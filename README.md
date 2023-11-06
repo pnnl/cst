@@ -1,0 +1,3 @@
+This is the internal PNNL repository for the development of Copper (to be renamed before public release). 
+
+Copper is a layer in the E-COMP software stack about HELICS that is intended to provide easy ways to install simulation tools needed by E-COMP, configure the tools for use in a particular use case analysis, run the analysis and post-process the data. Though Copper is use-case agnostic and is being developed by E-COMP, it is expected to be useful by all users of HELICS and will be distributed as a stand-alone product apart from any particular E-COMP-related use cases and analysis.
