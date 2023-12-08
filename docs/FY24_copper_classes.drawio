@@ -13,7 +13,7 @@
                 <mxCell id="4" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" parent="2" vertex="1">
                     <mxGeometry y="140" width="440" height="8" as="geometry"/>
                 </mxCell>
-                <mxCell id="5" value="+ connect_to_database(self): &#10;+ query(self, query:TSDBQuery): DataFrame&#10;+ get_case_data(self, case: str, datatype: HELICS_DATA_TYPE): DataFrame&#10;+ get_case_timestamps(self, case: str): DataFrame&#10;+ delete_case(self, case: str): void&#10;&#10;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="2" vertex="1">
+                <mxCell id="5" value="+ connect_to_database(self): &#10;+ add_case(self, case: str): void&#10;+ query(self, query:TSDBQuery): TSDBResult&#10;+ get_case_data(self, case: str, datatype: HELICS_DATA_TYPE): TSDBResult&#10;+ get_case_data(self, case: str, federates: str, publication: str) (setting any of &#10;           these inputs to None treats them as a wildcard, *)&#10;+ get_case_timestamps(self, case: str): TSDBResult&#10;+ delete_case(self, case: str): void&#10;&#10;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="2" vertex="1">
                     <mxGeometry y="148" width="440" height="152" as="geometry"/>
                 </mxCell>
                 <mxCell id="6" value="TSDBQuery" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" parent="1" vertex="1">
@@ -153,6 +153,20 @@
                 </mxCell>
                 <mxCell id="43" value="HELICS_NONE&lt;br&gt;HELICS_OR&lt;br&gt;HELICS_SUM&lt;br&gt;HELICS_MAX&lt;br&gt;HELICS_MIN&lt;br&gt;HELICS_MEAN&lt;br&gt;HELICS_VECTORIZE&lt;br&gt;HELICS_DIFF" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="42" vertex="1">
                     <mxGeometry y="40" width="230" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="44" value="TSDBResult" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" vertex="1" parent="1">
+                    <mxGeometry x="-9390" y="290" width="250" height="116" as="geometry">
+                        <mxRectangle x="110" y="60" width="120" height="30" as="alternateBounds"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="45" value="+ results: dict{col1:[], col2:[], col3:[]...}" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="44">
+                    <mxGeometry y="26" width="250" height="44" as="geometry"/>
+                </mxCell>
+                <mxCell id="46" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="44">
+                    <mxGeometry y="70" width="250" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="47" value="+" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontStyle=0" vertex="1" parent="44">
+                    <mxGeometry y="78" width="250" height="38" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>
