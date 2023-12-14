@@ -8,6 +8,7 @@ Prototype metadata database API development
 from pymongo import MongoClient
 import gridfs
 import pprint
+import logging
 
 logger = logging.getLogger(__name__)
 pp = pprint.PrettyPrinter(indent=4, )
@@ -17,7 +18,7 @@ class MetaDB:
     """
     _cu_dict_name = 'cu_metadB_dok'
 
-    def __init__(self, uri_string=''):
+    def __init__(self, uri_string=None):
         client = None
         collections = []
         db = None
@@ -25,10 +26,10 @@ class MetaDB:
         fs = None 
         
 
-        if uri_string is not '':
-            self.client = _connect_to_database(uri_string)
+        if uri_string is not None:
+            self.client = self._connect_to_database(uri_string)
         else:
-            self.client = _connect_to_database()
+            self.client = self._connect_to_database()
 
         self.db = self.client.metadataDB
         self.fs = gridfs.GridFS(self.db)        
@@ -48,10 +49,16 @@ class MetaDB:
 
 
 
-    def _connect_to_database(self, uri_string="mongodb://127.0.0.1:27017"):
+    def _connect_to_database(self, uri_string=None):
         """
+        Sets up connection to server port for mongodb
         """
-        client = MongoClient("mongodb://127.0.0.1:27017")
+        # Set up default uri_string to the server Trevor was using on the EIOC
+        if uri_string == None:
+            uri_string = "mongodb://127.0.0.1:27017"
+        # Set up connection
+        client = MongoClient(uri_string)
+        # Test connection
         try:
             client.admin.command('ping')
             print("Pinged your deployment. You successfully connected to MongoDB!")
@@ -69,10 +76,10 @@ class MetaDB:
         Doesn't throw an error if the name is not unique and let's the calling
         method decide what to do with it.
         """
-        for doc in self.db[collection_name].find({}, {"_id":1, _cu_dict_name: 1})
+        for doc in self.db[collection_name].find({}, {"_id":1, _cu_dict_name: 1}):
             if doc[_cu_dict_name] == new_name:
                 return False 
-            else
+            else:
                 pass  
 
         return True
@@ -84,15 +91,17 @@ class MetaDB:
     def remove_document(self, collection_name, object_id = None, dict_name = None):
         if dict_name is None and object_id is None:
             raise AttributeError("Must provide the name or object ID of the dictionary to be retrieved.")
+        elif dict_name is not None and object_id is not None:
+            raise UserWarning("Using provided object ID (and not provided name) to remove document.")
+            self.db[collection_name].delete_one({"_id": object_id})
         elif dict_name is not None:
             self.db[collection].delete_one({_cu_dict_name: dict_name})
             if not doc:
                 raise NameError(f"{dict_name} does not exist in collection {collection_name} and cannot be retrieved.")
         elif object_id is not None:
             self.db[collection_name].delete_one({"_id": object_id})
-        else dict_name is not None and object_id is not None:
-            raise UserWarning("Using provided object ID (and not provided name) to remove document.")
-            self.db[collection_name].delete_one({"_id": object_id})
+        # TODO: Add check for success on delete.
+        
 
 
     def add_collection(self, name):
@@ -123,7 +132,7 @@ class MetaDB:
         """
         """
         doc_names = []
-        for doc in self.db[collection_name].find({}, {"_id":1, _cu_dict_name: 1})
+        for doc in self.db[collection_name].find({}, {"_id":1, _cu_dict_name: 1}):
             doc_names.append(doc._cu_dict_name)
 
         return doc_names
@@ -165,14 +174,14 @@ class MetaDB:
         """
         if dict_name is None and object_id is None:
             raise AttributeError("Must provide the name or object ID of the dictionary to be retrieved.")
+        elif dict_name is not None and object_id is not None:
+            raise UserWarning("Using provided object ID (and not provided name) to to get dictionary.")
+            doc = self.db[collection_name].find_one({"_id": object_id})
         elif dict_name is not None:
             doc = self.db[collection].find_one({_cu_dict_name: dict_name})
             if not doc:
                 raise NameError(f"{dict_name} does not exist in collection {collection_name} and cannot be retrieved.")
         elif object_id is not None:
-            doc = self.db[collection_name].find_one({"_id": object_id})
-        else dict_name is not None and object_id is not None:
-            raise UserWarning("Using provided object ID (and not provided name) to to get dictionary.")
             doc = self.db[collection_name].find_one({"_id": object_id})
         # Pulling out the metaDB secret name field that was added when we put
         #   the dictionary into the database. Will not raise an error if 
@@ -193,6 +202,9 @@ class MetaDB:
         updated_dict[_cu_dict_name] = dict_name
         if dict_name is None and object_id is None:
             raise AttributeError("Must provide the name or object ID of the dictionary to be modified.")
+        elif dict_name is not None and object_id is not None:
+            raise UserWarning("Using provided object ID (and not provided name) to update database.")
+            doc = self.db[collection_name].replace({"_id": object_id}, updated_dict)
         elif dict_name is not None:
             doc = db[collection].find_one({_cu_dict_name: dict_name})
             if doc:
@@ -201,11 +213,23 @@ class MetaDB:
                 raise NameError(f"{dict_name} does not exist in collection {collection_name} and cannot be updated.")
         elif object_id is not None:
             doc = self.db[collection_name].replace({"_id": object_id}, updated_dict)
-        else dict_name is not None and object_id is not None:
-            raise UserWarning("Using provided object ID (and not provided name) to update database.")
-            doc = self.db[collection_name].replace({"_id": object_id}, updated_dict)
+        
 
         return str(doc["_id"])
+    
+
+if __name__ == "__main__":
+    """ 
+    Main method for launching meta data class
+    First user's will need to set up docker desktop, install mongodb community: 
+    https://www.mongodb.com/docs/manual/tutorial/install-mongodb-community-with-docker/
+    But run docker with the port number exposed to the host so that it can be pinged from outside the container: 
+    docker run --name mongodb -d -p 27017:27017 mongodb/mongodb-community-server:$MONGODB_VERSION
+    If no version number is important the tag MONGODB_VERSION=latest can be used
+    """
+    local_default_uri = 'mongodb://localhost:27017'
+    uri = local_default_uri
+    metadb = MetaDB(uri_string=uri)
 
 
 
