@@ -57,116 +57,51 @@
                 <mxCell id="18" value="+ connect_to_database(self): &#10;+ add_table(self, name: str, columns: list)&#10;+ add_publication(self, pub: Publication)&#10;+ cosimulation()&#10;+ delete_table(self, table_name: str)&#10;+ delete_column(self, table_name: str, column_name: str)&#10;+ table_to_df(self, table: name): df: Dataframe" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="15" vertex="1">
                     <mxGeometry y="148" width="410" height="152" as="geometry"/>
                 </mxCell>
-                <mxCell id="19" value="HelicsPubSubInput" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" parent="1" vertex="1">
-                    <mxGeometry x="-9590" y="1130" width="330" height="188" as="geometry">
-                        <mxRectangle x="110" y="60" width="120" height="30" as="alternateBounds"/>
-                    </mxGeometry>
-                </mxCell>
-                <mxCell id="20" value="+ key: str&#10;+ type: HELICS_DATA_TYPE&#10;+ unit: str&#10;+ buffer_data: bool&#10;+ ignore_units_mismatch: bool&#10;+ info: str&#10;+ strict_input_type_checking: bool&#10;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="19" vertex="1">
-                    <mxGeometry y="26" width="330" height="154" as="geometry"/>
-                </mxCell>
-                <mxCell id="21" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" parent="19" vertex="1">
-                    <mxGeometry y="180" width="330" height="8" as="geometry"/>
-                </mxCell>
-                <mxCell id="22" value="HelicsInterface" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" parent="1" vertex="1">
-                    <mxGeometry x="-9400" y="830" width="330" height="188" as="geometry">
-                        <mxRectangle x="110" y="60" width="120" height="30" as="alternateBounds"/>
-                    </mxGeometry>
-                </mxCell>
-                <mxCell id="23" value="+ datatype: str&#10;+ info: str&#10;+ only_update_on_change: bool&#10;+ tolerance: float&#10;+ default: HELICS_DATA_TYPE&#10;+ connection_required: bool&#10;+ connection_optional: bool&#10;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="22" vertex="1">
-                    <mxGeometry y="26" width="330" height="154" as="geometry"/>
-                </mxCell>
-                <mxCell id="24" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" parent="22" vertex="1">
-                    <mxGeometry y="180" width="330" height="8" as="geometry"/>
-                </mxCell>
-                <mxCell id="25" style="edgeStyle=none;html=1;endArrow=block;endFill=0;endSize=13;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="19" target="22" edge="1">
-                    <mxGeometry relative="1" as="geometry">
-                        <mxPoint x="-8620" y="820" as="sourcePoint"/>
-                        <mxPoint x="-8779.362549800797" y="660" as="targetPoint"/>
-                    </mxGeometry>
-                </mxCell>
-                <mxCell id="26" value="HelicsPub" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" parent="1" vertex="1">
-                    <mxGeometry x="-9720" y="1410" width="210" height="188" as="geometry">
-                        <mxRectangle x="110" y="60" width="120" height="30" as="alternateBounds"/>
-                    </mxGeometry>
-                </mxCell>
-                <mxCell id="27" value="+ global: bool&#10;+ targets: list of str" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="26" vertex="1">
-                    <mxGeometry y="26" width="210" height="154" as="geometry"/>
-                </mxCell>
-                <mxCell id="28" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" parent="26" vertex="1">
-                    <mxGeometry y="180" width="210" height="8" as="geometry"/>
-                </mxCell>
-                <mxCell id="29" style="edgeStyle=none;html=1;endArrow=block;endFill=0;endSize=13;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" parent="1" source="26" target="21" edge="1">
-                    <mxGeometry relative="1" as="geometry">
-                        <mxPoint x="-9635" y="930" as="sourcePoint"/>
-                        <mxPoint x="-9415" y="818" as="targetPoint"/>
-                    </mxGeometry>
-                </mxCell>
-                <mxCell id="30" style="edgeStyle=none;html=1;endArrow=block;endFill=0;endSize=13;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" parent="1" source="31" edge="1">
-                    <mxGeometry relative="1" as="geometry">
-                        <mxPoint x="-9275" y="1400" as="sourcePoint"/>
-                        <mxPoint x="-9440" y="1320" as="targetPoint"/>
-                    </mxGeometry>
-                </mxCell>
-                <mxCell id="31" value="HelicsInput" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" parent="1" vertex="1">
-                    <mxGeometry x="-9420" y="1380" width="470" height="250" as="geometry">
-                        <mxRectangle x="110" y="60" width="120" height="30" as="alternateBounds"/>
-                    </mxGeometry>
-                </mxCell>
-                <mxCell id="32" value="+ targets: list of str&#10;+ connections: int&#10;+ input_priority_location: int&#10;+ single_connection_only: bool&#10;+ multiple_connections_allowed: bool&#10;+ multiple_input_handling_method: HELICS_HANDLE_OPTION_MULTI_INPUT" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="31" vertex="1">
-                    <mxGeometry y="26" width="470" height="144" as="geometry"/>
-                </mxCell>
-                <mxCell id="33" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" parent="31" vertex="1">
-                    <mxGeometry y="170" width="470" height="8" as="geometry"/>
-                </mxCell>
-                <mxCell id="34" value="+ clear_priority_list(): void&#10;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontStyle=0" parent="31" vertex="1">
-                    <mxGeometry y="178" width="470" height="72" as="geometry"/>
-                </mxCell>
-                <mxCell id="35" value="HelicsEndpoint" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" parent="1" vertex="1">
-                    <mxGeometry x="-9190" y="1090" width="340" height="250" as="geometry">
-                        <mxRectangle x="110" y="60" width="120" height="30" as="alternateBounds"/>
-                    </mxGeometry>
-                </mxCell>
-                <mxCell id="36" value="+ name&#10;+ type:  HELICS_DATA_TYPE&#10;+ target: list of str&#10;+ alias&#10;+ subscriptions: list of str&#10;+ info: str" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="35" vertex="1">
-                    <mxGeometry y="26" width="340" height="144" as="geometry"/>
-                </mxCell>
-                <mxCell id="37" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" parent="35" vertex="1">
-                    <mxGeometry y="170" width="340" height="8" as="geometry"/>
-                </mxCell>
-                <mxCell id="38" value="+ " style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontStyle=0" parent="35" vertex="1">
-                    <mxGeometry y="178" width="340" height="72" as="geometry"/>
-                </mxCell>
-                <mxCell id="39" style="edgeStyle=none;html=1;endArrow=block;endFill=0;endSize=13;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" parent="1" source="35" edge="1">
-                    <mxGeometry relative="1" as="geometry">
-                        <mxPoint x="-9415" y="1140" as="sourcePoint"/>
-                        <mxPoint x="-9240" y="1020" as="targetPoint"/>
-                    </mxGeometry>
-                </mxCell>
-                <mxCell id="40" value="&amp;lt;&amp;lt;enumeration&amp;gt;&amp;gt;&lt;br&gt;&lt;span style=&quot;font-weight: 700;&quot;&gt;HELICS_DATA_TYPE&lt;/span&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=40;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;" parent="1" vertex="1">
-                    <mxGeometry x="-8820" y="1220" width="180" height="200" as="geometry"/>
-                </mxCell>
-                <mxCell id="41" value="HELICS_BOOL&lt;br style=&quot;padding: 0px; margin: 0px;&quot;&gt;HELICS_BYTE&lt;br&gt;HELICS_CHAR&lt;br style=&quot;padding: 0px; margin: 0px;&quot;&gt;HELICS_COMPLEX&lt;br style=&quot;padding: 0px; margin: 0px;&quot;&gt;HELICS_COMPLEX_VECTOR&lt;br style=&quot;padding: 0px; margin: 0px;&quot;&gt;HELICS_DOUBLE&lt;br style=&quot;padding: 0px; margin: 0px;&quot;&gt;HELICS_INTEGER&lt;br style=&quot;padding: 0px; margin: 0px;&quot;&gt;HELICS_RAW&lt;br style=&quot;padding: 0px; margin: 0px;&quot;&gt;HELICS_STRING&lt;br style=&quot;padding: 0px; margin: 0px;&quot;&gt;HELICS_VECTOR" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="40" vertex="1">
-                    <mxGeometry y="40" width="180" height="160" as="geometry"/>
-                </mxCell>
-                <mxCell id="42" value="&amp;lt;&amp;lt;enumeration&amp;gt;&amp;gt;&lt;br&gt;&lt;span style=&quot;font-weight: 700;&quot;&gt;HELICS_INPUT_HANDLING_METHOD&lt;/span&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=40;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;" parent="1" vertex="1">
-                    <mxGeometry x="-8900" y="1460" width="230" height="170" as="geometry"/>
-                </mxCell>
-                <mxCell id="43" value="HELICS_NONE&lt;br&gt;HELICS_OR&lt;br&gt;HELICS_SUM&lt;br&gt;HELICS_MAX&lt;br&gt;HELICS_MIN&lt;br&gt;HELICS_MEAN&lt;br&gt;HELICS_VECTORIZE&lt;br&gt;HELICS_DIFF" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="42" vertex="1">
-                    <mxGeometry y="40" width="230" height="130" as="geometry"/>
-                </mxCell>
-                <mxCell id="44" value="TSDBResult" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" vertex="1" parent="1">
+                <mxCell id="44" value="TSDBResult" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" parent="1" vertex="1">
                     <mxGeometry x="-9390" y="290" width="250" height="116" as="geometry">
                         <mxRectangle x="110" y="60" width="120" height="30" as="alternateBounds"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="45" value="+ results: dict{col1:[], col2:[], col3:[]...}" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="44">
+                <mxCell id="45" value="+ results: dict{col1:[], col2:[], col3:[]...}" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="44" vertex="1">
                     <mxGeometry y="26" width="250" height="44" as="geometry"/>
                 </mxCell>
-                <mxCell id="46" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="44">
+                <mxCell id="46" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" parent="44" vertex="1">
                     <mxGeometry y="70" width="250" height="8" as="geometry"/>
                 </mxCell>
-                <mxCell id="47" value="+" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontStyle=0" vertex="1" parent="44">
+                <mxCell id="47" value="+" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontStyle=0" parent="44" vertex="1">
                     <mxGeometry y="78" width="250" height="38" as="geometry"/>
+                </mxCell>
+                <mxCell id="48" value="Federate" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" vertex="1" parent="1">
+                    <mxGeometry x="-8470" y="120" width="530" height="448" as="geometry">
+                        <mxRectangle x="110" y="60" width="120" height="30" as="alternateBounds"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="49" value="+ name: str&#10;+ fed: HelicsFederate (defined by PyHELICS)&#10;+ federate_type: HELICS_FEDERATE_TYPE&#10;+ input_arguments: dict&#10;+ metadataDB: MetadataDB&#10;+ helics_inputs: input_dict" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="48">
+                    <mxGeometry y="26" width="530" height="184" as="geometry"/>
+                </mxCell>
+                <mxCell id="50" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="48">
+                    <mxGeometry y="210" width="530" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="51" value="+ create_federate(self): self.fed&#10;- _get_configuration_from metadataDB(self.name: str, metadataDB: MetadataDB)&#10;+ destroy_fed(self): void&#10;+ advance_sim_time(time: float)&#10;+ update_model()&#10;+ get_data_from_federation(self.fed): self.helics_inputs&#10;+ send_data_to_federation(self.fed, pub_dict)&#10;&#10;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontStyle=0" vertex="1" parent="48">
+                    <mxGeometry y="218" width="530" height="230" as="geometry"/>
+                </mxCell>
+                <mxCell id="56" value="&amp;lt;&amp;lt;enumeration&amp;gt;&amp;gt;&lt;br&gt;&lt;span style=&quot;font-weight: 700;&quot;&gt;HELICS_FEDERATE_TYPE&lt;/span&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=40;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="-8940" y="410" width="200" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="57" value="HELICS_VALUE_FEDERATE&lt;br&gt;HELICS_MESSAGE_FEDERATE&lt;br&gt;HELICS_COMBO_FEDERATE" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="56">
+                    <mxGeometry y="40" width="200" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="80" value="The PyHELICS Pythonic API provides LOTS of federate management funcationality we don't need to replicate here. There are easy ways to do all the common federate things and if we need something that isn't there, we can add it." style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;" vertex="1" parent="1">
+                    <mxGeometry x="-8650" y="160" width="160" height="170" as="geometry"/>
+                </mxCell>
+                <mxCell id="85" value="Do we want to do like GridLAB-D and provide an explicit mapping between HELICS interfaces and internal variables and data strucutres? For simple data types this seems tractable and good but or data types with complex structures this would be hard. If we could do this we could write generic functions for exchanging data with the federation" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;" vertex="1" parent="1">
+                    <mxGeometry x="-8650" y="380" width="160" height="200" as="geometry"/>
+                </mxCell>
+                <mxCell id="90" value="input_dict&amp;nbsp; and pub_dict are dictionaries where the keys are the HELICS publication names and the values are the values received or to be published, respectively" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;" vertex="1" parent="1">
+                    <mxGeometry x="-7910" y="350" width="160" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="91" value="update_model is user-written code&amp;nbsp;" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;" vertex="1" parent="1">
+                    <mxGeometry x="-7910" y="500" width="160" height="60" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>
