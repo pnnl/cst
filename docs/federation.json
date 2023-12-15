@@ -3,29 +3,32 @@
     "federates": {
         "BatteryFed1": {
             "image": "python/3.11.7-slim-bullseye",
-            "name": "Battery",
-            "core_type": "zmq",
-            "log_level": "warning",
-            "period": 60,
-            "uninterruptible": false,
-            "terminate_on_error": true,
-            "wait_for_current_time_update": true,
-            "publications": [
-                {
-                "global": true,
-                "key": "Battery/EV1_current",
-                "type": "double",
-                "unit": "A"
-                }
-            ],
-            "subscriptions": [
-                {
-                  "global": true,
-                  "key": "Charger/EV1_voltage",
-                  "type": "double",
-                  "unit": "V"
-                }
-            ]
+            "federate type": "HELICS value federate",
+            "HELICS config": {
+                "name": "Battery",
+                "core_type": "zmq",
+                "log_level": "warning",
+                "period": 60,
+                "uninterruptible": false,
+                "terminate_on_error": true,
+                "wait_for_current_time_update": true,
+                "publications": [
+                    {
+                    "global": true,
+                    "key": "Battery/EV1_current",
+                    "type": "double",
+                    "unit": "A"
+                    }
+                ],
+                "subscriptions": [
+                    {
+                    "global": true,
+                    "key": "Charger/EV1_voltage",
+                    "type": "double",
+                    "unit": "V"
+                    }
+                ]
+            } 
         }
     },
     "images":[
