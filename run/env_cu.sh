@@ -3,12 +3,14 @@
 mkdir -p ./dags ./logs ./plugins
 chmod -R 777 ./dags ./logs ./plugins
 
-echo -e "POSTGRES_DB=copper" > env
-echo -e "POSTGRES_USER=postgres" >> .env
-echo -e "POSTGRES_PASSWORD=postgres" >> .env
-echo -e "POSTGRES_HOST=database" >> .env
-echo -e "POSTGRES_PORT=5432" >> .env
-echo -e "AIRFLOW_UID=$(id -u)" >> .env
-echo -e "AIRFLOW_GID=0" >> .env
+cat > ".env" << EOF
+POSTGRES_DB=copper
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_HOST=database
+POSTGRES_PORT=5432
+AIRFLOW_UID=$(id -u)
+AIRFLOW_GID=0
+EOF
 
 docker-compose -f airflow-docker-compose.yaml up airflow-init
