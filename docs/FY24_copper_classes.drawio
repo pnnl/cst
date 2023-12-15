@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="t3LKLqEtbccrNYtRNrDR" name="Page-1">
-        <mxGraphModel dx="11309" dy="1268" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="10000" pageHeight="10000" math="0" shadow="0">
+        <mxGraphModel dx="10884" dy="1268" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="10000" pageHeight="10000" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -71,37 +71,37 @@
                 <mxCell id="47" value="+" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontStyle=0" parent="44" vertex="1">
                     <mxGeometry y="78" width="250" height="38" as="geometry"/>
                 </mxCell>
-                <mxCell id="48" value="Federate" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" vertex="1" parent="1">
-                    <mxGeometry x="-8470" y="120" width="530" height="448" as="geometry">
+                <mxCell id="48" value="Federate" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" parent="1" vertex="1">
+                    <mxGeometry x="-9720" y="820" width="530" height="448" as="geometry">
                         <mxRectangle x="110" y="60" width="120" height="30" as="alternateBounds"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="49" value="+ name: str&#10;+ fed: HelicsFederate (defined by PyHELICS)&#10;+ federate_type: HELICS_FEDERATE_TYPE&#10;+ input_arguments: dict&#10;+ metadataDB: MetadataDB&#10;+ helics_inputs: input_dict" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="48">
+                <mxCell id="49" value="+ name: str&#10;+ fed: HelicsFederate (defined by PyHELICS)&#10;+ federate_type: HELICS_FEDERATE_TYPE&#10;+ input_arguments: dict&#10;+ metadataDB: MetadataDB&#10;+ helics_inputs: input_dict&#10;+ pub_dict: dict" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="48" vertex="1">
                     <mxGeometry y="26" width="530" height="184" as="geometry"/>
                 </mxCell>
-                <mxCell id="50" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="48">
+                <mxCell id="50" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" parent="48" vertex="1">
                     <mxGeometry y="210" width="530" height="8" as="geometry"/>
                 </mxCell>
-                <mxCell id="51" value="+ create_federate(self): self.fed&#10;- _get_configuration_from metadataDB(self.name: str, metadataDB: MetadataDB)&#10;+ destroy_fed(self): void&#10;+ advance_sim_time(time: float)&#10;+ update_model()&#10;+ get_data_from_federation(self.fed): self.helics_inputs&#10;+ send_data_to_federation(self.fed, pub_dict)&#10;&#10;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontStyle=0" vertex="1" parent="48">
+                <mxCell id="51" value="+ create_federate(self): self.fed&#10;- _get_configuration_from metadataDB(self.name: str, metadataDB: MetadataDB)&#10;+ destroy_fed(self): void&#10;+ advance_sim_time(time: float)&#10;+ update_model()&#10;+ get_data_from_federation(self.fed): self.helics_inputs&#10;+ send_data_to_federation(self.fed, pub_dict)&#10;&#10;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontStyle=0" parent="48" vertex="1">
                     <mxGeometry y="218" width="530" height="230" as="geometry"/>
                 </mxCell>
-                <mxCell id="56" value="&amp;lt;&amp;lt;enumeration&amp;gt;&amp;gt;&lt;br&gt;&lt;span style=&quot;font-weight: 700;&quot;&gt;HELICS_FEDERATE_TYPE&lt;/span&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=40;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;" vertex="1" parent="1">
+                <mxCell id="56" value="&amp;lt;&amp;lt;enumeration&amp;gt;&amp;gt;&lt;br&gt;&lt;span style=&quot;font-weight: 700;&quot;&gt;HELICS_FEDERATE_TYPE&lt;/span&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=40;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;" parent="1" vertex="1">
                     <mxGeometry x="-8940" y="410" width="200" height="130" as="geometry"/>
                 </mxCell>
-                <mxCell id="57" value="HELICS_VALUE_FEDERATE&lt;br&gt;HELICS_MESSAGE_FEDERATE&lt;br&gt;HELICS_COMBO_FEDERATE" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="56">
+                <mxCell id="57" value="HELICS_VALUE_FEDERATE&lt;br&gt;HELICS_MESSAGE_FEDERATE&lt;br&gt;HELICS_COMBO_FEDERATE" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="56" vertex="1">
                     <mxGeometry y="40" width="200" height="90" as="geometry"/>
                 </mxCell>
-                <mxCell id="80" value="The PyHELICS Pythonic API provides LOTS of federate management funcationality we don't need to replicate here. There are easy ways to do all the common federate things and if we need something that isn't there, we can add it." style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;" vertex="1" parent="1">
-                    <mxGeometry x="-8650" y="160" width="160" height="170" as="geometry"/>
+                <mxCell id="80" value="The PyHELICS Pythonic API provides LOTS of federate management funcationality we don't need to replicate here. There are easy ways to do all the common federate things and if we need something that isn't there, we can add it." style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;" parent="1" vertex="1">
+                    <mxGeometry x="-9900" y="860" width="160" height="170" as="geometry"/>
                 </mxCell>
-                <mxCell id="85" value="Do we want to do like GridLAB-D and provide an explicit mapping between HELICS interfaces and internal variables and data strucutres? For simple data types this seems tractable and good but or data types with complex structures this would be hard. If we could do this we could write generic functions for exchanging data with the federation" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;" vertex="1" parent="1">
-                    <mxGeometry x="-8650" y="380" width="160" height="200" as="geometry"/>
+                <mxCell id="85" value="Do we want to do like GridLAB-D and provide an explicit mapping between HELICS interfaces and internal variables and data strucutres? For simple data types this seems tractable and good but or data types with complex structures this would be hard. If we could do this we could write generic functions for exchanging data with the federation" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;" parent="1" vertex="1">
+                    <mxGeometry x="-9900" y="1080" width="160" height="200" as="geometry"/>
                 </mxCell>
-                <mxCell id="90" value="input_dict&amp;nbsp; and pub_dict are dictionaries where the keys are the HELICS publication names and the values are the values received or to be published, respectively" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;" vertex="1" parent="1">
-                    <mxGeometry x="-7910" y="350" width="160" height="120" as="geometry"/>
+                <mxCell id="90" value="input_dict&amp;nbsp; and pub_dict are dictionaries where the keys are the HELICS publication names and the values are the values received or to be published, respectively" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;" parent="1" vertex="1">
+                    <mxGeometry x="-9160" y="1050" width="160" height="120" as="geometry"/>
                 </mxCell>
-                <mxCell id="91" value="update_model is user-written code&amp;nbsp;" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;" vertex="1" parent="1">
-                    <mxGeometry x="-7910" y="500" width="160" height="60" as="geometry"/>
+                <mxCell id="91" value="update_model is user-written code&amp;nbsp;" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;" parent="1" vertex="1">
+                    <mxGeometry x="-9160" y="1200" width="160" height="60" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>
