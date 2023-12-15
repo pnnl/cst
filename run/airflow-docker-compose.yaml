@@ -28,9 +28,10 @@ x-airflow-common:
     - ./dags:/opt/airflow/dags
     - ./logs:/opt/airflow/logs
     - ./plugins:/opt/airflow/plugins
+    - ./examples:/opt/example
 
   env_file:
-    - ./.env
+    - ./env
   user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-50000}"
   mem_limit: 4000m
   depends_on:
