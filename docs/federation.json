@@ -1,9 +1,12 @@
 {
     "federation name": "federation_name",
+    "max sim time": 100,
     "federates": {
         "BatteryFed1": {
             "image": "python/3.11.7-slim-bullseye",
-            "federate type": "HELICS value federate",
+            "federate type": "value",
+            "sim time step": 1,
+
             "HELICS config": {
                 "name": "Battery",
                 "core_type": "zmq",
