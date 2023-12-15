@@ -1,7 +1,8 @@
 """
 Created on 12/14/2023
 
-Federate class that defines the basic operations of federates in Copper.
+Federate class that defines the basic operations of Python-based federates in
+Copper.
 
 @author: Trevor Hardy
 trevor.hardy@pnnl.gov
@@ -9,7 +10,8 @@ trevor.hardy@pnnl.gov
 
 import helics as h
 import logging
-import metadataDB
+import metadataDB as mddb
+import json
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler())
@@ -17,13 +19,44 @@ logger.setLevel(logging.ERROR)
 
 class Federate():
     """
+    This federate class definition is intended to be a reasonable, generic 
+    class for Python-based federates in HELICS. It outlines the typical 
+    federate operational procedure in the "_main_" function; users that
+    don't need anything fancy will probably be able to call those few functions
+    and get a working federate.
+
+    This class gets its configuration from the metadata database following
+    the standard Copper definition of the "federation" document. 
+
+    To be overly clear, this class is intended to be sub-classed and overloaded
+    to allow users to customize it as necessary. If nothing else, the 
+    "update_model" method will always need updating to perform the particular
+    calculations the federate is responsible for. There are several other
+    methods that are likely candidates for subclassing based on the 
+    particular needs of the federate or the larger federation:
+    "enter_initializing_mode"
+    "enter_executing_mode"
+    "time_request"
+
+    All of these have the simplest version of these HELICS operations but there
+    are more complex versions that HELICS supports that allow for things like
+    itterations and asynchronous or non-blocking operations (further details
+    can be found in the HELICS documentation).
+
+    The existing methods to pull in values from the HELICS federation and
+    push values out are likely to be sufficient for most federates but, again
+    these can be overloaded in a sub-class if, for example, the number of 
+    HELICS inputs and publications is very large and only a few are used during
+    a given time-step.
     """
 
     def __init__(self):
         self.hfed = None
         self.mddb = None
+        self.main_collection = "main"
+        self.fed_name = None
+        self.sim_step_size = -1
         self.max_sim_time = -1
-        self.period
         self.next_requested_time
         self.granted_time
         self.data_from_federation
@@ -35,12 +68,12 @@ class Federate():
         self.data_to_federation["publications"] = {}
         self.data_to_federation["endpoints"] = {}
 
-    def populate_helics_input_data(self):
-        """
-        Updates the helics_input_data dictionary with the latest values from
-        the federation. This is a a convenience that makes it easier for users
-        of this class to be 
-        """
+        # stackoverflow said I could do this and allow users to instantiate
+        # this doing something like:
+        # fed = Federate(fed_name = "heat_pump12")
+        # and this would set self.name = "heatpump12"
+        # Seems like a good idea to me; I hope it works.
+        self.__dict__.update(kwargs)
 
     def connect_to_metadataDB(self):
         """
@@ -49,27 +82,86 @@ class Federate():
         management data. This method connects to that database and makes it 
         available for other methods in this class.
         """
-        pass
+        local_default_uri = 'mongodb://localhost:27017'
+        uri = local_default_uri
+        self.mddb = MetaDB(uri_string=uri)
 
+    def create_federate(self):
+        """
+        Creates and defines both the instance of this Federate class as well
+        as the HELICS federate object (self.hfed).
+        """
+        self.initialize_fed()
+        self.create_helics_fed()
+    
     def initialize_fed(self):
         """
+        Any initialization that cannot take place on instantiation of
+        the federate object should be done here. In this case, 
+        initializing any class attribute values that come from the 
+        metadata database have to take place after connecting to
+        said database.
         """
-        pass
+        fed_def = self.mddb.get_dict(case_name, name="federation")
+        self.sim_step_size = fed_def[self.fed_name]["sim step size"]
+        self.max_sim_time = fed_def["max sim time"]
 
     def create_helics_fed(self):
         """
         Using the HELICS configuration document from the metadataDB, this
         method creates the HELICS federate.
-        """
 
-        pass
-
-    def create_federate(self):
         """
-        """
-        self.initialize_fed()
-        self.create_helics_fed()
+        case_name = self.mddb.get_dict(self.main_collection, name="current case")["current case"]
+        fed_def = self.mddb.get_dict(case_name, name="federation")[self.fed_name]
+        if fed_def["federate type"] == "value":
+            self.hfed = h.helicsCreateValueFederateFromConfig(json.dumps(fed_def["HELICS config"]))
+        elif fed_def["federate type"] == "message":
+            self.hfed = h.helicsCreateMessageFederateFromConfig(json.dumps(fed_def["HELICS config"]))
+        elif fed_def["federate type"] == "combo":
+            self.hfed = h.helicsCreateCombinationFederateFromConfig(json.dumps(fed_def["HELICS config"]))
+        else:
+            raise ValueError(f"Federate type \'{fed_def['federate type']}\' not allowed; must be 'value','message', or 'combo'.")
 
+    def run_cosim_loop(self):
+        """
+        This is a generic HELICS co-sim loop based on a pre-defined maximum
+        simulation time. 
+        """
+        self.enter_intialization()
+        self.enter_executing_mode()
+        while self.granted_time < self.max_sim_time:
+            self.simulate_next_step()
+
+    def enter_intialization(self):
+        """
+        There are a few different ways of handling HELICS initializing mode and
+        what is implemented here is the simplest. If you need something more
+        complex, subclass and overload.
+        """
+        self.hfed.enter_initializing_mode()
+
+    def enter_executing_mode(self):
+        """
+        There are a few different ways of handling HELICS executing mode and
+        what is implemented here is the simplest. If you need something more
+        complex, subclass and overload.
+        """
+        self.hfed.enter_executing_mode()
+
+    def simulate_next_step(self):
+        """
+        This method is the core of the main co-simulation loop where the time 
+        request is made and once granted, data from the rest of the federation
+        is collected and used to update the federate's internal model before
+        sending out new data for the rest of the federation to use.
+        """
+        next_requested_time = self.calculate_next_requested_time()
+        self.request_time(next_requested_time)
+        self.get_data_from_federation()
+        self.update_internal_model()
+        self.send_data_to_federation(self.pub_data)
+    
     def calculate_next_requested_time(self):
         """
         Many federates run at very regular time steps and thus the calculation
@@ -78,9 +170,10 @@ class Federate():
         to overload the default calculation method if they need something 
         more complex.
         """
-        self.next_requested_time = self.granted_time + self.period
+        self.next_requested_time = self.granted_time + self.sim_step_size
+        return self.next_requested_time
 
-    def generic_request_time(self, requested_time:float):
+    def request_time(self, requested_time:float):
         """
         HELICS provides a variety of means of requesting time. The most common
         is a simple hfed.request_time(float) which is a blocking call. There
@@ -92,16 +185,6 @@ class Federate():
         """
         self.granted_time = self.hfed.request_time(requested_time)
         pass
-
-    def run_cosim_loop(self):
-        """
-        """
-        self.hfed.enter_initializing_mode()
-        self.hfed.enter_executing_mode()
-        while self.granted_time < self.max_sim_time:
-            self.calculate_next_requested_time()
-            self.simulate_next_step()
-
 
     def get_data_from_federation(self):
         """
@@ -135,6 +218,23 @@ class Federate():
         sub-classing and overloading.
         """
         # Doing something silly for testing purposes
+        # Get a value from an arbitrary input; I hope its a number
+        key = list(self.get_data_from_federation["inputs"].keys())[0]
+        dummy_value = self.get_data_from_federation[key]
+        
+        # Increment for arbitrary reasons. This is the actual model
+        # that is being updated in this example.
+        dummy_value += 1
+
+
+        # Send out incremented value on arbitrary publication
+        # Clear out values published last time
+        self.send_data_to_federation["publications"].clear()
+        self.send_data_to_federation["endpoints"].clear()
+        pub = self.hfed.get_publication_by_index(0)
+        self.send_data_to_federation["publications"][pub.name] = dummy_value
+
+
 
     def send_data_to_federation(self, pub_data):
         """
@@ -166,18 +266,6 @@ class Federate():
                 ep.send_data(value["payload"])
             else: 
                 ep.send_data(value["payload"], value["destination"])
-
-    def simulate_next_step(self):
-        """
-        This method is the core of the main co-simulation loop where the time 
-        request is made and once granted, data from the rest of the federation
-        is collected and used to update the federate's internal model before
-        sending out new data for the rest of the federation to use.
-        """
-        self.generic_request_time(self.next_requested_time)
-        self.get_data_from_federation()
-        self.update_internal_model()
-        self.send_data_to_federation(self.pub_data)
 
     def destroy_federate(self):
         """
