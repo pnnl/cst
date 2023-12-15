@@ -9,7 +9,10 @@ POSTGRES_USER=postgres
 POSTGRES_PASSWORD=postgres
 POSTGRES_HOST=database
 POSTGRES_PORT=5432
+# add user id for linux
 AIRFLOW_UID=$(id -u)
+# add user id for windows
+# AIRFLOW_UID=50000
 AIRFLOW_GID=0
 EOF
 

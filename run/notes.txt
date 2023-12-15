@@ -51,3 +51,7 @@ It will create volume name pgdata and mount this volume to container's path.
 
 You can inspect this volume >>
 docker volume inspect pgdata
+
+some files need the line endings to be changed (in VScode, in the command palette select 'Change End of Line Sequence' and change from CRLF to LF)
+Windows doesn't like empty lines on shell scripts
+For starting up Docker, running the commands in the shell script in the terminal works better than running the script itself.
