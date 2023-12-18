@@ -1,11 +1,9 @@
 {
-    "federation name": "federation_name",
-    "max sim time": 100,
-    "federates": {
+    "federation": {
         "BatteryFed1": {
             "image": "python/3.11.7-slim-bullseye",
             "federate type": "value",
-            "sim time step": 1,
+            "sim time step": 120,
 
             "HELICS config": {
                 "name": "Battery",
@@ -33,10 +31,5 @@
                 ]
             } 
         }
-    },
-    "images":[
-        "mongodb/mongodb-community-server",
-        "postgres",
-        "python/3.11.7-slim-bullseye"
-    ]
+    }
 }
