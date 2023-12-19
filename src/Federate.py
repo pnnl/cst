@@ -10,7 +10,7 @@ trevor.hardy@pnnl.gov
 
 import helics as h
 import logging
-import metadataDB as mddb
+import metadataDB 
 import json
 
 logger = logging.getLogger(__name__)
@@ -87,7 +87,7 @@ class Federate():
         """
         local_default_uri = 'mongodb://localhost:27017'
         uri = local_default_uri
-        self.mddb = MetaDB(uri_string=uri)
+        self.mddb = metadataDB.MetaDB(uri_string=uri)
 
     def create_federate(self, scenario_name):
         """
