@@ -96,14 +96,14 @@ multiple_federation_dict = {
 
 # helper functions
 def setup_cosim(test_federation_name):
-  collection_cases = {"current case": test_federation_name}
+  collection_scenarios = {"current scenario": test_federation_name}
   # add a DB collection for all tests
   try:
-    metadb.add_dict(collection_name, dict_to_add=collection_cases, dict_name="current case")
+    metadb.add_dict(collection_name, dict_to_add=collection_scenarios, dict_name="current scenario")
   except NameError as e:
     metadb.remove_collection(collection_name)
     metadb.add_collection(collection_name)
-    metadb.add_dict(collection_name, dict_to_add=collection_cases, dict_name="current case")
+    metadb.add_dict(collection_name, dict_to_add=collection_scenarios, dict_name="current scenario")
   
 def add_federation_collection(test_federation_name, test_federation_dict, num_feds):
   # create and begin a broker for the cosim
@@ -170,7 +170,7 @@ if __name__ == "__main__":
   except NameError as e:
     metadb.remove_collection(collection_name)
     metadb.add_collection(collection_name)
-  run_multiple_federates()
+  run_single_federate()
   
 
 
