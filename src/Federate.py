@@ -88,7 +88,7 @@ class Federate():
         """
         local_default_uri = 'mongodb://localhost:27017'
         uri = local_default_uri
-        self.mddb = metadataDB.MetaDB(uri_string=uri)
+        self.mddb = MetaDB(uri_string=uri)
 
     def create_federate(self, scenario_name):
         """
