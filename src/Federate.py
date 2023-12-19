@@ -71,7 +71,7 @@ class Federate():
         # stackoverflow said I could do this and allow users to instantiate
         # this doing something like:
         # fed = Federate(fed_name = "heat_pump12")
-        # and this would set self.name = "heatpump12"
+        # and this would set self.fed_name = "heatpump12"
         # Seems like a good idea to me; I hope it works.
         self.__dict__.update(kwargs)
 
@@ -84,9 +84,9 @@ class Federate():
         """
         local_default_uri = 'mongodb://localhost:27017'
         uri = local_default_uri
-        self.mddb = MetaDB(uri_string=uri)
+        self.mddb = metadataDB.MetaDB(uri_string=uri)
 
-    def create_federate(self):
+    def create_federate(self, scenario_name):
         """
         Creates and defines both the instance of this Federate class as well
         as the HELICS federate object (self.hfed).
@@ -125,7 +125,8 @@ class Federate():
     def create_helics_fed(self):
         """
         Using the HELICS configuration document from the metadataDB, this
-        method creates the HELICS federate.
+        method creates the HELICS federate. It also populates class 
+        attributes that define the inputs, pubs, and endpoints
 
         """
         case_name = self.mddb.get_dict(self.main_collection, dict_name="current case")["current case"]
@@ -314,6 +315,6 @@ class Federate():
 if __name__ == "__main__":
     test_fed = Federate()
     test_fed.connect_to_metadataDB()
-    test_fed.create_federate()
+    test_fed.create_federate(test_fed.scenario_name)
     test_fed.run_cosim_loop()
     test_fed.destroy_federate()
