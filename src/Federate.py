@@ -53,7 +53,7 @@ class Federate():
     def __init__(self):
         self.hfed = None
         self.mddb = None
-        self.main_collection = "main"
+        self.main_collection = "main" # TODO: arbitrary name
         self.fed_name = None
         self.sim_step_size = -1
         self.max_sim_time = -1
@@ -71,7 +71,7 @@ class Federate():
         # stackoverflow said I could do this and allow users to instantiate
         # this doing something like:
         # fed = Federate(fed_name = "heat_pump12")
-        # and this would set self.name = "heatpump12"
+        # and this would set self.fed_name = "heatpump12"
         # Seems like a good idea to me; I hope it works.
         self.__dict__.update(kwargs)
 
@@ -86,15 +86,15 @@ class Federate():
         uri = local_default_uri
         self.mddb = MetaDB(uri_string=uri)
 
-    def create_federate(self):
+    def create_federate(self, scenario_name):
         """
         Creates and defines both the instance of this Federate class as well
         as the HELICS federate object (self.hfed).
         """
-        self.initialize_fed()
+        self.initialize_fed(scenario_name)
         self.create_helics_fed()
     
-    def initialize_fed(self):
+    def initialize_fed(self, scenario_name):
         """
         Any initialization that cannot take place on instantiation of
         the federate object should be done here. In this case, 
@@ -102,7 +102,7 @@ class Federate():
         metadata database have to take place after connecting to
         said database.
         """
-        fed_def = self.mddb.get_dict(case_name, name="federation")
+        fed_def = self.mddb.get_dict(scenario_name, name="federation")
         self.sim_step_size = fed_def[self.fed_name]["sim step size"]
         self.max_sim_time = fed_def["max sim time"]
 
@@ -112,8 +112,9 @@ class Federate():
         method creates the HELICS federate.
 
         """
-        case_name = self.mddb.get_dict(self.main_collection, name="current case")["current case"]
-        fed_def = self.mddb.get_dict(case_name, name="federation")[self.fed_name]
+        scenario_name = self.mddb.get_dict(self.main_collection, name="scenario_dictionary")["current scenario"]
+        scenario_def = self.mddb.get_dict(self.main_collection, name="scenario_dictionary")["scenarios"][scenario_name]
+        fed_def = scenario_def["federation"][self.fed_name]
         if fed_def["federate type"] == "value":
             self.hfed = h.helicsCreateValueFederateFromConfig(json.dumps(fed_def["HELICS config"]))
         elif fed_def["federate type"] == "message":
@@ -121,7 +122,8 @@ class Federate():
         elif fed_def["federate type"] == "combo":
             self.hfed = h.helicsCreateCombinationFederateFromConfig(json.dumps(fed_def["HELICS config"]))
         else:
-            raise ValueError(f"Federate type \'{fed_def['federate type']}\' not allowed; must be 'value','message', or 'combo'.")
+            raise ValueError(f"Federate type \'{fed_def['federate type']}\' not allowed; must be
+                              'value','message', or 'combo'.")
 
     def run_cosim_loop(self):
         """
@@ -291,6 +293,6 @@ class Federate():
 if __name__ == "__main__":
     test_fed = Federate()
     test_fed.connect_to_metadataDB()
-    test_fed.create_federate()
+    test_fed.create_federate(test_fed.scenario_name)
     test_fed.run_cosim_loop()
     test_fed.destroy_federate()
