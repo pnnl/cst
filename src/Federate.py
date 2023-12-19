@@ -61,6 +61,9 @@ class Federate():
         self.granted_time
         self.data_from_federation
         self.data_to_federation
+        self.inputs = {}
+        self.pubs = {}
+        self.endpoints = {}
 
         # Initialize the structure of the interface dictionaries
         self.data_from_federation["inputs"] = {}
@@ -109,7 +112,8 @@ class Federate():
     def create_helics_fed(self):
         """
         Using the HELICS configuration document from the metadataDB, this
-        method creates the HELICS federate.
+        method creates the HELICS federate. It also populates class 
+        attributes that define the inputs, pubs, and endpoints
 
         """
         scenario_name = self.mddb.get_dict(self.main_collection, name="scenario_dictionary")["current scenario"]
@@ -124,6 +128,22 @@ class Federate():
         else:
             raise ValueError(f"Federate type \'{fed_def['federate type']}\' not allowed; must be
                               'value','message', or 'combo'.")
+        
+        # Provide internal copies of the HELICS interfaces for convenience
+        # during debugging.
+        if "publications" in fed_def["HELICS config"].keys():
+            for pub in fed_def["HELICS config"]["publications"]:
+                self.pubs[pub["key"]] = pub
+        if "subscriptions" in fed_def["HELICS config"].keys():
+            for sub in fed_def["HELICS config"]["subscriptions"]:
+                self.inputs[sub["key"]] = sub
+        if "inputs" in fed_def["HELICS config"].keys():
+            for input in fed_def["HELICS config"]["inputs"]:
+                self.inputs[input["name"]] = input
+        if "endpoints" in fed_def["HELICS config"].keys():
+            for ep in fed_def["HELICS config"]["endpoints"]:
+                self.endpoints[ep["name"]] = ep
+            
 
     def run_cosim_loop(self):
         """
