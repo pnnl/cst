@@ -178,7 +178,7 @@ class MetaDB:
             raise UserWarning("Using provided object ID (and not provided name) to to get dictionary.")
             doc = self.db[collection_name].find_one({"_id": object_id})
         elif dict_name is not None:
-            doc = self.db[collection].find_one({_cu_dict_name: dict_name})
+            doc = self.db[collection_name].find_one({_cu_dict_name: dict_name})
             if not doc:
                 raise NameError(f"{dict_name} does not exist in collection {collection_name} and cannot be retrieved.")
         elif object_id is not None:

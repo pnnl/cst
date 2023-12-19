@@ -50,17 +50,17 @@ class Federate():
     a given time-step.
     """
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         self.hfed = None
         self.mddb = None
         self.main_collection = "main"
         self.fed_name = None
         self.sim_step_size = -1
         self.max_sim_time = -1
-        self.next_requested_time
-        self.granted_time
-        self.data_from_federation
-        self.data_to_federation
+        self.next_requested_time = None
+        self.granted_time = None
+        self.data_from_federation = {}
+        self.data_to_federation = {}
 
         # Initialize the structure of the interface dictionaries
         self.data_from_federation["inputs"] = {}
@@ -84,7 +84,7 @@ class Federate():
         """
         local_default_uri = 'mongodb://localhost:27017'
         uri = local_default_uri
-        self.mddb = MetaDB(uri_string=uri)
+        self.mddb = mddb.MetaDB(uri_string=uri)
 
     def create_federate(self):
         """
@@ -102,9 +102,9 @@ class Federate():
         metadata database have to take place after connecting to
         said database.
         """
-        fed_def = self.mddb.get_dict(case_name, name="federation")
+        fed_def = self.mddb.get_dict(self.case_name, name="federation")
         self.sim_step_size = fed_def[self.fed_name]["sim step size"]
-        self.max_sim_time = fed_def["max sim time"]
+        self.max_sim_time = fed_def["max sim time"]       
 
     def create_helics_fed(self):
         """
