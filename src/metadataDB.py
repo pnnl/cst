@@ -9,6 +9,7 @@ from pymongo import MongoClient
 import gridfs
 import pprint
 import logging
+import helics_messages as hm
 
 logger = logging.getLogger(__name__)
 pp = pprint.PrettyPrinter(indent=4, )
@@ -17,22 +18,21 @@ pp = pprint.PrettyPrinter(indent=4, )
 class MetaDB:
     """
     """
-    _cu_dict_name = 'cu_metadB_dok'
+    _cu_dict_name = 'cu_meta'
 
-    def __init__(self, uri_string=None):
+    def __init__(self, uri: str = None, name: str = None):
         self.collections = None
-        collections = []
-        db = None
-        file_collection_name = "cu_file_collection"
-        fs = None 
-        
-        if uri_string is not None:
-            self.client = self._connect_to_database(uri_string)
+
+        if uri is not None:
+            self.client = self._connect_to_database(uri)
         else:
             self.client = self._connect_to_database()
 
-        self.db = self.client.metadataDB
-        self.fs = gridfs.GridFS(self.db)        
+        if name is not None:
+            self.db = self.client[name]
+        else:
+            self.db = self.client["meta_db"]
+        # self.fs = gridfs.GridFS(self.db)
 
     def _open_file(self, file_path, mode='r'):
         """
@@ -71,7 +71,7 @@ class MetaDB:
         Doesn't throw an error if the name is not unique and let's the calling
         method decide what to do with it.
         """
-        for doc in self.db[collection_name].find({}, {"_id": 1, self._cu_dict_name: 1}):
+        for doc in self.db[collection_name].d.find({}, {"_id": 1, self._cu_dict_name: 1}):
             if doc[self._cu_dict_name] == new_name:
                 return False 
             else:
@@ -103,11 +103,9 @@ class MetaDB:
         JSON to fill this role.
         """
         id_dict = {"collection name": name}
-        self.db[name]
-        self.db.insert_one(id_dict)
-        self.collections = self.get_collection_names()
-
-        return name
+        collection = self.db[name]
+        collection.insert_one(id_dict)
+        return collection
 
     def update_collection_names(self):
         """
@@ -115,14 +113,14 @@ class MetaDB:
         As you can see in the code below, this is pure syntax sugar.
         """
         self.collections = self.db.list_collection_names()
-
         return self.collections
 
     def get_collection_document_names(self, collection):
         """
         """
         doc_names = []
-        for doc in self.db[self.collection_name].find({}, {"_id": 1, self._cu_dict_name: 1}):
+        for doc in (self.db[self.collection_name].
+                find({}, {"_id": 1, self._cu_dict_name: 1})):
             doc_names.append(doc._cu_dict_name)
 
         return doc_names
@@ -143,10 +141,11 @@ class MetaDB:
         it to the collection (the assumption is that "cu_metadB_dok" will 
         always be a unique field in the dictionary).
         """
-        if self._check_unique_doc_name():
+        if self._check_unique_doc_name(collection_name, dict_name):
             dict_to_add[self._cu_dict_name] = dict_name
         else:
             raise NameError(f"{dict_name} is not unique in collection {collection_name} and cannot be added.")
+
         obj_id = self.db[collection_name].insert_one(dict_to_add).inserted_id
         
         return str(obj_id)
@@ -201,7 +200,13 @@ class MetaDB:
             doc = self.db[collection_name].replace({"_id": object_id}, updated_dict)
 
         return str(doc["_id"])
-    
+
+
+def scenarioToJson(federation: str, start: str, stop: str):
+    return {"federation": federation,
+            "start time": start,
+            "stop time": stop}
+
 
 if __name__ == "__main__":
     """ 
@@ -212,6 +217,38 @@ if __name__ == "__main__":
     docker run --name mongodb -d -p 27017:27017 mongodb/mongodb-community-server:$MONGODB_VERSION
     If no version number is important the tag MONGODB_VERSION=latest can be used
     """
-    local_default_uri = 'mongodb://localhost:27017'
-    uri = local_default_uri
-    metadb = MetaDB(uri_string=uri)
+    local_uri = 'mongodb://localhost:27017'
+    db_name = "copper"
+    fed = "federates"
+    scr = "scenarios"
+    db = MetaDB(local_uri, db_name)
+    scenarios = db.add_collection(fed)
+    federates = db.add_collection(scr)
+
+    config = hm.HelicsMsg("Battery", 30)
+    config.config("core_type", "zmq")
+    config.config("log_level", "warning")
+    config.config("period", 60)
+    config.config("uninterruptible", False)
+    config.config("terminate_on_error", True)
+    config.config("wait_for_current_time_update", True)
+    config.pubs_e(True, "Battery/EV1_current", "double", "A")
+    config.subs_e(True, "EVehicle/EV1_voltage", "double", "V")
+
+    config = hm.HelicsMsg("EVehicle", 30)
+    config.config("core_type", "zmq")
+    config.config("log_level", "warning")
+    config.config("period", 60)
+    config.config("uninterruptible", False)
+    config.config("terminate_on_error", True)
+    config.config("wait_for_current_time_update", True)
+    config.subs_e(True, "Battery/EV1_current", "double", "A")
+    config.pubs_e(True, "EVehicle/EV1_voltage", "double", "V")
+
+    scenario_name = "TE30"
+    federate_name = "ea1ep1g1s1t1w1"
+    scenario = scenarioToJson(federate_name, "2023-12-07T15:31:27−07:00", "2023-12-07T15:31:27−07:00")
+    db.add_dict(fed, scenario_name, scenario)
+
+    print(db.client.list_database_names())
+

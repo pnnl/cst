@@ -9,7 +9,13 @@ mitch.pelton@pnnl.gov
 """
 
 import Federate as Fed
+import pos
+import psycopg2
 
+open log
+with open(file_name, 'r', encoding='utf-8') as json_file:
+    config = json.load(json_file)
+conn = psycopg2.connect("dbname=suppliers user=postgres password=postgres")
 
 def update_internal_model(self):
     pass

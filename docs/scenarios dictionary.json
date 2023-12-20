@@ -4,12 +4,12 @@
         "<user-defined scenario name1>": {
             "simulation start time": "<ISO 8601 string: 2023-12-07T15:31:27−07:00>",
             "simulation stop stime": "<ISO 8601 string: 2023-12-07T15:31:27−07:00>",
-            "federation": "<See definintion in federation.json, like TE30>"
+            "federation": "<See definition in federation.json, like TE30>"
         },
         "<user-defined scenario name2>": {
             "simulation start time": "<ISO 8601 string: 2023-12-07T15:31:27−07:00>",
             "simulation stop stime": "<ISO 8601 string: 2023-12-07T15:31:27−07:00>",
-            "federation": "<See definintion in federation.json, like TE@30>"
+            "federation": "<See definition in federation.json, like TE100>"
         }
     }
 }
