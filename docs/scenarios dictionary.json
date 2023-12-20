@@ -1,16 +1,15 @@
 {
-    "name": "scenario dictionary",
-    "current scenario": "<dictionary key (string) in 'scenarios' dictionary of the currently simulated scenario>",
+    "name": "<scenario dictionary name>",
     "scenarios": {
-        "<user-defined scenario name>": {
+        "<user-defined scenario name1>": {
             "simulation start time": "<ISO 8601 string: 2023-12-07T15:31:27−07:00>",
             "simulation stop stime": "<ISO 8601 string: 2023-12-07T15:31:27−07:00>",
-            "images":[
-                "mongodb/mongodb-community-server",
-                "postgres",
-                "python/3.11.7-slim-bullseye"
-            ],
-            "federation": "<See definintion in federation.json>"
+            "federation": "<See definintion in federation.json, like TE30>"
+        },
+        "<user-defined scenario name2>": {
+            "simulation start time": "<ISO 8601 string: 2023-12-07T15:31:27−07:00>",
+            "simulation stop stime": "<ISO 8601 string: 2023-12-07T15:31:27−07:00>",
+            "federation": "<See definintion in federation.json, like TE@30>"
         }
     }
 }

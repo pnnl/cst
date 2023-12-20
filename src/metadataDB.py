@@ -75,7 +75,6 @@ class MetaDB:
         method decide what to do with it.
         """
         for doc in self.db[collection_name].find({}):
-            print(doc)
             if doc[self._cu_dict_name] == new_name:
                 return False 
             else:
@@ -92,8 +91,10 @@ class MetaDB:
             raise AttributeError("Must provide the name or object ID of the dictionary to be retrieved.")
         elif dict_name is not None and object_id is not None:
             self.db[collection_name].delete_one({"_id": object_id})
+            self.db[collection_name].delete_one({"_id": object_id})
             raise UserWarning("Using provided object ID (and not provided name) to remove document.")
         elif dict_name is not None:
+            doc = self.db[collection_name].delete_one({self._cu_dict_name: dict_name})
             doc = self.db[collection_name].delete_one({self._cu_dict_name: dict_name})
             if not doc:
                 raise NameError(f"{dict_name} does not exist in collection {collection_name} and cannot be retrieved.")
@@ -113,6 +114,10 @@ class MetaDB:
                    self._cu_dict_name: "collection name"}
         self.db[name].insert_one(id_dict)
         self.collections = self.db.list_collection_names()
+        id_dict = {"collection name": name,
+                   self._cu_dict_name: "collection name"}
+        self.db[name].insert_one(id_dict)
+        self.collections = self.db.list_collection_names()
 
         return name
 
@@ -127,10 +132,13 @@ class MetaDB:
 
         return self.collections
 
+
     def get_collection_document_names(self, collection):
         """
         """
         doc_names = []
+        for doc in self.db[collection].find({}):
+            doc_names.append(doc[self._cu_dict_name])
         for doc in self.db[collection].find({}):
             doc_names.append(doc[self._cu_dict_name])
 
@@ -155,6 +163,7 @@ class MetaDB:
         always be a unqiue field in the dictionary). 
         """
         if self._check_unique_doc_name(collection_name, dict_name):
+        if self._check_unique_doc_name(collection_name, dict_name):
             dict_to_add[self._cu_dict_name] = dict_name
         else:
             raise NameError(f"{dict_name} is not unqiue in collection {collection_name} and cannot be added.")
@@ -175,8 +184,10 @@ class MetaDB:
             raise AttributeError("Must provide the name or object ID of the dictionary to be retrieved.")
         elif dict_name is not None and object_id is not None:
             doc = self.db[collection_name].find_one({"_id": object_id})
+            doc = self.db[collection_name].find_one({"_id": object_id})
             raise UserWarning("Using provided object ID (and not provided name) to to get dictionary.")
         elif dict_name is not None:
+            doc = self.db[collection_name].find_one({self._cu_dict_name: dict_name})
             doc = self.db[collection_name].find_one({self._cu_dict_name: dict_name})
             if not doc:
                 raise NameError(f"{dict_name} does not exist in collection {collection_name} and cannot be retrieved.")
@@ -202,9 +213,10 @@ class MetaDB:
         if dict_name is None and object_id is None:
             raise AttributeError("Must provide the name or object ID of the dictionary to be modified.")
         elif dict_name is not None and object_id is not None:
-            raise UserWarning("Using provided object ID (and not provided name) to update database.")
             doc = self.db[collection_name].replace({"_id": object_id}, updated_dict)
+            raise UserWarning("Using provided object ID (and not provided name) to update database.")
         elif dict_name is not None:
+            doc = self.db[collection_name].find_one({self._cu_dict_name: dict_name})
             doc = self.db[collection_name].find_one({self._cu_dict_name: dict_name})
             if doc:
                 doc = self.db[collection_name].replace({self._cu_dict_name: dict_name}, updated_dict)
@@ -212,7 +224,6 @@ class MetaDB:
                 raise NameError(f"{dict_name} does not exist in collection {collection_name} and cannot be updated.")
         elif object_id is not None:
             doc = self.db[collection_name].replace({"_id": object_id}, updated_dict)
-        
 
         return str(doc["_id"])
     
