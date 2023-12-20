@@ -3,7 +3,7 @@ x-airflow-common:
   &airflow-common
   build:
     context: .
-    dockerfile: airflow-dockerfile
+    dockerfile: airflow.dockerfile
   environment:
     &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: CeleryExecutor
@@ -28,6 +28,7 @@ x-airflow-common:
     - ./dags:/opt/airflow/dags
     - ./logs:/opt/airflow/logs
     - ./plugins:/opt/airflow/plugins
+    - ./examples:/opt/example
 
   env_file:
     - ./.env
@@ -109,8 +110,10 @@ services:
     command: celery worker
     healthcheck:
       test:
-        - "CMD-SHELL"
-        - 'celery --app airflow.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}"'
+        [
+          "CMD-SHELL"
+          'celery --app airflow.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}"'
+        ]
       interval: 10s
       timeout: 10s
       retries: 5
