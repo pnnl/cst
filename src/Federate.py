@@ -7,7 +7,7 @@ Copper.
 @author: Trevor Hardy
 trevor.hardy@pnnl.gov
 """
-
+import datetime
 import json
 import logging
 
@@ -29,7 +29,7 @@ class Federate:
     and get a working federate.
 
     This class gets its configuration from the metadata database following
-    the standard Copper definition of the "federation" document. 
+    the standard Copper definition of the "federations" document.
 
     To be overly clear, this class is intended to be sub-classed and overloaded
     to allow users to customize it as necessary. If nothing else, the 
@@ -53,13 +53,21 @@ class Federate:
     a given time-step.
     """
 
+    mongo_uri = 'mongodb://localhost:27017'
+    copper = "copper"
+    federations = "federations"
+    scenarios = "scenarios"
+
     def __init__(self):
+        self.config = None
+        self.federate_type = None
         self.hfed = None
         self.mddb = None
-        self.main_collection = "main"  # TODO: arbitrary name
+        self.start = None
+        self.stop = None
         self.fed_name = None
-        self.sim_step_size = -1
-        self.max_sim_time = -1
+        self.time_step = -1
+        self.stop_time = -1
         self.next_requested_time = -1
         self.granted_time = -1
         self.data_from_federation = {}
@@ -88,29 +96,63 @@ class Federate:
         management data. This method connects to that database and makes it 
         available for other methods in this class.
         """
-        local_default_uri = 'mongodb://localhost:27017'
-        uri = local_default_uri
-        self.mddb = metadataDB.MetaDB(uri_string=uri)
+        self.mddb = metadataDB.MetaDB(self.mongo_uri, self.copper)
 
-    def create_federate(self, scenario_name):
+    def create_federate(self, scenario_name, federate_name):
         """
         Creates and defines both the instance of this class,
         and the HELICS federate object (self.hfed).
-        """
-        self.initialize_fed(scenario_name)
-        self.create_helics_fed()
-
-    def initialize_fed(self, scenario_name):
-        """
         Any initialization that cannot take place on instantiation of
         the federate object should be done here. In this case, 
         initializing any class attribute values that come from the 
         metadata database have to take place after connecting to
         said database.
         """
-        fed_def = self.mddb.get_dict(scenario_name, name="federation")
-        self.sim_step_size = fed_def[self.fed_name]["sim step size"]
-        self.max_sim_time = fed_def["max sim time"]
+
+        self.connect_to_metadataDB()
+        if scenario_name is None or federate_name is None:
+            raise NameError("scenario_name is None or federate_name is None")
+        scenario_def = self.mddb.get_dict(self.scenarios, None, scenario_name)
+        federation_name = scenario_def["federation"]
+        self.start = scenario_def["start_time"]
+        self.stop = scenario_def["stop_time"]
+
+        self.fed_name = federate_name
+        fed_def = self.mddb.get_dict(self.federations, None, federation_name)["federation"]
+
+        if self.fed_name == "cu_logger":
+            self.federate_type = "message"
+            self.time_step = 30
+            publications = []
+            for fed in fed_def:
+                config = fed_def[fed]["HELICS_config"]
+                if "publications" in config.keys():
+                    for pub in config["publications"]:
+                        publications.append(pub)
+            self.config = {
+                "name": "cu_logger",
+                "period": 30,
+                "log_level": "warning",
+                "subscriptions": publications
+            }
+            # self.image = fed_def[self.fed_name]["image"]
+        else:
+            self.federate_type = fed_def[self.fed_name]["federate_type"]
+            # self.time_step = fed_def[self.fed_name]["time_step"]
+            self.time_step = fed_def[self.fed_name]["HELICS_config"]["period"]
+            self.config = fed_def[self.fed_name]["HELICS_config"]
+            # self.image = fed_def[self.fed_name]["image"]
+
+        # setting max in seconds
+        ep = datetime.datetime(1970, 1, 1)
+        # %:z in version  python 3.12, for now, no time offsets -
+        s = datetime.datetime.strptime(self.start, '%Y-%m-%dT%H:%M:%S')
+        e = datetime.datetime.strptime(self.stop, '%Y-%m-%dT%H:%M:%S')
+        sIdx = (s - ep).total_seconds()
+        eIdx = (e - ep).total_seconds()
+        self.stop_time = int((eIdx - sIdx))
+
+        self.create_helics_fed()
 
     def create_helics_fed(self):
         """
@@ -119,32 +161,29 @@ class Federate:
         attributes that define the inputs, pubs, and endpoints
 
         """
-        scenario_name = self.mddb.get_dict(self.main_collection, name="scenario_dictionary")["current scenario"]
-        scenario_def = self.mddb.get_dict(self.main_collection, name="scenario_dictionary")["scenarios"][scenario_name]
-        fed_def = scenario_def["federation"][self.fed_name]
-        if fed_def["federate type"] == "value":
-            self.hfed = h.helicsCreateValueFederateFromConfig(json.dumps(fed_def["HELICS config"]))
-        elif fed_def["federate type"] == "message":
-            self.hfed = h.helicsCreateMessageFederateFromConfig(json.dumps(fed_def["HELICS config"]))
-        elif fed_def["federate type"] == "combo":
-            self.hfed = h.helicsCreateCombinationFederateFromConfig(json.dumps(fed_def["HELICS config"]))
+        if self.federate_type == "value":
+            self.hfed = h.helicsCreateValueFederateFromConfig(json.dumps(self.config))
+        elif self.federate_type == "message":
+            self.hfed = h.helicsCreateMessageFederateFromConfig(json.dumps(self.config))
+        elif self.federate_type == "combo":
+            self.hfed = h.helicsCreateCombinationFederateFromConfig(json.dumps(self.config))
         else:
-            raise ValueError(f"Federate type \'{fed_def['federate type']}\'"
+            raise ValueError(f"Federate type \'{self.federate_type}\'"
                              f" not allowed; must be 'value', 'message', or 'combo'.")
 
         # Provide internal copies of the HELICS interfaces for convenience
         # during debugging.
-        if "publications" in fed_def["HELICS config"].keys():
-            for pub in fed_def["HELICS config"]["publications"]:
+        if "publications" in self.config.keys():
+            for pub in self.config["publications"]:
                 self.pubs[pub["key"]] = pub
-        if "subscriptions" in fed_def["HELICS config"].keys():
-            for sub in fed_def["HELICS config"]["subscriptions"]:
+        if "subscriptions" in self.config.keys():
+            for sub in self.config["subscriptions"]:
                 self.inputs[sub["key"]] = sub
-        if "inputs" in fed_def["HELICS config"].keys():
-            for put in fed_def["HELICS config"]["inputs"]:
+        if "inputs" in self.config.keys():
+            for put in self.config["inputs"]:
                 self.inputs[put["name"]] = put
-        if "endpoints" in fed_def["HELICS config"].keys():
-            for ep in fed_def["HELICS config"]["endpoints"]:
+        if "endpoints" in self.config.keys():
+            for ep in self.config["endpoints"]:
                 self.endpoints[ep["name"]] = ep
 
     def run_cosim_loop(self):
@@ -154,7 +193,7 @@ class Federate:
         """
         self.enter_initialization()
         self.enter_executing_mode()
-        while self.granted_time < self.max_sim_time:
+        while self.granted_time < self.stop_time:
             self.simulate_next_step()
 
     def enter_initialization(self):
@@ -194,7 +233,7 @@ class Federate:
         to overload the default calculation method if they need something 
         more complex.
         """
-        self.next_requested_time = self.granted_time + self.sim_step_size
+        self.next_requested_time = self.granted_time + self.time_step
         return self.next_requested_time
 
     def request_time(self, requested_time: float):
@@ -311,7 +350,6 @@ class Federate:
 
 if __name__ == "__main__":
     test_fed = Federate()
-    test_fed.connect_to_metadataDB()
-    test_fed.create_federate(test_fed.scenario_name)
+    test_fed.create_federate("TE30", "Battery")
     test_fed.run_cosim_loop()
     test_fed.destroy_federate()

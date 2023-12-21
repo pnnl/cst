@@ -54,8 +54,7 @@ if __name__ == "__main__":
     check_version()
 
     test_fed = Fed.Federate()
+    test_fed.create_federate("TE30", "cu_logger")
     test_fed.update_internal_model = update_internal_model
-    test_fed.connect_to_metadataDB()
-    test_fed.create_federate(test_fed.scenario_name)
     test_fed.run_cosim_loop()
     test_fed.destroy_federate()
