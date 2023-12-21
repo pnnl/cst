@@ -68,6 +68,8 @@ class Federate:
         self.inputs = {}
         self.pubs = {}
         self.endpoints = {}
+        self.debug = True
+        self.errors = []
 
 
         # Initialize the structure of the interface dictionaries
@@ -76,12 +78,8 @@ class Federate:
         self.data_to_federation["publications"] = {}
         self.data_to_federation["endpoints"] = {}
 
-        # stackoverflow said I could do this and allow users to instantiate
-        # this doing something like:
-        # fed = Federate(fed_name = "heat_pump12")
-        # and this would set self.fed_name = "heat_pump12"
-        # Seems like a good idea to me; I hope it works.
-        # self.__dict__.update(kwargs)
+        # if not wanting to debug, add debug=False as an argument
+        self.__dict__.update(kwargs)
 
     def connect_to_metadataDB(self):
         """
@@ -92,15 +90,23 @@ class Federate:
         """
         local_default_uri = 'mongodb://localhost:27017'
         uri = local_default_uri
-        self.mddb = MetaDB(uri_string=uri)
+        try:
+            self.mddb = MetaDB(uri=uri)
+        except Exception as e:
+            self.errors.append(str(e))
+            return
 
     def create_federate(self):
         """
         Creates and defines both the instance of this class,
         and the HELICS federate object (self.hfed).
         """
-        scenario_name = self.create_helics_fed()
-        self.initialize_fed(scenario_name)
+        try:
+            scenario_name = self.create_helics_fed()
+            self.initialize_fed(scenario_name)
+        except Exception as e:
+            self.errors.append(str(e))
+            return
     
     def initialize_fed(self, scenario_name):
         """
@@ -149,20 +155,19 @@ class Federate:
             raise ValueError(f"Federate type \'{fed_def['federate type']}\'"
                              f" not allowed; must be 'value', 'message', or 'combo'.")
 
-        # Provide internal copies of the HELICS interfaces for convenience
-        # during debugging.
-        if "publications" in fed_def["HELICS config"].keys():
-            for pub in fed_def["HELICS config"]["publications"]:
-                self.pubs[pub["key"]] = pub
-        if "subscriptions" in fed_def["HELICS config"].keys():
-            for sub in fed_def["HELICS config"]["subscriptions"]:
-                self.inputs[sub["key"]] = sub
-        if "inputs" in fed_def["HELICS config"].keys():
-            for put in fed_def["HELICS config"]["inputs"]:
-                self.inputs[put["name"]] = put
-        if "endpoints" in fed_def["HELICS config"].keys():
-            for ep in fed_def["HELICS config"]["endpoints"]:
-                self.endpoints[ep["name"]] = ep
+        if self.debug:
+            if "publications" in fed_def["HELICS config"].keys():
+                for pub in fed_def["HELICS config"]["publications"]:
+                    self.pubs[pub["key"]] = pub
+            if "subscriptions" in fed_def["HELICS config"].keys():
+                for sub in fed_def["HELICS config"]["subscriptions"]:
+                    self.inputs[sub["key"]] = sub
+            if "inputs" in fed_def["HELICS config"].keys():
+                for put in fed_def["HELICS config"]["inputs"]:
+                    self.inputs[put["name"]] = put
+            if "endpoints" in fed_def["HELICS config"].keys():
+                for ep in fed_def["HELICS config"]["endpoints"]:
+                    self.endpoints[ep["name"]] = ep
 
         return scenario_name
 
@@ -171,11 +176,29 @@ class Federate:
         This is a generic HELICS co-sim loop based on a pre-defined maximum
         simulation time. 
         """
-        self.granted_time = 0
-        self.enter_intialization()
-        self.enter_executing_mode()
-        while self.granted_time < self.max_sim_time:
-            self.simulate_next_step()
+        # check that the federate is set up to run a cosim
+        try:
+            if self.mddb == None:
+                curr_len = len(self.errors)
+                self.connect_to_metadataDB()
+                if len(self.errors) > curr_len:
+                    raise Exception(self.errors[curr_len])
+            if self.hfed == None:
+                curr_len = len(self.errors)
+                self.create_federate()
+                if len(self.errors) > curr_len:
+                    raise Exception(self.errors[curr_len])
+            self.granted_time = 0
+            self.enter_initialization()
+            self.enter_executing_mode()
+            while self.granted_time < self.max_sim_time:
+                self.simulate_next_step()
+        except h.HelicsException as e:
+            self.errors.append(f"HelicsException at time {self.granted_time}: {e}")
+            return
+        except Exception as e:
+            self.errors.append(f"Exception: {e}")
+            return
 
     def enter_initialization(self):
         """
@@ -245,11 +268,11 @@ class Federate:
             if put.name[0:7] == "_input_":
                 # The name is auto-generated by HELICS and is a subscription
                 self.data_from_federation["inputs"][put.target] = put.value
-                print(f" received {input.value}")
-                self.data_from_federation["inputs"][input.target] = input.value
+                logger.debug(f" {self.fed_name} received {put.value} from {put.name}")
+                self.data_from_federation["inputs"][put.target] = put.value
             else:
-                print(f" received {input.value}")
-                self.data_from_federation["inputs"][input.name] = input.value
+                logger.debug(f" {self.fed_name} received {put.value} from {put.name}")
+                self.data_from_federation["inputs"][put.name] = put.value
         
         # Endpoints
         for idx in range(0, self.hfed.n_endpoints):
@@ -264,6 +287,8 @@ class Federate:
         This is entirely user-defined code and is intended to be defined by
         sub-classing and overloading.
         """
+        if not self.debug:
+            raise NotImplementedError("Subclass from Federate and write code to update internal model")
         # Doing something silly for testing purposes
         # Get a value from an arbitrary input; I hope its a number
         if len(self.data_from_federation["inputs"].keys()) >= 1:
@@ -308,9 +333,9 @@ class Federate:
 
         # Publications
         for key, value in self.data_to_federation["publications"].items():
-            print(f"publication {key}, {value}")
             pub = self.hfed.get_publication_by_name(key)
             pub.publish(value)
+            logger.debug(f" {self.fed_name} publication {key}, {value}")
 
         # Endpoints
         for key, value in self.data_to_federation["endpoints"].items():
@@ -330,23 +355,30 @@ class Federate:
         at more or less the same wall-clock time.
 
         """
-        logger.debug(f'{h.helicsFederateGetName(self.hfed)} being destroyed, max time = {h.HELICS_TIME_MAXTIME}')
-        logger.debug(f'{h.helicsFederateGetName(self.hfed)} being destroyed, max time = {h.HELICS_TIME_MAXTIME}')
-        requested_time = int(h.HELICS_TIME_MAXTIME)
-        h.helicsFederateClearMessages(self.hfed)
-        granted_time = h.helicsFederateRequestTime(self.hfed, requested_time)
-        logger.info(f'{h.helicsFederateGetName(self.hfed)} granted time {granted_time}')
-        granted_time = h.helicsFederateRequestTime(self.hfed, requested_time)
-        logger.info(f'{h.helicsFederateGetName(self.hfed)} granted time {granted_time}')
-        h.helicsFederateDisconnect(self.hfed)
-        h.helicsFederateFree(self.hfed)
-        # h.helicsCloseLibrary()
-        logger.debug(f'Federate {h.helicsFederateGetName(self.hfed)} finalized')
+        try:
+            logger.debug(f'{h.helicsFederateGetName(self.hfed)} being destroyed, max time = {h.HELICS_TIME_MAXTIME}')
+            logger.debug(f'{h.helicsFederateGetName(self.hfed)} being destroyed, max time = {h.HELICS_TIME_MAXTIME}')
+            requested_time = int(h.HELICS_TIME_MAXTIME)
+            h.helicsFederateClearMessages(self.hfed)
+            granted_time = h.helicsFederateRequestTime(self.hfed, requested_time)
+            logger.info(f'{h.helicsFederateGetName(self.hfed)} granted time {granted_time}')
+            granted_time = h.helicsFederateRequestTime(self.hfed, requested_time)
+            logger.info(f'{h.helicsFederateGetName(self.hfed)} granted time {granted_time}')
+            h.helicsFederateDisconnect(self.hfed)
+            h.helicsFederateFree(self.hfed)
+            # h.helicsCloseLibrary()
+            logger.debug(f'Federate {h.helicsFederateGetName(self.hfed)} finalized')
+        except Exception as e:
+            self.errors.append(str(e))
 
 
 if __name__ == "__main__":
     test_fed = Federate()
     test_fed.connect_to_metadataDB()
-    test_fed.create_federate(test_fed.scenario_name)
+    test_fed.create_federate()
     test_fed.run_cosim_loop()
     test_fed.destroy_federate()
+    if len(test_fed.errors) > 0:
+        logger.warning("Federate failed to execute due to the following errors:")
+        for error in test_fed.errors:
+            logger.warning(error)
