@@ -4,7 +4,7 @@ Prototype metadata database API development
 @author Trevor Hardy
 @date 2023-11-30
 """
-
+import pymongo
 from pymongo import MongoClient
 import gridfs
 import pprint
@@ -166,6 +166,7 @@ class MetaDB:
             doc = self.db[collection_name].find_one({"_id": object_id})
         elif dict_name is not None:
             doc = self.db[collection_name].find_one({self._cu_dict_name: dict_name})
+            doc = self.db[collection_name].find_one({self._cu_dict_name: dict_name})
             if not doc:
                 raise NameError(f"{dict_name} does not exist in collection {collection_name} and cannot be retrieved.")
         elif object_id is not None:
@@ -193,6 +194,7 @@ class MetaDB:
             doc = self.db[collection_name].replace({"_id": object_id}, updated_dict)
         elif dict_name is not None:
             doc = self.db[collection_name].find_one({self._cu_dict_name: dict_name})
+            doc = self.db[collection_name].find_one({self._cu_dict_name: dict_name})
             if doc:
                 doc = self.db[collection_name].replace({self._cu_dict_name: dict_name}, updated_dict)
             else:
@@ -213,8 +215,8 @@ def scenarioToJson(federation: str, start: str, stop: str):
 
 if __name__ == "__main__":
     """ 
-    Main method for launching meta data class
-    First user's will need to set up docker desktop, install mongodb community: 
+    Main method for launching meta data class to ping local container of mongodb.
+    First user's will need to set up docker desktop (through the PNNL App Store), install mongodb community: 
     https://www.mongodb.com/docs/manual/tutorial/install-mongodb-community-with-docker/
     But run docker with the port number exposed to the host so that it can be pinged from outside the container: 
     docker run --name mongodb -d -p 27017:27017 mongodb/mongodb-community-server:$MONGODB_VERSION
