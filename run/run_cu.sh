@@ -1,0 +1,1 @@
+docker run -it --rm run_airflow-webserver bash

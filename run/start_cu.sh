@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source env
+source .env
 
 # Install yq (https://github.com/mikefarah/yq/#install) to parse the YAML file and retrieve the network name
 #NETWORK_NAME=$(yq eval '.networks' postgres-docker-compose.yaml | cut -f 1 -d':')
