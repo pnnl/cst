@@ -7,14 +7,13 @@ Copper.
 @author: Trevor Hardy
 trevor.hardy@pnnl.gov
 """
-
+import datetime
 import json
 import logging
 
 import helics as h
-import logging
-from metadataDB import MetaDB
-import json
+
+import metadataDB
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler())
@@ -30,7 +29,7 @@ class Federate:
     and get a working federate.
 
     This class gets its configuration from the metadata database following
-    the standard Copper definition of the "federation" document. 
+    the standard Copper definition of the "federations" document.
 
     To be overly clear, this class is intended to be sub-classed and overloaded
     to allow users to customize it as necessary. If nothing else, the 
@@ -54,13 +53,21 @@ class Federate:
     a given time-step.
     """
 
+    mongo_uri = 'mongodb://localhost:27017'
+    copper = "copper"
+    federations = "federations"
+    scenarios = "scenarios"
+
     def __init__(self, fed_name="", **kwargs):
+        self.config = None
+        self.federate_type = None
         self.hfed = None
         self.mddb = None
-        self.main_collection = "main"
+        self.start = None
+        self.stop = None
         self.fed_name = fed_name
-        self.sim_step_size = -1
-        self.max_sim_time = -1
+        self.time_step = -1
+        self.stop_time = -1
         self.next_requested_time = -1
         self.granted_time = -1
         self.data_from_federation = {}
@@ -70,7 +77,6 @@ class Federate:
         self.endpoints = {}
         self.debug = True
         self.errors = []
-
 
         # Initialize the structure of the interface dictionaries
         self.data_from_federation["inputs"] = {}
@@ -88,53 +94,87 @@ class Federate:
         management data. This method connects to that database and makes it 
         available for other methods in this class.
         """
-        local_default_uri = 'mongodb://localhost:27017'
-        uri = local_default_uri
         try:
-            self.mddb = MetaDB(uri=uri)
+            self.mddb = metadataDB.MetaDB(self.mongo_uri, self.copper)
         except Exception as e:
             self.errors.append(str(e))
             return
 
-    def create_federate(self):
+    def create_federate(self, scenario_name):
         """
         Creates and defines both the instance of this class,
         and the HELICS federate object (self.hfed).
-        """
-        try:
-            scenario_name = self.create_helics_fed()
-            self.initialize_fed(scenario_name)
-        except Exception as e:
-            self.errors.append(str(e))
-            return
-    
-    def initialize_fed(self, scenario_name):
-        """
         Any initialization that cannot take place on instantiation of
         the federate object should be done here. In this case, 
         initializing any class attribute values that come from the 
         metadata database have to take place after connecting to
         said database.
         """
-        fed_dict = self.mddb.get_dict(scenario_name, dict_name="federation")[self.fed_name]
-        helics_dict = fed_dict["HELICS config"]
-        self.sim_step_size = fed_dict["sim step size"]
-        self.max_sim_time = self.mddb.get_dict(scenario_name, dict_name="federation")["max sim time"]
-        if "publications" in helics_dict:
-            for pub in helics_dict['publications']:
+
+        self.connect_to_metadataDB()
+        if scenario_name is None:
+            raise NameError("scenario_name is None")
+        scenario_def = self.mddb.get_dict(self.scenarios, None, scenario_name)
+        federation_name = scenario_def["federation"]
+        self.start = scenario_def["start_time"]
+        self.stop = scenario_def["stop_time"]
+
+        fed_def = self.mddb.get_dict(self.federations, None, federation_name)["federation"]
+
+        if self.fed_name == "cu_logger":
+            self.federate_type = "message"
+            self.time_step = 30
+            publications = []
+            for fed in fed_def:
+                config = fed_def[fed]["HELICS_config"]
+                if "publications" in config.keys():
+                    for pub in config["publications"]:
+                        publications.append(pub)
+            self.config = {
+                "name": "cu_logger",
+                "period": 30,
+                "log_level": "warning",
+                "subscriptions": publications
+            }
+            # self.image = fed_def[self.fed_name]["image"]
+        else:
+            self.federate_type = fed_def[self.fed_name]["federate_type"]
+            # self.time_step = fed_def[self.fed_name]["time_step"]
+            self.time_step = fed_def[self.fed_name]["HELICS_config"]["period"]
+            self.config = fed_def[self.fed_name]["HELICS_config"]
+            # self.image = fed_def[self.fed_name]["image"]
+
+        # Provide internal copies of the HELICS interfaces for convenience during debugging.
+        if "publications" in self.config.keys():
+            for pub in self.config["publications"]:
+                self.pubs[pub["key"]] = pub
                 self.data_to_federation["publications"][pub['key']] = None
-        if "inputs" in helics_dict:
-            for inp in helics_dict['inputs']:
-                self.data_from_federation["inputs"][inp['key']] = None
-        if "subscriptions" in helics_dict:
-            for inp in helics_dict['subscriptions']:
-                self.data_from_federation["inputs"][inp['key']] = None
-        if 'endpoints' in helics_dict:
-            for ep in helics_dict['endpoints']:
-                if 'key' in helics_dict['endpoints'][ep]:
+        if "subscriptions" in self.config.keys():
+            for sub in self.config["subscriptions"]:
+                self.inputs[sub["key"]] = sub
+                self.data_from_federation["inputs"][sub['key']] = None
+        if "inputs" in self.config.keys():
+            for put in self.config["inputs"]:
+                self.inputs[put["name"]] = put
+                self.data_from_federation["inputs"][put['key']] = None
+        if "endpoints" in self.config.keys():
+            for ep in self.config["endpoints"]:
+                self.endpoints[ep["name"]] = ep
+                if 'key' in self.config['endpoints'][ep]:
                     self.data_to_federation['endpoints'][ep['key']] = None
-                if 'destination' in helics_dict['endpoints'][ep]:
+                if 'destination' in self.config['endpoints'][ep]:
                     self.data_from_federation['endpoints'][ep['key']] = None
+
+        # setting max in seconds
+        ep = datetime.datetime(1970, 1, 1)
+        # %:z in version  python 3.12, for now, no time offsets -
+        s = datetime.datetime.strptime(self.start, '%Y-%m-%dT%H:%M:%S')
+        e = datetime.datetime.strptime(self.stop, '%Y-%m-%dT%H:%M:%S')
+        sIdx = (s - ep).total_seconds()
+        eIdx = (e - ep).total_seconds()
+        self.stop_time = int((eIdx - sIdx))
+
+        self.create_helics_fed()
 
     def create_helics_fed(self):
         """
@@ -143,55 +183,28 @@ class Federate:
         attributes that define the inputs, pubs, and endpoints
 
         """
-        scenario_name = self.mddb.get_dict(self.main_collection, dict_name="current scenario")["current scenario"]
-        fed_def = self.mddb.get_dict(scenario_name, dict_name="federation")[self.fed_name]
-        if fed_def["federate type"] == "value":
-            self.hfed = h.helicsCreateValueFederateFromConfig(json.dumps(fed_def["HELICS config"]))
-        elif fed_def["federate type"] == "message":
-            self.hfed = h.helicsCreateMessageFederateFromConfig(json.dumps(fed_def["HELICS config"]))
-        elif fed_def["federate type"] == "combo":
-            self.hfed = h.helicsCreateCombinationFederateFromConfig(json.dumps(fed_def["HELICS config"]))
+        if self.federate_type == "value":
+            self.hfed = h.helicsCreateValueFederateFromConfig(json.dumps(self.config))
+        elif self.federate_type == "message":
+            self.hfed = h.helicsCreateMessageFederateFromConfig(json.dumps(self.config))
+        elif self.federate_type == "combo":
+            self.hfed = h.helicsCreateCombinationFederateFromConfig(json.dumps(self.config))
         else:
-            raise ValueError(f"Federate type \'{fed_def['federate type']}\'"
+            raise ValueError(f"Federate type \'{self.federate_type}\'"
                              f" not allowed; must be 'value', 'message', or 'combo'.")
-
-        if self.debug:
-            if "publications" in fed_def["HELICS config"].keys():
-                for pub in fed_def["HELICS config"]["publications"]:
-                    self.pubs[pub["key"]] = pub
-            if "subscriptions" in fed_def["HELICS config"].keys():
-                for sub in fed_def["HELICS config"]["subscriptions"]:
-                    self.inputs[sub["key"]] = sub
-            if "inputs" in fed_def["HELICS config"].keys():
-                for put in fed_def["HELICS config"]["inputs"]:
-                    self.inputs[put["name"]] = put
-            if "endpoints" in fed_def["HELICS config"].keys():
-                for ep in fed_def["HELICS config"]["endpoints"]:
-                    self.endpoints[ep["name"]] = ep
-
-        return scenario_name
 
     def run_cosim_loop(self):
         """
         This is a generic HELICS co-sim loop based on a pre-defined maximum
         simulation time. 
         """
-        # check that the federate is set up to run a cosim
         try:
-            if self.mddb == None:
-                curr_len = len(self.errors)
-                self.connect_to_metadataDB()
-                if len(self.errors) > curr_len:
-                    raise Exception(self.errors[curr_len])
-            if self.hfed == None:
-                curr_len = len(self.errors)
-                self.create_federate()
-                if len(self.errors) > curr_len:
-                    raise Exception(self.errors[curr_len])
+            if self.hfed is None:
+                raise Exception(self.errors)
             self.granted_time = 0
             self.enter_initialization()
             self.enter_executing_mode()
-            while self.granted_time < self.max_sim_time:
+            while self.granted_time < self.stop_time:
                 self.simulate_next_step()
         except h.HelicsException as e:
             self.errors.append(f"HelicsException at time {self.granted_time}: {e}")
@@ -228,7 +241,7 @@ class Federate:
         self.get_data_from_federation()
         self.update_internal_model()
         self.send_data_to_federation()
-    
+
     def calculate_next_requested_time(self):
         """
         Many federates run at very regular time steps and thus the calculation
@@ -237,7 +250,7 @@ class Federate:
         to overload the default calculation method if they need something 
         more complex.
         """
-        self.next_requested_time = self.granted_time + self.sim_step_size
+        self.next_requested_time = self.granted_time + self.time_step
         return self.next_requested_time
 
     def request_time(self, requested_time: float):
@@ -273,7 +286,7 @@ class Federate:
             else:
                 logger.debug(f" {self.fed_name} received {put.value} from {put.name}")
                 self.data_from_federation["inputs"][put.name] = put.value
-        
+
         # Endpoints
         for idx in range(0, self.hfed.n_endpoints):
             ep = self.hfed.get_endpoint_by_index
@@ -290,13 +303,13 @@ class Federate:
         if not self.debug:
             raise NotImplementedError("Subclass from Federate and write code to update internal model")
         # Doing something silly for testing purposes
-        # Get a value from an arbitrary input; I hope its a number
+        # Get a value from an arbitrary input; I hope it is a number
         if len(self.data_from_federation["inputs"].keys()) >= 1:
             key = list(self.data_from_federation["inputs"].keys())[0]
             dummy_value = self.data_from_federation["inputs"][key]
         else:
             dummy_value = 0
-        
+
         # Increment for arbitrary reasons. This is the actual model
         # that is being updated in this example.
         dummy_value += 1
@@ -306,12 +319,10 @@ class Federate:
         for pub in self.data_to_federation["publications"]:
             self.data_to_federation["publications"][pub] = None
         for ep in self.data_to_federation["endpoints"]:
-            self.data_to_federation["endpoints"][pub] = None
+            self.data_to_federation["endpoints"][ep] = None
         if len(self.data_to_federation["publications"].keys()) >= 1:
             pub = self.hfed.get_publication_by_index(0)
             self.data_to_federation["publications"][pub.name] = dummy_value
-
-
 
     def send_data_to_federation(self):
         """
@@ -357,11 +368,8 @@ class Federate:
         """
         try:
             logger.debug(f'{h.helicsFederateGetName(self.hfed)} being destroyed, max time = {h.HELICS_TIME_MAXTIME}')
-            logger.debug(f'{h.helicsFederateGetName(self.hfed)} being destroyed, max time = {h.HELICS_TIME_MAXTIME}')
             requested_time = int(h.HELICS_TIME_MAXTIME)
             h.helicsFederateClearMessages(self.hfed)
-            granted_time = h.helicsFederateRequestTime(self.hfed, requested_time)
-            logger.info(f'{h.helicsFederateGetName(self.hfed)} granted time {granted_time}')
             granted_time = h.helicsFederateRequestTime(self.hfed, requested_time)
             logger.info(f'{h.helicsFederateGetName(self.hfed)} granted time {granted_time}')
             h.helicsFederateDisconnect(self.hfed)
@@ -373,9 +381,8 @@ class Federate:
 
 
 if __name__ == "__main__":
-    test_fed = Federate()
-    test_fed.connect_to_metadataDB()
-    test_fed.create_federate()
+    test_fed = Federate("Battery")
+    test_fed.create_federate("TE30")
     test_fed.run_cosim_loop()
     test_fed.destroy_federate()
     if len(test_fed.errors) > 0:
