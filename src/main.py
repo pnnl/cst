@@ -7,19 +7,15 @@ from metadataDB import MetaDB
     But run docker with the port number exposed to the host so that it can be pinged from outside the container: 
     docker run --name mongodb -d -p 27017:27017 mongodb/mongodb-community-server:$MONGODB_VERSION
     If no version number is important the tag MONGODB_VERSION=latest can be used
-    """
+"""
 
 
 local_default_uri = 'mongodb://localhost:27017'
-metadb = MetaDB(uri_string=local_default_uri)
+metadb = MetaDB(uri=local_default_uri)
 
 # test adding a data collection
 name = "copper_data"
 name_out = metadb.add_collection(name=name)
-
-# test removing a data collection
-name = "copper_data"
-metadb.remove_collection(name)
 
 # test adding a document
 collection_name = "copper_data"
