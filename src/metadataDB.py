@@ -18,7 +18,7 @@ pp = pprint.PrettyPrinter(indent=4, )
 class MetaDB:
     """
     """
-    _cu_dict_name = 'cu_meta'
+    _cu_dict_name = 'cu_007'
 
     def __init__(self, uri: str = None, name: str = None):
         self.collections = None
@@ -71,7 +71,7 @@ class MetaDB:
         Doesn't throw an error if the name is not unique and let's the calling
         method decide what to do with it.
         """
-        for doc in self.db[collection_name].d.find({}, {"_id": 1, self._cu_dict_name: 1}):
+        for doc in self.db[collection_name].d.find({}, {"_id": 0, self._cu_dict_name: 1}):
             if doc[self._cu_dict_name] == new_name:
                 return False 
             else:
@@ -86,12 +86,12 @@ class MetaDB:
         if dict_name is None and object_id is None:
             raise AttributeError("Must provide the name or object ID of the dictionary to be retrieved.")
         elif dict_name is not None and object_id is not None:
-            raise UserWarning("Using provided object ID (and not provided name) to remove document.")
+            # raise UserWarning("Using provided object ID (and not provided name) to remove document.")
             self.db[collection_name].delete_one({"_id": object_id})
         elif dict_name is not None:
             self.db[collection_name].delete_one({self._cu_dict_name: dict_name})
-            if not doc:
-                raise NameError(f"{dict_name} does not exist in collection {collection_name} and cannot be retrieved.")
+            # if not doc:
+            #     raise NameError(f"{dict_name} does not exist in collection {collection_name} and cannot be retrieved.")
         elif object_id is not None:
             self.db[collection_name].delete_one({"_id": object_id})
         # TODO: Add check for success on delete.
@@ -119,9 +119,9 @@ class MetaDB:
         """
         """
         doc_names = []
-        for doc in (self.db[self.collection_name].
-                find({}, {"_id": 1, self._cu_dict_name: 1})):
-            doc_names.append(doc._cu_dict_name)
+        for doc in (self.db[collection].find({}, {"_id": 0, self._cu_dict_name: 1})):
+            if doc.__len__():
+                doc_names.append(doc[self._cu_dict_name])
 
         return doc_names
 
@@ -129,6 +129,7 @@ class MetaDB:
         """
         """
         doc = self.db[collection_name].find({self._cu_dict_name: doc_name})
+        return doc
 
     def add_dict(self, collection_name, dict_name, dict_to_add):
         """
@@ -137,8 +138,8 @@ class MetaDB:
         by that name; if it does, throw an error.
         
         To allow later access to the document by name, 
-        the field "cu_metadB_dok" is added to the dictionary before adding
-        it to the collection (the assumption is that "cu_metadB_dok" will 
+        the field "cu_007" is added to the dictionary before adding
+        it to the collection (the assumption is that "cu_007" will
         always be a unique field in the dictionary).
         """
         if self._check_unique_doc_name(collection_name, dict_name):
@@ -161,10 +162,10 @@ class MetaDB:
         if dict_name is None and object_id is None:
             raise AttributeError("Must provide the name or object ID of the dictionary to be retrieved.")
         elif dict_name is not None and object_id is not None:
-            raise UserWarning("Using provided object ID (and not provided name) to to get dictionary.")
+            # raise UserWarning("Using provided object ID (and not provided name) to to get dictionary.")
             doc = self.db[collection_name].find_one({"_id": object_id})
         elif dict_name is not None:
-            doc = self.db[self.collection].find_one({self._cu_dict_name: dict_name})
+            doc = self.db[collection_name].find_one({self._cu_dict_name: dict_name})
             if not doc:
                 raise NameError(f"{dict_name} does not exist in collection {collection_name} and cannot be retrieved.")
         elif object_id is not None:
@@ -188,10 +189,10 @@ class MetaDB:
         if dict_name is None and object_id is None:
             raise AttributeError("Must provide the name or object ID of the dictionary to be modified.")
         elif dict_name is not None and object_id is not None:
-            raise UserWarning("Using provided object ID (and not provided name) to update database.")
+            # raise UserWarning("Using provided object ID (and not provided name) to update database.")
             doc = self.db[collection_name].replace({"_id": object_id}, updated_dict)
         elif dict_name is not None:
-            doc = self.db[self.collection].find_one({self._cu_dict_name: dict_name})
+            doc = self.db[collection_name].find_one({self._cu_dict_name: dict_name})
             if doc:
                 doc = self.db[collection_name].replace({self._cu_dict_name: dict_name}, updated_dict)
             else:
@@ -203,9 +204,11 @@ class MetaDB:
 
 
 def scenarioToJson(federation: str, start: str, stop: str):
-    return {"federation": federation,
-            "start time": start,
-            "stop time": stop}
+    return {
+        "federation": federation,
+        "start time": start,
+        "stop time": stop
+    }
 
 
 if __name__ == "__main__":
@@ -219,36 +222,73 @@ if __name__ == "__main__":
     """
     local_uri = 'mongodb://localhost:27017'
     db_name = "copper"
-    fed = "federates"
+    fed = "federations"
     scr = "scenarios"
     db = MetaDB(local_uri, db_name)
-    scenarios = db.add_collection(fed)
-    federates = db.add_collection(scr)
+    db.db[fed].drop()
+    db.db[scr].drop()
+    scenarios = db.add_collection(scr)
+    federates = db.add_collection(fed)
 
-    config = hm.HelicsMsg("Battery", 30)
-    config.config("core_type", "zmq")
-    config.config("log_level", "warning")
-    config.config("period", 60)
-    config.config("uninterruptible", False)
-    config.config("terminate_on_error", True)
-    config.config("wait_for_current_time_update", True)
-    config.pubs_e(True, "Battery/EV1_current", "double", "A")
-    config.subs_e(True, "EVehicle/EV1_voltage", "double", "V")
+    t1 = hm.HelicsMsg("Battery", 30)
+    t1.config("core_type", "zmq")
+    t1.config("log_level", "warning")
+    t1.config("period", 60)
+    t1.config("uninterruptible", False)
+    t1.config("terminate_on_error", True)
+    t1.config("wait_for_current_time_update", True)
+    t1.pubs_e(True, "Battery/EV1_current", "double", "A")
+    t1.subs_e(True, "EVehicle/EV1_voltage", "double", "V")
+    t1 = {
+        "image": "python/3.11.7-slim-bullseye",
+        "federate_type": "value",
+        "sim time step": 120,
+        "HELICS config": t1.write_json()
+    }
 
-    config = hm.HelicsMsg("EVehicle", 30)
-    config.config("core_type", "zmq")
-    config.config("log_level", "warning")
-    config.config("period", 60)
-    config.config("uninterruptible", False)
-    config.config("terminate_on_error", True)
-    config.config("wait_for_current_time_update", True)
-    config.subs_e(True, "Battery/EV1_current", "double", "A")
-    config.pubs_e(True, "EVehicle/EV1_voltage", "double", "V")
+    t2 = hm.HelicsMsg("EVehicle", 30)
+    t2.config("core_type", "zmq")
+    t2.config("log_level", "warning")
+    t2.config("period", 60)
+    t2.config("uninterruptible", False)
+    t2.config("terminate_on_error", True)
+    t2.config("wait_for_current_time_update", True)
+    t2.subs_e(True, "Battery/EV1_current", "double", "A")
+    t2.pubs_e(True, "EVehicle/EV1_voltage", "double", "V")
+    t2 = {
+        "image": "python/3.11.7-slim-bullseye",
+        "federate_type": "value",
+        "sim time step": 120,
+        "HELICS config": t2.write_json()
+    }
+    diction = {
+        "federation": {
+            "Battery": t1,
+            "EVehicle": t2
+        }
+    }
 
     scenario_name = "TE30"
-    federate_name = "ea1ep1g1s1t1w1"
+    federate_name = "BT1_EV1"
+    db.add_dict(fed, federate_name, diction)
+
+    # for x in federates.find({}, {"_id": 0, "cu_name": 1, "federation": 1}):
+    for x in federates.find():
+        print(x)
+#    print(federates.find()[0])
+#    print(db.db[federate_name].find()[0])
+#    print(db.db[federate_name].find({}, {"_id": 0, "cu_name": 1, "federation": 1}))
+
     scenario = scenarioToJson(federate_name, "2023-12-07T15:31:27−07:00", "2023-12-07T15:31:27−07:00")
-    db.add_dict(fed, scenario_name, scenario)
+    db.add_dict(scr, scenario_name, scenario)
+    scenario_name = "TE100"
+    # seems to remember the scenario address, not the value so reinitialize
+    scenario = scenarioToJson(federate_name, "2023-12-07T15:31:27−07:00", "2023-12-07T15:31:27−07:00")
+    db.add_dict(scr, scenario_name, scenario)
+    # for x in scenarios.find({}, {"_id": 0, "cu_name": 1}):
+    for x in scenarios.find():
+        print(x)
 
-    print(db.client.list_database_names())
-
+    print(db.get_collection_document_names(scr))
+    print(db.get_collection_document_names(fed))
+    print(db.get_dict_key_names(fed, federate_name))

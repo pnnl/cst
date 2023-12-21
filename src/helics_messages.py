@@ -14,6 +14,11 @@ class HelicsMsg(object):
                       }
         pass
 
+    def write_json(self):
+        self.config("publications", self._pubs)
+        self.config("subscriptions", self._subs)
+        return json.dumps(self._cnfg, ensure_ascii=False)
+
     def write_file(self, _fn):
         self.config("publications", self._pubs)
         self.config("subscriptions", self._subs)

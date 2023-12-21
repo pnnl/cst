@@ -1,15 +1,17 @@
-{
-    "name": "<scenario dictionary name>",
-    "scenarios": {
-        "<user-defined scenario name1>": {
-            "simulation start time": "<ISO 8601 string: 2023-12-07T15:31:27−07:00>",
-            "simulation stop stime": "<ISO 8601 string: 2023-12-07T15:31:27−07:00>",
-            "federation": "<See definition in federation.json, like TE30>"
-        },
-        "<user-defined scenario name2>": {
-            "simulation start time": "<ISO 8601 string: 2023-12-07T15:31:27−07:00>",
-            "simulation stop stime": "<ISO 8601 string: 2023-12-07T15:31:27−07:00>",
-            "federation": "<See definition in federation.json, like TE100>"
-        }
-    }
-}
+[
+  {
+    "cu_name": "scenario documents"
+  },
+  {
+    "cu_name": "TE30",
+    "simulation start time": "<ISO 8601 string: 2023-12-07T15:31:27−07:00>",
+    "simulation stop stime": "<ISO 8601 string: 2023-12-07T15:31:27−07:00>",
+    "federation": "BT1_EV1"
+  },
+  {
+    "cu_name": "TE100",
+    "simulation start time": "<ISO 8601 string: 2023-12-07T15:31:27−07:00>",
+    "simulation stop stime": "<ISO 8601 string: 2023-12-07T15:31:27−07:00>",
+    "federation": "BT1_EV1"
+  }
+]
