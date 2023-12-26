@@ -162,7 +162,7 @@ class MetaDB:
         if dict_name is None and object_id is None:
             raise AttributeError("Must provide the name or object ID of the dictionary to be retrieved.")
         elif dict_name is not None and object_id is not None:
-            # raise UserWarning("Using provided object ID (and not provided name) to to get dictionary.")
+            # raise UserWarning("Using provided object ID (and not provided name) to get dictionary.")
             doc = self.db[collection_name].find_one({"_id": object_id})
         elif dict_name is not None:
             doc = self.db[collection_name].find_one({self._cu_dict_name: dict_name})
@@ -175,6 +175,7 @@ class MetaDB:
         #   the dictionary into the database. Will not raise an error if 
         #   somehow that key does not exist in the dictionary
         doc.pop(self._cu_dict_name, None)
+        doc.pop("_id", None)
 
         return doc
 
@@ -208,8 +209,8 @@ class MetaDB:
 def scenarioToJson(federation: str, start: str, stop: str):
     return {
         "federation": federation,
-        "start time": start,
-        "stop time": stop
+        "start_time": start,
+        "stop_time": stop
     }
 
 
@@ -244,8 +245,8 @@ if __name__ == "__main__":
     t1 = {
         "image": "python/3.11.7-slim-bullseye",
         "federate_type": "value",
-        "sim time step": 120,
-        "HELICS config": t1.write_json()
+        "time_step": 120,
+        "HELICS_config": t1.write_json()
     }
 
     t2 = hm.HelicsMsg("EVehicle", 30)
@@ -260,8 +261,8 @@ if __name__ == "__main__":
     t2 = {
         "image": "python/3.11.7-slim-bullseye",
         "federate_type": "value",
-        "sim time step": 120,
-        "HELICS config": t2.write_json()
+        "time_step": 120,
+        "HELICS_config": t2.write_json()
     }
     diction = {
         "federation": {
@@ -281,11 +282,11 @@ if __name__ == "__main__":
 #    print(db.db[federate_name].find()[0])
 #    print(db.db[federate_name].find({}, {"_id": 0, "cu_name": 1, "federation": 1}))
 
-    scenario = scenarioToJson(federate_name, "2023-12-07T15:31:27−07:00", "2023-12-07T15:31:27−07:00")
+    scenario = scenarioToJson(federate_name, "2023-12-07T15:31:27", "2023-12-08T15:31:27")
     db.add_dict(scr, scenario_name, scenario)
     scenario_name = "TE100"
     # seems to remember the scenario address, not the value so reinitialize
-    scenario = scenarioToJson(federate_name, "2023-12-07T15:31:27−07:00", "2023-12-07T15:31:27−07:00")
+    scenario = scenarioToJson(federate_name, "2023-12-07T15:31:27", "2023-12-10T15:31:27")
     db.add_dict(scr, scenario_name, scenario)
     # for x in scenarios.find({}, {"_id": 0, "cu_name": 1}):
     for x in scenarios.find():
@@ -294,3 +295,4 @@ if __name__ == "__main__":
     print(db.get_collection_document_names(scr))
     print(db.get_collection_document_names(fed))
     print(db.get_dict_key_names(fed, federate_name))
+    print(db.get_dict(fed, None, federate_name))

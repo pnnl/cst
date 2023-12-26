@@ -111,7 +111,7 @@ services:
     healthcheck:
       test:
         [
-          "CMD-SHELL"
+          "CMD-SHELL",
           'celery --app airflow.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}"'
         ]
       interval: 10s
