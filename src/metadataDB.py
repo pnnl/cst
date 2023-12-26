@@ -34,7 +34,7 @@ class MetaDB:
             self.db = self.client["meta_db"]
         # self.fs = gridfs.GridFS(self.db)
 
-    def _open_file(self, file_path, mode='r'):
+    def _open_file(self, file_path: str, mode='r'):
         """
         Utility function to open file with reasonable error handling.
         """
@@ -63,7 +63,7 @@ class MetaDB:
         
         return client
 
-    def _check_unique_doc_name(self, collection_name, new_name):
+    def _check_unique_doc_name(self, collection_name: str, new_name: str):
         """
         Checks to see if the provided document name is unique in the specified
         collection.
@@ -71,15 +71,13 @@ class MetaDB:
         Doesn't throw an error if the name is not unique and let's the calling
         method decide what to do with it.
         """
-        for doc in self.db[collection_name].d.find({}, {"_id": 0, self._cu_dict_name: 1}):
+        ret_val = True
+        for doc in (self.db[collection_name].find({self._cu_dict_name: 1})):
             if doc[self._cu_dict_name] == new_name:
-                return False 
-            else:
-                pass  
+                ret_val = False
+        return ret_val
 
-        return True
-
-    def remove_collection(self, collection_name):
+    def remove_collection(self, collection_name: str):
         self.db[collection_name].drop()
 
     def remove_document(self, collection_name, object_id=None, dict_name=None):
@@ -96,7 +94,7 @@ class MetaDB:
             self.db[collection_name].delete_one({"_id": object_id})
         # TODO: Add check for success on delete.
 
-    def add_collection(self, name):
+    def add_collection(self, name: str):
         """
         Collections don't really exist in MongoDB until at least one document
         has been added to the collection. This method adds a small identifier
@@ -106,6 +104,7 @@ class MetaDB:
         collection = self.db[name]
         collection.insert_one(id_dict)
         return collection
+
 
     def update_collection_names(self):
         """
@@ -119,7 +118,8 @@ class MetaDB:
         """
         """
         doc_names = []
-        for doc in (self.db[collection].find({}, {"_id": 0, self._cu_dict_name: 1})):
+        for doc in (self.db[collection].find({"_id": 0, self._cu_dict_name: 1})):
+            print("Doc names = ", doc[self._cu_dict_name])
             if doc.__len__():
                 doc_names.append(doc[self._cu_dict_name])
 
@@ -129,7 +129,7 @@ class MetaDB:
         """
         """
         doc = self.db[collection_name].find({self._cu_dict_name: doc_name})
-        return doc
+        return doc[0].keys()
 
     def add_dict(self, collection_name, dict_name, dict_to_add):
         """
