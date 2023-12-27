@@ -13,7 +13,7 @@ import logging
 
 import helics as h
 
-import metadataDB
+import metadataDB as mDB
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler())
@@ -53,11 +53,6 @@ class Federate:
     a given time-step.
     """
 
-    mongo_uri = 'mongodb://localhost:27017'
-    copper = "copper"
-    federations = "federations"
-    scenarios = "scenarios"
-
     def __init__(self, fed_name="", **kwargs):
         self.config = None
         self.federate_type = None
@@ -95,7 +90,7 @@ class Federate:
         available for other methods in this class.
         """
         try:
-            self.mddb = metadataDB.MetaDB(self.mongo_uri, self.copper)
+            self.mddb = mDB.MetaDB(mDB.cu_uri, mDB.cu_database)
         except Exception as e:
             self.errors.append(str(e))
             return
@@ -114,14 +109,14 @@ class Federate:
         self.connect_to_metadataDB()
         if scenario_name is None:
             raise NameError("scenario_name is None")
-        scenario_def = self.mddb.get_dict(self.scenarios, None, scenario_name)
+        scenario_def = self.mddb.get_dict(mDB.cu_scenarios, None, scenario_name)
         federation_name = scenario_def["federation"]
         self.start = scenario_def["start_time"]
         self.stop = scenario_def["stop_time"]
 
-        fed_def = self.mddb.get_dict(self.federations, None, federation_name)["federation"]
+        fed_def = self.mddb.get_dict(mDB.cu_federations, None, federation_name)["federation"]
 
-        if self.fed_name == "cu_logger":
+        if self.fed_name == mDB.cu_logger:
             self.federate_type = "message"
             self.time_step = 30
             publications = []
@@ -131,11 +126,12 @@ class Federate:
                     for pub in config["publications"]:
                         publications.append(pub)
             self.config = {
-                "name": "cu_logger",
+                "name": mDB.cu_logger,
                 "period": 30,
                 "log_level": "warning",
                 "subscriptions": publications
             }
+
             # self.image = fed_def[self.fed_name]["image"]
         else:
             self.federate_type = fed_def[self.fed_name]["federate_type"]
@@ -382,7 +378,7 @@ class Federate:
 
 if __name__ == "__main__":
     test_fed = Federate("Battery")
-    test_fed.create_federate("TE30")
+    test_fed.create_federate("ME30")
     test_fed.run_cosim_loop()
     test_fed.destroy_federate()
     if len(test_fed.errors) > 0:
