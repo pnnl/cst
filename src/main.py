@@ -1,5 +1,8 @@
 from metadataDB import MetaDB
 
+import os
+import json
+
 """ 
     Main method for launching meta data class to ping local container of mongodb.
     First user's will need to set up docker desktop (through the PNNL App Store), install mongodb community: 
@@ -7,43 +10,43 @@ from metadataDB import MetaDB
     But run docker with the port number exposed to the host so that it can be pinged from outside the container: 
     docker run --name mongodb -d -p 27017:27017 mongodb/mongodb-community-server:$MONGODB_VERSION
     If no version number is important the tag MONGODB_VERSION=latest can be used
-    """
+"""
 
 
 local_default_uri = 'mongodb://localhost:27017'
 metadb = MetaDB(uri=local_default_uri)
 
-# test adding a data collection
-name = "copper_data"
-name_out = metadb.add_collection(name=name)
+# Testing methods in metadataDB.py
 
 # test removing a data collection
-name = "copper_data"
-metadb.remove_collection(name)
+collections = metadb.update_collection_names()
+for c in collections:
+    metadb.remove_collection(c)
+
+# test adding a data collection
+collection_name = "case_data"
+name_out = metadb.add_collection(name=collection_name)
+collections = metadb.update_collection_names()
+print(collections)
+
+# test _open_file(self, file_path, mode='r'):
+file_path = os.path.join(os.path.dirname(__file__), "data", "psc_ex.json")
+print(file_path)
+file = metadb._open_file(file_path)
+file_dict = json.load(file)
+named_file_dict = {"psc": file_dict}
 
 # test adding a document
-collection_name = "copper_data"
 dict_name = "psc"
-dict_to_add = {
-    "bus": {
-        "bus_num": [1, 2 ,3, 4, 5],
-    },
-    "branch": {
-        "from_bus": [1, 1, 1, 3, 4],
-        "to_bus": [2, 3, 5, 2, 5]
-    },
-    "gen": {
-        "bus_num": [1, 2, 3],
-        "id": ["1", "1", "1"],
-        "mw": [10, 20, 30]
-    },
-    "load": {
-        "bus_num": [4, 5, 5],
-        "id": ["1", "1", "2"],
-        "mw": [12, 17, 25]
-    }
-}
-obj_id = metadb.add_dict(collection_name, dict_name, dict_to_add)
+obj_id = metadb.add_dict(collection_name, dict_name, named_file_dict)
+
+#test get get_dict_key_names(self, collection_name, doc_name):
+keys = metadb.get_dict_key_names(collection_name, dict_name)
+print(f"Dictionary keys of {dict_name}: {keys}")
+
+# test _check_unique_doc_name(self, collection_name, new_name):
+file_name_unique = metadb._check_unique_doc_name(collection_name, dict_name)
+print("File name unique? ", file_name_unique)
 
 # test update_collection_name(self)
 collections = metadb.update_collection_names()
@@ -73,5 +76,4 @@ doc_names = metadb.get_collection_document_names(collection_name)
 print("Doc names after: ", doc_names)
 
 # test removing a data collection
-name = "copper_data"
-metadb.remove_collection(name)
+metadb.remove_collection(collection_name)
