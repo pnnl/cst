@@ -14,8 +14,10 @@ USER_NAME=worker
 USER_HOME=/home/$USER_NAME
 
 
+
 clear
 docker run -it --rm \
+           -v .:/home/$USER_NAME/copper
            -e LOCAL_USER_ID="$(id -u d3j331)" \
            -w=${USER_HOME} \
            --name ${DOCKER_NAME} ${IMAGE_NAME} bash

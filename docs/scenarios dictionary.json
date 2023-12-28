@@ -9,9 +9,9 @@
     "federation": "BT1_EV1"
   },
   {
-    "cu_name": "TE100",
-    "start_time": "<ISO 8601 string: 2023-12-07T15:31:27−07:00>",
+    "cu_name": "<string: TE100>",
+    "start_time": "<ISO 8601 string: 2023-12-07T15:31:27−07:00   %:z -07:00 not supported < py3.12>",
     "stop_stime": "<ISO 8601 string: 2023-12-07T15:31:27−07:00>",
-    "federation": "BT1_EV1"
+    "federation": "<string: BT1_EV1>"
   }
 ]
