@@ -430,3 +430,4 @@ federation_database()
 
 if __name__ == "__main__":
     mytest1()
+    mytest2()

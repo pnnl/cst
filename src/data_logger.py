@@ -75,11 +75,11 @@ def drop_schema(conn, schema_name: str):
 
 
 class DataLogger(Federate):
-    def __init__(self, fed_name="", **kwargs):
+    def __init__(self, fed_name="", schema="default", **kwargs):
         super().__init__(fed_name="", **kwargs)
         self.conn = open_logger()
         check_version(self.conn)
-        self.make_logger_database("mesp")
+        self.make_logger_database(schema)
 
 
     """
@@ -139,6 +139,23 @@ class DataLogger(Federate):
         for key in hdt_type:
             self.create_table(scheme_name, key, hdt_type[key])
 
+    def connect_to_helics_config(self):
+        self.federate_type = "message"
+        self.time_step = 30
+        publications = []
+
+        for fed in self.federation:
+            config = self.federation[fed]["HELICS_config"]
+            if "publications" in config.keys():
+                for pub in config["publications"]:
+                    publications.append(pub)
+        self.config = {
+            "name": "cu_logger",
+            "period": 30,
+            "log_level": "warning",
+            "subscriptions": publications
+        }
+
     def update_internal_model(self):
         query = ""
         if len(self.data_from_federation["inputs"].keys()) >= 1:
@@ -146,42 +163,21 @@ class DataLogger(Federate):
 
             # add to logger database
             query += ("INSERT INTO {} (time, scenario, federate, data_name, data_value)"
-                      "VALUES({}, {}, {}, {}, {})".format(table, time, scenario, federate, name, value))
+                      "VALUES({}, {}, {}, {}, {}); ".format(table, time, scenario, federate, name, value))
 
         if query != "":
-            cur = conn.cursor()
+            cur = self.conn.cursor()
             cur.execute(query)
             cur.close()
-
-        pass
 
 
 if __name__ == "__main__":
 
-    if sys.argv.__len__() > 1:
-        my_conn = open_logger()
-        check_version(my_conn)
-        make_logger_database(my_conn, "mesp")
+    if sys.argv.__len__() > 2:
+        datalogger = DataLogger("cu_logger", sys.argv[1])
+        datalogger.create_federate(sys.argv[2])
+        datalogger.run_cosim_loop()
+        datalogger.destroy_federate()
 
-        mongo
-        if self.fed_name == mDB.cu_logger:
-            self.federate_type = "message"
-            self.time_step = 30
-            publications = []
-            for fed in fed_def:
-                config = fed_def[fed]["HELICS_config"]
-                if "publications" in config.keys():
-                    for pub in config["publications"]:
-                        publications.append(pub)
-            self.config = {
-                "name": mDB.cu_logger,
-                "period": 30,
-                "log_level": "warning",
-                "subscriptions": publications
-            }
 
-        test_fed = Fed.Federate("cu_logger")
-        test_fed.create_federate(sys.argv[1])
-        test_fed.update_internal_model = update_internal_model
-        test_fed.run_cosim_loop()
-        test_fed.destroy_federate()
+
