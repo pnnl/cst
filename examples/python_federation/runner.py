@@ -8,7 +8,7 @@ from Federate import Federate
 from helics_messages import HelicsMsg
 
 
-class Runner():
+class Runner:
 
     def __init__(self):
         self.db = mDB.MetaDB(mDB.cu_uri, mDB.cu_database)
@@ -16,7 +16,7 @@ class Runner():
     def define_scenario(self, scenario_name):
         names = ["Battery", "EVehicle"]
         t1 = HelicsMsg(names[0], 30)
-#        t1.config("core_type", "zmq")
+        t1.config("core_type", "zmq")
         t1.config("log_level", "warning")
         t1.config("period", 60)
         t1.config("uninterruptible", False)
@@ -33,7 +33,7 @@ class Runner():
         }
 
         t2 = HelicsMsg(names[1], 30)
-#        t2.config("core_type", "zmq")
+        t2.config("core_type", "zmq")
         t2.config("log_level", "warning")
         t2.config("period", 60)
         t2.config("uninterruptible", False)

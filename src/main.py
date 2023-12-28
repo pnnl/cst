@@ -11,7 +11,7 @@ from metadataDB import MetaDB
 
 
 local_default_uri = 'mongodb://localhost:27017'
-metadb = MetaDB(uri_string=local_default_uri)
+metadb = MetaDB(uri=local_default_uri)
 
 # test adding a data collection
 name = "copper_data"
@@ -54,21 +54,21 @@ doc_names = metadb.get_collection_document_names(collection_name)
 print("Doc names = ", doc_names)
 
 # test remove_document(self, collection_name, object_id = None, dict_name = None):
-#first test error catching
+# first test error catching
 try:
     metadb.remove_document(collection_name)
 except AttributeError as e:
     print("AttributeError : ", e)
 
 try:
-    metadb.remove_document(collection_name, dict_name = 'blah')
+    metadb.remove_document(collection_name, dict_name='blah')
 except NameError as e:
     print("NameError : ", e) 
 
 # now test works
 doc_names = metadb.get_collection_document_names(collection_name)
 print("Doc names before: ", doc_names)
-metadb.remove_document(collection_name, dict_name = dict_name)
+metadb.remove_document(collection_name, dict_name=dict_name)
 doc_names = metadb.get_collection_document_names(collection_name)
 print("Doc names after: ", doc_names)
 

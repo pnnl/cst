@@ -38,7 +38,7 @@ class MetaDB:
     """
     _cu_dict_name = 'cu_007'
 
-    def __init__(self, uri: str = None, name: str = None):
+    def __init__(self, uri=None, name=None):
         self.collections = None
 
         if uri is not None:
@@ -50,9 +50,6 @@ class MetaDB:
             self.db = self.client[name]
         else:
             self.db = self.client["meta_db"]
-        print("Databases: ", self.client.list_database_names())
-
-        # self.fs = gridfs.GridFS(self.db)
 
     def _open_file(self, file_path, mode='r'):
         """
@@ -65,15 +62,15 @@ class MetaDB:
         else:
             return fh
 
-    def _connect_to_database(self, uri_string=None):
+    def _connect_to_database(self, uri=None):
         """
         Sets up connection to server port for mongodb
         """
         # Set up default uri_string to the server Trevor was using on the EIOC
-        if uri_string is None:
+        if uri is None:
             uri_string = "mongodb://127.0.0.1:27017"
         # Set up connection
-        client = MongoClient(uri_string)
+        client = MongoClient(uri)
         # Test connection
         try:
             client.admin.command('ping')
@@ -91,13 +88,11 @@ class MetaDB:
         Doesn't throw an error if the name is not unique and let's the calling
         method decide what to do with it.
         """
-        for doc in self.db[collection_name].d.find({}, {"_id": 0, self._cu_dict_name: 1}):
+        ret_val = True
+        for doc in (self.db[collection_name].find({self._cu_dict_name: 1})):
             if doc[self._cu_dict_name] == new_name:
-                return False 
-            else:
-                pass  
-
-        return True
+                ret_val = False
+        return ret_val
 
     def remove_collection(self, collection_name):
         self.db[collection_name].drop()
@@ -139,10 +134,9 @@ class MetaDB:
         """
         """
         doc_names = []
-        for doc in (self.db[collection].find({}, {"_id": 0, self._cu_dict_name: 1})):
+        for doc in (self.db[collection].find({"_id": 0, self._cu_dict_name: 1})):
             if doc.__len__():
                 doc_names.append(doc[self._cu_dict_name])
-
         return doc_names
 
     def get_dict_key_names(self, collection_name, doc_name):
@@ -256,8 +250,10 @@ def docker_network():
     _network += '          gateway: 10.5.0.1\n'
     return _network
 
+
 def logger():
     pass
+
 
 def define_yaml(scenario_name):
     mdb = MetaDB(cu_uri, cu_database)
@@ -408,7 +404,7 @@ def mytest2():
     }
 
     scenario_name = "TE30"
-    federate_name = "BT1"
+    federate_name = "BT1_EV1"
     db.add_dict(cu_federations, federate_name, diction)
 
     scenario = scenario_tojson(federate_name, "2023-12-07T15:31:27", "2023-12-08T15:31:27")
