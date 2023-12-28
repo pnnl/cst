@@ -49,7 +49,7 @@ def check_version():
 
 class SimpleFederate(Federate):
     def __init__(self, fed_name="", schema="default", **kwargs):
-        super().__init__(fed_name="", **kwargs)
+        super().__init__(fed_name, **kwargs)
 
     def update_internal_model(self):
         """

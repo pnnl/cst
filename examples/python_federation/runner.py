@@ -16,12 +16,12 @@ class Runner():
     def define_scenario(self, scenario_name):
         names = ["Battery", "EVehicle"]
         t1 = HelicsMsg(names[0], 30)
-        t1.config("core_type", "zmq")
+#        t1.config("core_type", "zmq")
         t1.config("log_level", "warning")
         t1.config("period", 60)
         t1.config("uninterruptible", False)
         t1.config("terminate_on_error", True)
-        t1.config("wait_for_current_time_update", True)
+#        t1.config("wait_for_current_time_update", True)
         t1.pubs_e(True, names[0] + "/EV1_current", "double", "A")
         t1.subs_e(True, names[1] + "/EV1_voltage", "double", "V")
         t1 = {
@@ -33,12 +33,12 @@ class Runner():
         }
 
         t2 = HelicsMsg(names[1], 30)
-        t2.config("core_type", "zmq")
+#        t2.config("core_type", "zmq")
         t2.config("log_level", "warning")
         t2.config("period", 60)
         t2.config("uninterruptible", False)
         t2.config("terminate_on_error", True)
-        t2.config("wait_for_current_time_update", True)
+#        t2.config("wait_for_current_time_update", True)
         t2.subs_e(True, names[0] + "/EV1_current", "double", "A")
         t2.pubs_e(True, names[1] + "/EV1_voltage", "double", "V")
         t2 = {
@@ -61,12 +61,14 @@ class Runner():
         self.db.remove_document(mDB.cu_federations, None, federation_name)
         print(mDB.cu_federations, self.db.get_collection_document_names(mDB.cu_federations))
         self.db.add_dict(mDB.cu_federations, federation_name, diction)
+        print(mDB.cu_federations, self.db.get_collection_document_names(mDB.cu_federations))
 
         scenario = mDB.scenario_tojson(federation_name, "2023-12-07T15:31:27", "2023-12-08T15:31:27")
         print(mDB.cu_scenarios, self.db.get_collection_document_names(mDB.cu_scenarios))
         self.db.remove_document(mDB.cu_scenarios, None, scenario_name)
         print(mDB.cu_scenarios, self.db.get_collection_document_names(mDB.cu_scenarios))
         self.db.add_dict(mDB.cu_scenarios, scenario_name, scenario)
+        print(mDB.cu_scenarios, self.db.get_collection_document_names(mDB.cu_scenarios))
 
 
 if __name__ == "__main__":
