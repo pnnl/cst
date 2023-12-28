@@ -10,6 +10,7 @@ import gridfs
 import pprint
 import logging
 import helics_messages as hm
+import os
 
 logger = logging.getLogger(__name__)
 pp = pprint.PrettyPrinter(indent=4, )
@@ -32,7 +33,7 @@ class MetaDB:
             self.db = self.client[name]
         else:
             self.db = self.client["meta_db"]
-        # self.fs = gridfs.GridFS(self.db)
+        self.fs = gridfs.GridFS(self.db)
 
     def _open_file(self, file_path: str, mode='r'):
         """
@@ -76,6 +77,70 @@ class MetaDB:
             if doc[self._cu_dict_name] == new_name:
                 ret_val = False
         return ret_val
+    
+    def add_file(self, file, conflict='fail', name=None):
+        """
+        Gets file from disk and adds it to the metadataDB for all federates
+        to use. 
+        
+        The "name" parameter is optional. If provided, the file will be 
+        stored by that name in the database. If omitted, the name of the
+        file itself will be used. 
+
+        MongoDB allows files to have the same name and creates unique IDs.
+        By default, this method will produce an error if the name of the 
+        file being added already exists in the file storage. This can 
+        behavior can be altered by specifying the "conflict" parameter
+        to a different value. 
+        """
+        if not name:
+            path, file = os.path.split(file)
+            name = file
+        fh = self._open_file(file, mode='rb')
+
+        # Check for unique filename
+        db_file = self.fs.files.find({filename: name })
+        if db_file:
+            if conflict == "fail":
+                raise NameError(f"File '{name}' already exists, set 'conflict' to 'overwrite' to overwrite it.")
+            if conflict == "overwrite":
+                logger.warning(f"File {name} being overwritten.")
+            if conflict == "add version":
+                logger.warning(f"New version of file {name} being added."
+            else:
+                raise NameError(f"Invalid value for conflict resolution '{name}', 
+                                must be 'fail', 'overwrite' or 'add version' ")
+        self.fs.put(fh, filename = name)
+
+
+    def get_file(self, name, disk_name=None, path=None):
+        """
+        Pulls a file from the metadataDB by name and optionally writes it to 
+        disk. This method only gets the latest version of the file (if 
+        multiple versions exist).
+
+        If "disk_name" is specified, that name will be used when writing the
+        file to disk; otherwise the file name as specified in the metadataDB 
+        will be used. If path is not specified, the file is not written to 
+        disk. If if is the file is written at the location specified by path 
+        using the provided "disk_name".
+        """
+        db_file = self.fs.files.find({ filename: name })
+        if not db_file:
+            raise NameError(f"File '{name}' does not exist.")
+        else:
+            db_file = self.fs.get_last_version(filename=name)
+            if path:
+                if disk_name:
+                    path = os.path.join(path, disk_name)
+                else:
+                    path = os.path.join(path, name)
+                fh = self._open_file(path, 'wb')
+                fh.write(db_file)
+            else:
+                return db_file
+
+    
 
     def remove_collection(self, collection_name: str):
         self.db[collection_name].drop()
