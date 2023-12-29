@@ -12,7 +12,7 @@ import sys
 import psycopg2
 from pathlib import Path
 
-sys.path.insert(1, os.path.join(Path(__file__).parent, '..', '..', 'src'))
+# sys.path.insert(1, os.path.join(Path(__file__).parent, '..', '..', 'src'))
 from Federate import Federate
 
 
@@ -75,12 +75,28 @@ def drop_schema(conn, schema_name: str):
 
 
 class DataLogger(Federate):
-    def __init__(self, fed_name="", schema="default", **kwargs):
-        super().__init__(fed_name="", **kwargs)
+
+    hdt_type = {'HDT_STRING': 'VARCHAR (255)',
+                'HDT_DOUBLE': 'double precision',
+                'HDT_INT': 'bigint',
+                'HDT_COMPLEX': 'VARCHAR (30)',
+                'HDT_VECTOR': 'VARCHAR (255)',
+                'HDT_COMPLEX_VECTOR': 'VARCHAR (255)',
+                'HDT_NAMED_POINT': 'VARCHAR (255)',
+                'HDT_BOOLEAN': 'boolean',
+                'HDT_TIME': 'TIMESTAMP',
+                'HDT_JSON': 'text'}
+
+    def __init__(self, fed_name="", schema_name="default", **kwargs):
+        super().__init__(fed_name, **kwargs)
         self.conn = open_logger()
         check_version(self.conn)
-        self.make_logger_database(schema)
-
+        self.schema_name = schema_name
+        # uncomment debug
+        # drop_schema(self.conn, self.schema_name)
+        create_schema(self.conn, self.schema_name)
+        self.make_logger_database()
+        self.remove_scenario()
 
     """
         HELICS_DATA_TYPE_UNKNOWN = -1,
@@ -111,36 +127,34 @@ class DataLogger(Federate):
         /** open type that can be anything*/
         HELICS_DATA_TYPE_ANY = 25262
     """
-
-    def create_table(self, scheme_name: str, table_name: str, data_type: str):
-        query = ("CREATE TABLE IF NOT EXISTS "
-                 + scheme_name + "." + table_name +
-                 "(time TIMESTAMP NOT NULL, "
-                 "scenario VARCHAR (255) NOT NULL, "
-                 "federate VARCHAR (255) NOT NULL, "
-                 "data_name VARCHAR (255) NOT NULL, "
-                 "data_value " + data_type + " NOT NULL);")
+    def remove_scenario(self):
+        query = ""
+        for key in self.hdt_type:
+            query += f"DELETE FROM {self.schema_name}.{key} WHERE scenario='{self.scenario_name}'; "
         cur = self.conn.cursor()
         cur.execute(query)
         cur.close()
 
-    def make_logger_database(self, scheme_name: str):
-        hdt_type = {'HDT_STRING': 'VARCHAR (255)',
-                    'HDT_DOUBLE': 'double precision',
-                    'HDT_INT': 'bigint',
-                    'HDT_COMPLEX': 'VARCHAR (30)',
-                    'HDT_VECTOR': 'VARCHAR (255)',
-                    'HDT_COMPLEX_VECTOR': 'VARCHAR (255)',
-                    'HDT_NAMED_POINT': 'VARCHAR (255)',
-                    'HDT_BOOLEAN': 'boolean',
-                    'HDT_TIME': 'TIMESTAMP',
-                    'HDT_JSON': 'text'}
+    def create_table(self, table_name: str, data_type: str):
+        return ("CREATE TABLE IF NOT EXISTS "
+                f"{self.schema_name}.{table_name} ("
+                "time double precision NOT NULL, "
+                "scenario VARCHAR (255) NOT NULL, " 
+                "federate VARCHAR (255) NOT NULL, "
+                "data_name VARCHAR (255) NOT NULL, "
+                f"data_value {data_type} NOT NULL);")
+
+    def make_logger_database(self):
         # scheme is a set of like scenario (like DSOT bau, battery, flex load)
-        for key in hdt_type:
-            self.create_table(scheme_name, key, hdt_type[key])
+        query = ""
+        for key in self.hdt_type:
+            query += self.create_table(key, self.hdt_type[key])
+        cur = self.conn.cursor()
+        cur.execute(query)
+        cur.close()
 
     def connect_to_helics_config(self):
-        self.federate_type = "message"
+        self.federate_type = "combo"
         self.time_step = 30
         publications = []
 
@@ -150,21 +164,30 @@ class DataLogger(Federate):
                 for pub in config["publications"]:
                     publications.append(pub)
         self.config = {
-            "name": "cu_logger",
-            "period": 30,
+            "name": self.federate_name,
+            "period": self.time_step,
             "log_level": "warning",
             "subscriptions": publications
         }
 
     def update_internal_model(self):
+
         query = ""
-        if len(self.data_from_federation["inputs"].keys()) >= 1:
-            key = list(self.data_from_federation["inputs"].keys())[0]
+        for key in self.data_from_federation["inputs"]:
+            qry = ""
+            value = self.data_from_federation["inputs"][key]
+            for table in self.hdt_type.keys():
+                if self.inputs[key]['type'].lower() in table.lower():
+                    qry = (f"INSERT INTO {self.schema_name}.{table} (time, scenario, federate, data_name, data_value)"
+                           f" VALUES({self.granted_time}, '{self.scenario_name}', '{self.federate_name}', '{key}', ")
+                    if type(value) is str:
+                        qry += f" '{value}'); "
+                    else:
+                        qry += f" {value}); "
+                    break
+            query += qry
 
-            # add to logger database
-            query += ("INSERT INTO {} (time, scenario, federate, data_name, data_value)"
-                      "VALUES({}, {}, {}, {}, {}); ".format(table, time, scenario, federate, name, value))
-
+        # add to logger database
         if query != "":
             cur = self.conn.cursor()
             cur.execute(query)
@@ -173,9 +196,9 @@ class DataLogger(Federate):
 
 if __name__ == "__main__":
 
-    if sys.argv.__len__() > 2:
-        datalogger = DataLogger("cu_logger", sys.argv[1])
-        datalogger.create_federate(sys.argv[2])
+    if sys.argv.__len__() > 3:
+        datalogger = DataLogger(sys.argv[1], sys.argv[2])
+        datalogger.create_federate(sys.argv[3])
         datalogger.run_cosim_loop()
         datalogger.destroy_federate()
 
