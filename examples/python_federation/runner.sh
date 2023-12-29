@@ -4,4 +4,4 @@
 (exec python3 simple_federate.py Battery MyTest &> Battery.log &)
 (exec python3 simple_federate.py EVehicle MyTest &> EVehicle.log &)
 cd ../../src || exit
-(exec python3 data_logger.py DataLogger Mesp MyTest &> ../examples/python_federation/DataLogger.log &)
+(exec python3 data_logger.py DataLogger MySchema MyTest &> ../examples/python_federation/DataLogger.log &)

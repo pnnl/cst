@@ -1,10 +1,18 @@
+"""
+Created on 12/14/2023
+
+Data logger class that defines the basic operations of Python-based logger federate in
+Copper.
+
+@author: Mitch Pelton
+mitch.pelton@pnnl.gov
+"""
 import os
 import sys
 from pathlib import Path
 
 sys.path.insert(1, os.path.join(Path(__file__).parent, '..', '..', 'src'))
 import metadataDB as mDB
-from Federate import Federate
 from helics_messages import HelicsMsg
 
 
@@ -13,7 +21,7 @@ class Runner:
     def __init__(self):
         self.db = mDB.MetaDB(mDB.cu_uri, mDB.cu_database)
 
-    def define_scenario(self, scenario_name):
+    def define_scenario(self, scenario_name, schema_name, federation_name):
         names = ["Battery", "EVehicle"]
         t1 = HelicsMsg(names[0], 30)
         t1.config("core_type", "zmq")
@@ -56,23 +64,20 @@ class Runner:
             }
         }
 
-        federation_name = "MyBT1_EV1"
-        print(mDB.cu_federations, self.db.get_collection_document_names(mDB.cu_federations))
         self.db.remove_document(mDB.cu_federations, None, federation_name)
-        print(mDB.cu_federations, self.db.get_collection_document_names(mDB.cu_federations))
         self.db.add_dict(mDB.cu_federations, federation_name, diction)
         print(mDB.cu_federations, self.db.get_collection_document_names(mDB.cu_federations))
 
-        scenario = mDB.scenario_tojson(federation_name, "2023-12-07T15:31:27", "2023-12-08T15:31:27")
-        print(mDB.cu_scenarios, self.db.get_collection_document_names(mDB.cu_scenarios))
+        scenario = mDB.scenario_tojson(schema_name, federation_name, "2023-12-07T15:31:27", "2023-12-08T15:31:27")
         self.db.remove_document(mDB.cu_scenarios, None, scenario_name)
-        print(mDB.cu_scenarios, self.db.get_collection_document_names(mDB.cu_scenarios))
         self.db.add_dict(mDB.cu_scenarios, scenario_name, scenario)
         print(mDB.cu_scenarios, self.db.get_collection_document_names(mDB.cu_scenarios))
 
 
 if __name__ == "__main__":
     r = Runner()
-    my_scenario_name = "MyTest"
-    r.define_scenario(my_scenario_name)
-    mDB.define_yaml(my_scenario_name)
+    _scenario_name = "MyScenario"
+    _schema_name = "MySchema"
+    _federation_name = "MyFederation"
+    r.define_scenario(_scenario_name, _schema_name, _federation_name)
+    mDB.define_yaml(_scenario_name)

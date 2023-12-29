@@ -260,6 +260,7 @@ def define_yaml(scenario_name):
 
     scenario_def = mdb.get_dict(cu_scenarios, None, scenario_name)
     federation_name = scenario_def["federation"]
+    schema_name = scenario_def["schema"]
     fed_def = mdb.get_dict(cu_federations, None, federation_name)["federation"]
 
     yaml = 'version: "3.8"\n'
@@ -278,7 +279,7 @@ def define_yaml(scenario_name):
 
     # Add data logger federate
     cnt += 1
-    env = ["", "exec python3 data_logger.py " + scenario_name + " > " + cu_logger + ".log"]
+    env = ["", "exec python3 data_logger.py DataLogger " + schema_name + " " + scenario_name + " > DataLogger.log"]
     yaml += docker_service(cu_logger, "tesp-helics:latest", env, cnt, depends=None)
 
     yaml += docker_network()
@@ -295,9 +296,10 @@ def run_yaml(scenario_name):
     print('====  Broker Exit in\n        ' + os.getcwd(), flush=True)
 
 
-def scenario_tojson(federation: str, start: str, stop: str):
+def scenario_tojson(schema_name: str, federation_name: str, start: str, stop: str):
     return {
-        "federation": federation,
+        "schema": schema_name,
+        "federation": federation_name,
         "start_time": start,
         "stop_time": stop
     }
@@ -339,10 +341,11 @@ def mytest1():
     }
 
     scenario_name = "ME30"
+    schema_name = "Tesp"
     federate_name = "BT1"
     db.add_dict(cu_federations, federate_name, diction)
 
-    scenario = scenario_tojson(federate_name, "2023-12-07T15:31:27", "2023-12-08T15:31:27")
+    scenario = scenario_tojson(schema_name, federate_name, "2023-12-07T15:31:27", "2023-12-08T15:31:27")
     db.add_dict(cu_scenarios, scenario_name, scenario)
 
     print(db.get_collection_document_names(cu_scenarios))
@@ -404,15 +407,16 @@ def mytest2():
     }
 
     scenario_name = "TE30"
+    schema_name = "Tesp"
     federate_name = "BT1_EV1"
     db.add_dict(cu_federations, federate_name, diction)
 
-    scenario = scenario_tojson(federate_name, "2023-12-07T15:31:27", "2023-12-08T15:31:27")
+    scenario = scenario_tojson(schema_name, federate_name, "2023-12-07T15:31:27", "2023-12-08T15:31:27")
     db.add_dict(cu_scenarios, scenario_name, scenario)
 
     scenario_name = "TE100"
     # seems to remember the scenario address, not the value so reinitialize
-    scenario = scenario_tojson(federate_name, "2023-12-07T15:31:27", "2023-12-10T15:31:27")
+    scenario = scenario_tojson(schema_name, federate_name, "2023-12-07T15:31:27", "2023-12-10T15:31:27")
     db.add_dict(cu_scenarios, scenario_name, scenario)
 
     print(db.get_collection_document_names(cu_scenarios))
