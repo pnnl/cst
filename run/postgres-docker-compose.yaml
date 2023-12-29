@@ -10,6 +10,7 @@ services:
       - "8888:8888"
     volumes:
       - ${PWD}:/home/jovyan/work
+#      - ${HOME}/tesp/repository/copper/examples:/home/jovyan/examples
     depends_on:
       - database
     links:

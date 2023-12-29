@@ -61,7 +61,7 @@ def table_exist(conn, scheme_name: str, table_name: str):
 
 
 def create_schema(conn, schema_name: str):
-    query = "CREATE SCHEMA " + schema_name + ";"
+    query = "CREATE SCHEMA IF NOT EXISTS " + schema_name + ";"
     cur = conn.cursor()
     cur.execute(query)
     cur.close()
@@ -97,6 +97,8 @@ class DataLogger(Federate):
         create_schema(self.conn, self.schema_name)
         self.make_logger_database()
         self.remove_scenario()
+        self.conn.commit()
+
 
     """
         HELICS_DATA_TYPE_UNKNOWN = -1,
@@ -192,6 +194,7 @@ class DataLogger(Federate):
             cur = self.conn.cursor()
             cur.execute(query)
             cur.close()
+        self.conn.commit()
 
 
 if __name__ == "__main__":
@@ -201,6 +204,7 @@ if __name__ == "__main__":
         datalogger.create_federate(sys.argv[3])
         datalogger.run_cosim_loop()
         datalogger.destroy_federate()
-
+        if datalogger.conn:
+            datalogger.conn.close()
 
 
