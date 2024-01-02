@@ -13,11 +13,10 @@ IMAGE_NAME="tesp-tespapi:latest"
 USER_NAME=worker
 USER_HOME=/home/$USER_NAME
 
-
+# -e LOCAL_USER_ID="$(id -u d3j331)" \
 
 clear
 docker run -it --rm \
-           -v .:/home/$USER_NAME/copper
-           -e LOCAL_USER_ID="$(id -u d3j331)" \
+           -v .:/home/$USER_NAME/copper \
            -w=${USER_HOME} \
            --name ${DOCKER_NAME} ${IMAGE_NAME} bash

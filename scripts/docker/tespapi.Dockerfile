@@ -1,18 +1,12 @@
 # Build runtime image
-FROM tesp-python:latest AS tesp-run
+FROM tesp-python:latest AS tesp-tespapi
+
+USER root
 
 # TESP user name and work directory
 ENV USER_NAME=worker
 ENV USER_HOME=/home/$USER_NAME
-ENV TESPDIR=$USER_HOME/tesp
-ENV INSTDIR=$TESPDIR/tenv
-
-# Copy Binaries
-# COPY --from=tesp-build:latest $INSTDIR/ $INSTDIR/
-COPY --from=tesp-build:latest $TESPDIR/requirements.txt $TESPDIR
-COPY --from=tesp-build:latest $TESPDIR/data/ $TESPDIR/data/
-COPY --from=tesp-build:latest $TESPDIR/repository/AMES-V5.0/README.rst $TESPDIR
-COPY --from=tesp-build:latest $TESPDIR/repository/AMES-V5.0/psst/ $TESPDIR/psst/
+ENV INSTDIR=$USER_HOME/tenv
 
 RUN echo "===== BUILD RUN TESP API =====" && \
   export DEBIAN_FRONTEND=noninteractive && \
@@ -21,13 +15,25 @@ RUN echo "===== BUILD RUN TESP API =====" && \
   apt-get update && \
   apt-get dist-upgrade -y && \
   apt-get install -y \
-# Ipopt cbc solver support libraries
-  coinor-cbc \
-  coinor-libcbc-dev \
-  coinor-libipopt-dev \
-  liblapack-dev \
-  libmetis-dev && \
-# Install Python Libraries
-  pip3 install -r "$TESPDIR/requirements.txt" > "$TESPDIR/tesp_pypi.log" && \
-  cd $TESPDIR/psst || exit && \
-  pip3 install -e . >> "$TESPDIR/tesp_pypi.log"
+  git
+
+# Set 'worker' as user
+USER $USER_NAME
+WORKDIR $USER_HOME
+
+RUN echo "Directory structure for running" && \
+  mkdir -p psst/psst
+
+# Copy Binaries
+# COPY --from=tesp-build:latest $INSTDIR/ $INSTDIR/
+COPY --from=tesp-build:latest $USER_HOME/repository/AMES-V5.0/psst/ $USER_HOME/psst/psst/
+COPY --from=tesp-build:latest $USER_HOME/repository/AMES-V5.0/README.rst $USER_HOME/psst
+
+# Add directories and files
+RUN echo "Activate the python virtual environment" && \
+  . $USER_HOME/venv/bin/activate && \
+  echo "Install Python Libraries" && \
+  pip3 install tesp-support  >> "pypi.log"&& \
+  cd $USER_HOME/psst/psst || exit && \
+  pip3 install -e .  >> "pypi.log" && \
+  tesp_component -c 1

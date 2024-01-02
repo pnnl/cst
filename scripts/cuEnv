@@ -4,8 +4,8 @@
 # exports
 export SOFTWARE_NAME=cu
 export SOFTWARE_DIR=$HOME/$SOFTWARE_NAME
-export INST_DIR=$SOFTWARE_NAME/tenv
-export REPO_DIR=$SOFTWARE_NAME/repository
+export INST_DIR=$HOME/tenv
+export REPO_DIR=$HOME/repository
 export SOFTWARE_BUILD=$SOFTWARE_DIR/scripts/build
 export SOFTWARE_HELPER=$SOFTWARE_DIR/scripts/helpers
 
@@ -28,7 +28,8 @@ export PATH=$PATH:$INST_DIR/energyplus/PostProcess
 export PATH=$PATH:$SOFTWARE_HELPER
 
 # PSST environment variables
-export PSST_SOLVER=$INST_DIR/ibm/cplex/bin/x86-64_linux/cplexamp
+export PSST_SOLVER=ipopt
+# export PSST_SOLVER=$INST_DIR/ibm/cplex/bin/x86-64_linux/cplexamp
 # 'PSST_SOLVER path' -- one of "cbc", "ipopt", "$INST_DIR/ibm/cplex/bin/x86-64_linux/cplexamp"
 export PSST_WARNING=ignore
 # 'PSST_WARNING action' -- one of "error", "ignore", "always", "default", "module", or "once"

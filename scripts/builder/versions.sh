@@ -18,7 +18,7 @@ fi
 
 echo "HELICS $(helics_broker --version)"
 
-echo $("${TESPBUILD}/test_helics_java")
+echo $("${BUILDDIR}/test_helics_java")
 
 gridlabd --version
 
