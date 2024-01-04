@@ -76,12 +76,12 @@ def drop_schema(conn, schema_name: str):
 
 class DataLogger(Federate):
 
-    hdt_type = {'HDT_STRING': 'VARCHAR (255)',
+    hdt_type = {'HDT_STRING': 'text',
                 'HDT_DOUBLE': 'double precision',
                 'HDT_INT': 'bigint',
                 'HDT_COMPLEX': 'VARCHAR (30)',
-                'HDT_VECTOR': 'VARCHAR (255)',
-                'HDT_COMPLEX_VECTOR': 'VARCHAR (255)',
+                'HDT_VECTOR': 'text',
+                'HDT_COMPLEX_VECTOR': 'text',
                 'HDT_NAMED_POINT': 'VARCHAR (255)',
                 'HDT_BOOLEAN': 'boolean',
                 'HDT_TIME': 'TIMESTAMP',
@@ -182,19 +182,23 @@ class DataLogger(Federate):
                 if self.inputs[key]['type'].lower() in table.lower():
                     qry = (f"INSERT INTO {self.schema_name}.{table} (time, scenario, federate, data_name, data_value)"
                            f" VALUES({self.granted_time}, '{self.scenario_name}', '{self.federate_name}', '{key}', ")
-                    if type(value) is str:
+                    if type(value) is str or type(value) is complex or type(value) is list:
                         qry += f" '{value}'); "
                     else:
                         qry += f" {value}); "
                     break
             query += qry
 
-        # add to logger database
-        if query != "":
-            cur = self.conn.cursor()
-            cur.execute(query)
-            cur.close()
+            # add to logger database
+        try:
+            if query != "":
+                cur = self.conn.cursor()
+                cur.execute(query)
+                cur.close()
+        except:
+            print("Bad data type in update_internal_model")
         self.conn.commit()
+
 
 
 if __name__ == "__main__":
