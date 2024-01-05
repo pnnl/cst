@@ -7,19 +7,16 @@ Copper.
 @author: Mitch Pelton
 mitch.pelton@pnnl.gov
 """
-import os
 import sys
 import psycopg2
-from pathlib import Path
 
-sys.path.insert(1, os.path.join(Path(__file__).parent, '..', '..', 'src'))
-from Federate import Federate
+from cosim_toolbox.federate import Federate
 
 
 def open_logger():
     #    "host": os.environ.get("POSTGRES_HOST"),
     connection = {
-        "host": "gage",
+        "host": "gage.pnl.gov",
         "dbname": "copper",
         "user": "postgres",
         "password": "postgres",

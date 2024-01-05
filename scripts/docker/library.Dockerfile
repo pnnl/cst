@@ -51,6 +51,11 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
   python3-tk \
   python3-pil.imagetk && \
   ln -s /usr/lib/jvm/java-11-openjdk-amd64 /usr/lib/jvm/default-java && \
+  echo "===== Clean Up =====" && \
+  apt-get upgrade -y && \
+  apt-get clean -y && \
+  apt-get autoclean -y && \
+  apt-get autoremove -y && \
   echo "root:worker" | chpasswd && \
   echo "<<<< Adding the 'worker' user >>>>" && \
   useradd -m -s /bin/bash ${USER_NAME} && \

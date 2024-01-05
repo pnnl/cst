@@ -1,14 +1,16 @@
 #!/bin/bash
 
-DOCKER_NAME="tesp-docker"
+DOCKER_NAME="cosim-docker"
 #IMAGE_NAME="ubuntu:20.04"
-#IMAGE_NAME="tesp-$(cat $TESPDIR/scripts/version):latest"
-#IMAGE_NAME="tesp-helics:latest"
-#IMAGE_NAME="tesp-gridlabd:latest"
-#IMAGE_NAME="tesp-eplus:latest"
-#IMAGE_NAME="tesp-ns3:latest"
-#IMAGE_NAME="tesp-python:latest"
-IMAGE_NAME="tesp-tespapi:latest"
+#IMAGE_NAME="cosim-$(cat $TESPDIR/scripts/version):latest"
+IMAGE_NAME="cosim-helics:latest"
+#IMAGE_NAME="cosim-gridlabd:latest"
+#IMAGE_NAME="cosim-eplus:latest"
+#IMAGE_NAME="cosim-ns3:latest"
+#IMAGE_NAME="cosim-python:latest"
+#IMAGE_NAME="cosim-tespapi:latest"
+#IMAGE_NAME="cosim-julia:latest"
+#IMAGE_NAME="cosim-mespapi:latest"
 
 USER_NAME=worker
 USER_HOME=/home/$USER_NAME

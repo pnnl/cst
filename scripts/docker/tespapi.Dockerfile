@@ -1,12 +1,11 @@
 # Build runtime image
-FROM tesp-python:latest AS tesp-tespapi
+FROM cosim-python:latest AS cosim-tespapi
 
 USER root
 
-# TESP user name and work directory
+# User name and work directory
 ENV USER_NAME=worker
 ENV USER_HOME=/home/$USER_NAME
-ENV INSTDIR=$USER_HOME/tenv
 
 RUN echo "===== BUILD RUN TESP API =====" && \
   export DEBIAN_FRONTEND=noninteractive && \
@@ -21,19 +20,9 @@ RUN echo "===== BUILD RUN TESP API =====" && \
 USER $USER_NAME
 WORKDIR $USER_HOME
 
-RUN echo "Directory structure for running" && \
-  mkdir -p psst/psst
-
-# Copy Binaries
-# COPY --from=tesp-build:latest $INSTDIR/ $INSTDIR/
-COPY --from=tesp-build:latest $USER_HOME/repository/AMES-V5.0/psst/ $USER_HOME/psst/psst/
-COPY --from=tesp-build:latest $USER_HOME/repository/AMES-V5.0/README.rst $USER_HOME/psst
-
 # Add directories and files
-RUN echo "Activate the python virtual environment" && \
-  . $USER_HOME/venv/bin/activate && \
-  echo "Install Python Libraries" && \
-  pip3 install tesp-support  >> "pypi.log"&& \
-  cd $USER_HOME/psst/psst || exit && \
-  pip3 install -e .  >> "pypi.log" && \
+RUN echo "Install Python Libraries" && \
+  echo "Activate the python virtual environment" && \
+  . venv/bin/activate && \
+  pip install tesp-support >> pypi.log && \
   tesp_component -c 1

@@ -1,4 +1,4 @@
-from metadataDB import MetaDB
+from cosim_toolbox.metadataDB import MetaDB
 
 import os
 import json

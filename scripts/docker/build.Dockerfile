@@ -1,4 +1,4 @@
-FROM tesp-library AS tesp-production
+FROM cosim-library AS cosim-production
 
 ENV USER_NAME=worker
 ENV USER_HOME=/home/$USER_NAME
@@ -7,9 +7,9 @@ USER $USER_NAME
 WORKDIR $USER_HOME
 
 # TESP exports
-ENV INSTDIR=${USER_HOME}/tenv
-ENV BUILDDIR=${USER_HOME}/builder
-ENV REPODIR=${USER_HOME}/repository
+ENV INSTDIR=$USER_HOME/tenv
+ENV BUILDDIR=$USER_HOME/builder
+ENV REPODIR=$USER_HOME/repository
 
 # COMPILE exports
 ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
@@ -42,7 +42,7 @@ RUN git config --global user.name "${USER_NAME}" && \
   mkdir -p builder
 
 # Copy the build instructions
-COPY builder ${BUILDDIR}
+COPY . ${BUILDDIR}
 
 RUN echo "Download all relevant repositories..." && \
   cd ${REPODIR} || exit && \
@@ -71,7 +71,7 @@ RUN echo "Download all relevant repositories..." && \
   echo "++++++++++++++ KLU SOLVER" && \
   svn export https://github.com/gridlab-d/tools/branches/klu-build-update/solver_klu/source/KLU_DLL && \
   echo "++++++++++++++  Compiling and Installing TESP software is starting!  ++++++++++++++" && \
-  cd ${BUILDDIR} && \
+  cd ${BUILDDIR} || exit && \
   echo "Compiling and Installing FNCS..." && \
   ./fncs_b.sh clean > fncs.log 2>&1 && \
   echo "Compiling and Installing FNCS for Java..." && \
@@ -79,7 +79,7 @@ RUN echo "Download all relevant repositories..." && \
   /bin/rm -r ${REPODIR}/fncs && \
   echo "Compiling and Installing HELICS..." && \
   ./HELICS-src_b.sh clean > HELICS-src.log 2>&1 && \
-  /bin/rm -r  ${REPODIR}/HELICS-src && \
+  /bin/rm -r ${REPODIR}/HELICS-src && \
   echo "Compiling and Installing KLU..." && \
   ./KLU_DLL_b.sh clean > KLU_DLL.log 2>&1 && \
   /bin/rm -r ${REPODIR}/KLU_DLL && \

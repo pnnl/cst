@@ -1,5 +1,5 @@
 # Build runtime image
-FROM tesp-helics:latest AS tesp-python
+FROM cosim-helics:latest AS cosim-python
 
 USER root
 
@@ -10,6 +10,10 @@ ENV INSTDIR=$USER_HOME/tenv
 
 # PATH
 ENV PYHELICS_INSTALL=$INSTDIR
+
+COPY . $USER_HOME/cosim_toolbox/cosim_toolbox/
+COPY --from=cosim-build:latest $USER_HOME/repository/AMES-V5.0/psst/ $USER_HOME/psst/psst/
+COPY --from=cosim-build:latest $USER_HOME/repository/AMES-V5.0/README.rst $USER_HOME/psst
 
 RUN echo "===== BUILD RUN Python =====" && \
   export DEBIAN_FRONTEND=noninteractive && \
@@ -29,7 +33,8 @@ RUN echo "===== BUILD RUN Python =====" && \
   python3.8-venv \
   python3-pip \
   python3-tk \
-  python3-pil.imagetk
+  python3-pil.imagetk && \
+  chown -hR $USER_NAME:$USER_NAME $USER_HOME
 
 # Set 'worker' as user
 USER $USER_NAME
@@ -39,12 +44,16 @@ WORKDIR $USER_HOME
 RUN echo "Directory structure for running" && \
   pip3 install --upgrade pip > "_pypi.log" && \
   pip3 install virtualenv >> "_pypi.log" && \
-  "$USER_HOME/.local/bin/virtualenv" venv --prompt TESP && \
+  ".local/bin/virtualenv" venv --prompt TESP && \
+  echo "Add python virtual environment to .bashrc" && \
+  echo ". venv/bin/activate" >> .bashrc && \
   echo "Activate the python virtual environment" && \
-  . $USER_HOME/venv/bin/activate && \
+  . venv/bin/activate && \
   pip3 install --upgrade pip > "pypi.log" && \
+  echo "Install Python Libraries" && \
   pip3 install helics >> "pypi.log" && \
-  pip3 install helics[cli] >> "pypi.log"
-
-# Copy Binaries
-#COPY --from=tesp-build:latest $INSTDIR/ $INSTDIR/
+  pip3 install helics[cli] >> "pypi.log" && \
+  cd $USER_HOME/cosim_toolbox/cosim_toolbox || exit && \
+  pip3 install -e .  >> "pypi.log" && \
+  cd $USER_HOME/psst/psst || exit && \
+  pip3 install -e .  >> "pypi.log"

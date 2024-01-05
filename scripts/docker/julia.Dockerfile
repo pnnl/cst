@@ -1,12 +1,15 @@
 # Build runtime image
-FROM tesp-python:latest AS mesp-julia
+FROM cosim-python:latest AS cosim-julia
 
 USER root
 
-# TESP user name and work directory
+# User name and work directory
 ENV USER_NAME=worker
 ENV USER_HOME=/home/$USER_NAME
-ENV INSTDIR=$TESPDIR/tenv
+ENV INSTDIR=$USER_NAME/tenv
+
+# PATH
+ENV PATH=$USER_HOME/julia-1.9.4/bin:$PATH
 
 RUN echo "===== BUILD RUN Julia =====" && \
   export DEBIAN_FRONTEND=noninteractive && \
@@ -15,8 +18,8 @@ RUN echo "===== BUILD RUN Julia =====" && \
   apt-get update && \
   apt-get dist-upgrade -y && \
   apt-get install -y \
-  git \
-  wget
+  wget && \
+  chown -hR $USER_NAME:$USER_NAME $USER_HOME
 
 # Set 'worker' as user
 USER $USER_NAME
@@ -25,16 +28,4 @@ WORKDIR $USER_HOME
 RUN echo "Directory structure for running" && \
   wget https://julialang-s3.julialang.org/bin/linux/x64/1.9/julia-1.9.4-linux-x86_64.tar.gz && \
   tar zxvf julia-1.9.4-linux-x86_64.tar.gz  >> "julia.log" && \
-  mkdir -p psst/psst
-
-# Copy Binaries
-# COPY --from=tesp-build:latest $INSTDIR/ $INSTDIR/
-COPY --from=tesp-build:latest $USER_HOME/repository/AMES-V5.0/psst/ $USER_HOME/psst/psst/
-COPY --from=tesp-build:latest $USER_HOME/repository/AMES-V5.0/README.rst $USER_HOME/psst
-
-RUN echo "Activate the python virtual environment" && \
-  . $USER_HOME/venv/bin/activate && \
-  echo "Install Python Libraries" && \
-  cd $USER_HOME/psst/psst || exit && \
-  pip3 install -e .  >> "pypi.log"
-
+  rm julia-1.9.4-linux-x86_64.tar.gz

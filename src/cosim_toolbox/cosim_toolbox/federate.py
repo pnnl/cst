@@ -13,7 +13,7 @@ import logging
 
 import helics as h
 
-import metadataDB as mDB
+import cosim_toolbox.metadataDB as mDB
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler())

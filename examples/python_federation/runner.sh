@@ -1,7 +1,6 @@
 #!/bin/bash
 
 (exec helics_broker -f 3 --loglevel=warning --name=broker &> broker.log &)
-(exec python3 simple_federate.py Battery MyTest &> Battery.log &)
-(exec python3 simple_federate.py EVehicle MyTest &> EVehicle.log &)
-cd ../../src || exit
-(exec python3 data_logger.py DataLogger MySchema MyTest &> ../examples/python_federation/DataLogger.log &)
+(exec python3 simple_federate.py Battery MyScenario &> Battery.log &)
+(exec python3 simple_federate.py EVehicle MyScenario &> EVehicle.log &)
+(exec python3 -c "import cosim_toolbox.data_logger as datalog; datalog.main('DataLogger', 'MySchema', 'MyScenario')" &> DataLogger.log &)

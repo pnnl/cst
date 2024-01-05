@@ -1,36 +1,35 @@
 # Build runtime image
-FROM mesp-julia:latest AS mesp-mespapi
+FROM cosim-julia:latest AS cosim-mespapi
 
 USER root
 
-# TESP user name and work directory
+# User name and work directory
 ENV USER_NAME=worker
 ENV USER_HOME=/home/$USER_NAME
-ENV TESPDIR=$USER_HOME/tesp
-ENV INSTDIR=$TESPDIR/tenv
+ENV MESPDIR=$USER_HOME/mesp
 
-RUN echo "===== BUILD RUN TESP API =====" && \
+COPY . $MESPDIR/
+
+RUN echo "===== BUILD RUN MESP API =====" && \
   export DEBIAN_FRONTEND=noninteractive && \
   export DEBCONF_NONINTERACTIVE_SEEN=true && \
   echo "===== Install Libraries =====" && \
   apt-get update && \
   apt-get dist-upgrade -y && \
-  apt-get install -y \
-  git
+  apt-get install -y && \
+  chown -hR $USER_NAME:$USER_NAME $USER_HOME
 
 # Set 'worker' as user
 USER $USER_NAME
 WORKDIR $USER_HOME
 
-# Copy Binaries
-# COPY --from=tesp-build:latest $INSTDIR/ $INSTDIR/
-
-RUN  echo "Activate the python virtual environment" && \
-  . $USER_HOME/venv/bin/activate && \
-# Install Python Libraries
-  git clone https://devops.pnnl.gov/e-comp/thrust-3/prototype_mesp.git mesp && \
-  pip install -r $USER_HOME/mesp/prototype/requirements.txt >> "pypi.log" && \
-  julia $USER_HOME/mesp/prototype/install_julia_packages.jl
+RUN echo "Install Python Libraries" && \
+#  echo "Activate the python virtual environment" && \
+#  . venv/bin/activate && \
+#  cd $USER_HOME/mesp_support/mesp_support || exit && \
+#  pip3 install -e .  >> "pypi.log" && \
+  echo "Install Julia Libraries" && \
+  julia $MESPDIR/prototype/install_julia_packages.jl
 
 # This provides the mesp packages without having pip install packages
 #PACK=/home/worker/venv/lib/python3.8/site-packages && \

@@ -1,5 +1,5 @@
 # Build runtime image
-FROM tesp-helics:latest AS tesp-run
+FROM cosim-helics:latest AS cosim-run
 
 USER root
 
@@ -30,4 +30,4 @@ WORKDIR $USER_HOME
 #  mkdir -p tenv
 
 # Copy Binaries
-#COPY --from=tesp-build:latest $INSTDIR/ $INSTDIR/
+#COPY --from=cosim-build:latest $INSTDIR/ $INSTDIR/

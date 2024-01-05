@@ -1,4 +1,4 @@
-. $HOME/tesp/venv/bin/activate
+. $HOME/venv/bin/activate
 
 
 # exports

@@ -7,19 +7,17 @@ Copper.
 @author: Mitch Pelton
 mitch.pelton@pnnl.gov
 """
-import os
 import sys
 import psycopg2
-from pathlib import Path
 
-# sys.path.insert(1, os.path.join(Path(__file__).parent, '..', '..', 'src'))
-from Federate import Federate
+from cosim_toolbox.helics_config import HelicsMsg
+from .federate import Federate
 
 
 def open_logger():
     #    "host": os.environ.get("POSTGRES_HOST"),
     connection = {
-        "host": "gage",
+        "host": "gage.pnl.gov",
         "dbname": "copper",
         "user": "postgres",
         "password": "postgres",
@@ -165,12 +163,14 @@ class DataLogger(Federate):
             if "publications" in config.keys():
                 for pub in config["publications"]:
                     publications.append(pub)
-        self.config = {
-            "name": self.federate_name,
-            "period": self.time_step,
-            "log_level": "warning",
-            "subscriptions": publications
-        }
+
+        t1 = HelicsMsg(self.federate_name, self.time_step)
+        t1.config("core_type", "zmq")
+        t1.config("log_level", "warning")
+        t1.config("terminate_on_error", True)
+        if self.scenario["docker"]:
+            t1.config("brokeraddress", "10.5.0.2")
+        self.config = t1.config("subscriptions", publications)
 
     def update_internal_model(self):
 
@@ -200,15 +200,15 @@ class DataLogger(Federate):
         self.conn.commit()
 
 
+def main(federate_name, schema_name, scenario_name):
+    datalogger = DataLogger(federate_name, schema_name)
+    datalogger.create_federate(scenario_name)
+    datalogger.run_cosim_loop()
+    datalogger.destroy_federate()
+    if datalogger.conn:
+        datalogger.conn.close()
+
 
 if __name__ == "__main__":
-
     if sys.argv.__len__() > 3:
-        datalogger = DataLogger(sys.argv[1], sys.argv[2])
-        datalogger.create_federate(sys.argv[3])
-        datalogger.run_cosim_loop()
-        datalogger.destroy_federate()
-        if datalogger.conn:
-            datalogger.conn.close()
-
-
+        main(sys.argv[1], sys.argv[2], sys.argv[3])

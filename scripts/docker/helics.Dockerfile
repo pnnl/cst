@@ -3,8 +3,9 @@ ARG UBUNTU=ubuntu
 ARG UBUNTU_VERSION=:20.04
 
 # Build runtime image
-FROM ${UBUNTU}${UBUNTU_VERSION} AS tesp-helics
+FROM ${UBUNTU}${UBUNTU_VERSION} AS cosim-helics
 
+ARG UID
 # User name and work directory
 ENV USER_NAME=worker
 ENV USER_HOME=/home/$USER_NAME
@@ -31,10 +32,15 @@ RUN echo "===== BUILD RUN Helics =====" && \
   libczmq-dev \
   libboost-dev && \
   ln -s /usr/lib/jvm/java-11-openjdk-amd64 /usr/lib/jvm/default-java && \
+  echo "===== Clean Up =====" && \
+  apt-get upgrade -y && \
+  apt-get clean -y && \
+  apt-get autoclean -y && \
+  apt-get autoremove -y && \
 # protect images by changing root password
   echo "root:worker" | chpasswd && \
   echo "<<<< Adding the 'worker' user >>>>" && \
-  useradd -m -s /bin/bash ${USER_NAME} && \
+  useradd -m -s /bin/bash -u $UID ${USER_NAME} && \
   echo "<<<< Changing new user password >>>>" && \
   echo "${USER_NAME}:${USER_NAME}" | chpasswd && \
   usermod -aG sudo ${USER_NAME}
@@ -48,6 +54,6 @@ RUN echo "Directory structure for running" && \
   mkdir -p tenv
 
 # Copy Binaries
-COPY --from=tesp-build:latest $INSTDIR/ $INSTDIR/
+COPY --from=cosim-build:latest $INSTDIR/ $INSTDIR/
 
 

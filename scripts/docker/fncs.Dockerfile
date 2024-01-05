@@ -3,7 +3,7 @@ ARG UBUNTU=ubuntu
 ARG UBUNTU_VERSION=:20.04
 
 # Build runtime image
-FROM ${UBUNTU}${UBUNTU_VERSION} AS tesp-run
+FROM ${UBUNTU}${UBUNTU_VERSION} AS cosim-run
 
 # User name and work directory
 ENV USER_NAME=worker
@@ -47,6 +47,6 @@ RUN echo "Directory structure for running" && \
   mkdir -p tenv
 
 # Copy Binaries
-COPY --from=tesp-build:latest $INSTDIR/ $INSTDIR/
+COPY --from=cosim-build:latest $INSTDIR/ $INSTDIR/
 
 
