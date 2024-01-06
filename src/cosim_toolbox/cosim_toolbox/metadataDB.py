@@ -10,13 +10,12 @@ import logging
 import subprocess
 from pymongo import MongoClient
 
-import helics_messages as hm
-import os
+import cosim_toolbox.helics_config as hm
 
 logger = logging.getLogger(__name__)
 pp = pprint.PrettyPrinter(indent=4, )
 
-cu_uri = 'mongodb://gage:27017'
+cu_uri = 'mongodb://gage.pnl.gov:27017'
 cu_database = "copper"
 cu_federations = "federations"
 cu_scenarios = "scenarios"
@@ -25,13 +24,13 @@ cu_logger = "cu_logger"
 
 def federation_database(clear: bool = False):
     db = MetaDB(cu_uri, cu_database)
-    print("Before: ",  db.update_collection_names())
+    logger.info("Before: ",  db.update_collection_names())
     if clear:
         db.db[cu_federations].drop()
         db.db[cu_scenarios].drop()
     db.add_collection(cu_scenarios)
     db.add_collection(cu_federations)
-    print("After clear: ", db.update_collection_names())
+    logger.info("After clear: ", db.update_collection_names())
 
 
 class MetaDB:
@@ -51,7 +50,6 @@ class MetaDB:
             self.db = self.client[name]
         else:
             self.db = self.client["meta_db"]
-        self.fs = gridfs.GridFS(self.db)
 
     def _open_file(self, file_path, mode='r'):
         """
@@ -70,7 +68,7 @@ class MetaDB:
         """
         # Set up default uri_string to the server Trevor was using on the EIOC
         if uri is None:
-            uri_string = "mongodb://127.0.0.1:27017"
+            uri = "mongodb://127.0.0.1:27017"
         # Set up connection
         client = MongoClient(uri)
         # Test connection
@@ -87,7 +85,7 @@ class MetaDB:
         Checks to see if the provided document name is unique in the specified
         collection.
 
-        Doesn't throw an error if the name is not unique and let's the calling
+        Doesn't throw an error if the name is not unique and lets the calling
         method decide what to do with it.
         """
         ret_val = True
@@ -99,17 +97,17 @@ class MetaDB:
     def add_file(self, file, conflict='fail', name=None):
         """
         Gets file from disk and adds it to the metadataDB for all federates
-        to use. 
-        
-        The "name" parameter is optional. If provided, the file will be 
+        to use.
+
+        The "name" parameter is optional. If provided, the file will be
         stored by that name in the database. If omitted, the name of the
-        file itself will be used. 
+        file itself will be used.
 
         MongoDB allows files to have the same name and creates unique IDs.
-        By default, this method will produce an error if the name of the 
-        file being added already exists in the file storage. This can 
+        By default, this method will produce an error if the name of the
+        file being added already exists in the file storage. This can
         behavior can be altered by specifying the "conflict" parameter
-        to a different value. 
+        to a different value.
         """
         if not name:
             path, file = os.path.split(file)
@@ -126,21 +124,21 @@ class MetaDB:
             if conflict == "add version":
                 logger.warning(f"New version of file {name} being added."
             else:
-                raise NameError(f"Invalid value for conflict resolution '{name}', 
+                raise NameError(f"Invalid value for conflict resolution '{name}',
                                 must be 'fail', 'overwrite' or 'add version' ")
         self.fs.put(fh, filename = name)
 
 
     def get_file(self, name, disk_name=None, path=None):
         """
-        Pulls a file from the metadataDB by name and optionally writes it to 
-        disk. This method only gets the latest version of the file (if 
+        Pulls a file from the metadataDB by name and optionally writes it to
+        disk. This method only gets the latest version of the file (if
         multiple versions exist).
 
         If "disk_name" is specified, that name will be used when writing the
-        file to disk; otherwise the file name as specified in the metadataDB 
-        will be used. If path is not specified, the file is not written to 
-        disk. If if is the file is written at the location specified by path 
+        file to disk; otherwise the file name as specified in the metadataDB
+        will be used. If path is not specified, the file is not written to
+        disk. If if is the file is written at the location specified by path
         using the provided "disk_name".
         """
         db_file = self.fs.files.find({ filename: name })
@@ -283,88 +281,94 @@ class MetaDB:
 
         return str(doc["_id"])
 
-
-def docker_service(name, image, env, cnt, depends=None):
-    _service = "  " + name + ":\n"
-    _service += "    image: \"" + image + "\"\n"
-    if env[0] != '':
-        _service += "    environment:\n"
-        _service += env[0]
-    _service += "    working_dir: /home/worker/case\n"
-    _service += "    volumes:\n"
-    _service += "      - .:/home/worker/case\n"
-    _service += "      - ../../../data:/home/worker/tesp/data\n"
-    if depends is not None:
-        _service += "    depends_on:\n"
-        _service += "      - " + depends + "\n"
-    _service += "    networks:\n"
-    _service += "      cu_net:\n"
-    _service += "        ipv4_address: 10.5.0." + str(cnt) + "\n"
-    _service += "    command: sh -c \"" + env[1] + "\"\n"
-    return _service
+    @staticmethod
+    def scenario(schema_name: str, federation_name: str, start: str, stop: str, docker: bool = False):
+        return {
+            "schema": schema_name,
+            "federation": federation_name,
+            "start_time": start,
+            "stop_time": stop,
+            "docker": docker
+        }
 
 
-def docker_network():
-    _network = 'networks:\n'
-    _network += '  cu_net:\n'
-    _network += '    driver: bridge\n'
-    _network += '    ipam:\n'
-    _network += '      config:\n'
-    _network += '        - subnet: 10.5.0.0/16\n'
-    _network += '          gateway: 10.5.0.1\n'
-    return _network
+class Docker:
+    def __init__(self):
+        pass
 
+    @staticmethod
+    def _service(name, image, env, cnt, depends=None):
+        _service = "  " + name + ":\n"
+        _service += "    image: \"" + image + "\"\n"
+        if env[0] != '':
+            _service += "    environment:\n"
+            _service += env[0]
+        _service += "    user: worker\n"
+        _service += "    working_dir: /home/worker/case\n"
+        _service += "    volumes:\n"
+        _service += "      - .:/home/worker/case\n"
+        _service += "      - ../../../data:/home/worker/tesp/data\n"
+        if depends is not None:
+            _service += "    depends_on:\n"
+            _service += "      - " + depends + "\n"
+        _service += "    networks:\n"
+        _service += "      cu_net:\n"
+        _service += "        ipv4_address: 10.5.0." + str(cnt) + "\n"
+        _service += "    command: /bin/bash -c \"" + env[1] + "\"\n"
+        return _service
 
-def logger():
-    pass
+    @staticmethod
+    def _network():
+        _network = 'networks:\n'
+        _network += '  cu_net:\n'
+        _network += '    driver: bridge\n'
+        _network += '    ipam:\n'
+        _network += '      config:\n'
+        _network += '        - subnet: 10.5.0.0/16\n'
+        _network += '          gateway: 10.5.0.1\n'
+        return _network
 
+    @staticmethod
+    def define_yaml(scenario_name):
+        mdb = MetaDB(cu_uri, cu_database)
 
-def define_yaml(scenario_name):
-    mdb = MetaDB(cu_uri, cu_database)
+        scenario_def = mdb.get_dict(cu_scenarios, None, scenario_name)
+        federation_name = scenario_def["federation"]
+        schema_name = scenario_def["schema"]
+        fed_def = mdb.get_dict(cu_federations, None, federation_name)["federation"]
 
-    scenario_def = mdb.get_dict(cu_scenarios, None, scenario_name)
-    federation_name = scenario_def["federation"]
-    fed_def = mdb.get_dict(cu_federations, None, federation_name)["federation"]
+        yaml = 'version: "3.8"\n'
+        yaml += 'services:\n'
+        # Add helics broker federate
+        cnt = 2
+        fed_cnt = str(fed_def.__len__() + 1)
+        env = ["", "exec helics_broker --ipv4 -f " + fed_cnt + " --loglevel=warning --name=broker"]
+        yaml += Docker._service("helics", "cosim-python:latest", env, cnt, depends=None)
 
-    yaml = 'version: "3.8"\n'
-    yaml += 'services:\n'
-    # Add helics broker federate
-    cnt = 2
-    fed_cnt = str(fed_def.__len__() + 1)
-    env = ["", "exec helics_broker --ipv4 -f " + fed_cnt + " --loglevel=warning --name=broker > broker.log"]
-    yaml += docker_service("helics", "tesp-helics:latest", env, cnt, depends=None)
+        for name in fed_def:
+            cnt += 1
+            image = fed_def[name]['image']
+            env = ["", fed_def[name]['command']]
+            yaml += Docker._service(name, image, env, cnt, depends=None)
 
-    for name in fed_def:
+        # Add data logger federate
         cnt += 1
-        image = fed_def[name]['image']
-        env = ["", fed_def[name]['command'] + " > " + name + ".log"]
-        yaml += docker_service(name, image, env, cnt, depends=None)
+        env = ["", "source /home/worker/venv/bin/activate && exec python3 -c \\\"import cosim_toolbox.data_logger as datalog; datalog.main('DataLogger', '" +
+               schema_name + "', '" + scenario_name + "')\\\""]
+        yaml += Docker._service(cu_logger, "cosim-python:latest", env, cnt, depends=None)
 
-    # Add data logger federate
-    cnt += 1
-    env = ["", "exec python3 data_logger.py " + scenario_name + " > " + cu_logger + ".log"]
-    yaml += docker_service(cu_logger, "tesp-helics:latest", env, cnt, depends=None)
+        yaml += Docker._network()
+        op = open(scenario_name + ".yaml", 'w')
+        op.write(yaml)
+        op.close()
 
-    yaml += docker_network()
-    op = open(scenario_name + ".yaml", 'w')
-    op.write(yaml)
-    op.close()
-
-
-def run_yaml(scenario_name):
-    print('====  ' + scenario_name + ' Broker Start in\n        ' + os.getcwd(), flush=True)
-    docker_compose = "docker-compose -f " + scenario_name + ".yaml"
-    subprocess.Popen(docker_compose + " up", shell=True).wait()
-    subprocess.Popen(docker_compose + " down", shell=True).wait()
-    print('====  Broker Exit in\n        ' + os.getcwd(), flush=True)
-
-
-def scenario_tojson(federation: str, start: str, stop: str):
-    return {
-        "federation": federation,
-        "start_time": start,
-        "stop_time": stop
-    }
+    @staticmethod
+    def run_yaml(scenario_name):
+        print('====  ' + scenario_name + ' Broker Start in\n        ' + os.getcwd(), flush=True)
+        docker_compose = "docker-compose -f " + scenario_name + ".yaml"
+        subprocess.Popen(docker_compose + " up", shell=True).wait()
+        subprocess.Popen(docker_compose + " down", shell=True).wait()
+        print('====  Broker Exit in\n        ' + os.getcwd(), flush=True)
 
 
 def mytest1():
@@ -403,10 +407,11 @@ def mytest1():
     }
 
     scenario_name = "ME30"
+    schema_name = "Tesp"
     federate_name = "BT1"
     db.add_dict(cu_federations, federate_name, diction)
 
-    scenario = scenario_tojson(federate_name, "2023-12-07T15:31:27", "2023-12-08T15:31:27")
+    scenario = db.scenario(schema_name, federate_name, "2023-12-07T15:31:27", "2023-12-08T15:31:27")
     db.add_dict(cu_scenarios, scenario_name, scenario)
 
     print(db.get_collection_document_names(cu_scenarios))
@@ -468,15 +473,16 @@ def mytest2():
     }
 
     scenario_name = "TE30"
+    schema_name = "Tesp"
     federate_name = "BT1_EV1"
     db.add_dict(cu_federations, federate_name, diction)
 
-    scenario = scenario_tojson(federate_name, "2023-12-07T15:31:27", "2023-12-08T15:31:27")
+    scenario = db.scenario(schema_name, federate_name, "2023-12-07T15:31:27", "2023-12-08T15:31:27")
     db.add_dict(cu_scenarios, scenario_name, scenario)
 
     scenario_name = "TE100"
     # seems to remember the scenario address, not the value so reinitialize
-    scenario = scenario_tojson(federate_name, "2023-12-07T15:31:27", "2023-12-10T15:31:27")
+    scenario = db.scenario(schema_name, federate_name, "2023-12-07T15:31:27", "2023-12-10T15:31:27", True)
     db.add_dict(cu_scenarios, scenario_name, scenario)
 
     print(db.get_collection_document_names(cu_scenarios))

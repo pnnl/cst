@@ -28,7 +28,7 @@ x-airflow-common:
     - ./dags:/opt/airflow/dags
     - ./logs:/opt/airflow/logs
     - ./plugins:/opt/airflow/plugins
-    - ./examples:/opt/example
+#    - ${HOME}/tesp/repository/copper/examples:/opt/airflow/examples
 
   env_file:
     - ./.env

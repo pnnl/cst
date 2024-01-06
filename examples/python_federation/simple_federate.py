@@ -7,19 +7,16 @@ Copper.
 @author: Mitch Pelton
 mitch.pelton@pnnl.gov
 """
-import os
 import sys
 import psycopg2
-from pathlib import Path
 
-sys.path.insert(1, os.path.join(Path(__file__).parent, '..', '..', 'src'))
-from Federate import Federate
+from cosim_toolbox.federate import Federate
 
 
 def open_logger():
     #    "host": os.environ.get("POSTGRES_HOST"),
     connection = {
-        "host": "gage",
+        "host": "gage.pnl.gov",
         "dbname": "copper",
         "user": "postgres",
         "password": "postgres",
@@ -49,6 +46,7 @@ def check_version():
 
 class SimpleFederate(Federate):
     def __init__(self, fed_name="", schema="default", **kwargs):
+        self.dummy = 0
         super().__init__(fed_name, **kwargs)
 
     def update_internal_model(self):
@@ -58,28 +56,20 @@ class SimpleFederate(Federate):
         """
         if not self.debug:
             raise NotImplementedError("Subclass from Federate and write code to update internal model")
-        # Doing something silly for testing purposes
-        # Get a value from an arbitrary input; I hope it is a number
-        if len(self.data_from_federation["inputs"].keys()) >= 1:
-            key = list(self.data_from_federation["inputs"].keys())[0]
-            dummy_value = self.data_from_federation["inputs"][key]
-        else:
-            dummy_value = 0
 
-        # Increment for arbitrary reasons. This is the actual model
-        # that is being updated in this example.
-        dummy_value += 1
-        print(dummy_value)
+        for key in self.data_from_federation["inputs"]:
+            print(self.data_from_federation["inputs"][key])
+            self.dummy += 1
 
         # Send out incremented value on arbitrary publication
         # Clear out values published last time
-        for pub in self.data_to_federation["publications"]:
-            self.data_to_federation["publications"][pub] = None
-        for ep in self.data_to_federation["endpoints"]:
-            self.data_to_federation["endpoints"][ep] = None
-        if len(self.data_to_federation["publications"].keys()) >= 1:
-            pub = self.hfed.get_publication_by_index(0)
-            self.data_to_federation["publications"][pub.name] = dummy_value
+        for key in self.data_to_federation["publications"]:
+            self.data_to_federation["publications"][key] = None
+        for key in self.data_to_federation["endpoints"]:
+            self.data_to_federation["endpoints"][key] = None
+
+        for key in self.data_to_federation["publications"]:
+            self.data_to_federation["publications"][key] = self.dummy + 1
 
 
 if __name__ == "__main__":

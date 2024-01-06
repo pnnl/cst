@@ -28,6 +28,7 @@ class HelicsMsg(object):
 
     def config(self, _n, _v):
         self._cnfg[_n] = _v
+        return self._cnfg
 
     def pubs(self, _g, _k, _t, _o, _p):
         # for object and property is for internal code interface for GridLAB-D

@@ -6,12 +6,16 @@
     "cu_name": "TE30",
     "start_time": "2023-12-07T15:31:27",
     "stop_stime": "2023-12-07T15:31:27",
-    "federation": "BT1_EV1"
+    "federation": "BT1_EV1",
+    "schema": "Tesp",
+    "docker": true
   },
   {
     "cu_name": "<string: TE100>",
     "start_time": "<ISO 8601 string: 2023-12-07T15:31:27−07:00   %:z -07:00 not supported < py3.12>",
     "stop_stime": "<ISO 8601 string: 2023-12-07T15:31:27−07:00>",
-    "federation": "<string: BT1_EV1>"
+    "federation": "<string: BT1_EV1>",
+    "schema": "<string: Tesp>",
+    "docker": "<boolean: true>"
   }
 ]
