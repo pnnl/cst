@@ -87,7 +87,7 @@ class Federate:
         # if not wanting to debug, add debug=False as an argument
         self.__dict__.update(kwargs)
 
-    def connect_to_metadataDB(self):
+    def connect_to_metadataDB(self, uri, db_name):
         """Connects to the Copper metadataDB
 
         The metadata database (metadataDB) contains the HELICS configuration
@@ -96,11 +96,11 @@ class Federate:
         available for other methods in this class.
 
         Args:
-            self.mDB - MetadataDB object
-        
+            uri (str): URI for Mongo database
+            db_name (str): Name for Mongo database
         """
         try:
-            self.mddb = mDB.MetaDB(mDB.cu_uri, mDB.cu_database)
+            self.mddb = mDB.MetaDB(uri, db_name)
         except Exception as e:
             self.errors.append(str(e))
             return
@@ -111,11 +111,11 @@ class Federate:
         HELICS configuration information is generally stored in the metadataDB
         and is copied into the `self.federation` attribute. This method pulls
         out a few keys configuration parameters from that attribute to make 
-        them more easily accesible.
+        them more easily accessible.
 
-        Args:
-            self.federation: Dictionary with all federate configuration
-                information
+        Attributes:
+            self.federation: Dictionary with all federate configuration information
+            self.federate_name: The name of federate
             self.federate: Dictionary with configuration information for
                 this federate, including but not limited to the HELICS JSON
                 config string
@@ -128,7 +128,7 @@ class Federate:
         self.config = self.federate["HELICS_config"]
         # self.image = self.federate["image"]
 
-    def create_federate(self, scenario_name: str):
+    def create_federate(self, scenario_name):
         """Create Copper and HELICS federates
 
         Creates and defines both the instance of this class,(the Copper 
@@ -139,14 +139,14 @@ class Federate:
         take place after connecting to said database.
 
         Args:
-            scenario_name: Name of scenario used to store configuration 
+            scenario_name (str): Name of scenario used to store configuration
                 information in the metadataDB
 
         Raises:
             NameError: Scenario name is undefined (`None`)
         """
 
-        self.connect_to_metadataDB()
+        self.connect_to_metadataDB(mDB.cu_uri, mDB.cu_database)
         if scenario_name is None:
             raise NameError("scenario_name is None")
         self.scenario_name = scenario_name
@@ -200,7 +200,7 @@ class Federate:
         needs to be defined as an instance attribute to enable the correct API
         to be called.
 
-        Args:
+        Attributes:
             self.federate_type: String defining the federate type. Must be
                 "value", "message", or "combo".
             self.config: Valid HELICS config JSON string
@@ -247,17 +247,17 @@ class Federate:
         """Moves federate to HELICS initializing mode
 
         There are a few stages to a federate in HELICS with initializing mode
-        being the first after the federate is created. Entering initializing
+        being the first after the Federate is created. Entering initializing
         mode is a global synchronous event for all federates and provides an 
         opportunity to do some fancy things around dynamic configuration of the
-        federate. What is implemented here is the simplest, most vanilla means 
+        Federate. What is implemented here is the simplest, most vanilla means
         of entering initializing mode. If you need something more complex, 
         overload or redefine this method.
         """
         self.hfed.enter_initializing_mode()
 
     def enter_executing_mode(self):
-        """Moves fedeate to executing mode
+        """Moves the Federate to executing mode
 
         Similar to initializing mode, there are a few different ways of 
         handling HELICS executing mode and what is implemented here is the 
@@ -267,7 +267,7 @@ class Federate:
         self.hfed.enter_executing_mode()
 
     def simulate_next_step(self):
-        """Advances the federate to its next simulated time
+        """Advances the Federate to its next simulated time
 
         This method is the core of the main co-simulation loop where the time 
         request is made and once granted, data from the rest of the federation
@@ -289,7 +289,7 @@ class Federate:
         to overload the default calculation method if they need something 
         more complex.
 
-        Args:
+        Attributes:
             self.granted_time: The last time granted to this federate
             self.time_step: The size of the simulated time step this 
                 federates takes when requesting the next time
@@ -317,7 +317,7 @@ class Federate:
             requested_time: Simulated time this federate needs to request
         
         Returns:
-            granted_time: Simulated time granted by HELICS
+            self.granted_time: Simulated time granted by HELICS
         """
         self.granted_time = self.hfed.request_time(requested_time)
         return self.granted_time
@@ -331,9 +331,8 @@ class Federate:
         set of metadata associated with these interfaces. The implementation
         here is vanilla and is expected to be sufficient for many use cases.
 
-        Args:
-            self.hfed: The HELICS federate object used to access the HELICS
-                interfaces
+        Attributes:
+            self.hfed: The HELICS federate object used to access the HELICS interfaces
         """
         # Subscriptions and inputs
         for idx in range(0, self.hfed.n_inputs):
@@ -375,7 +374,7 @@ class Federate:
 
         After receiving inputs from the rest of the federation, each federate
         updates its internal model, generally using the new inputs to perform
-        the necessary calculations. This aligns the federate's state with that 
+        the necessary calculations. This aligns the Federate state with that
         of the rest of the federation
 
         This is entirely user-defined code and is intended to be defined by
@@ -425,9 +424,8 @@ class Federate:
         Since endpoints can send multiple messages, each message needs its
         own entry in the pub_data.
 
-        Args:
-            self.hfed: The HELICS federate object used to access the HELICS
-                interfaces
+        Attributes:
+            self.hfed: The HELICS federate object used to access the HELICS interfaces
         """
 
         # Publications
@@ -454,7 +452,7 @@ class Federate:
         when the co-simulation is complete and all federates end execution
         at more or less the same wall-clock time.
 
-        Args:
+        Attributes:
             self.hfed: The HELICS federate object that needs to be removed from
                 the HELICS federation
         """

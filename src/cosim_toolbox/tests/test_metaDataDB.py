@@ -1,7 +1,7 @@
-from cosim_toolbox.metadataDB import MetaDB
-
 import os
 import json
+
+from cosim_toolbox.metadataDB import MetaDB
 
 """ 
     Main method for launching meta data class to ping local container of mongodb.
@@ -14,6 +14,7 @@ import json
 
 
 local_default_uri = 'mongodb://localhost:27017'
+
 metadb = MetaDB(uri=local_default_uri)
 
 # Testing methods in metadataDB.py
@@ -40,7 +41,7 @@ named_file_dict = {"psc": file_dict}
 dict_name = "psc"
 obj_id = metadb.add_dict(collection_name, dict_name, named_file_dict)
 
-#test get get_dict_key_names(self, collection_name, doc_name):
+# test get get_dict_key_names(self, collection_name, doc_name):
 keys = metadb.get_dict_key_names(collection_name, dict_name)
 print(f"Dictionary keys of {dict_name}: {keys}")
 
