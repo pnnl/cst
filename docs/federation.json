@@ -5,11 +5,12 @@
   {
     "cu_name": "BT1_EV1",
     "federation": {
-      "BatteryFed1": {
+      "Battery": {
         "image": "python/3.11.7-slim-bullseye",
-        "federate type": "value",
-        "sim time step": 120,
-        "HELICS config": {
+        "command": "exec python3 simple_federate.py TE30 EVehicle",
+        "federate_type": "value",
+        "time_step": 120,
+        "HELICS_config": {
           "name": "Battery",
           "core_type": "zmq",
           "log_level": "warning",
@@ -35,10 +36,11 @@
           ]
         }
       },
-      "EVFed1": {
+      "EVehicle": {
         "image": "python/3.11.7-slim-bullseye",
-        "federate type": "value",
-        "sim time step": 120,
+        "command": "exec python3 simple_federate.py TE30 EVehicle",
+        "federate_type": "value",
+        "time_step": 120,
         "HELICS config": {
           "name": "EVehicle",
           "core_type": "zmq",

@@ -17,7 +17,7 @@ class HelicsMsg(object):
     def write_json(self):
         self.config("publications", self._pubs)
         self.config("subscriptions", self._subs)
-        return json.dumps(self._cnfg, ensure_ascii=False)
+        return self._cnfg
 
     def write_file(self, _fn):
         self.config("publications", self._pubs)
@@ -28,6 +28,7 @@ class HelicsMsg(object):
 
     def config(self, _n, _v):
         self._cnfg[_n] = _v
+        return self._cnfg
 
     def pubs(self, _g, _k, _t, _o, _p):
         # for object and property is for internal code interface for GridLAB-D

@@ -12,24 +12,24 @@ echo "++++++++++++++  Compiling and Installing TESP software is starting!  +++++
 echo
 
 echo "Installing Python Libraries..."
-which python > "${TESPBUILD}/tesp_pypi.log" 2>&1
-pip list >> "${TESPBUILD}/tesp_pypi.log" 2>&1
-pip install sphinx-jsonschema sphinxcontrib-bibtex recommonmark xarray >> "${TESPBUILD}/tesp_pypi.log" 2>&1
-pip install pygccxml pybindgen PYPOWER PuLP Pyomo PyYAML plotly future networkx pyutilib >> "${TESPBUILD}/tesp_pypi.log" 2>&1
-#pip install NREL-PySAM~=4.1.0 PyGLM~=2.7.0 tables~=3.8.0 >> "${TESPBUILD}/tesp_pypi.log" 2>&1
+which python > "${BUILDDIR}/tesp_pypi.log" 2>&1
+pip list >> "${BUILDDIR}/tesp_pypi.log" 2>&1
+pip install sphinx-jsonschema sphinxcontrib-bibtex recommonmark xarray >> "${BUILDDIR}/tesp_pypi.log" 2>&1
+pip install pygccxml pybindgen PYPOWER PuLP Pyomo PyYAML plotly future networkx pyutilib >> "${BUILDDIR}/tesp_pypi.log" 2>&1
+#pip install NREL-PySAM~=4.1.0 PyGLM~=2.7.0 tables~=3.8.0 >> "${BUILDDIR}/tesp_pypi.log" 2>&1
 
 echo "Installing Python TESP API..."
 cd "${TESPDIR}/src/tesp_support" || exit
-pip3 install -e . > "${TESPBUILD}/tesp_api.log" 2>&1
+pip3 install -e . > "${BUILDDIR}/tesp_api.log" 2>&1
 
 echo "Installing Python PSST..."
 cd "${REPODIR}/AMES-V5.0/psst" || exit
-pip3 install -e . > "${TESPBUILD}/AMES-V5.0.log" 2>&1
+pip3 install -e . > "${BUILDDIR}/AMES-V5.0.log" 2>&1
 
 #  pip3 install tesp_support --upgrade
 #  pip3 install psst --upgrade
 
-cd "${TESPBUILD}" || exit
+cd "${BUILDDIR}" || exit
 if [[ $1 == "develop" ]]; then
 
   echo "Compiling and Installing CZMQ..."
@@ -69,15 +69,15 @@ if [[ $1 == "develop" ]]; then
   mv TMY3toTMY2_ansi "${INSTDIR}/bin"
 else
 
-  ver=$(cat "${TESPBUILD}/version")
+  ver=$(cat "${BUILDDIR}/version")
   echo "Installing HELICS, FNCS, GridLabD, EnergyPlus, NS3, and solver binaries..."
   cd "${INSTDIR}" || exit
 #  wget --no-check-certificate https://github.com/pnnl/tesp/releases/download/${ver}/tesp_binaries.zip
-#  unzip tesp_binaries.zip > "${TESPBUILD}/tesp_binaries.log" 2>&1
+#  unzip tesp_binaries.zip > "${BUILDDIR}/tesp_binaries.log" 2>&1
 #  rm tesp_binaries.zip
 fi
 
-cd "${TESPBUILD}" || exit
+cd "${BUILDDIR}" || exit
 echo "Installing HELICS Python bindings..."
 ./HELICS-py.sh clean > HELICS-py.log 2>&1
 
@@ -89,10 +89,10 @@ echo "Installing TESP documentation..."
 # and in the trusted directories (/lib and /usr/lib).
 # sudo ldconfig
 echo
-echo "TESP installation logs are found in ${TESPBUILD}"
+echo "TESP installation logs are found in ${BUILDDIR}"
 echo "++++++++++++++  Compiling and Installing TESP software is complete!  ++++++++++++++"
 
-cd "${TESPBUILD}" || exit
+cd "${BUILDDIR}" || exit
 ./versions.sh
 
 echo

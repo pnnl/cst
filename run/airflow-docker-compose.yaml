@@ -28,7 +28,7 @@ x-airflow-common:
     - ./dags:/opt/airflow/dags
     - ./logs:/opt/airflow/logs
     - ./plugins:/opt/airflow/plugins
-    - ./examples:/opt/example
+#    - ${HOME}/tesp/repository/copper/examples:/opt/airflow/examples
 
   env_file:
     - ./.env
@@ -111,7 +111,7 @@ services:
     healthcheck:
       test:
         [
-          "CMD-SHELL"
+          "CMD-SHELL",
           'celery --app airflow.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}"'
         ]
       interval: 10s

@@ -1,14 +1,19 @@
 # Build runtime image
-FROM tesp-helics:latest AS tesp-run
+FROM cosim-helics:latest AS cosim-python
 
-# TESP user name and work directory
+USER root
+
+# User name and work directory
 ENV USER_NAME=worker
 ENV USER_HOME=/home/$USER_NAME
-ENV TESPDIR=$USER_HOME/tesp
-ENV INSTDIR=$TESPDIR/tenv
+ENV INSTDIR=$USER_HOME/tenv
 
-# Copy Binaries
-# COPY --from=tesp-build:latest $INSTDIR/ $INSTDIR/
+# PATH
+ENV PYHELICS_INSTALL=$INSTDIR
+
+COPY . $USER_HOME/cosim_toolbox/cosim_toolbox/
+COPY --from=cosim-build:latest $USER_HOME/repository/AMES-V5.0/psst/ $USER_HOME/psst/psst/
+COPY --from=cosim-build:latest $USER_HOME/repository/AMES-V5.0/README.rst $USER_HOME/psst
 
 RUN echo "===== BUILD RUN Python =====" && \
   export DEBIAN_FRONTEND=noninteractive && \
@@ -17,11 +22,38 @@ RUN echo "===== BUILD RUN Python =====" && \
   apt-get update && \
   apt-get dist-upgrade -y && \
   apt-get install -y \
+# Ipopt cbc solver support libraries
+  coinor-cbc \
+  coinor-libcbc-dev \
+  coinor-libipopt-dev \
+  liblapack-dev \
+  libmetis-dev \
 # Python support
   python3.8 \
-  # python3.8-venv \
+  python3.8-venv \
   python3-pip \
   python3-tk \
   python3-pil.imagetk && \
-  pip3 install helics > "$TESPDIR/tesp_pypi.log" && \
-  pip3 install helics[cli] >> "$TESPDIR/tesp_pypi.log"
+  chown -hR $USER_NAME:$USER_NAME $USER_HOME
+
+# Set 'worker' as user
+USER $USER_NAME
+WORKDIR $USER_HOME
+
+# Add directories and files
+RUN echo "Directory structure for running" && \
+  pip3 install --upgrade pip > "_pypi.log" && \
+  pip3 install virtualenv >> "_pypi.log" && \
+  ".local/bin/virtualenv" venv --prompt TESP && \
+  echo "Add python virtual environment to .bashrc" && \
+  echo ". venv/bin/activate" >> .bashrc && \
+  echo "Activate the python virtual environment" && \
+  . venv/bin/activate && \
+  pip3 install --upgrade pip > "pypi.log" && \
+  echo "Install Python Libraries" && \
+  pip3 install helics >> "pypi.log" && \
+  pip3 install helics[cli] >> "pypi.log" && \
+  cd $USER_HOME/cosim_toolbox/cosim_toolbox || exit && \
+  pip3 install -e .  >> "pypi.log" && \
+  cd $USER_HOME/psst/psst || exit && \
+  pip3 install -e .  >> "pypi.log"
