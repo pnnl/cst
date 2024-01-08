@@ -113,6 +113,7 @@ if __name__ == "__main__":
       metadb.remove_collection(collection_name)
       metadb.add_collection(collection_name)
       metadb.add_dict(collection_name, dict_to_add=collection_scenarios, dict_name="current scenario")
+      
   # create and begin a broker for the cosim
   broker = h.helicsCreateBroker("zmq", "mainbroker", f"-f 2")
   #  add a DB collection for the first test federation, and add the federation to the collection
