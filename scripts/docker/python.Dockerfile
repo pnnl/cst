@@ -51,9 +51,9 @@ RUN echo "Directory structure for running" && \
   . venv/bin/activate && \
   pip3 install --upgrade pip > "pypi.log" && \
   echo "Install Python Libraries" && \
-  pip3 install helics >> "pypi.log" && \
-  pip3 install helics[cli] >> "pypi.log" && \
+  pip3 install --no-cache-dir helics >> "pypi.log" && \
+  pip3 install --no-cache-dir helics[cli] >> "pypi.log" && \
   cd $USER_HOME/cosim_toolbox/cosim_toolbox || exit && \
-  pip3 install -e .  >> "pypi.log" && \
+  pip3 install --no-cache-dir -e .  >> "pypi.log" && \
   cd $USER_HOME/psst/psst || exit && \
-  pip3 install -e .  >> "pypi.log"
+  pip3 install --no-cache-dir -e .  >> "pypi.log"

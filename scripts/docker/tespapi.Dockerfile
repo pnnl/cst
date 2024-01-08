@@ -24,5 +24,5 @@ WORKDIR $USER_HOME
 RUN echo "Install Python Libraries" && \
   echo "Activate the python virtual environment" && \
   . venv/bin/activate && \
-  pip install tesp-support >> pypi.log && \
+  pip install --no-cache-dir tesp-support >> pypi.log && \
   tesp_component -c 1

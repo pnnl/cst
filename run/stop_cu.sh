@@ -1,8 +1,9 @@
 #!/bin/bash
 
 # Shutdown and stop containers/volumes
-# to remove all images as well add  '--rmi all' the docker compose
-docker-compose -f airflow-docker-compose.yaml down --volumes
+# to remove all images as well  '--rmi all' the docker compose
+# to remove all volumes as well  '--volumes' er compose
+docker-compose -f docker-compose.yaml down --volumes
 docker-compose -f postgres-docker-compose.yaml down --volumes
 
 # Remove network and volumes 

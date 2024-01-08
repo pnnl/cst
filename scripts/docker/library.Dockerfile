@@ -29,7 +29,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
   lsof \
   # Java support
   openjdk-11-jdk \
-  # for HELICS and FNCS
+  # HELICS and FNCS support
   libzmq5-dev \
   libczmq-dev \
   libboost-dev \
