@@ -8,6 +8,7 @@ import os
 import pprint
 import logging
 import subprocess
+import gridfs
 from pymongo import MongoClient
 
 import cosim_toolbox.helics_config as hm
@@ -50,8 +51,10 @@ class MetaDB:
             self.db = self.client[name]
         else:
             self.db = self.client["meta_db"]
+        self.fs = gridfs.GridFS(self.db)
 
-    def _open_file(self, file_path, mode='r'):
+    @staticmethod
+    def _open_file(file_path, mode='r'):
         """
         Utility function to open file with reasonable error handling.
         """
@@ -62,7 +65,8 @@ class MetaDB:
         else:
             return fh
 
-    def _connect_to_database(self, uri=None):
+    @staticmethod
+    def _connect_to_database(uri=None):
         """
         Sets up connection to server port for mongodb
         """
@@ -115,19 +119,18 @@ class MetaDB:
         fh = self._open_file(file, mode='rb')
 
         # Check for unique filename
-        db_file = self.fs.files.find({filename: name })
+        db_file = self.fs.files.find({'filename': name})
         if db_file:
             if conflict == "fail":
                 raise NameError(f"File '{name}' already exists, set 'conflict' to 'overwrite' to overwrite it.")
             if conflict == "overwrite":
                 logger.warning(f"File {name} being overwritten.")
             if conflict == "add version":
-                logger.warning(f"New version of file {name} being added."
+                logger.warning(f"New version of file {name} being added.")
             else:
-                raise NameError(f"Invalid value for conflict resolution '{name}',
-                                must be 'fail', 'overwrite' or 'add version' ")
-        self.fs.put(fh, filename = name)
-
+                raise NameError(f"Invalid value for conflict resolution '{name}',"
+                                f"must be 'fail', 'overwrite' or 'add version' ")
+        self.fs.put(fh, filename=name)
 
     def get_file(self, name, disk_name=None, path=None):
         """
@@ -138,10 +141,10 @@ class MetaDB:
         If "disk_name" is specified, that name will be used when writing the
         file to disk; otherwise the file name as specified in the metadataDB
         will be used. If path is not specified, the file is not written to
-        disk. If if is the file is written at the location specified by path
+        disk. If it is the file is written at the location specified by path
         using the provided "disk_name".
         """
-        db_file = self.fs.files.find({ filename: name })
+        db_file = self.fs.files.find({'filename': name})
         if not db_file:
             raise NameError(f"File '{name}' does not exist.")
         else:
@@ -163,12 +166,10 @@ class MetaDB:
         if dict_name is None and object_id is None:
             raise AttributeError("Must provide the name or object ID of the dictionary to be retrieved.")
         elif dict_name is not None and object_id is not None:
-            # raise UserWarning("Using provided object ID (and not provided name) to remove document.")
+            logger.warning("Using provided object ID (and not provided name) to remove document.")
             self.db[collection_name].delete_one({"_id": object_id})
         elif dict_name is not None:
             self.db[collection_name].delete_one({self._cu_dict_name: dict_name})
-            # if not doc:
-            #     raise NameError(f"{dict_name} does not exist in collection {collection_name} and cannot be retrieved.")
         elif object_id is not None:
             self.db[collection_name].delete_one({"_id": object_id})
         # TODO: Add check for success on delete.
@@ -238,10 +239,9 @@ class MetaDB:
         if dict_name is None and object_id is None:
             raise AttributeError("Must provide the name or object ID of the dictionary to be retrieved.")
         elif dict_name is not None and object_id is not None:
-            # raise UserWarning("Using provided object ID (and not provided name) to get dictionary.")
+            logger.warning("Using provided object ID (and not provided name) to get dictionary.")
             doc = self.db[collection_name].find_one({"_id": object_id})
         elif dict_name is not None:
-            doc = self.db[collection_name].find_one({self._cu_dict_name: dict_name})
             doc = self.db[collection_name].find_one({self._cu_dict_name: dict_name})
             if not doc:
                 raise NameError(f"{dict_name} does not exist in collection {collection_name} and cannot be retrieved.")
@@ -267,10 +267,9 @@ class MetaDB:
         if dict_name is None and object_id is None:
             raise AttributeError("Must provide the name or object ID of the dictionary to be modified.")
         elif dict_name is not None and object_id is not None:
-            # raise UserWarning("Using provided object ID (and not provided name) to update database.")
+            logger.warning("Using provided object ID (and not provided name) to update database.")
             doc = self.db[collection_name].replace({"_id": object_id}, updated_dict)
         elif dict_name is not None:
-            doc = self.db[collection_name].find_one({self._cu_dict_name: dict_name})
             doc = self.db[collection_name].find_one({self._cu_dict_name: dict_name})
             if doc:
                 doc = self.db[collection_name].replace({self._cu_dict_name: dict_name}, updated_dict)
@@ -373,7 +372,7 @@ class Docker:
 
 def mytest1():
     """
-    Main method for launching meta data class to ping local container of mongodb.
+    Main method for launching metadata class to ping local container of mongodb.
     First user's will need to set up docker desktop (through the PNNL App Store), install mongodb community: 
     https://www.mongodb.com/docs/manual/tutorial/install-mongodb-community-with-docker/
     But run docker with the port number exposed to the host so that it can be pinged from outside the container: 
@@ -422,7 +421,7 @@ def mytest1():
 
 def mytest2():
     """
-    Main method for launching meta data class to ping local container of mongodb.
+    Main method for launching metadata class to ping local container of mongodb.
     First user's will need to set up docker desktop (through the PNNL App Store), install mongodb community:
     https://www.mongodb.com/docs/manual/tutorial/install-mongodb-community-with-docker/
     But run docker with the port number exposed to the host so that it can be pinged from outside the container:

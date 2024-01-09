@@ -57,6 +57,10 @@ Windows doesn't like empty lines on shell scripts
 For starting up Docker, running the commands in the shell script in the terminal works better than running the script itself.
 
 
+For AIRFLOW
+/home/airflow/copper-key-ecdsa.pub
+
+
 #in the docker for each server to use
 # remove old finger print if any, not needed in file was empty
 ssh-keygen -R boomer
@@ -73,7 +77,6 @@ ssh-copy-id -i ~/copper-key-ecdsa user@host
 
 
 
-
 ## Info about keygen
 
 Creating an SSH Key Pair for User Authentication
@@ -86,9 +89,19 @@ Your identification has been saved in /home/ylo/.ssh/id_rsa.
 Your public key has been saved in /home/ylo/.ssh/id_rsa.pub.
 The key fingerprint is: SHA256:Up6KjbnEV4Hgfo75YM393QdQsK3Z0aTNBz0DoirrW+c ylo@klar
 The key's randomart image is:
-+---[RSA 2048]----+ |    .      ..oo..| |   . . .  . .o.X.| |    . . o.  ..+ B|
-|   .   o.o  .+ ..| |    ..o.S   o..  | |   . %o=      .  | |    @.B...     . |
-|   o.=. o. . .  .| |    .oo  E. . .. | +----[SHA256]-----+ klar (11:40) ~>
++---[RSA 2048]----+
+|    .      ..oo..|
+|   . . .  . .o.X.|
+|    . . o.  ..+ B|
+|   .   o.o  .+ ..|
+|    ..o.S   o..  |
+|   . %o=      .  |
+|    @.B...     . |
+|   o.=. o. . .  .|
+|    .oo  E. . .. |
++----[SHA256]-----+
+
+klar (11:40) ~>
 First, the tool asked where to save the file. SSH keys for user authentication are usually stored in the user's .ssh directory under the home directory. However, in enterprise environments, the location is often different. The default key file name depends on the algorithm, in this case id_rsa when using the default RSA algorithm. It could also be, for example, id_dsa or id_ecdsa.
 
 Then it asks to enter a passphrase. The passphrase is used for encrypting the key, so that it cannot be used even if someone obtains the private key file. The passphrase should be cryptographically strong. Our online random password generator is one possible tool for generating strong passphrases.
@@ -117,3 +130,72 @@ To use public key authentication, the public key must be copied to a server and 
 ssh-copy-id -i ~/.ssh/tatu-key-ecdsa user@host
 Once the public key has been configured on the server, the server will allow any connecting user that has the private key to log in. During the login process, the client proves possession of the private key by digitally signing the key exchange.
 
+
+
+https://stackoverflow.com/questions/67887138/how-to-install-packages-in-airflow-docker-compose
+don't know if the answer is too late, anyway, I've managed to workaround this problem by:
+
+Defining new volumen in docker compose, pointing to a directory where new modules will be deployed. In my case, in Docker compose x-airflow-common: common section, in volumes subsection, I added: - ${AIRFLOW_PROJ_DIR:-.}/python:/python_extended
+Then, in ${AIRFLOW_PROJ_DIR:-.}/python, I can deploy new modules to be used as PYTHONPATH.
+Finally, it is possible to define a .env specific per task defined in Airflow in ${AIRFLOW_PROJ_DIR:-.}/python and load a per-task specific .env files in the dag.py of the task.
+So, my docker-compose.yml looks like:
+
+version: '3.8'
+x-airflow-common:
+  &airflow-common
+  # In order to add custom dependencies or upgrade provider packages you can use your extended image.
+  # Comment the image line, place your Dockerfile in the directory where you placed the docker-compose.yaml
+  # and uncomment the "build" line below, Then run `docker-compose build` to build the images.
+
+  #image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.7.0}
+  build: .
+
+  environment:
+    &airflow-common-env
+    AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+    # For backward compatibility, with Airflow <2.3
+    AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+    AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres/airflow
+    AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
+    AIRFLOW__CORE__FERNET_KEY: ''
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session'
+    # yamllint disable rule:line-length
+    # Use simple http server on scheduler for health checks
+    # See https://airflow.apache.org/docs/apache-airflow/stable/administration-and-deployment/logging-monitoring/check-health.html#scheduler-health-check-server
+    # yamllint enable rule:line-length
+    AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
+    # WARNING: Use _PIP_ADDITIONAL_REQUIREMENTS option ONLY for a quick checks
+    # for other purpose (development, test and especially production usage) build/extend Airflow image.
+    _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
+    PYTHONPATH: '$PYTHONPATH;/python_extended'
+  volumes:
+    - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
+    - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
+    - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
+    - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
+    - ${AIRFLOW_PROJ_DIR:-.}/python:/python_extended
+  user: "${AIRFLOW_UID:-50000}:0"
+  depends_on:
+    &airflow-common-depends-on
+    redis:
+      condition: service_healthy
+    postgres:
+      condition: service_healthy
+And my DAGs start with:
+
+import sys, os, logging
+sys.path.append(os.path.abspath("/python_extended"))
+logging.info(os.environ['PYTHONPATH'])
+
+...
+
+from dotenv import load_dotenv
+
+path = '/python_extended/whatever.env'
+print(f'> Using .env file: {path}')
+load_dotenv(path)
+
+This way, keeping the current docker deploy of the image, you can add new modules by just deploying them to your local path in ${AIRFLOW_PROJ_DIR:-.}/python.

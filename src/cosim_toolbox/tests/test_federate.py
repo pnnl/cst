@@ -1,13 +1,9 @@
 # setup and definitions
-import sys
-import os
-from pathlib import Path
-
-sys.path.insert(1, os.path.join(Path(__file__).parent, '..', 'src'))
-from Federate import Federate
-from metadataDB import MetaDB
-import helics as h
 import threading
+import helics as h
+
+from cosim_toolbox.federate import Federate
+from cosim_toolbox.metadataDB import MetaDB
 
 # create a db for a simple federation
 local_default_uri = 'mongodb://localhost:27017'
@@ -102,7 +98,7 @@ def setup_cosim(test_federation_name):
     # add a DB collection for all tests
     try:
         metadb.add_dict(collection_name, dict_to_add=collection_scenarios, dict_name="current scenario")
-    except NameError as e:
+    except NameError as _e:
         metadb.remove_collection(collection_name)
         metadb.add_collection(collection_name)
         metadb.add_dict(collection_name, dict_to_add=collection_scenarios, dict_name="current scenario")
@@ -115,7 +111,7 @@ def add_federation_collection(test_federation_name, test_federation_dict, num_fe
     try:
         metadb.add_collection(test_federation_name)
         metadb.add_dict(test_federation_name, "federation", test_federation_dict)
-    except NameError as e:
+    except NameError as _e:
         metadb.remove_collection(test_federation_name)
         metadb.add_collection(test_federation_name)
         metadb.add_dict(test_federation_name, "federation", test_federation_dict)

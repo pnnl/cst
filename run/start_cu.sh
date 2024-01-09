@@ -1,5 +1,8 @@
 #!/bin/bash
 
+if [[ ! -e ".env" ]]; then
+  ./env_cu.sh
+fi
 source .env
 
 # Install yq (https://github.com/mikefarah/yq/#install) to parse the YAML file and retrieve the network name
@@ -11,12 +14,11 @@ source .env
 #docker volume create cu_vol_user
 #docker volume create cu_vol_admin
 
-# docker-compose -f airflow-docker-compose.yaml up airflow-init
+image1=$(docker images -q "cosim-airflow:latest")
+if [[ $image1 == "" ]]; then
+  echo "Please build-cosim-images in scripts/docker"
+  exit
+fi
 
 docker-compose --env-file ./.env -f postgres-docker-compose.yaml up -d
-docker-compose -f airflow-docker-compose.yaml up -d
-
-
-
-
-
+docker-compose -f docker-compose.yaml up -d
