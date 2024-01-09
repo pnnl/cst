@@ -76,7 +76,6 @@ class Federate:
         self.pubs = {}
         self.endpoints = {}
         self.debug = True
-        self.errors = []
 
         # Initialize the structure of the interface dictionaries
         self.data_from_federation["inputs"] = {}
@@ -99,11 +98,9 @@ class Federate:
             self.mDB - MetadataDB object
         
         """
-        try:
-            self.mddb = mDB.MetaDB(mDB.cu_uri, mDB.cu_database)
-        except Exception as e:
-            self.errors.append(str(e))
-            return
+
+        self.mddb = mDB.MetaDB(mDB.cu_uri, mDB.cu_database)
+        return
 
     def connect_to_helics_config(self):
         """Sets instance attributes to enable HELICS config query of metadataDB
@@ -228,20 +225,14 @@ class Federate:
         have been implemented and should be overloaded/redefined as necessary
         to fit the needs of a given federate and/or federation.
         """
-        try:
-            if self.hfed is None:
-                raise Exception(self.errors)
-            self.granted_time = 0
-            self.enter_initialization()
-            self.enter_executing_mode()
-            while self.granted_time < self.stop_time:
-                self.simulate_next_step()
-        except h.HelicsException as e:
-            self.errors.append(f"HelicsException at time {self.granted_time}: {e}")
-            return
-        except Exception as e:
-            self.errors.append(f"Exception: {e}")
-            return
+        if self.hfed is None:
+            raise ValueError("Helics Federate object has not been created")
+        self.granted_time = 0
+        self.enter_initialization()
+        self.enter_executing_mode()
+        while self.granted_time < self.stop_time:
+            self.simulate_next_step()
+        return
 
     def enter_initialization(self):
         """Moves federate to HELICS initializing mode
@@ -458,18 +449,18 @@ class Federate:
             self.hfed: The HELICS federate object that needs to be removed from
                 the HELICS federation
         """
-        try:
-            logger.debug(f'{h.helicsFederateGetName(self.hfed)} being destroyed, max time = {h.HELICS_TIME_MAXTIME}')
-            requested_time = int(h.HELICS_TIME_MAXTIME)
-            h.helicsFederateClearMessages(self.hfed)
-            granted_time = h.helicsFederateRequestTime(self.hfed, requested_time)
-            logger.info(f'{h.helicsFederateGetName(self.hfed)} granted time {granted_time}')
-            h.helicsFederateDisconnect(self.hfed)
-            h.helicsFederateFree(self.hfed)
-            # h.helicsCloseLibrary()
-            logger.debug(f'Federate {h.helicsFederateGetName(self.hfed)} finalized')
-        except Exception as e:
-            self.errors.append(str(e))
+
+        logger.debug(f'{h.helicsFederateGetName(self.hfed)} being destroyed, max time = {h.HELICS_TIME_MAXTIME}')
+        requested_time = int(h.HELICS_TIME_MAXTIME)
+        h.helicsFederateClearMessages(self.hfed)
+        granted_time = h.helicsFederateRequestTime(self.hfed, requested_time)
+        logger.info(f'{h.helicsFederateGetName(self.hfed)} granted time {granted_time}')
+        h.helicsFederateDisconnect(self.hfed)
+        h.helicsFederateFree(self.hfed)
+        # h.helicsCloseLibrary()
+        logger.debug(f'Federate {h.helicsFederateGetName(self.hfed)} finalized')
+
+
 
 
 if __name__ == "__main__":
@@ -477,7 +468,7 @@ if __name__ == "__main__":
     test_fed.create_federate("TE30")
     test_fed.run_cosim_loop()
     test_fed.destroy_federate()
-    if len(test_fed.errors) > 0:
-        logger.warning("Federate failed to execute due to the following errors:")
-        for error in test_fed.errors:
-            logger.warning(error)
+    # if len(test_fed.errors) > 0:
+    #     logger.warning("Federate failed to execute due to the following errors:")
+    #     for error in test_fed.errors:
+    #         logger.warning(error)
