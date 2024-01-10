@@ -15,10 +15,12 @@ COPY . $USER_HOME/cosim_toolbox/cosim_toolbox/
 COPY --from=cosim-build:latest $USER_HOME/repository/AMES-V5.0/psst/ $USER_HOME/psst/psst/
 COPY --from=cosim-build:latest $USER_HOME/repository/AMES-V5.0/README.rst $USER_HOME/psst
 
-RUN echo "===== BUILD RUN Python =====" && \
+RUN echo "===== Building CoSim Python =====" && \
   export DEBIAN_FRONTEND=noninteractive && \
   export DEBCONF_NONINTERACTIVE_SEEN=true && \
   echo "===== Install Libraries =====" && \
+  apt-get install software-properties-common && \
+  add-apt-repository ppa:deadsnakes/ppa -y && \
   apt-get update && \
   apt-get dist-upgrade -y && \
   apt-get install -y \
@@ -32,7 +34,7 @@ RUN echo "===== BUILD RUN Python =====" && \
   python3.8 \
   python3.8-venv \
   python3-pip \
-  python3-tk \
+  python3.8-tk \
   python3-pil.imagetk && \
   chown -hR $USER_NAME:$USER_NAME $USER_HOME
 

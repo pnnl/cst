@@ -4,7 +4,7 @@ if [[ -z ${INSTDIR} ]]; then
   . "${HOME}/tespEnv"
 fi
 
-cd "${TESPDIR}/src/energyplus" || exit
+cd "${REPODIR}/tesp/src/energyplus" || exit
 # the following steps are also in go.sh
 autoheader
 aclocal

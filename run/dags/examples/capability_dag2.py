@@ -20,9 +20,10 @@ logger = logging.getLogger("airflow.task")
 
 
 default_args = {
-        'owner' : 'airflow',
-        'start_date' : datetime(2022, 11, 12)
+        'owner': 'airflow',
+        'start_date': datetime(2022, 11, 12)
 }
+
 
 def successful_dag(context):
     logger.info(f"DAG has succeeded, run_id: {context['run_id']}")
@@ -34,7 +35,8 @@ def log_info(context):
         
 
 def capability_dag(dag_id, schedule, test_var):
-    with DAG(dag_id=dag_id, default_args=default_args, schedule_interval=schedule, catchup=False, on_success_callback=[log_info]) as c_dag:
+    with DAG(dag_id=dag_id, default_args=default_args, schedule_interval=schedule,
+             catchup=False, on_success_callback=[log_info]) as c_dag:
         """
         Example DAG that performs addition or subtraction on randomly generated numbers.
         
@@ -45,47 +47,46 @@ def capability_dag(dag_id, schedule, test_var):
         # -------------------------------------------------------
         #                   task definitions
         # -------------------------------------------------------
-        @task(task_id = "test_var")
+        @task(task_id="test_var")
         def test():
             logger.warning(f" test_var: {test_var} dag_id = {dag_id}")    
         var_task = test()
         
         # join task at completion
-        @task(task_id = "join_success", trigger_rule="none_failed_min_one_success", on_success_callback=[successful_dag])
+        @task(task_id="join_success", trigger_rule="none_failed_min_one_success", on_success_callback=[successful_dag])
         def join():
             logger.info("Successfully ran DAG")
         
-        @task(task_id = "join_failure", trigger_rule="one_failed", on_success_callback=[successful_dag])
+        @task(task_id="join_failure", trigger_rule="one_failed", on_success_callback=[successful_dag])
         def join_failure():
             logger.info("Failed DAG run")
 
         # test python functions and create instances of tasks
         @task(task_id="python_add")
-        def add_task(inp1:int, inp2:int):
+        def add_task(inp1: int, inp2: int):
             logger.info(f"Addition result: {inp1 + inp2}")
             return inp1 + inp2
 
         @task(task_id="python_subtract")
-        def subtract_task(inp1:int, inp2:int):
+        def subtract_task(inp1: int, inp2: int):
             if inp1 - inp2 < 0:
                 logger.error(f"negative value: {inp1 - inp2}")
-                raise Exception("Negative value occured!")
+                raise Exception("Negative value occurred!")
             logger.info(f"Subtraction result: {inp1 - inp2}")
             return inp1 - inp2
 
-
-        @task(task_id = "generate_numbers")
+        @task(task_id="generate_numbers")
         def generate_num(is_random):
-            logger.warning(f"is_randomw = {is_random}, type = {type(is_random)}")
+            logger.warning(f"is_random = {is_random}, type = {type(is_random)}")
             if is_random:
                 logger.info("randomly generating number")
-                return random.randint(1,10)
+                return random.randint(1, 10)
             logger.info("choosing 4")
             return 4
 
         # test conditional task execution
         def add_or_subtract():
-            i = random.randint(1,10)
+            i = random.randint(1, 10)
             if i % 2 == 0:
                 return "python_add"
             else:

@@ -1,18 +1,21 @@
 ARG UBUNTU=ubuntu
-ARG UBUNTU_VERSION=:20.04
+ARG UBUNTU_VERSION=:22.04
 
-FROM ${UBUNTU}${UBUNTU_VERSION} AS ubuntu-base
+FROM ${UBUNTU}${UBUNTU_VERSION} AS cosim-libary
 
 # User name and work directory
 ENV USER_NAME=worker
 ENV USER_HOME=/home/$USER_NAME
 
-RUN export DEBIAN_FRONTEND=noninteractive && \
+RUN echo "===== Building CoSim Library =====" && \
+  export DEBIAN_FRONTEND=noninteractive && \
   export DEBCONF_NONINTERACTIVE_SEEN=true && \
+  echo "===== Install Libraries =====" && \
   apt-get update && \
-  echo "===== UPGRADING =====" && \
+  apt-get install -y software-properties-common && \
+  add-apt-repository ppa:deadsnakes/ppa -y && \
+  apt-get update && \
   apt-get dist-upgrade -y && \
-  echo "===== INSTALL STUFF =====" && \
   apt-get install -y \
   sudo \
   wget \
@@ -48,7 +51,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
   python3.8 \
   python3.8-venv \
   python3-pip \
-  python3-tk \
+  python3.8-tk \
   python3-pil.imagetk && \
   ln -s /usr/lib/jvm/java-11-openjdk-amd64 /usr/lib/jvm/default-java && \
   echo "===== Clean Up =====" && \

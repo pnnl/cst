@@ -1,12 +1,13 @@
 FROM cosim-library AS cosim-production
 
 ENV USER_NAME=worker
+ENV USER_EMAIL=pnnl.com
 ENV USER_HOME=/home/$USER_NAME
 
 USER $USER_NAME
 WORKDIR $USER_HOME
 
-# TESP exports
+# CoSim exports
 ENV INSTDIR=$USER_HOME/tenv
 ENV BUILDDIR=$USER_HOME/builder
 ENV REPODIR=$USER_HOME/repository
@@ -32,20 +33,25 @@ ENV PSST_SOLVER=cbc
 # 'PSST_SOLVER path' -- one of "cbc", "ipopt", "/ibm/cplex/bin/x86-64_linux/cplexamp"
 ENV PSST_WARNING=ignore
 
-RUN git config --global user.name "${USER_NAME}" && \
+RUN echo "===== Building CoSim Build =====" && \
+  echo "Configure name and email for" && \
+  git config --global user.name "${USER_NAME}" && \
   git config --global user.email "${USER_NAME}@${USER_NAME}.com" && \
-  echo "User .name=${USER_NAME} and .email=${USER_NAME}@${USER_NAME}.com have been set for git repositories!" && \
+  echo "User .name=${USER_NAME} and .email=${USER_NAME}@${USER_EMAIL} have been set for git repositories!" && \
   git config --global credential.helper store && \
   echo "Directory structure for build" && \
-  mkdir -p repository && \
   mkdir -p tenv && \
-  mkdir -p builder
+  mkdir -p builder && \
+  mkdir -p repository
 
 # Copy the build instructions
 COPY . ${BUILDDIR}
 
-RUN echo "Download all relevant repositories..." && \
+RUN echo "Cloning or download all relevant repositories..." && \
   cd ${REPODIR} || exit && \
+  echo ++++++++++++++ TESP && \
+  git clone -b main https://github.com/pnnl/tesp.git && \
+#  ${BUILDDIR}/patch.sh tesp tesp && \
   echo "++++++++++++++ PSST" && \
   git clone -b master https://github.com/ames-market/AMES-V5.0.git && \
   echo "Applying the patch for AMES...... from ${BUILDDIR}" && \
@@ -69,7 +75,9 @@ RUN echo "Download all relevant repositories..." && \
   git clone -b main https://github.com/GMLC-TDC/helics-ns3 ns-3-dev/contrib/helics && \
   ${BUILDDIR}/patch.sh ns-3-dev/contrib/helics helics-ns3 && \
   echo "++++++++++++++ KLU SOLVER" && \
-  svn export https://github.com/gridlab-d/tools/branches/klu-build-update/solver_klu/source/KLU_DLL && \
+# Add cp because svn can't seem be used this way anymore
+  cp -r ${BUILDDIR}/KLU_DLL ${REPODIR}/KLU_DLL && \
+#  svn export https://github.com/gridlab-d/tools/branches/klu-build-update/solver_klu/source/KLU_DLL && \
   echo "++++++++++++++  Compiling and Installing TESP software is starting!  ++++++++++++++" && \
   cd ${BUILDDIR} || exit && \
   echo "Compiling and Installing FNCS..." && \
@@ -89,8 +97,8 @@ RUN echo "Download all relevant repositories..." && \
   echo "Compiling and Installing EnergyPlus..." && \
   ./EnergyPlus_b.sh clean > EnergyPlus.log 2>&1 && \
   /bin/rm -r ${REPODIR}/EnergyPlus && \
-#  echo "Compiling and Installing EnergyPlus for Java..." && \
-#  ./EnergyPlus_j_b.sh clean > EnergyPlus_j.log 2>&1 && \
+  echo "Compiling and Installing EnergyPlus for Java..." && \
+  ./EnergyPlus_j_b.sh clean > EnergyPlus_j.log 2>&1 && \
   echo "Compiling and Installing NS-3..." && \
   ./ns-3-dev_b.sh clean > ns-3-dev.log 2>&1 && \
   /bin/rm -r ${REPODIR}/ns-3-dev && \
@@ -99,6 +107,9 @@ RUN echo "Download all relevant repositories..." && \
   /bin/rm -r ${REPODIR}/Ipopt && \
   /bin/rm -r ${REPODIR}/ThirdParty-ASL && \
   /bin/rm -r ${REPODIR}/ThirdParty-Mumps && \
-  echo "${USER_NAME}" | sudo -S ldconfig && \
+  echo "Compiling and Installing TMY3toTMY2_ansi..."  && \
+  cd "${REPODIR}/tesp/data/weather/TMY2EPW/source_code" || exit  && \
+  gcc TMY3toTMY2_ansi.c -o TMY3toTMY2_ansi && \
+  mv TMY3toTMY2_ansi "${INSTDIR}/bin" echo "${USER_NAME}" | sudo -S ldconfig && \
   cd ${BUILDDIR} || exit && \
   ./versions.sh

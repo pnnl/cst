@@ -4,11 +4,12 @@ ENV DOCKER_HOSTS=gage
 
 COPY . cosim_toolbox/
 
-RUN pip install --no-cache-dir -U pip setuptools wheel && \
-pip install --no-cache-dir python-dotenv SQLAlchemy && \
-cd cosim_toolbox || exit && \
-pip3 install --no-cache-dir -e . && \
-# add the new finger print for each host connection
-mkdir ~/.ssh && \
-ssh-keyscan ${DOCKER_HOSTS} >> ~/.ssh/known_hosts && \
-ssh-keygen -f ~/copper-key-ecdsa -t ecdsa -b 521
+RUN echo "===== Building CoSim Airflow =====" && \
+  pip install --no-cache-dir --upgrade pip && \
+  pip install --no-cache-dir python-dotenv SQLAlchemy && \
+  cd cosim_toolbox || exit && \
+  pip3 install --no-cache-dir -e . && \
+  # add the new finger print for each host connection
+  mkdir -p ~/.ssh && \
+  ssh-keyscan ${DOCKER_HOSTS} >> ~/.ssh/known_hosts && \
+  ssh-keygen -f ~/copper-key-ecdsa -t ecdsa -b 521
