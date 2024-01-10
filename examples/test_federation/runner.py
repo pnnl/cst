@@ -46,7 +46,7 @@ class Runner:
         t1.pubs_e(True, names[0] + "/current6", "vector", "A")
         t1.subs_e(True, names[1] + "/voltage6", "vector", "V")
         t1 = {
-            "image": "tesp-tespapi:latest",
+            "image": "cosim-python:latest",
             "command": prefix + "simple_federate.py " + names[0] + " " + self.scenario_name,
             "federate_type": "value",
             "time_step": 120,
@@ -75,7 +75,7 @@ class Runner:
         t2.subs_e(True, names[0] + "/current6", "vector", "A")
         t2.pubs_e(True, names[1] + "/voltage6", "vector", "V")
         t2 = {
-            "image": "tesp-tespapi:latest",
+            "image": "cosim-python:latest",
             "command": prefix + "simple_federate2.py " + names[1] + " " + self.scenario_name,
             "env": "",
             "federate_type": "value",
@@ -93,7 +93,11 @@ class Runner:
         self.db.add_dict(mDB.cu_federations, self.federation_name, diction)
         print(mDB.cu_federations, self.db.get_collection_document_names(mDB.cu_federations))
 
-        scenario = self.db.scenario(self.schema_name, self.federation_name, "2023-12-07T15:31:27", "2023-12-08T15:31:27", self.docker)
+        scenario = self.db.scenario(self.schema_name,
+                                    self.federation_name,
+                                    "2023-12-07T15:31:27",
+                                    "2023-12-08T15:31:27",
+                                    self.docker)
         self.db.remove_document(mDB.cu_scenarios, None, self.scenario_name)
         self.db.add_dict(mDB.cu_scenarios, self.scenario_name, scenario)
         print(mDB.cu_scenarios, self.db.get_collection_document_names(mDB.cu_scenarios))

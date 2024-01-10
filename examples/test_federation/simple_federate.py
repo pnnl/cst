@@ -7,33 +7,27 @@ Copper.
 @author: Mitch Pelton
 mitch.pelton@pnnl.gov
 """
-import os
 import sys
 import psycopg2
-from pathlib import Path
 
-sys.path.insert(1, os.path.join(Path(__file__).parent, '..', '..', 'src'))
-from Federate import Federate
-
+from cosim_toolbox.federate import Federate
 
 
 def open_logger():
     #    "host": os.environ.get("POSTGRES_HOST"),
     connection = {
-        "host": "gage",
+        "host": "gage.pnl.gov",
         "dbname": "copper",
         "user": "postgres",
         "password": "postgres",
         "port": 5432
     }
 
-#    with open(file_name, 'r', encoding='utf-8') as json_file:
-#        config = json.load(json_file)
     conn = None
     try:
         conn = psycopg2.connect(**connection)
     except:
-        return
+        pass
     return conn
 
 
@@ -139,10 +133,10 @@ class SimpleFederate(Federate):
                 self.data_to_federation["publications"][key] = increment_boolean(dummy)
 
 
-
 if __name__ == "__main__":
     conn = open_logger()
-    check_version()
+    if conn:
+        check_version()
 
     if sys.argv.__len__() > 2:
         test_fed = SimpleFederate(sys.argv[1])

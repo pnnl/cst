@@ -73,7 +73,11 @@ class Runner:
         self.db.add_dict(mDB.cu_federations, self.federation_name, diction)
         print(mDB.cu_federations, self.db.get_collection_document_names(mDB.cu_federations))
 
-        scenario = self.db.scenario(self.schema_name, self.federation_name, "2023-12-07T15:31:27", "2023-12-08T15:31:27", self.docker)
+        scenario = self.db.scenario(self.schema_name,
+                                    self.federation_name,
+                                    "2023-12-07T15:31:27",
+                                    "2023-12-08T15:31:27",
+                                    self.docker)
         self.db.remove_document(mDB.cu_scenarios, None, self.scenario_name)
         self.db.add_dict(mDB.cu_scenarios, self.scenario_name, scenario)
         print(mDB.cu_scenarios, self.db.get_collection_document_names(mDB.cu_scenarios))

@@ -1,10 +1,11 @@
 # Declare arguments
 ARG UBUNTU=ubuntu
-ARG UBUNTU_VERSION=:20.04
+ARG UBUNTU_VERSION=:22.04
 
 # Build runtime image
-FROM ${UBUNTU}${UBUNTU_VERSION} AS cosim-run
+FROM ${UBUNTU}${UBUNTU_VERSION} AS cosim-fncs
 
+ARG UID
 # User name and work directory
 ENV USER_NAME=worker
 ENV USER_HOME=/home/$USER_NAME
@@ -17,7 +18,7 @@ ENV PYHELICS_INSTALL=$INSTDIR
 # PATH
 ENV PATH=$JAVA_HOME:$INSTDIR/bin:$PATH
 
-RUN echo "===== BUILD RUN FNCS =====" && \
+RUN echo "===== Building CoSim FNCS =====" && \
   export DEBIAN_FRONTEND=noninteractive && \
   export DEBCONF_NONINTERACTIVE_SEEN=true && \
   echo "===== Install Libraries =====" && \
@@ -35,18 +36,15 @@ RUN echo "===== BUILD RUN FNCS =====" && \
 # protect images by changing root password
   echo "root:worker" | chpasswd && \
   echo "<<<< Adding the 'worker' user >>>>" && \
-  useradd -m -s /bin/bash ${USER_NAME} && \
+  useradd -m -s /bin/bash -u $UID ${USER_NAME} && \
   echo "<<<< Changing new user password >>>>" && \
   echo "${USER_NAME}:${USER_NAME}" | chpasswd && \
   usermod -aG sudo ${USER_NAME}
 
-USER $USER_NAME
-WORKDIR $USER_HOME
-
-RUN echo "Directory structure for running" && \
-  mkdir -p tenv
-
 # Copy Binaries
 COPY --from=cosim-build:latest $INSTDIR/ $INSTDIR/
+RUN chown -hR $USER_NAME:$USER_NAME $USER_HOME
 
-
+# Set 'worker' as user
+USER $USER_NAME
+WORKDIR $USER_HOME

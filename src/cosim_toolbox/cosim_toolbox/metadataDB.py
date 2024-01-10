@@ -342,7 +342,7 @@ class Docker:
         cnt = 2
         fed_cnt = str(fed_def.__len__() + 1)
         env = ["", "exec helics_broker --ipv4 -f " + fed_cnt + " --loglevel=warning --name=broker"]
-        yaml += Docker._service("helics", "cosim-python:latest", env, cnt, depends=None)
+        yaml += Docker._service("helics", "cosim-helics:latest", env, cnt, depends=None)
 
         for name in fed_def:
             cnt += 1

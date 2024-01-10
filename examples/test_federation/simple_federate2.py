@@ -7,33 +7,27 @@ Copper.
 @author: Mitch Pelton
 mitch.pelton@pnnl.gov
 """
-import os
 import sys
 import psycopg2
-from pathlib import Path
 
-sys.path.insert(1, os.path.join(Path(__file__).parent, '..', '..', 'src'))
-from Federate import Federate
-
+from cosim_toolbox.federate import Federate
 
 
 def open_logger():
     #    "host": os.environ.get("POSTGRES_HOST"),
     connection = {
-        "host": "gage",
+        "host": "gage.pnl.gov",
         "dbname": "copper",
         "user": "postgres",
         "password": "postgres",
         "port": 5432
     }
 
-#    with open(file_name, 'r', encoding='utf-8') as json_file:
-#        config = json.load(json_file)
     conn = None
     try:
         conn = psycopg2.connect(**connection)
     except:
-        return
+        pass
     return conn
 
 
@@ -109,11 +103,7 @@ def increment_boolean(original_value):
 
 class SimpleFederate(Federate):
     def __init__(self, fed_name="", schema="default", **kwargs):
-        self.dummy = None
-        self.d_type = "vector"
         super().__init__(fed_name, **kwargs)
-
-        print(self.dummy)
 
     def update_internal_model(self):
         """
@@ -124,27 +114,29 @@ class SimpleFederate(Federate):
             raise NotImplementedError("Subclass from Federate and write code to update internal model")
 
         for key in self.data_to_federation["publications"]:
-            self.d_type = self.pubs[key]['type'].lower()
+            d_type = self.pubs[key]['type'].lower()
             inkey = key.replace("voltage", "current").replace("EVehicle", "Battery")
             dummy = self.data_from_federation["inputs"][inkey]
-            if self.d_type == "double":
+            if d_type == "double":
                 self.data_to_federation["publications"][key] = increment_double(dummy)
-            elif self.d_type == "integer":
+            elif d_type == "integer":
                 self.data_to_federation["publications"][key] = increment_integer(dummy)
-            elif self.d_type == "complex":
+            elif d_type == "complex":
                 self.data_to_federation["publications"][key] = increment_complex(dummy)
-            elif self.d_type == "string":
+            elif d_type == "string":
                 self.data_to_federation["publications"][key] = increment_string(dummy)
-            elif self.d_type == "vector":
+            elif d_type == "vector":
                 self.data_to_federation["publications"][key] = increment_vector(dummy)
-            elif self.d_type == "complex vector":
+            elif d_type == "complex vector":
                 self.data_to_federation["publications"][key] = increment_complex_vector(dummy)
-            elif self.d_type == "boolean":
+            elif d_type == "boolean":
                 self.data_to_federation["publications"][key] = increment_boolean(dummy)
+
 
 if __name__ == "__main__":
     conn = open_logger()
-    check_version()
+    if conn:
+        check_version()
 
     if sys.argv.__len__() > 2:
         test_fed = SimpleFederate(sys.argv[1])

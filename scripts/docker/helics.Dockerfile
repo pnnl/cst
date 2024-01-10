@@ -17,7 +17,7 @@ ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
 # PATH
 ENV PATH=$JAVA_HOME:$INSTDIR/bin:$PATH
 
-RUN echo "===== BUILD RUN Helics =====" && \
+RUN echo "===== Building CoSim HELICS =====" && \
   export DEBIAN_FRONTEND=noninteractive && \
   export DEBCONF_NONINTERACTIVE_SEEN=true && \
   echo "===== Install Libraries =====" && \
@@ -45,15 +45,10 @@ RUN echo "===== BUILD RUN Helics =====" && \
   echo "${USER_NAME}:${USER_NAME}" | chpasswd && \
   usermod -aG sudo ${USER_NAME}
 
+# Copy Binaries
+COPY --from=cosim-build:latest $INSTDIR/ $INSTDIR/
+RUN chown -hR $USER_NAME:$USER_NAME $USER_HOME
+
 # Set 'worker' as user
 USER $USER_NAME
 WORKDIR $USER_HOME
-
-# Add directories and files
-RUN echo "Directory structure for running" && \
-  mkdir -p tenv
-
-# Copy Binaries
-COPY --from=cosim-build:latest $INSTDIR/ $INSTDIR/
-
-

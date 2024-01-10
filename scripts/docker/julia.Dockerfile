@@ -11,7 +11,7 @@ ENV INSTDIR=$USER_NAME/tenv
 # PATH
 ENV PATH=$USER_HOME/julia-1.9.4/bin:$PATH
 
-RUN echo "===== BUILD RUN Julia =====" && \
+RUN echo "===== Building CoSim Julia =====" && \
   export DEBIAN_FRONTEND=noninteractive && \
   export DEBCONF_NONINTERACTIVE_SEEN=true && \
   echo "===== Install Libraries =====" && \

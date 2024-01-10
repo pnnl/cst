@@ -110,6 +110,7 @@ RUN echo "Cloning or download all relevant repositories..." && \
   echo "Compiling and Installing TMY3toTMY2_ansi..."  && \
   cd "${REPODIR}/tesp/data/weather/TMY2EPW/source_code" || exit  && \
   gcc TMY3toTMY2_ansi.c -o TMY3toTMY2_ansi && \
-  mv TMY3toTMY2_ansi "${INSTDIR}/bin" echo "${USER_NAME}" | sudo -S ldconfig && \
+  mv TMY3toTMY2_ansi "${INSTDIR}/bin"  && \
+  echo "${USER_NAME}" | sudo -S ldconfig && \
   cd ${BUILDDIR} || exit && \
   ./versions.sh

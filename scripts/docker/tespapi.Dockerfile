@@ -7,7 +7,7 @@ USER root
 ENV USER_NAME=worker
 ENV USER_HOME=/home/$USER_NAME
 
-RUN echo "===== BUILD RUN TESP API =====" && \
+RUN echo "===== Building CoSim TESP API =====" && \
   export DEBIAN_FRONTEND=noninteractive && \
   export DEBCONF_NONINTERACTIVE_SEEN=true && \
   echo "===== Install Libraries =====" && \
@@ -15,6 +15,10 @@ RUN echo "===== BUILD RUN TESP API =====" && \
   apt-get dist-upgrade -y && \
   apt-get install -y \
   git
+
+# Copy Binaries
+#COPY --from=cosim-build:latest $INSTDIR/ $INSTDIR/
+#RUN chown -hR $USER_NAME:$USER_NAME $USER_HOME
 
 # Set 'worker' as user
 USER $USER_NAME

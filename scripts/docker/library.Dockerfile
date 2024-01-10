@@ -12,10 +12,10 @@ RUN echo "===== Building CoSim Library =====" && \
   export DEBCONF_NONINTERACTIVE_SEEN=true && \
   echo "===== Install Libraries =====" && \
   apt-get update && \
+  apt-get dist-upgrade -y && \
   apt-get install -y software-properties-common && \
   add-apt-repository ppa:deadsnakes/ppa -y && \
   apt-get update && \
-  apt-get dist-upgrade -y && \
   apt-get install -y \
   sudo \
   wget \

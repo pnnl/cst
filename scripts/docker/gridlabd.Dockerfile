@@ -23,13 +23,10 @@ RUN echo "===== BUILD RUN Gridlab-D =====" && \
   libhdf5-serial-dev \
   libsuitesparse-dev
 
+# Copy Binaries
+#COPY --from=cosim-build:latest $INSTDIR/ $INSTDIR/
+#RUN chown -hR $USER_NAME:$USER_NAME $USER_HOME
+
 # Set 'worker' as user
 USER $USER_NAME
 WORKDIR $USER_HOME
-
-# Add directories and files
-#RUN echo "Directory structure for running" && \
-#  mkdir -p tenv
-
-# Copy Binaries
-#COPY --from=cosim-build:latest $INSTDIR/ $INSTDIR/

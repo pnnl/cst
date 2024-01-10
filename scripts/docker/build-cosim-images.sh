@@ -29,17 +29,17 @@ names=(
 )
 
 builds=(
-  0
-  0
   1
-  0
-  0
-  0
-  0
-  0
-  0
-  0
-  0
+  1
+  1
+  1
+  1
+  1
+  1
+  1
+  1
+  1
+  1
 )
 
 export BUILDKIT_PROGRESS=plain
@@ -50,6 +50,7 @@ for i in "${!names[@]}"; do
   DOCKERFILE="${names[$i]}.Dockerfile"
 
   if [ "${builds[$i]}" -eq 1 ]; then
+    echo "========"
     echo "Creating ${IMAGE_NAME} from ${DOCKERFILE}"
     image1=$(docker images -q "${IMAGE_NAME}")
     docker build --no-cache --rm \
@@ -62,5 +63,6 @@ for i in "${!names[@]}"; do
       echo "Deleting old image Id: $image1"
       docker rmi "${image1}"
     fi
+    echo
   fi
 done

@@ -8,16 +8,15 @@ ENV USER_NAME=worker
 ENV USER_HOME=/home/$USER_NAME
 ENV MESPDIR=$USER_HOME/mesp
 
-COPY . $MESPDIR/
-
-RUN echo "===== BUILD RUN MESP API =====" && \
+RUN echo "===== Building CoSim MESP API =====" && \
   export DEBIAN_FRONTEND=noninteractive && \
   export DEBCONF_NONINTERACTIVE_SEEN=true && \
   echo "===== Install Libraries =====" && \
   apt-get update && \
-  apt-get dist-upgrade -y && \
-  apt-get install -y && \
-  chown -hR $USER_NAME:$USER_NAME $USER_HOME
+  apt-get dist-upgrade -y
+
+COPY . $MESPDIR/
+RUN chown -hR $USER_NAME:$USER_NAME $USER_HOME
 
 # Set 'worker' as user
 USER $USER_NAME

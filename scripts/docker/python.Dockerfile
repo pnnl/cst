@@ -11,15 +11,11 @@ ENV INSTDIR=$USER_HOME/tenv
 # PATH
 ENV PYHELICS_INSTALL=$INSTDIR
 
-COPY . $USER_HOME/cosim_toolbox/cosim_toolbox/
-COPY --from=cosim-build:latest $USER_HOME/repository/AMES-V5.0/psst/ $USER_HOME/psst/psst/
-COPY --from=cosim-build:latest $USER_HOME/repository/AMES-V5.0/README.rst $USER_HOME/psst
-
 RUN echo "===== Building CoSim Python =====" && \
   export DEBIAN_FRONTEND=noninteractive && \
   export DEBCONF_NONINTERACTIVE_SEEN=true && \
   echo "===== Install Libraries =====" && \
-  apt-get install software-properties-common && \
+  apt-get install -y software-properties-common && \
   add-apt-repository ppa:deadsnakes/ppa -y && \
   apt-get update && \
   apt-get dist-upgrade -y && \
@@ -35,8 +31,13 @@ RUN echo "===== Building CoSim Python =====" && \
   python3.8-venv \
   python3-pip \
   python3.8-tk \
-  python3-pil.imagetk && \
-  chown -hR $USER_NAME:$USER_NAME $USER_HOME
+  python3-pil.imagetk
+
+# Copy Files
+COPY . $USER_HOME/cosim_toolbox/cosim_toolbox/
+COPY --from=cosim-build:latest $USER_HOME/repository/AMES-V5.0/psst/ $USER_HOME/psst/psst/
+COPY --from=cosim-build:latest $USER_HOME/repository/AMES-V5.0/README.rst $USER_HOME/psst
+RUN chown -hR $USER_NAME:$USER_NAME $USER_HOME
 
 # Set 'worker' as user
 USER $USER_NAME
@@ -56,6 +57,6 @@ RUN echo "Directory structure for running" && \
   pip3 install --no-cache-dir helics >> "pypi.log" && \
   pip3 install --no-cache-dir helics[cli] >> "pypi.log" && \
   cd $USER_HOME/cosim_toolbox/cosim_toolbox || exit && \
-  pip3 install --no-cache-dir -e .  >> "pypi.log" && \
+  pip3 install --no-cache-dir -e .  >> "$USER_HOME/pypi.log" && \
   cd $USER_HOME/psst/psst || exit && \
-  pip3 install --no-cache-dir -e .  >> "pypi.log"
+  pip3 install --no-cache-dir -e .  >> "$USER_HOME/pypi.log"

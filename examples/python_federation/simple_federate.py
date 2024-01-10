@@ -23,13 +23,11 @@ def open_logger():
         "port": 5432
     }
 
-#    with open(file_name, 'r', encoding='utf-8') as json_file:
-#        config = json.load(json_file)
     conn = None
     try:
         conn = psycopg2.connect(**connection)
     except:
-        return
+        pass
     return conn
 
 
@@ -74,7 +72,8 @@ class SimpleFederate(Federate):
 
 if __name__ == "__main__":
     conn = open_logger()
-    check_version()
+    if conn:
+        check_version()
 
     if sys.argv.__len__() > 2:
         test_fed = SimpleFederate(sys.argv[1])
