@@ -2,7 +2,7 @@
 
 DOCKER_NAME="cosim-docker"
 #IMAGE_NAME="ubuntu:20.04"
-#IMAGE_NAME="cosim-$(cat $TESPDIR/scripts/version):latest"
+#IMAGE_NAME="cosim-build:latest"
 IMAGE_NAME="cosim-helics:latest"
 #IMAGE_NAME="cosim-gridlabd:latest"
 #IMAGE_NAME="cosim-eplus:latest"

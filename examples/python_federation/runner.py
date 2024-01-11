@@ -87,7 +87,7 @@ if __name__ == "__main__":
     _scenario_name = "MyScenario"
     _schema_name = "MySchema"
     _federation_name = "MyFederation"
-    r = Runner(_scenario_name, _schema_name, _federation_name, True)
+    r = Runner(_scenario_name, _schema_name, _federation_name, False)
     r.define_scenario()
     mDB.Docker.define_yaml(r.scenario_name)
 

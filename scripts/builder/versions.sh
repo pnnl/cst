@@ -5,9 +5,7 @@ if [[ -z ${INSTDIR} ]]; then
 fi
 
 echo
-echo "TESP software modules installed are:"
-echo
-echo "TESP $(cat ${TESPDIR}/scripts/version)"
+echo "Co-Simulation software modules installed are:"
 
 FILE="${INSTDIR}/bin/fncs_broker"
 if [[ -f "${FILE}" ]]; then
