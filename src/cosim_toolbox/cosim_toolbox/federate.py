@@ -98,11 +98,23 @@ class Federate:
             uri (str): URI for Mongo database
             db_name (str): Name for Mongo database
         """
-        try:
-            self.mddb = mDB.MetaDB(uri, db_name)
-        except Exception as e:
-            self.errors.append(str(e))
-            return
+        self.mddb = mDB.MetaDB(uri, db_name)
+        self.scenario = self.mddb.get_dict(mDB.cu_scenarios, None, self.scenario_name)
+        self.federation_name = self.scenario["federation"]
+        self.start = self.scenario["start_time"]
+        self.stop = self.scenario["stop_time"]
+
+        self.federation = self.mddb.get_dict(mDB.cu_federations, None, self.federation_name)
+        self.federation = self.federation["federation"]
+
+        # setting max in seconds
+        ep = datetime.datetime(1970, 1, 1)
+        # %:z in version  python 3.12, for now, no time offsets -
+        s = datetime.datetime.strptime(self.start, '%Y-%m-%dT%H:%M:%S')
+        e = datetime.datetime.strptime(self.stop, '%Y-%m-%dT%H:%M:%S')
+        sIdx = (s - ep).total_seconds()
+        eIdx = (e - ep).total_seconds()
+        self.stop_time = int((eIdx - sIdx))
 
     def connect_to_helics_config(self):
         """Sets instance attributes to enable HELICS config query of metadataDB
@@ -144,18 +156,10 @@ class Federate:
         Raises:
             NameError: Scenario name is undefined (`None`)
         """
-
-        self.connect_to_metadataDB(mDB.cu_uri, mDB.cu_database)
         if scenario_name is None:
             raise NameError("scenario_name is None")
         self.scenario_name = scenario_name
-        self.scenario = self.mddb.get_dict(mDB.cu_scenarios, None, self.scenario_name)
-        self.federation_name = self.scenario["federation"]
-        self.start = self.scenario["start_time"]
-        self.stop = self.scenario["stop_time"]
-
-        self.federation = self.mddb.get_dict(mDB.cu_federations, None, self.federation_name)
-        self.federation = self.federation["federation"]
+        self.connect_to_metadataDB(mDB.cu_uri, mDB.cu_database)
         self.connect_to_helics_config()
 
         # Provide internal copies of the HELICS interfaces for convenience during debugging.
@@ -178,15 +182,6 @@ class Federate:
                     self.data_to_federation['endpoints'][ep['key']] = None
                 if 'destination' in self.config['endpoints'][ep]:
                     self.data_from_federation['endpoints'][ep['key']] = None
-
-        # setting max in seconds
-        ep = datetime.datetime(1970, 1, 1)
-        # %:z in version  python 3.12, for now, no time offsets -
-        s = datetime.datetime.strptime(self.start, '%Y-%m-%dT%H:%M:%S')
-        e = datetime.datetime.strptime(self.stop, '%Y-%m-%dT%H:%M:%S')
-        sIdx = (s - ep).total_seconds()
-        eIdx = (e - ep).total_seconds()
-        self.stop_time = int((eIdx - sIdx))
 
         self.create_helics_fed()
 

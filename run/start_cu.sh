@@ -22,3 +22,4 @@ fi
 
 docker-compose --env-file ./.env -f postgres-docker-compose.yaml up -d
 docker-compose -f docker-compose.yaml up -d
+docker run --name mongodb -d -p 27017:27017 mongodb/mongodb-community-server:latest
