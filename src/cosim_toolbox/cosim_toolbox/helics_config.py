@@ -12,7 +12,6 @@ class HelicsMsg(object):
                       "period": period,
                       "logging": "warning",
                       }
-        pass
 
     def write_json(self):
         self.config("publications", self._pubs)

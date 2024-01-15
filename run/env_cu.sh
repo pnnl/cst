@@ -2,7 +2,7 @@
 
 mkdir -p ./dags ./logs ./plugins ./config ./python
 # make wide open for now
-chmod -R 777 ./dags ./logs ./plugins ./config ./python
+sudo chmod -R 777 ./dags ./logs ./plugins ./config ./python ../src
 
 cat > ".env" << EOF
 POSTGRES_DB=copper

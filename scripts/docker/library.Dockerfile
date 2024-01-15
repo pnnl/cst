@@ -61,7 +61,7 @@ RUN echo "===== Building CoSim Library =====" && \
   apt-get autoremove -y && \
   echo "root:worker" | chpasswd && \
   echo "<<<< Adding the 'worker' user >>>>" && \
-  useradd -m -s /bin/bash ${USER_NAME} && \
+  useradd -m -s /bin/bash -u $UID ${USER_NAME} && \
   echo "<<<< Changing new user password >>>>" && \
   echo "${USER_NAME}:${USER_NAME}" | chpasswd && \
   usermod -aG sudo ${USER_NAME}

@@ -11,7 +11,7 @@ import sys
 import psycopg2
 
 from cosim_toolbox.helics_config import HelicsMsg
-from .federate import Federate
+from cosim_toolbox.federate import Federate
 
 
 def open_logger():
@@ -85,7 +85,7 @@ class DataLogger(Federate):
                 'HDT_TIME': 'TIMESTAMP',
                 'HDT_JSON': 'text'}
 
-    def __init__(self, fed_name="", schema_name="default", **kwargs):
+    def __init__(self, fed_name="", schema_name="default", clear=True, **kwargs):
         super().__init__(fed_name, **kwargs)
         self.conn = open_logger()
         check_version(self.conn)
@@ -94,7 +94,8 @@ class DataLogger(Federate):
         # drop_schema(self.conn, self.schema_name)
         create_schema(self.conn, self.schema_name)
         self.make_logger_database()
-        self.remove_scenario()
+        if clear:
+            self.remove_scenario()
         self.conn.commit()
 
 
@@ -173,7 +174,6 @@ class DataLogger(Federate):
         self.config = t1.config("subscriptions", publications)
 
     def update_internal_model(self):
-
         query = ""
         for key in self.data_from_federation["inputs"]:
             qry = ""

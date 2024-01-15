@@ -369,6 +369,14 @@ class Docker:
         subprocess.Popen(docker_compose + " down", shell=True).wait()
         print('====  Broker Exit in\n        ' + os.getcwd(), flush=True)
 
+    @staticmethod
+    def run_remote_yaml(scenario_name):
+        print('====  ' + scenario_name + ' Broker Start in\n        ' + os.getcwd(), flush=True)
+        subprocess.Popen("ssh -i  ~/tesp-key-ecdsa  d3j331@gage.pnl.gov 'nohup sleep 300 >/dev/null 2>/dev/null </dev/null &'", shell=True)
+        print('====  Broker Exit in\n        ' + os.getcwd(), flush=True)
+
+
+
 
 def mytest1():
     """

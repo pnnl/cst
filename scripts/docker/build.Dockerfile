@@ -97,8 +97,6 @@ RUN echo "Cloning or download all relevant repositories..." && \
   echo "Compiling and Installing EnergyPlus..." && \
   ./EnergyPlus_b.sh clean > EnergyPlus.log 2>&1 && \
   /bin/rm -r ${REPODIR}/EnergyPlus && \
-  echo "Compiling and Installing EnergyPlus for Java..." && \
-  ./EnergyPlus_j_b.sh clean > EnergyPlus_j.log 2>&1 && \
   echo "Compiling and Installing NS-3..." && \
   ./ns-3-dev_b.sh clean > ns-3-dev.log 2>&1 && \
   /bin/rm -r ${REPODIR}/ns-3-dev && \
@@ -107,10 +105,8 @@ RUN echo "Cloning or download all relevant repositories..." && \
   /bin/rm -r ${REPODIR}/Ipopt && \
   /bin/rm -r ${REPODIR}/ThirdParty-ASL && \
   /bin/rm -r ${REPODIR}/ThirdParty-Mumps && \
-  echo "Compiling and Installing TMY3toTMY2_ansi..."  && \
-  cd "${REPODIR}/tesp/data/weather/TMY2EPW/source_code" || exit  && \
-  gcc TMY3toTMY2_ansi.c -o TMY3toTMY2_ansi && \
-  mv TMY3toTMY2_ansi "${INSTDIR}/bin"  && \
+  echo "Compiling and Installing TESP agents and converter..." && \
+  ./tesp_b.sh clean > EnergyPlus_j.log 2>&1 && \
   /bin/rm -r ${REPODIR}/tesp && \
   echo "${USER_NAME}" | sudo -S ldconfig && \
   cd ${BUILDDIR} || exit && \

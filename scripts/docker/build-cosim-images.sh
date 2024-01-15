@@ -15,6 +15,7 @@ paths=(
 )
 
 names=(
+  "jupyter"
   "airflow"
   "library"
   "build"
@@ -30,16 +31,17 @@ names=(
 
 builds=(
   1
-  1
-  1
-  1
-  1
-  1
-  1
-  1
-  1
-  1
-  1
+  0
+  0
+  0
+  0
+  0
+  0
+  0
+  0
+  0
+  0
+  0
 )
 
 export BUILDKIT_PROGRESS=plain

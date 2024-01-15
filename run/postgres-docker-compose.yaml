@@ -2,14 +2,17 @@ version: "3.8"
 # Optional Jupyter Notebook service
 services:
   jupyter_notebook:
-    image: "jupyter/minimal-notebook"
+    image: "cosim-jupyter:latest"
+#    jupyter/minimal-notebook:7285848c0a11"
     container_name: ${CONTAINER_NAME:-jupyter_notebook}
     environment:
       JUPYTER_ENABLE_LAB: "yes"
+      GRANT_SUDO: "yes"
     ports:
       - "8888:8888"
     volumes:
       - ${PWD}:/home/jovyan/work
+      - /home/d3j331/tesp/repository/copper:/home/jovyan/copper
 #      - ${HOME}/tesp/repository/copper/examples:/home/jovyan/examples
     depends_on:
       - database

@@ -32,11 +32,6 @@ RUN echo "===== Building CoSim HELICS =====" && \
   libczmq-dev \
   libboost-dev && \
   ln -s /usr/lib/jvm/java-11-openjdk-amd64 /usr/lib/jvm/default-java && \
-  echo "===== Clean Up =====" && \
-  apt-get upgrade -y && \
-  apt-get clean -y && \
-  apt-get autoclean -y && \
-  apt-get autoremove -y && \
 # protect images by changing root password
   echo "root:worker" | chpasswd && \
   echo "<<<< Adding the 'worker' user >>>>" && \

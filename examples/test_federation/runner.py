@@ -33,6 +33,7 @@ class Runner:
         t1.config("uninterruptible", False)
         t1.config("terminate_on_error", True)
 #        t1.config("wait_for_current_time_update", True)
+
         t1.pubs_e(True, names[0] + "/current", "double", "V")
         t1.subs_e(True, names[1] + "/voltage", "double", "V")
         t1.pubs_e(True, names[0] + "/current2", "integer", "A")
@@ -45,7 +46,7 @@ class Runner:
         t1.subs_e(True, names[1] + "/voltage5", "complex", "V")
         t1.pubs_e(True, names[0] + "/current6", "vector", "A")
         t1.subs_e(True, names[1] + "/voltage6", "vector", "V")
-        t1 = {
+        f1 = {
             "image": "cosim-python:latest",
             "command": prefix + "simple_federate.py " + names[0] + " " + self.scenario_name,
             "federate_type": "value",
@@ -62,6 +63,7 @@ class Runner:
         t2.config("uninterruptible", False)
         t2.config("terminate_on_error", True)
 #        t2.config("wait_for_current_time_update", True)
+
         t2.subs_e(True, names[0] + "/current", "double", "V")
         t2.pubs_e(True, names[1] + "/voltage", "double", "V")
         t2.subs_e(True, names[0] + "/current2", "integer", "A")
@@ -74,7 +76,7 @@ class Runner:
         t2.pubs_e(True, names[1] + "/voltage5", "complex", "V")
         t2.subs_e(True, names[0] + "/current6", "vector", "A")
         t2.pubs_e(True, names[1] + "/voltage6", "vector", "V")
-        t2 = {
+        f2 = {
             "image": "cosim-python:latest",
             "command": prefix + "simple_federate2.py " + names[1] + " " + self.scenario_name,
             "env": "",
@@ -84,8 +86,8 @@ class Runner:
         }
         diction = {
             "federation": {
-                names[0]: t1,
-                names[1]: t2
+                names[0]: f1,
+                names[1]: f2
             }
         }
 
@@ -110,3 +112,5 @@ if __name__ == "__main__":
     r = Runner(_scenario_name, _schema_name, _federation_name, True)
     r.define_scenario()
     mDB.Docker.define_yaml(r.scenario_name)
+    if False:
+        mDB.Docker.run_yaml(_scenario_name)
