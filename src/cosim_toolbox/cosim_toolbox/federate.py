@@ -338,7 +338,7 @@ class Federate:
             # Delete out old message list to avoid confusion about when the message came in
             self.data_from_federation[ep.name] = []
             for message in range(0, ep.n_pending_messages):
-                self.data_from_federation["endpoints"][ep.name].append(ep.get_message())
+                self.data_from_federation["endpoints"][ep.name].append(ep.get_message().data)
 
     def update_internal_model(self):
         """Perform federate specific calculations to bring model up to date
