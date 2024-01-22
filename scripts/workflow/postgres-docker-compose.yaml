@@ -3,7 +3,6 @@ version: "3.8"
 services:
   jupyter_notebook:
     image: "cosim-jupyter:latest"
-#    jupyter/minimal-notebook:7285848c0a11"
     container_name: ${CONTAINER_NAME:-jupyter_notebook}
     environment:
       JUPYTER_ENABLE_LAB: "yes"
@@ -11,9 +10,7 @@ services:
     ports:
       - "8888:8888"
     volumes:
-      - ${PWD}:/home/jovyan/work
-      - /home/d3j331/tesp/repository/copper:/home/jovyan/copper
-#      - ${HOME}/tesp/repository/copper/examples:/home/jovyan/examples
+      - ${RUNFLOW}:/home/jovyan/work
     depends_on:
       - database
     links:
@@ -49,7 +46,17 @@ services:
     restart: always
     volumes:
       - cu_vol_user:/var/lib/postgresql/data
-      - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql
+      - $WORKFLOW/init-db.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - cu_net
+
+  mongodb:
+    image: mongodb/mongodb-community-server:latest
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    expose:
+      - "27017"
     networks:
       - cu_net
 

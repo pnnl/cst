@@ -1,7 +1,9 @@
 #!/bin/bash
 
+CODEDIR=/home/d3j331/tesp/repository/copper
+
 if [[ ! -e ".env" ]]; then
-  ./env_cu.sh
+  $CODEDIR/scripts/workflow/env_cu.sh
 fi
 source .env
 
@@ -20,6 +22,6 @@ if [[ $image1 == "" ]]; then
   exit
 fi
 
-docker-compose --env-file ./.env -f postgres-docker-compose.yaml up -d
-docker-compose -f docker-compose.yaml up -d
-docker run --name mongodb -d -p 27017:27017 mongodb/mongodb-community-server:latest
+cd "$CODEDIR/run" || exit
+docker-compose -f $WORKFLOW/postgres-docker-compose.yaml up -d
+docker-compose -f $WORKFLOW/docker-compose.yaml up -d
