@@ -57,14 +57,13 @@ Windows doesn't like empty lines on shell scripts
 For starting up Docker, running the commands in the shell script in the terminal works better than running the script itself.
 
 
-For AIRFLOW
-/home/airflow/copper-key-ecdsa.pub
+For AIRFLOW, in the admin interface add a connection the with the password
+Either the copy for running the dags one the same server as airflow
 
-
-#in the docker for each server to use
-# remove old finger print if any, not needed in file was empty
+For Jupyter
+# remove old fingerprint if any, not needed in file was empty
 ssh-keygen -R boomer
-# add the new finger print
+# add the new fingerprint
 ssh-keyscan boomer >> ~/.ssh/known_hosts
 
 from the node airflow is running from copy the file to docker
@@ -73,6 +72,8 @@ from the node airflow is running from copy the file to docker
 ssh-keygen -f ~/copper-key-ecdsa -t ecdsa -b 521
  === user@host is the remote user and host
 ssh-copy-id -i ~/copper-key-ecdsa user@host
+need add to cosim-airflow and jupyter through terminal:
+ssh-copy-id -i ~/copper-key-ecdsa d3j331@gage.pnl.gov
  === to run without password/first time may require passphrase
 
 
@@ -131,11 +132,11 @@ ssh-copy-id -i ~/.ssh/tatu-key-ecdsa user@host
 Once the public key has been configured on the server, the server will allow any connecting user that has the private key to log in. During the login process, the client proves possession of the private key by digitally signing the key exchange.
 
 
-
+Adding a directories where new modules will be deployed
 https://stackoverflow.com/questions/67887138/how-to-install-packages-in-airflow-docker-compose
 don't know if the answer is too late, anyway, I've managed to workaround this problem by:
 
-Defining new volumen in docker compose, pointing to a directory where new modules will be deployed. In my case, in Docker compose x-airflow-common: common section, in volumes subsection, I added: - ${AIRFLOW_PROJ_DIR:-.}/python:/python_extended
+Defining new volume in docker compose, pointing to a directory where new modules will be deployed. In my case, in Docker compose x-airflow-common: common section, in volumes subsection, I added: - ${AIRFLOW_PROJ_DIR:-.}/python:/python_extended
 Then, in ${AIRFLOW_PROJ_DIR:-.}/python, I can deploy new modules to be used as PYTHONPATH.
 Finally, it is possible to define a .env specific per task defined in Airflow in ${AIRFLOW_PROJ_DIR:-.}/python and load a per-task specific .env files in the dag.py of the task.
 So, my docker-compose.yml looks like:

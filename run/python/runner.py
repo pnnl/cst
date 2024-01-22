@@ -93,7 +93,7 @@ class Runner:
 
         self.db.remove_document(mDB.cu_federations, None, self.federation_name)
         self.db.add_dict(mDB.cu_federations, self.federation_name, diction)
-        print(mDB.cu_federations, self.db.get_collection_document_names(mDB.cu_federations))
+        # print(mDB.cu_federations, self.db.get_collection_document_names(mDB.cu_federations))
 
         scenario = self.db.scenario(self.schema_name,
                                     self.federation_name,
@@ -102,7 +102,7 @@ class Runner:
                                     self.docker)
         self.db.remove_document(mDB.cu_scenarios, None, self.scenario_name)
         self.db.add_dict(mDB.cu_scenarios, self.scenario_name, scenario)
-        print(mDB.cu_scenarios, self.db.get_collection_document_names(mDB.cu_scenarios))
+        # print(mDB.cu_scenarios, self.db.get_collection_document_names(mDB.cu_scenarios))
 
 
 if __name__ == "__main__":

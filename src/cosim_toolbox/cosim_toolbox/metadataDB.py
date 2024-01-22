@@ -78,9 +78,9 @@ class MetaDB:
         # Test connection
         try:
             client.admin.command('ping')
-            print("Pinged your deployment. You successfully connected to MongoDB!")
+            logger.info("Pinged your deployment. You successfully connected to MongoDB!")
         except Exception as e:
-            print(e)
+            logger.info(e)
         
         return client
 
@@ -363,19 +363,23 @@ class Docker:
 
     @staticmethod
     def run_yaml(scenario_name):
-        print('====  ' + scenario_name + ' Broker Start in\n        ' + os.getcwd(), flush=True)
+        logger.info('====  ' + scenario_name + ' Broker Start in\n        ' + os.getcwd())
         docker_compose = "docker-compose -f " + scenario_name + ".yaml"
         subprocess.Popen(docker_compose + " up", shell=True).wait()
         subprocess.Popen(docker_compose + " down", shell=True).wait()
-        print('====  Broker Exit in\n        ' + os.getcwd(), flush=True)
+        logger.info('====  Broker Exit in\n        ' + os.getcwd())
 
     @staticmethod
     def run_remote_yaml(scenario_name):
-        print('====  ' + scenario_name + ' Broker Start in\n        ' + os.getcwd(), flush=True)
-        subprocess.Popen("ssh -i  ~/tesp-key-ecdsa  d3j331@gage.pnl.gov 'nohup sleep 300 >/dev/null 2>/dev/null </dev/null &'", shell=True)
-        print('====  Broker Exit in\n        ' + os.getcwd(), flush=True)
-
-
+        logger.info('====  ' + scenario_name + ' Broker Start in\n        ' + os.getcwd())
+        docker_compose = "docker-compose -f " + scenario_name + ".yaml"
+        # subprocess.Popen("ssh -i  ~/copper-key-ecdsa  d3j331@gage.pnl.gov 'nohup sleep 300 >/dev/null 2>/dev/null </dev/null &'", shell=True)
+        cmd = ("sh -c 'cd ~/tesp/repository/copper/run/python && " +
+               docker_compose + " up && " + docker_compose + " down'")
+        subprocess.Popen("ssh -i  ~/copper-key-ecdsa  d3j331@gage.pnl.gov \"nohup " + cmd +
+                         " > /dev/null &\"", shell=True)
+                         # " >/dev/null 2>/dev/null </dev/null &\"", shell=True)
+        logger.info('====  Broker Exit in\n        ' + os.getcwd())
 
 
 def mytest1():
@@ -388,7 +392,7 @@ def mytest1():
     If no version number is important the tag MONGODB_VERSION=latest can be used
     """
     db = MetaDB(cu_uri, cu_database)
-    print(db.update_collection_names())
+    logger.info(db.update_collection_names())
     scenarios = db.add_collection(cu_scenarios)
     federates = db.add_collection(cu_federations)
 
@@ -421,10 +425,10 @@ def mytest1():
     scenario = db.scenario(schema_name, federate_name, "2023-12-07T15:31:27", "2023-12-08T15:31:27")
     db.add_dict(cu_scenarios, scenario_name, scenario)
 
-    print(db.get_collection_document_names(cu_scenarios))
-    print(db.get_collection_document_names(cu_federations))
-    print(db.get_dict_key_names(cu_federations, federate_name))
-    print(db.get_dict(cu_federations, None, federate_name))
+    logger.info(db.get_collection_document_names(cu_scenarios))
+    logger.info(db.get_collection_document_names(cu_federations))
+    logger.info(db.get_dict_key_names(cu_federations, federate_name))
+    logger.info(db.get_dict(cu_federations, None, federate_name))
 
 
 def mytest2():
@@ -437,7 +441,7 @@ def mytest2():
     If no version number is important the tag MONGODB_VERSION=latest can be used
     """
     db = MetaDB(cu_uri, cu_database)
-    print(db.update_collection_names())
+    logger.info(db.update_collection_names())
     db.add_collection(cu_scenarios)
     db.add_collection(cu_federations)
 
@@ -492,10 +496,10 @@ def mytest2():
     scenario = db.scenario(schema_name, federate_name, "2023-12-07T15:31:27", "2023-12-10T15:31:27", True)
     db.add_dict(cu_scenarios, scenario_name, scenario)
 
-    print(db.get_collection_document_names(cu_scenarios))
-    print(db.get_collection_document_names(cu_federations))
-    print(db.get_dict_key_names(cu_federations, federate_name))
-    print(db.get_dict(cu_federations, None, federate_name))
+    logger.info(db.get_collection_document_names(cu_scenarios))
+    logger.info(db.get_collection_document_names(cu_federations))
+    logger.info(db.get_dict_key_names(cu_federations, federate_name))
+    logger.info(db.get_dict(cu_federations, None, federate_name))
 
 
 federation_database()

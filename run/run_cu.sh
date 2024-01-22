@@ -1,1 +1,1 @@
-docker run -it --rm run_airflow-webserver bash
+docker run -it --rm cosim-airflow bash

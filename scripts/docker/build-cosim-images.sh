@@ -2,6 +2,7 @@
 
 paths=(
   "/home/d3j331/tesp/repository/copper/src/cosim_toolbox/"
+  "/home/d3j331/tesp/repository/copper/src/cosim_toolbox/"
   "./"
   "/home/d3j331/tesp/repository/copper/scripts/builder/"
   "./"
@@ -31,7 +32,7 @@ names=(
 
 builds=(
   1
-  0
+  1
   0
   0
   0
