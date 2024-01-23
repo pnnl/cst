@@ -4,8 +4,11 @@ FROM cosim-julia:latest AS cosim-mespapi
 USER root
 
 # User name and work directory
-ENV USER_NAME=worker
+ARG UID
+ARG USER_NAME
 ENV USER_HOME=/home/$USER_NAME
+
+# Compile exports
 ENV MESPDIR=$USER_HOME/mesp
 
 RUN echo "===== Building CoSim MESP API =====" && \
@@ -18,7 +21,7 @@ RUN echo "===== Building CoSim MESP API =====" && \
 COPY . $MESPDIR/
 RUN chown -hR $USER_NAME:$USER_NAME $USER_HOME
 
-# Set 'worker' as user
+# Set user
 USER $USER_NAME
 WORKDIR $USER_HOME
 
@@ -26,7 +29,7 @@ RUN echo "Install Python Libraries" && \
 #  echo "Activate the python virtual environment" && \
 #  . venv/bin/activate && \
 #  cd $USER_HOME/mesp_support/mesp_support || exit && \
-#  pip3 install -e .  >> "pypi.log" && \
+#  pip install -e .  >> "pypi.log" && \
   echo "Install Julia Libraries" && \
   julia $MESPDIR/prototype/install_julia_packages.jl
 

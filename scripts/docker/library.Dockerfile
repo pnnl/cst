@@ -1,10 +1,12 @@
+# Build runtime image
 ARG UBUNTU=ubuntu
 ARG UBUNTU_VERSION=:22.04
 
-FROM ${UBUNTU}${UBUNTU_VERSION} AS cosim-libary
+FROM ${UBUNTU}${UBUNTU_VERSION} AS cosim-library
 
 # User name and work directory
-ENV USER_NAME=worker
+ARG UID
+ARG USER_NAME
 ENV USER_HOME=/home/$USER_NAME
 
 RUN echo "===== Building CoSim Library =====" && \
@@ -54,11 +56,6 @@ RUN echo "===== Building CoSim Library =====" && \
   python3.8-tk \
   python3-pil.imagetk && \
   ln -s /usr/lib/jvm/java-11-openjdk-amd64 /usr/lib/jvm/default-java && \
-  echo "===== Clean Up =====" && \
-  apt-get upgrade -y && \
-  apt-get clean -y && \
-  apt-get autoclean -y && \
-  apt-get autoremove -y && \
   echo "root:worker" | chpasswd && \
   echo "<<<< Adding the 'worker' user >>>>" && \
   useradd -m -s /bin/bash -u $UID ${USER_NAME} && \

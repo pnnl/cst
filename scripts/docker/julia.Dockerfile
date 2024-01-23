@@ -4,8 +4,11 @@ FROM cosim-python:latest AS cosim-julia
 USER root
 
 # User name and work directory
-ENV USER_NAME=worker
+ARG UID
+ARG USER_NAME
 ENV USER_HOME=/home/$USER_NAME
+
+# Compile exports
 ENV INSTDIR=$USER_NAME/tenv
 
 # PATH
@@ -21,7 +24,7 @@ RUN echo "===== Building CoSim Julia =====" && \
   wget && \
   chown -hR $USER_NAME:$USER_NAME $USER_HOME
 
-# Set 'worker' as user
+# Set as user
 USER $USER_NAME
 WORKDIR $USER_HOME
 

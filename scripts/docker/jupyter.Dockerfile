@@ -1,13 +1,14 @@
+# Build runtime image
 FROM jupyter/minimal-notebook:7285848c0a11
-
-ARG UID
 
 USER root
 
-ENV GRANT_SUDO=yes
-ENV USER_NAME=d3j331
+# User name and work directory
+ARG UID
+ARG USER_NAME
 ENV USER_HOME=/home/$USER_NAME
-#ENV USER_HOME=/copper
+
+ENV GRANT_SUDO=yes
 
 ARG DOCKER_USER=d3j331
 ARG DOCKER_HOST=gage.pnl.gov
@@ -25,11 +26,12 @@ RUN echo "===== Building CoSim Jupyter =====" && \
   #  usermod -aG sudo ${USER_NAME} && \   sudo does not work, also the passwords don't work
   #  usermod -aG sudo jovyan && \
   cp /home/jovyan/.bashrc ${USER_HOME}/.bashrc && \
+  chown -R ${USER_NAME} ${USER_HOME}/.bashrc && \
 # Lines below are all for debug
 #  echo $(pwd) && \
 #  echo  $(ls -las)
   cd cosim_toolbox || exit && \
-  pip3 install --no-cache-dir -e . && \
+  pip install --no-cache-dir -e . && \
   chown -R jovyan ../cosim_toolbox
 
 # RUN chown -hR $USER_NAME:$USER_NAME $USER_HOME
@@ -37,7 +39,7 @@ RUN echo "===== Building CoSim Jupyter =====" && \
 #COPY --from=cosim-build:latest $INSTDIR/ $INSTDIR/
 #RUN chown -hR $USER_NAME:$USER_NAME $USER_HOME
 
-# Set 'worker' as user
+# Set as user
 USER jovyan
 WORKDIR /home/jovyan
 
@@ -49,6 +51,6 @@ RUN echo "==" && \
 # Line below needs to set at run for right now in the terminal for user:
 # ssh-copy-id -i copper-key-ecdsa ${DOCKER_USER}@${DOCKER_HOST}
 
-# Set 'worker' as user
+# Set as user
 #USER $USER_NAME
 #WORKDIR $USER_HOME

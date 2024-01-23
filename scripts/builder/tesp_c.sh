@@ -13,19 +13,19 @@ echo
 
 echo "Installing Python Libraries..."
 which python > "${BUILDDIR}/tesp_pypi.log" 2>&1
-pip3 install --upgrade pip >> "${BUILDDIR}/tesp_pypi.log" 2>&1
-pip3 install -r "${TESPDIR}/requirements.txt" >> "${BUILDDIR}/tesp_pypi.log" 2>&1
+pip install --upgrade pip >> "${BUILDDIR}/tesp_pypi.log" 2>&1
+pip install -r "${TESPDIR}/requirements.txt" >> "${BUILDDIR}/tesp_pypi.log" 2>&1
 
 echo "Installing Python TESP API..."
 cd "${TESPDIR}/src/tesp_support" || exit
-pip3 install -e . > "${BUILDDIR}/tesp_api.log" 2>&1
+pip install -e . > "${BUILDDIR}/tesp_api.log" 2>&1
 
 echo "Installing Python PSST..."
 cd "${REPODIR}/AMES-V5.0/psst" || exit
-pip3 install -e . > "${BUILDDIR}/AMES-V5.0.log" 2>&1
+pip install -e . > "${BUILDDIR}/AMES-V5.0.log" 2>&1
 
-#  pip3 install tesp_support --upgrade
-#  pip3 install psst --upgrade
+#  pip install tesp_support --upgrade
+#  pip install psst --upgrade
 
 cd "${BUILDDIR}" || exit
 if [[ $1 == "develop" ]]; then

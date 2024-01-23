@@ -5,13 +5,13 @@ ARG UBUNTU_VERSION=:22.04
 # Build runtime image
 FROM ${UBUNTU}${UBUNTU_VERSION} AS cosim-helics
 
-ARG UID
 # User name and work directory
-ENV USER_NAME=worker
+ARG UID
+ARG USER_NAME
 ENV USER_HOME=/home/$USER_NAME
-ENV INSTDIR=$USER_HOME/tenv
 
 # Compile exports
+ENV INSTDIR=$USER_HOME/tenv
 ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
 
 # PATH
@@ -44,6 +44,6 @@ RUN echo "===== Building CoSim HELICS =====" && \
 COPY --from=cosim-build:latest $INSTDIR/ $INSTDIR/
 RUN chown -hR $USER_NAME:$USER_NAME $USER_HOME
 
-# Set 'worker' as user
+# Set as user
 USER $USER_NAME
 WORKDIR $USER_HOME

@@ -24,7 +24,7 @@ cmake -DHELICS_BUILD_JAVA_INTERFACE=ON -DBUILD_SHARED_LIBS=ON -DHELICS_BUILD_CXX
 
 if [[ $1 == "clean" ]]; then
   make clean
-  pip3 uninstall -y helics
+  pip uninstall -y helics
 fi
 make -j "$(grep -c "^processor" /proc/cpuinfo)"
 make install

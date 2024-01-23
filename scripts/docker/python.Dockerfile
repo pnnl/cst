@@ -4,8 +4,11 @@ FROM cosim-helics:latest AS cosim-python
 USER root
 
 # User name and work directory
-ENV USER_NAME=worker
+ARG UID
+ARG USER_NAME
 ENV USER_HOME=/home/$USER_NAME
+
+# Compile exports
 ENV INSTDIR=$USER_HOME/tenv
 
 # PATH
@@ -39,24 +42,24 @@ COPY --from=cosim-build:latest $USER_HOME/repository/AMES-V5.0/psst/ $USER_HOME/
 COPY --from=cosim-build:latest $USER_HOME/repository/AMES-V5.0/README.rst $USER_HOME/psst
 RUN chown -hR $USER_NAME:$USER_NAME $USER_HOME
 
-# Set 'worker' as user
+# Set as user
 USER $USER_NAME
 WORKDIR $USER_HOME
 
 # Add directories and files
 RUN echo "Directory structure for running" && \
-  pip3 install --upgrade pip > "_pypi.log" && \
-  pip3 install virtualenv >> "_pypi.log" && \
+  pip install --upgrade pip > "_pypi.log" && \
+  pip install virtualenv >> "_pypi.log" && \
   ".local/bin/virtualenv" venv --prompt TESP && \
   echo "Add python virtual environment to .bashrc" && \
   echo ". venv/bin/activate" >> .bashrc && \
   echo "Activate the python virtual environment" && \
   . venv/bin/activate && \
-  pip3 install --upgrade pip > "pypi.log" && \
+  pip install --upgrade pip > "pypi.log" && \
   echo "Install Python Libraries" && \
-  pip3 install --no-cache-dir helics >> "pypi.log" && \
-  pip3 install --no-cache-dir helics[cli] >> "pypi.log" && \
+  pip install --no-cache-dir helics >> "pypi.log" && \
+  pip install --no-cache-dir helics[cli] >> "pypi.log" && \
   cd $USER_HOME/cosim_toolbox/cosim_toolbox || exit && \
-  pip3 install --no-cache-dir -e .  >> "$USER_HOME/pypi.log" && \
+  pip install --no-cache-dir -e .  >> "$USER_HOME/pypi.log" && \
   cd $USER_HOME/psst/psst || exit && \
-  pip3 install --no-cache-dir -e .  >> "$USER_HOME/pypi.log"
+  pip install --no-cache-dir -e .  >> "$USER_HOME/pypi.log"

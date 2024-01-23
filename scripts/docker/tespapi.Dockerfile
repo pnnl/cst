@@ -4,7 +4,8 @@ FROM cosim-python:latest AS cosim-tespapi
 USER root
 
 # User name and work directory
-ENV USER_NAME=worker
+ARG UID
+ARG USER_NAME
 ENV USER_HOME=/home/$USER_NAME
 
 RUN echo "===== Building CoSim TESP API =====" && \
@@ -20,7 +21,7 @@ RUN echo "===== Building CoSim TESP API =====" && \
 #COPY --from=cosim-build:latest $INSTDIR/ $INSTDIR/
 #RUN chown -hR $USER_NAME:$USER_NAME $USER_HOME
 
-# Set 'worker' as user
+# Set as user
 USER $USER_NAME
 WORKDIR $USER_HOME
 

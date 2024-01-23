@@ -1,8 +1,10 @@
 FROM cosim-library AS cosim-production
 
-ENV USER_NAME=worker
-ENV USER_EMAIL=pnnl.com
+# User name and work directory
+ARG UID
+ARG USER_NAME
 ENV USER_HOME=/home/$USER_NAME
+ENV USER_EMAIL=pnnl.com
 
 USER $USER_NAME
 WORKDIR $USER_HOME
@@ -75,9 +77,7 @@ RUN echo "Cloning or download all relevant repositories..." && \
   git clone -b main https://github.com/GMLC-TDC/helics-ns3 ns-3-dev/contrib/helics && \
   ${BUILDDIR}/patch.sh ns-3-dev/contrib/helics helics-ns3 && \
   echo "++++++++++++++ KLU SOLVER" && \
-# Add cp because svn can't seem be used this way anymore
-  cp -r ${BUILDDIR}/KLU_DLL ${REPODIR}/KLU_DLL && \
-#  svn export https://github.com/gridlab-d/tools/branches/klu-build-update/solver_klu/source/KLU_DLL && \
+  unzip -q ${BUILDDIR}/KLU_DLL.zip -d ./KLU_DLL && \
   echo "++++++++++++++  Compiling and Installing TESP software is starting!  ++++++++++++++" && \
   cd ${BUILDDIR} || exit && \
   echo "Compiling and Installing FNCS..." && \

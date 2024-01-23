@@ -4,8 +4,11 @@ FROM cosim-helics:latest AS cosim-ns3
 USER root
 
 # User name and work directory
-ENV USER_NAME=worker
+ARG UID
+ARG USER_NAME
 ENV USER_HOME=/home/$USER_NAME
+
+# Compile exports
 ENV INSTDIR=$USER_HOME/tenv
 
 # PATH
@@ -22,6 +25,6 @@ RUN echo "===== BUILD RUN NS3 =====" && \
 #COPY --from=cosim-build:latest $INSTDIR/ $INSTDIR/
 #RUN chown -hR $USER_NAME:$USER_NAME $USER_HOME
 
-# Set 'worker' as user
+# Set as user
 USER $USER_NAME
 WORKDIR $USER_HOME

@@ -4,6 +4,9 @@ if [[ -z ${INSTDIR} ]]; then
   . "${HOME}/tespEnv"
 fi
 
+
+mkdir -p build
+
 cd "${REPODIR}/KLU_DLL" || exit
 if [[ $1 == "clean" ]]; then
   rm -rf build
