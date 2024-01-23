@@ -6,7 +6,7 @@ Prototype metadata database API development
 """
 import pymongo
 from pymongo import MongoClient
-import gridfs
+# import gridfs
 import pprint
 import logging
 import helics_messages as hm
@@ -72,7 +72,7 @@ class MetaDB:
         method decide what to do with it.
         """
         ret_val = True
-        for doc in (self.db[collection_name].find({self._cu_dict_name: 1})):
+        for doc in (self.db[collection_name].find({}, {self._cu_dict_name: 1})):
             if doc[self._cu_dict_name] == new_name:
                 ret_val = False
         return ret_val
@@ -82,14 +82,18 @@ class MetaDB:
 
     def remove_document(self, collection_name, object_id=None, dict_name=None):
         if dict_name is None and object_id is None:
+            logger.error("Error : Must provide the name or object ID of the dictionary to be retrieved.")
             raise AttributeError("Must provide the name or object ID of the dictionary to be retrieved.")
         elif dict_name is not None and object_id is not None:
             # raise UserWarning("Using provided object ID (and not provided name) to remove document.")
+            logger.debug("Debug : Using provided object ID (and not provided name) to remove document.")
             self.db[collection_name].delete_one({"_id": object_id})
         elif dict_name is not None:
-            self.db[collection_name].delete_one({self._cu_dict_name: dict_name})
-            # if not doc:
-            #     raise NameError(f"{dict_name} does not exist in collection {collection_name} and cannot be retrieved.")
+            if not self._check_unique_doc_name(collection_name, dict_name):
+                self.db[collection_name].delete_one({self._cu_dict_name: dict_name})
+            else:
+                logger.error(f"Error : {dict_name} does not exist in collection {collection_name} and cannot be retrieved.")
+                raise NameError(f"{dict_name} does not exist in collection {collection_name} and cannot be retrieved.")
         elif object_id is not None:
             self.db[collection_name].delete_one({"_id": object_id})
         # TODO: Add check for success on delete.
@@ -100,7 +104,8 @@ class MetaDB:
         has been added to the collection. This method adds a small identifier
         JSON to fill this role.
         """
-        id_dict = {"collection name": name}
+        id_dict = {"collection name": name,
+                   self._cu_dict_name: "collection name"}
         collection = self.db[name]
         collection.insert_one(id_dict)
         return collection
@@ -118,7 +123,7 @@ class MetaDB:
         """
         """
         doc_names = []
-        for doc in (self.db[collection].find({"_id": 0, self._cu_dict_name: 1})):
+        for doc in (self.db[collection].find({}, {self._cu_dict_name: 1})):
             print("Doc names = ", doc[self._cu_dict_name])
             if doc.__len__():
                 doc_names.append(doc[self._cu_dict_name])
@@ -145,6 +150,7 @@ class MetaDB:
         if self._check_unique_doc_name(collection_name, dict_name):
             dict_to_add[self._cu_dict_name] = dict_name
         else:
+            logger.error(f"{dict_name} is not unique in collection {collection_name} and cannot be added.")
             raise NameError(f"{dict_name} is not unique in collection {collection_name} and cannot be added.")
 
         obj_id = self.db[collection_name].insert_one(dict_to_add).inserted_id
@@ -160,14 +166,17 @@ class MetaDB:
         was created when the dictionary was added but not both.
         """
         if dict_name is None and object_id is None:
+            logger.error("Must provide the name or object ID of the dictionary to be retrieved.")
             raise AttributeError("Must provide the name or object ID of the dictionary to be retrieved.")
         elif dict_name is not None and object_id is not None:
+            logger.debug("Using provided object ID (and not provided name) to get dictionary.")
             # raise UserWarning("Using provided object ID (and not provided name) to get dictionary.")
             doc = self.db[collection_name].find_one({"_id": object_id})
         elif dict_name is not None:
             doc = self.db[collection_name].find_one({self._cu_dict_name: dict_name})
             doc = self.db[collection_name].find_one({self._cu_dict_name: dict_name})
             if not doc:
+                logger.error(f"{dict_name} does not exist in collection {collection_name} and cannot be retrieved.")
                 raise NameError(f"{dict_name} does not exist in collection {collection_name} and cannot be retrieved.")
         elif object_id is not None:
             doc = self.db[collection_name].find_one({"_id": object_id})
@@ -192,18 +201,18 @@ class MetaDB:
             raise AttributeError("Must provide the name or object ID of the dictionary to be modified.")
         elif dict_name is not None and object_id is not None:
             # raise UserWarning("Using provided object ID (and not provided name) to update database.")
-            doc = self.db[collection_name].replace({"_id": object_id}, updated_dict)
+            doc = self.db[collection_name].update_one({"_id": object_id}, {"$set": updated_dict})
         elif dict_name is not None:
             doc = self.db[collection_name].find_one({self._cu_dict_name: dict_name})
             doc = self.db[collection_name].find_one({self._cu_dict_name: dict_name})
             if doc:
-                doc = self.db[collection_name].replace({self._cu_dict_name: dict_name}, updated_dict)
+                doc = self.db[collection_name].update_one({self._cu_dict_name: dict_name}, {"$set": updated_dict})
             else:
                 raise NameError(f"{dict_name} does not exist in collection {collection_name} and cannot be updated.")
         elif object_id is not None:
-            doc = self.db[collection_name].replace({"_id": object_id}, updated_dict)
+            doc = self.db[collection_name].update_one({"_id": object_id}, {"$set": updated_dict})
 
-        return str(doc["_id"])
+        return doc
 
 
 def scenarioToJson(federation: str, start: str, stop: str):

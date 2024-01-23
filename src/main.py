@@ -16,18 +16,20 @@ import json
 local_default_uri = 'mongodb://localhost:27017'
 metadb = MetaDB(uri=local_default_uri)
 
-# Testing methods in metadataDB.py
+# Testing methods in MetaDB class in metadataDB.py
 
-# test removing a data collection
-collections = metadb.update_collection_names()
-for c in collections:
-    metadb.remove_collection(c)
+#define collection name for testing
+collection_name = "case_data"
+
+#clear out collection in case it exists
+metadb.remove_collection(collection_name)
 
 # test adding a data collection
-collection_name = "case_data"
+collections = metadb.update_collection_names()
+print(f"Collections before: {collections}")
 name_out = metadb.add_collection(name=collection_name)
 collections = metadb.update_collection_names()
-print(collections)
+print(f"Collections after: {collections}")
 
 # test _open_file(self, file_path, mode='r'):
 file_path = os.path.join(os.path.dirname(__file__), "data", "psc_ex.json")
@@ -40,6 +42,9 @@ named_file_dict = {"psc": file_dict}
 dict_name = "psc"
 obj_id = metadb.add_dict(collection_name, dict_name, named_file_dict)
 
+doc_names = metadb.get_collection_document_names(collection_name)
+print("Doc names = ", doc_names)
+
 #test get get_dict_key_names(self, collection_name, doc_name):
 keys = metadb.get_dict_key_names(collection_name, dict_name)
 print(f"Dictionary keys of {dict_name}: {keys}")
@@ -50,11 +55,46 @@ print("File name unique? ", file_name_unique)
 
 # test update_collection_name(self)
 collections = metadb.update_collection_names()
-print("Collection_names = ", collections)
+print(f"Collection_names = {collections}, and should equal ['case_data']")
 
 # test get_collection_document_names(self, collection)
 doc_names = metadb.get_collection_document_names(collection_name)
-print("Doc names = ", doc_names)
+print(f"Doc names = {doc_names}, and should equal: ['collection name', 'psc']")
+
+# test update document update_dict(self, collection_name, updated_dict, object_id=None, dict_name=None):
+#first test error catching
+updated_dict = named_file_dict
+updated_dict["new_field"] = 1
+try:
+    metadb.update_dict(collection_name, updated_dict)
+except AttributeError as e:
+    print("AttributeError : ", e)
+
+try:
+    metadb.update_dict(collection_name, updated_dict, dict_name="yoda")
+except NameError as e:
+    print("NameError : ", e) 
+
+# now test works
+doc = metadb.update_dict(collection_name, updated_dict, dict_name=dict_name)
+print(f"Return from update_dict: {doc}")
+
+
+# test get document: get_dict(self, collection_name, object_id=None, dict_name=None):
+#first test error catching
+try:
+    metadb.get_dict(collection_name)
+except AttributeError as e:
+    print("AttributeError : ", e)
+
+try:
+    metadb.get_dict(collection_name, dict_name = 'blah')
+except NameError as e:
+    print("NameError : ", e) 
+
+# now test works
+metadb.get_dict(collection_name, dict_name = dict_name)
+
 
 # test remove_document(self, collection_name, object_id = None, dict_name = None):
 #first test error catching
@@ -70,10 +110,11 @@ except NameError as e:
 
 # now test works
 doc_names = metadb.get_collection_document_names(collection_name)
-print("Doc names before: ", doc_names)
+print(f"Doc names before remove {dict_name}: {doc_names}")
 metadb.remove_document(collection_name, dict_name = dict_name)
 doc_names = metadb.get_collection_document_names(collection_name)
-print("Doc names after: ", doc_names)
+print(f"Doc names after remove {dict_name}: {doc_names}")
 
 # test removing a data collection
 metadb.remove_collection(collection_name)
+print(f"Collection_names = {collections}, and should equal []")
