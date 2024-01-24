@@ -52,11 +52,22 @@ services:
 
   mongodb:
     image: mongodb/mongodb-community-server:latest
-    container_name: mongo
+    container_name: ${CONTAINER_NAME:-mongodb}
     ports:
       - "27017:27017"
     expose:
       - "27017"
+    networks:
+      - cu_net
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: ${CONTAINER_NAME:-pgadmin}
+    ports:
+      - "80:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "${PGADMIN_DEFAULT_EMAIL}"
+      PGADMIN_DEFAULT_PASSWORD: "${PGADMIN_DEFAULT_PASSWORD}"
     networks:
       - cu_net
 

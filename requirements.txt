@@ -1,4 +1,4 @@
-airflow~=2.7.3
+apache-airflow~=2.7.3
 Jinja2~=3.1.2
 NREL-PySAM~=4.2.0
 PYPOWER==5.1.16

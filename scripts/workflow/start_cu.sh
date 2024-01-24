@@ -1,11 +1,8 @@
 #!/bin/bash
 
-CODEDIR=/home/d3j331/tesp/repository/copper
-
-if [[ ! -e ".env" ]]; then
-  $CODEDIR/scripts/workflow/env_cu.sh
+if [[ -z ${CSTBDIR} ]]; then
+  . "${CSTBDIR}/cosim.env"
 fi
-source .env
 
 # Install yq (https://github.com/mikefarah/yq/#install) to parse the YAML file and retrieve the network name
 #NETWORK_NAME=$(yq eval '.networks' postgres-docker-compose.yaml | cut -f 1 -d':')
@@ -22,6 +19,9 @@ if [[ $image1 == "" ]]; then
   exit
 fi
 
-cd "$CODEDIR/run" || exit
+cd "$CSTBDIR/run" || exit
+mkdir -p ./dags ./logs ./plugins ./config ./python
+# make wide open for now
+sudo chmod -R 777 ./dags ./logs ./plugins ./config ./python ../src
 docker-compose -f $WORKFLOW/postgres-docker-compose.yaml up -d
 docker-compose -f $WORKFLOW/docker-compose.yaml up -d
