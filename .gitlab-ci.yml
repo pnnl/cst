@@ -1,0 +1,13 @@
+stages:
+  - test
+
+test:
+  stage: test
+  image: python:3.10
+  before_script:
+    - apt-get update && apt-get install make
+  script:
+    - export HTTPS_PROXY=http://proxy01.pnl.gov:3128
+    - export https_proxy=http://proxy01.pnl.gov:3128
+    - make venv test
+    
