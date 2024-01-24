@@ -1,0 +1,6 @@
+# Test coverage
+.coverage
+coverage.xml
+resutls.xml
+htmlcov/
+**/.pytest_cache/
