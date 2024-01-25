@@ -10,7 +10,7 @@ services:
     ports:
       - "8888:8888"
     volumes:
-      - ${RUNFLOW}:/home/jovyan/work
+      - ${AIRFLOW_PROJ_DIR}:/home/jovyan/work
     depends_on:
       - database
     links:
@@ -46,7 +46,7 @@ services:
     restart: always
     volumes:
       - cu_vol_user:/var/lib/postgresql/data
-      - $WORKFLOW/init-db.sql:/docker-entrypoint-initdb.d/init.sql
+      - $STACK_DIR/init-db.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - cu_net
 

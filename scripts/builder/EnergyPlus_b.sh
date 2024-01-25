@@ -6,7 +6,7 @@ fi
 
 cd "${INSTDIR}" || exit
 mkdir -p energyplus
-cd "${REPODIR}/EnergyPlus" || exit
+cd "${REPO_DIR}/EnergyPlus" || exit
 if [[ $1 == "clean" ]]; then
   rm -rf build
 fi

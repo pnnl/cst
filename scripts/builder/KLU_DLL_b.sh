@@ -7,7 +7,7 @@ fi
 
 mkdir -p build
 
-cd "${REPODIR}/KLU_DLL" || exit
+cd "${REPO_DIR}/KLU_DLL" || exit
 if [[ $1 == "clean" ]]; then
   rm -rf build
 fi

@@ -12,22 +12,22 @@ echo "++++++++++++++  Compiling and Installing TESP software is starting!  +++++
 echo
 
 echo "Installing Python Libraries..."
-which python > "${BUILDDIR}/tesp_pypi.log" 2>&1
-pip install --upgrade pip >> "${BUILDDIR}/tesp_pypi.log" 2>&1
-pip install -r "${TESPDIR}/requirements.txt" >> "${BUILDDIR}/tesp_pypi.log" 2>&1
+which python > "${BUILD_DIR}/tesp_pypi.log" 2>&1
+pip install --upgrade pip >> "${BUILD_DIR}/tesp_pypi.log" 2>&1
+pip install -r "${TESPDIR}/requirements.txt" >> "${BUILD_DIR}/tesp_pypi.log" 2>&1
 
 echo "Installing Python TESP API..."
 cd "${TESPDIR}/src/tesp_support" || exit
-pip install -e . > "${BUILDDIR}/tesp_api.log" 2>&1
+pip install -e . > "${BUILD_DIR}/tesp_api.log" 2>&1
 
 echo "Installing Python PSST..."
-cd "${REPODIR}/AMES-V5.0/psst" || exit
-pip install -e . > "${BUILDDIR}/AMES-V5.0.log" 2>&1
+cd "${REPO_DIR}/AMES-V5.0/psst" || exit
+pip install -e . > "${BUILD_DIR}/AMES-V5.0.log" 2>&1
 
 #  pip install tesp_support --upgrade
 #  pip install psst --upgrade
 
-cd "${BUILDDIR}" || exit
+cd "${BUILD_DIR}" || exit
 if [[ $1 == "develop" ]]; then
 
   echo "Compiling and Installing FNCS..."
@@ -63,15 +63,15 @@ if [[ $1 == "develop" ]]; then
   mv TMY3toTMY2_ansi "${INSTDIR}/bin"
 else
 
-  ver=$(cat "${BUILDDIR}/version")
+  ver=$(cat "${BUILD_DIR}/version")
   echo "Installing HELICS, FNCS, GridLabD, EnergyPlus, NS3, and solver binaries..."
   cd "${INSTDIR}" || exit
   wget --no-check-certificate https://github.com/pnnl/tesp/releases/download/${ver}/tesp_binaries.zip
-  unzip tesp_binaries.zip > "${BUILDDIR}/tesp_binaries.log" 2>&1
+  unzip tesp_binaries.zip > "${BUILD_DIR}/tesp_binaries.log" 2>&1
   rm tesp_binaries.zip
 fi
 
-cd "${BUILDDIR}" || exit
+cd "${BUILD_DIR}" || exit
 echo "Installing HELICS Python bindings..."
 ./HELICS-py.sh clean > HELICS-py.log 2>&1
 
@@ -83,10 +83,10 @@ echo "Installing TESP documentation..."
 # and in the trusted directories (/lib and /usr/lib).
 sudo ldconfig
 echo
-echo "TESP installation logs are found in ${BUILDDIR}"
+echo "TESP installation logs are found in ${BUILD_DIR}"
 echo "++++++++++++++  Compiling and Installing TESP software is complete!  ++++++++++++++"
 
-cd "${BUILDDIR}" || exit
+cd "${BUILD_DIR}" || exit
 ./versions.sh
 
 echo

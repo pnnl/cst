@@ -15,13 +15,13 @@ IMAGE_NAME="cosim-airflow:latest"
 #IMAGE_NAME="cosim-julia:latest"
 #IMAGE_NAME="cosim-mespapi:latest"
 
-USER_NAME=airflow
-#USER_NAME=jovyan
-#USER_NAME=worker
-USER_HOME=/home/$USER_NAME
+COSIM_USER=airflow
+#COSIM_USER=jovyan
+#COSIM_USER=worker
+COSIM_HOME=/home/$COSIM_USER
 CONTENT=/home/d3j331/tesp/repository/copper/src/cosim_toolbox
 
-#           -w=${USER_HOME} \
+#           -w=${COSIM_HOME} \
 #           -v $CONTENT:/copper \
 
 clear

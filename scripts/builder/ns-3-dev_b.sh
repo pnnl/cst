@@ -4,7 +4,7 @@ if [[ -z ${INSTDIR} ]]; then
   . "${HOME}/tespEnv"
 fi
 
-cd "${REPODIR}/ns-3-dev" || exit
+cd "${REPO_DIR}/ns-3-dev" || exit
 # first build: use the following command for HELICS interface to ns3:
 # git clone -b feature/13b https://github.com/GMLC-TDC/helics-ns3 contrib/helics
 # subsequent builds: use the following 3 commands to update HELICS interface code:

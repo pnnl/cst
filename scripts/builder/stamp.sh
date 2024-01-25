@@ -28,7 +28,7 @@ if [[ $stamp == "no" ]]; then
   exit
 fi
 
-cd "${REPODIR}" || exit
+cd "${REPO_DIR}" || exit
 echo "Stamping commit ids for:"
 for dir in *
 do
@@ -36,29 +36,29 @@ do
     repo=$dir/.git
     if [ -d "$repo" ]; then
       cd "$dir" || exit
-      git rev-parse HEAD > "${BUILDDIR}/$dir.id"
-      git diff > "${BUILDDIR}/$dir.patch"
+      git rev-parse HEAD > "${BUILD_DIR}/$dir.id"
+      git diff > "${BUILD_DIR}/$dir.patch"
       echo "...$dir"
-      cd "${REPODIR}" || exit
+      cd "${REPO_DIR}" || exit
     fi
   fi
 done
 
 #helics submodule in ns3
 name="helics-ns3"
-dir="${REPODIR}/ns-3-dev/contrib/helics"
+dir="${REPO_DIR}/ns-3-dev/contrib/helics"
 if [ -d "$dir" ]; then
   cd "$dir" || exit
-  git rev-parse HEAD > "${BUILDDIR}/$name.id"
-  git diff > "${BUILDDIR}/$name.patch"
+  git rev-parse HEAD > "${BUILD_DIR}/$name.id"
+  git diff > "${BUILD_DIR}/$name.patch"
   echo "...$name"
-  cd "${REPODIR}" || exit
+  cd "${REPO_DIR}" || exit
 fi
 
 echo "Creating tesp_binaries.zip for installed binaries on TESP install"
 cd "${INSTDIR}" || exit
-zip -r -9 "${BUILDDIR}/tesp_binaries.zip" . &> "${BUILDDIR}/tesp_binaries.log" &
-pip list > "${BUILDDIR}/tesp_pypi.id"
+zip -r -9 "${BUILD_DIR}/tesp_binaries.zip" . &> "${BUILD_DIR}/tesp_binaries.log" &
+pip list > "${BUILD_DIR}/tesp_pypi.id"
 
 echo "Stamping TESP $ver for install"
 cd "${TESPDIR}" || exit
@@ -70,7 +70,7 @@ echo "$ver" > "src/tesp_support/version"
 
 echo "Creating TESP distribution package for pypi"
 cd "${TESPDIR}/src/tesp_support" || exit
-python3 -m build . > "${BUILDDIR}/package.log"
+python3 -m build . > "${BUILD_DIR}/package.log"
 echo "Checking TESP distribution package for pypi"
 twine check dist/*
 echo

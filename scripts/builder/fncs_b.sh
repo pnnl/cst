@@ -4,7 +4,7 @@ if [[ -z ${INSTDIR} ]]; then
   . "${HOME}/tespEnv"
 fi
 
-cd "${REPODIR}/fncs" || exit
+cd "${REPO_DIR}/fncs" || exit
 autoreconf -isf
 
 if [ ${MSYSTEM_PREFIX} ]; then

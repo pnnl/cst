@@ -5,8 +5,8 @@ USER root
 
 # User name and work directory
 ARG UID
-ARG USER_NAME
-ENV USER_HOME=/home/$USER_NAME
+ARG COSIM_USER
+ENV COSIM_HOME=/home/$COSIM_USER
 
 ENV GRANT_SUDO=yes
 
@@ -18,15 +18,15 @@ COPY . cosim_toolbox/
 RUN echo "===== Building CoSim Jupyter =====" && \
   echo "root:worker" | chpasswd && \
   echo "<<<< Adding the 'worker' user >>>>" && \
-  useradd -m -s /bin/bash -u $UID ${USER_NAME} && \
+  useradd -m -s /bin/bash -u $UID ${COSIM_USER} && \
   echo "<<<< Changing new user password >>>>" && \
-  echo "${USER_NAME}:${USER_NAME}" | chpasswd && \
+  echo "${COSIM_USER}:${COSIM_USER}" | chpasswd && \
   echo "jovyan:worker" | chpasswd && \
-  usermod -aG ${USER_NAME} jovyan && \
-  #  usermod -aG sudo ${USER_NAME} && \   sudo does not work, also the passwords don't work
+  usermod -aG ${COSIM_USER} jovyan && \
+  #  usermod -aG sudo ${COSIM_USER} && \   sudo does not work, also the passwords don't work
   #  usermod -aG sudo jovyan && \
-  cp /home/jovyan/.bashrc ${USER_HOME}/.bashrc && \
-  chown -R ${USER_NAME} ${USER_HOME}/.bashrc && \
+  cp /home/jovyan/.bashrc ${COSIM_HOME}/.bashrc && \
+  chown -R ${COSIM_USER} ${COSIM_HOME}/.bashrc && \
 # Lines below are all for debug
 #  echo $(pwd) && \
 #  echo  $(ls -las)
@@ -34,10 +34,10 @@ RUN echo "===== Building CoSim Jupyter =====" && \
   pip install --no-cache-dir -e . && \
   chown -R jovyan ../cosim_toolbox
 
-# RUN chown -hR $USER_NAME:$USER_NAME $USER_HOME
+# RUN chown -hR $COSIM_USER:$COSIM_USER $COSIM_HOME
 # Copy Binaries
 #COPY --from=cosim-build:latest $INSTDIR/ $INSTDIR/
-#RUN chown -hR $USER_NAME:$USER_NAME $USER_HOME
+#RUN chown -hR $COSIM_USER:$COSIM_USER $COSIM_HOME
 
 # Set as user
 USER jovyan
@@ -52,5 +52,5 @@ RUN echo "==" && \
 # ssh-copy-id -i copper-key-ecdsa ${DOCKER_USER}@${DOCKER_HOST}
 
 # Set as user
-#USER $USER_NAME
-#WORKDIR $USER_HOME
+#USER $COSIM_USER
+#WORKDIR $COSIM_HOME

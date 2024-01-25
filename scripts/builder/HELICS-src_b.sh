@@ -4,7 +4,7 @@ if [[ -z ${INSTDIR} ]]; then
   . "${HOME}/tespEnv"
 fi
 
-cd "${REPODIR}/HELICS-src" || exit
+cd "${REPO_DIR}/HELICS-src" || exit
 if [[ $1 == "clean" ]]; then
   rm -rf build
   git submodule update --init

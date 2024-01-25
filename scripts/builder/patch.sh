@@ -4,8 +4,8 @@ if [[ -z ${INSTDIR} ]]; then
   . "${HOME}/tespEnv"
 fi
 
-id="${BUILDDIR}/${2}.id"
-patch="${BUILDDIR}/${2}.patch"
+id="${BUILD_DIR}/${2}.id"
+patch="${BUILD_DIR}/${2}.patch"
 
 a=$(cat "$id")
 cd "${1}" || exit

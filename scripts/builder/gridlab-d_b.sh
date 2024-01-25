@@ -5,7 +5,7 @@ if [[ -z ${INSTDIR} ]]; then
 fi
 
 ## using make for <5.0 GridLAB-D
-#cd "${REPODIR}/gridlab-d" || exit
+#cd "${REPO_DIR}/gridlab-d" || exit
 #autoreconf -isf
 ## for ARM/'constance' processer needs libtinfo.a,   edit 'ax_with_curses.m4'  lines 206,219,325,338  add -ltinfo
 #./configure --prefix="${INSTDIR}" --with-fncs="${INSTDIR}" --with-helics="${INSTDIR}" --with-hdf5=yes --enable-silent-rules \
@@ -20,7 +20,7 @@ fi
 #make install
 
 # using cmake for >=5.0 GridLAB-D
-cd "${REPODIR}/gridlab-d" || exit
+cd "${REPO_DIR}/gridlab-d" || exit
 if [[ $1 == "clean" ]]; then
   rm -rf build
   git submodule update --init

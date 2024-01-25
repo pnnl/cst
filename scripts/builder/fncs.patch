@@ -20878,14 +20878,14 @@ index 855abed..81ce984 100755
     if test $USE_MAINTAINER_MODE = yes; then
    MAINTAINER_MODE_TRUE=
    MAINTAINER_MODE_FALSE='#'
-@@ -3557,31 +4178,35 @@ FNCS_TOP_BUILDDIR="`pwd`"
+@@ -3557,31 +4178,35 @@ FNCS_TOP_BUILD_DIR="`pwd`"
  cd "$srcdir"
  FNCS_TOP_SRCDIR="`pwd`"
- cd "$FNCS_TOP_BUILDDIR"
--if test "$FNCS_TOP_BUILDDIR" != "$FNCS_TOP_SRCDIR"; then :
+ cd "$FNCS_TOP_BUILD_DIR"
+-if test "$FNCS_TOP_BUILD_DIR" != "$FNCS_TOP_SRCDIR"; then :
 -  { $as_echo "$as_me:${as_lineno-$LINENO}: Detected VPATH build" >&5
 -$as_echo "$as_me: Detected VPATH build" >&6;}
-+if test "$FNCS_TOP_BUILDDIR" != "$FNCS_TOP_SRCDIR"
++if test "$FNCS_TOP_BUILD_DIR" != "$FNCS_TOP_SRCDIR"
 +then :
 +  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: Detected VPATH build" >&5
 +printf "%s\n" "$as_me: Detected VPATH build" >&6;}
@@ -32679,10 +32679,10 @@ index a3bc337..0000000
 -       [$2])])
 -
 -
--# _LT_CHECK_BUILDDIR
+-# _LT_CHECK_BUILD_DIR
 -# ------------------
 -# Complain if the absolute build directory name contains unusual characters
--m4_defun([_LT_CHECK_BUILDDIR],
+-m4_defun([_LT_CHECK_BUILD_DIR],
 -[case `pwd` in
 -  *\ * | *\	*)
 -    AC_MSG_WARN([Libtool does not cope well with whitespace in `pwd`]) ;;
@@ -32698,7 +32698,7 @@ index a3bc337..0000000
 -AC_BEFORE([$0], [LT_LANG])dnl
 -AC_BEFORE([$0], [LT_OUTPUT])dnl
 -AC_BEFORE([$0], [LTDL_INIT])dnl
--m4_require([_LT_CHECK_BUILDDIR])dnl
+-m4_require([_LT_CHECK_BUILD_DIR])dnl
 -
 -dnl Autoconf doesn't catch unexpanded LT_ macros by default:
 -m4_pattern_forbid([^_?LT_[A-Z_]+$])dnl

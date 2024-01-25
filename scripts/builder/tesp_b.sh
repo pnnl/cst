@@ -5,7 +5,7 @@ if [[ -z ${INSTDIR} ]]; then
 fi
 
 # Compile TESP energyplus agents
-cd "${REPODIR}/tesp/src/energyplus" || exit
+cd "${REPO_DIR}/tesp/src/energyplus" || exit
 # the following steps are also in go.sh
 autoheader
 aclocal
@@ -19,6 +19,6 @@ make -j "$(grep -c "^processor" /proc/cpuinfo)"
 make install
 
 # Compile TESP TMY3toTMY2_ansi
-cd "${REPODIR}/tesp/data/weather/TMY2EPW/source_code" || exit
+cd "${REPO_DIR}/tesp/data/weather/TMY2EPW/source_code" || exit
 gcc TMY3toTMY2_ansi.c -o TMY3toTMY2_ansi
 mv -f TMY3toTMY2_ansi "${INSTDIR}/bin"

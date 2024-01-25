@@ -4,7 +4,7 @@ if [[ -z ${INSTDIR} ]]; then
   . "${HOME}/tespEnv"
 fi
 
-cd "${REPODIR}/fncs/java" || exit
+cd "${REPO_DIR}/fncs/java" || exit
 if [[ $1 == "clean" ]]; then
   rm -rf build
 fi 

@@ -1,7 +1,7 @@
 #!/bin/bash
 
-if [[ -z ${CSTBDIR} ]]; then
-  . "${CSTBDIR}/cosim.env"
+if [[ -z ${COSIM_DIR} ]]; then
+  . "${COSIM_DIR}/cosim.env"
 fi
 
 # Install yq (https://github.com/mikefarah/yq/#install) to parse the YAML file and retrieve the network name
@@ -19,9 +19,9 @@ if [[ $image1 == "" ]]; then
   exit
 fi
 
-cd "$CSTBDIR/run" || exit
+cd "$COSIM_DIR/run" || exit
 mkdir -p ./dags ./logs ./plugins ./config ./python
 # make wide open for now
 sudo chmod -R 777 ./dags ./logs ./plugins ./config ./python ../src
-docker-compose -f $WORKFLOW/postgres-docker-compose.yaml up -d
-docker-compose -f $WORKFLOW/docker-compose.yaml up -d
+docker-compose -f $STACK_DIR/postgres-docker-compose.yaml up -d
+docker-compose -f $STACK_DIR/docker-compose.yaml up -d

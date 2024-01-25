@@ -31,18 +31,18 @@ names=(
 )
 
 builds=(
+  0
+  0
+  0
+  0
+  0
+  0
+  0
+  0
   1
-  1
-  1
-  1
-  1
-  1
-  1
-  1
-  1
-  1
-  1
-  1
+  0
+  0
+  0
 )
 
 export BUILDKIT_PROGRESS=plain
@@ -58,7 +58,7 @@ for i in "${!names[@]}"; do
     image1=$(docker images -q "${IMAGE_NAME}")
     docker build --no-cache --rm \
                  --build-arg UID=$UID \
-                 --build-arg USER_NAME=worker \
+                 --build-arg COSIM_USER=worker \
                  --network=host \
                  -f "${DOCKERFILE}" \
                  -t "${IMAGE_NAME}" "${CONTEXT}"
