@@ -59,6 +59,8 @@ for i in "${!names[@]}"; do
     docker build --no-cache --rm \
                  --build-arg UID=$UID \
                  --build-arg COSIM_USER="${COSIM_USER}" \
+                 --build-arg DOCKER_HOST="$(cat /etc/hostname)" \
+                 --build-arg DOCKER_USER="$(USER)" \
                  --network=host \
                  -f "${DOCKERFILE}" \
                  -t "${IMAGE_NAME}" "${CONTEXT}"

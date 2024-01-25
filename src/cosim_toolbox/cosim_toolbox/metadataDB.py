@@ -16,6 +16,9 @@ import cosim_toolbox.helics_config as hm
 logger = logging.getLogger(__name__)
 pp = pprint.PrettyPrinter(indent=4, )
 
+cu_user = os.environ.get("DOCKER_USER", "worker")
+cu_host = os.environ.get("DOCKER_HOST", "localhost")
+
 cu_uri = os.environ.get("MONGO_HOST", "mongodb://localhost:27017")
 cu_database = os.environ.get("MONGO_DB", "copper")
 cu_federations = "federations"
@@ -72,7 +75,7 @@ class MetaDB:
         """
         # Set up default uri_string to the server Trevor was using on the EIOC
         if uri is None:
-            uri = "mongodb://127.0.0.1:27017"
+            uri = os.environ.get("MONGO_HOST", "mongodb://localhost:27017")
         # Set up connection
         client = MongoClient(uri)
         # Test connection
@@ -373,12 +376,10 @@ class Docker:
     def run_remote_yaml(scenario_name):
         logger.info('====  ' + scenario_name + ' Broker Start in\n        ' + os.getcwd())
         docker_compose = "docker-compose -f " + scenario_name + ".yaml"
-        # subprocess.Popen("ssh -i  ~/copper-key-ecdsa  d3j331@gage.pnl.gov 'nohup sleep 300 >/dev/null 2>/dev/null </dev/null &'", shell=True)
         cmd = ("sh -c 'cd ~/tesp/repository/copper/run/python && " +
                docker_compose + " up && " + docker_compose + " down'")
-        subprocess.Popen("ssh -i  ~/copper-key-ecdsa  d3j331@gage.pnl.gov \"nohup " + cmd +
-                         " > /dev/null &\"", shell=True)
-                         # " >/dev/null 2>/dev/null </dev/null &\"", shell=True)
+        subprocess.Popen("ssh -i  ~/copper-key-ecdsa " + cu_user + "@" + cu_host +
+                         " \"nohup " + cmd + " > /dev/null &\"", shell=True)
         logger.info('====  Broker Exit in\n        ' + os.getcwd())
 
 
