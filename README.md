@@ -31,6 +31,12 @@ source venv/bin/activate    # Activate the virtual environment
 ```
 `source venv/bin/activate` activates this virtual environment, so that Python commands you run in your shell use this environment's Python interpreter and installed packages, rather than your system-wide Python installation.
 
+After activating venv, command like `python` and `pip` will be using this virtual environment.
+
+Note that `make` can be run without activating venv since it internally uses the virtual environment automatically.
+
+IDE, PyCharm or VSC, can also utilize this virtual environment to set up the development environment with all required package dependencies installed.
+
 ### Run unit tests
 ```commandline
 make test
