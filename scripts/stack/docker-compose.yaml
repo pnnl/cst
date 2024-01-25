@@ -38,7 +38,7 @@
 # _PIP_ADDITIONAL_REQUIREMENTS - Additional PIP requirements to add when starting all containers.
 #                                Use this option ONLY for quick checks. Installing requirements at container
 #                                startup is done EVERY TIME the service is started.
-#                                A better way is to builder a custom image or extend the official image
+#                                A better way is to build a custom image or extend the official image
 #                                as described in https://airflow.apache.org/docs/docker-stack/build.html.
 #                                Default: ''
 #

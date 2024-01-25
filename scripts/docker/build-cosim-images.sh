@@ -4,7 +4,7 @@ paths=(
   "/home/d3j331/tesp/repository/copper/src/cosim_toolbox/"
   "/home/d3j331/tesp/repository/copper/src/cosim_toolbox/"
   "./"
-  "/home/d3j331/tesp/repository/copper/scripts/builder/"
+  "/home/d3j331/tesp/repository/copper/scripts/build/"
   "./"
   "./"
   "./"

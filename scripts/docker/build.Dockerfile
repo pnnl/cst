@@ -11,7 +11,7 @@ WORKDIR $COSIM_HOME
 
 # CoSim exports
 ENV INSTDIR=$COSIM_HOME/tenv
-ENV BUILD_DIR=$COSIM_HOME/builder
+ENV BUILD_DIR=$COSIM_HOME/build
 ENV REPO_DIR=$COSIM_HOME/repository
 
 # COMPILE exports
@@ -43,7 +43,7 @@ RUN echo "===== Building CoSim Build =====" && \
   git config --global credential.helper store && \
   echo "Directory structure for build" && \
   mkdir -p tenv && \
-  mkdir -p builder && \
+  mkdir -p build && \
   mkdir -p repository
 
 # Copy the build instructions
