@@ -7,10 +7,10 @@ USER root
 ARG UID
 ARG COSIM_USER
 ENV COSIM_HOME=/home/$COSIM_USER
-ARG DOCKER_USER
-ARG DOCKER_HOST
-ENV DOCKER_USER=$DOCKER_USER
-ENV DOCKER_HOST=$DOCKER_HOST
+ARG SIM_USER
+ARG SIM_HOST
+ENV SIM_USER=$SIM_USER
+ENV SIM_HOST=$SIM_HOST
 ENV GRANT_SUDO=yes
 
 COPY . cosim_toolbox/
@@ -46,10 +46,10 @@ WORKDIR /home/jovyan
 RUN echo "==" && \
   # add the new finger print for each host connection
   mkdir -p .ssh && \
-  ssh-keyscan ${DOCKER_HOST} >> .ssh/known_hosts && \
+  ssh-keyscan ${SIM_HOST} >> .ssh/known_hosts && \
   ssh-keygen -f copper-key-ecdsa -t ecdsa -b 521
 # Line below needs to set at run for right now in the terminal for user:
-# ssh-copy-id -i copper-key-ecdsa ${DOCKER_USER}@${DOCKER_HOST}
+# ssh-copy-id -i copper-key-ecdsa ${SIM_USER}@${SIM_HOST}
 
 # Set as user
 #USER $COSIM_USER

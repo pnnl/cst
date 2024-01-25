@@ -16,8 +16,8 @@ import cosim_toolbox.helics_config as hm
 logger = logging.getLogger(__name__)
 pp = pprint.PrettyPrinter(indent=4, )
 
-cu_user = os.environ.get("DOCKER_USER", "worker")
-cu_host = os.environ.get("DOCKER_HOST", "localhost")
+cu_user = os.environ.get("SIM_USER", "worker")
+cu_host = os.environ.get("SIM_HOST", "localhost")
 
 cu_uri = os.environ.get("MONGO_HOST", "mongodb://localhost:27017")
 cu_database = os.environ.get("MONGO_DB", "copper")
