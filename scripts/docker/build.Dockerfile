@@ -4,7 +4,7 @@ FROM cosim-library AS cosim-production
 ARG UID
 ARG COSIM_USER
 ENV COSIM_HOME=/home/$COSIM_USER
-ENV USER_EMAIL=pnnl.com
+ENV COSIM_EMAIL=pnnl.com
 
 USER $COSIM_USER
 WORKDIR $COSIM_HOME
@@ -39,7 +39,7 @@ RUN echo "===== Building CoSim Build =====" && \
   echo "Configure name and email for" && \
   git config --global user.name "${COSIM_USER}" && \
   git config --global user.email "${COSIM_USER}@${COSIM_USER}.com" && \
-  echo "User .name=${COSIM_USER} and .email=${COSIM_USER}@${USER_EMAIL} have been set for git repositories!" && \
+  echo "User .name=${COSIM_USER} and .email=${COSIM_USER}@${COSIM_EMAIL} have been set for git repositories!" && \
   git config --global credential.helper store && \
   echo "Directory structure for build" && \
   mkdir -p tenv && \

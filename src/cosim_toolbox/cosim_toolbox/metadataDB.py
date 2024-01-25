@@ -16,8 +16,8 @@ import cosim_toolbox.helics_config as hm
 logger = logging.getLogger(__name__)
 pp = pprint.PrettyPrinter(indent=4, )
 
-cu_uri = 'mongodb://gage.pnl.gov:27017'
-cu_database = "copper"
+cu_uri = os.environ.get("MONGO_HOST", "mongodb://localhost:27017")
+cu_database = os.environ.get("MONGO_DB", "copper")
 cu_federations = "federations"
 cu_scenarios = "scenarios"
 cu_logger = "cu_logger"
@@ -39,7 +39,7 @@ class MetaDB:
     """
     _cu_dict_name = 'cu_007'
 
-    def __init__(self, uri=None, name=None):
+    def __init__(self, uri=None, db_name=None):
         self.collections = None
 
         if uri is not None:
@@ -47,8 +47,8 @@ class MetaDB:
         else:
             self.client = self._connect_to_database()
 
-        if name is not None:
-            self.db = self.client[name]
+        if db_name is not None:
+            self.db = self.client[db_name]
         else:
             self.db = self.client["meta_db"]
         self.fs = gridfs.GridFS(self.db)

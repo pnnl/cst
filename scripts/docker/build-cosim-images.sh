@@ -58,7 +58,7 @@ for i in "${!names[@]}"; do
     image1=$(docker images -q "${IMAGE_NAME}")
     docker build --no-cache --rm \
                  --build-arg UID=$UID \
-                 --build-arg COSIM_USER=worker \
+                 --build-arg COSIM_USER="${COSIM_USER}" \
                  --network=host \
                  -f "${DOCKERFILE}" \
                  -t "${IMAGE_NAME}" "${CONTEXT}"
