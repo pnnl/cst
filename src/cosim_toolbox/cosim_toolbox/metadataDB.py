@@ -376,7 +376,7 @@ class Docker:
     def run_remote_yaml(scenario_name):
         logger.info('====  ' + scenario_name + ' Broker Start in\n        ' + os.getcwd())
         docker_compose = "docker-compose -f " + scenario_name + ".yaml"
-        cmd = ("sh -c 'cd ~/tesp/repository/copper/run/python && " +
+        cmd = ("sh -c 'cd ~/tesp/repository/copper/run/python/test_federation && " +
                docker_compose + " up && " + docker_compose + " down'")
         subprocess.Popen("ssh -i  ~/copper-key-ecdsa " + cu_user + "@" + cu_host +
                          " \"nohup " + cmd + " > /dev/null &\"", shell=True)

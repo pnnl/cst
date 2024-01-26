@@ -7,7 +7,7 @@ Copper.
 @author: Mitch Pelton
 mitch.pelton@pnnl.gov
 """
-import os
+from os import environ
 import sys
 import psycopg2
 
@@ -17,11 +17,11 @@ from cosim_toolbox.federate import Federate
 
 def open_logger():
     connection = {
-        "host": os.environ.get("POSTGRES_HOST", "localhost"),
-        "dbname": os.environ.get("POSTGRES_DB", "copper"),
-        "user": os.environ.get("POSTGRES_USER", "postgres"),
-        "password": os.environ.get("POSTGRES_PASSWORD", "postgres"),
-        "port": os.environ.get("POSTGRES_HOST", 5432)
+        "host": environ.get("POSTGRES_HOST", "localhost"),
+        "dbname": environ.get("POSTGRES_DB", "copper"),
+        "user": environ.get("POSTGRES_USER", "postgres"),
+        "password": environ.get("POSTGRES_PASSWORD", "postgres"),
+        "port": environ.get("POSTGRES_PORT", 5432)
     }
     try:
         return psycopg2.connect(**connection)

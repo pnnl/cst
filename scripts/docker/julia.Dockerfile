@@ -3,13 +3,11 @@ FROM cosim-python:latest AS cosim-julia
 
 USER root
 
-# User name and work directory
-ARG UID
 ARG COSIM_USER
 ENV COSIM_HOME=/home/$COSIM_USER
 
 # Compile exports
-ENV INSTDIR=$COSIM_USER/tenv
+ENV INSTDIR=$COSIM_HOME/tenv
 
 # PATH
 ENV PATH=$COSIM_HOME/julia-1.9.4/bin:$PATH

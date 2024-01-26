@@ -3,12 +3,8 @@ FROM jupyter/minimal-notebook:7285848c0a11
 
 USER root
 
-# User name and work directory
-ARG UID
-ARG COSIM_USER
-ENV COSIM_HOME=/home/$COSIM_USER
-ARG SIM_USER
-ARG SIM_HOST
+ENV COSIM_DIR=$COSIM_DIR
+ENV COSIM_HOME=$COSIM_HOME
 ENV SIM_USER=$SIM_USER
 ENV SIM_HOST=$SIM_HOST
 
@@ -28,7 +24,7 @@ COPY . cosim_toolbox/
 RUN echo "===== Building CoSim Jupyter =====" && \
   echo "root:worker" | chpasswd && \
   echo "<<<< Adding the 'worker' user >>>>" && \
-  useradd -m -s /bin/bash -u $UID ${COSIM_USER} && \
+  useradd -m -s /bin/bash -u $SIM_UID ${COSIM_USER} && \
   echo "<<<< Changing new user password >>>>" && \
   echo "${COSIM_USER}:${COSIM_USER}" | chpasswd && \
   echo "jovyan:worker" | chpasswd && \

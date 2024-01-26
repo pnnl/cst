@@ -6,7 +6,7 @@ ARG UBUNTU_VERSION=:22.04
 FROM ${UBUNTU}${UBUNTU_VERSION} AS cosim-fncs
 
 # User name and work directory
-ARG UID
+ARG SIM_UID
 ARG COSIM_USER
 ENV COSIM_HOME=/home/$COSIM_USER
 
@@ -36,7 +36,7 @@ RUN echo "===== Building CoSim FNCS =====" && \
 # protect images by changing root password
   echo "root:worker" | chpasswd && \
   echo "<<<< Adding the 'worker' user >>>>" && \
-  useradd -m -s /bin/bash -u $UID ${COSIM_USER} && \
+  useradd -m -s /bin/bash -u $SIM_UID ${COSIM_USER} && \
   echo "<<<< Changing new user password >>>>" && \
   echo "${COSIM_USER}:${COSIM_USER}" | chpasswd && \
   usermod -aG sudo ${COSIM_USER}

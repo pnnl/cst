@@ -1,7 +1,5 @@
 FROM cosim-library AS cosim-production
 
-# User name and work directory
-ARG UID
 ARG COSIM_USER
 ENV COSIM_HOME=/home/$COSIM_USER
 ENV COSIM_EMAIL=pnnl.com

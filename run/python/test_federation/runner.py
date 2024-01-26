@@ -106,7 +106,7 @@ class Runner:
 
 
 if __name__ == "__main__":
-    remote = False
+    remote = True
     _scenario_name = "test_MyTest"
     _schema_name = "test_MySchema2"
     _federation_name = "test_MyFederation"

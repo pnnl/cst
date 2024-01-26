@@ -3,8 +3,6 @@ FROM cosim-helics:latest AS cosim-run
 
 USER root
 
-# User name and work directory
-ARG UID
 ARG COSIM_USER
 ENV COSIM_HOME=/home/$COSIM_USER
 
