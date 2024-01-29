@@ -20,7 +20,7 @@ cu_user = os.environ.get("SIM_USER", "worker")
 cu_host = os.environ.get("SIM_HOST", "localhost")
 
 cu_uri = os.environ.get("MONGO_HOST", "mongodb://localhost:27017")
-cu_database = os.environ.get("MONGO_DB", "copper")
+cu_database = os.environ.get("COSIM_DB", "copper")
 cu_federations = "federations"
 cu_scenarios = "scenarios"
 cu_logger = "cu_logger"
@@ -374,9 +374,10 @@ class Docker:
 
     @staticmethod
     def run_remote_yaml(scenario_name):
+        cosim = os.environ.get("SIM_DIR", "/home/worker/copper")
         logger.info('====  ' + scenario_name + ' Broker Start in\n        ' + os.getcwd())
         docker_compose = "docker-compose -f " + scenario_name + ".yaml"
-        cmd = ("sh -c 'cd ~/tesp/repository/copper/run/python/test_federation && " +
+        cmd = ("sh -c 'cd " + cosim + "/run/python/test_federation && " +
                docker_compose + " up && " + docker_compose + " down'")
         subprocess.Popen("ssh -i  ~/copper-key-ecdsa " + cu_user + "@" + cu_host +
                          " \"nohup " + cmd + " > /dev/null &\"", shell=True)
@@ -501,9 +502,6 @@ def mytest2():
     logger.info(db.get_collection_document_names(cu_federations))
     logger.info(db.get_dict_key_names(cu_federations, federate_name))
     logger.info(db.get_dict(cu_federations, None, federate_name))
-
-
-federation_database()
 
 
 if __name__ == "__main__":

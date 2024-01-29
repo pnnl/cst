@@ -17,10 +17,10 @@ from cosim_toolbox.federate import Federate
 def open_logger():
     connection = {
         "host": environ.get("POSTGRES_HOST", "localhost"),
-        "dbname": environ.get("POSTGRES_DB", "copper"),
-        "user": environ.get("POSTGRES_USER", "postgres"),
-        "password": environ.get("POSTGRES_PASSWORD", "postgres"),
-        "port": environ.get("POSTGRES_PORT", 5432)
+        "port": environ.get("POSTGRES_PORT", 5432),
+        "dbname": environ.get("COSIM_DB", "copper"),
+        "user": environ.get("COSIM_USER", "worker"),
+        "password": environ.get("COSIM_PASSWORD", "worker")
     }
 
     conn = None

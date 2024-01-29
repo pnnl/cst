@@ -30,7 +30,7 @@ def prepare_yaml():
 
 
 def run_yaml():
-    cosim = os.environ.get("COSIM_DIR", "/home/d3j331/tesp/repository/copper")
+    cosim = os.environ.get("SIM_DIR", "/home/worker/copper")
     _scenario_name = "test_MyTest"
     ssh = SSHHook(ssh_conn_id='myssh')
     ssh_client = None
@@ -40,9 +40,8 @@ def run_yaml():
         channel = ssh_client.invoke_shell()
         stdin = channel.makefile('wb')
         stdout = channel.makefile('rb')
-
         stdin.write('''
-cd ''' + cosim + '''/run/python/test_federation
+cd ''' + cosim + '''/run/python/test_federation || exit
 docker-compose -f ''' + _scenario_name + '''.yaml up
 docker-compose -f ''' + _scenario_name + '''.yaml down
 exit

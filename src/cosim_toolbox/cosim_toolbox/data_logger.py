@@ -18,11 +18,12 @@ from cosim_toolbox.federate import Federate
 def open_logger():
     connection = {
         "host": environ.get("POSTGRES_HOST", "localhost"),
-        "dbname": environ.get("POSTGRES_DB", "copper"),
-        "user": environ.get("POSTGRES_USER", "postgres"),
-        "password": environ.get("POSTGRES_PASSWORD", "postgres"),
-        "port": environ.get("POSTGRES_PORT", 5432)
+        "port": environ.get("POSTGRES_PORT", 5432),
+        "dbname": environ.get("COSIM_DB", "copper"),
+        "user": environ.get("COSIM_USER", "worker"),
+        "password": environ.get("COSIM_PASSWORD", "worker")
     }
+    print(connection)
     try:
         return psycopg2.connect(**connection)
     except:
@@ -73,7 +74,6 @@ def drop_schema(conn, schema_name: str):
 
 
 class DataLogger(Federate):
-
     hdt_type = {'HDT_STRING': 'text',
                 'HDT_DOUBLE': 'double precision',
                 'HDT_INT': 'bigint',
@@ -97,7 +97,6 @@ class DataLogger(Federate):
         if clear:
             self.remove_scenario()
         self.conn.commit()
-
 
     """
         HELICS_DATA_TYPE_UNKNOWN = -1,
@@ -128,6 +127,7 @@ class DataLogger(Federate):
         /** open type that can be anything*/
         HELICS_DATA_TYPE_ANY = 25262
     """
+
     def remove_scenario(self):
         query = ""
         for key in self.hdt_type:
@@ -140,7 +140,7 @@ class DataLogger(Federate):
         return ("CREATE TABLE IF NOT EXISTS "
                 f"{self.schema_name}.{table_name} ("
                 "time double precision NOT NULL, "
-                "scenario VARCHAR (255) NOT NULL, " 
+                "scenario VARCHAR (255) NOT NULL, "
                 "federate VARCHAR (255) NOT NULL, "
                 "data_name VARCHAR (255) NOT NULL, "
                 f"data_value {data_type} NOT NULL);")

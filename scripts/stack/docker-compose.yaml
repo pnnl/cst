@@ -92,9 +92,9 @@ services:
   postgres:
     image: postgres:13
     environment:
+      POSTGRES_DB: airflow
       POSTGRES_USER: airflow
       POSTGRES_PASSWORD: airflow
-      POSTGRES_DB: airflow
     volumes:
       - cosim_vol_admin:/var/lib/postgresql/data
     healthcheck:

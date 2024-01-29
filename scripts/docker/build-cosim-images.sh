@@ -1,19 +1,19 @@
 #!/bin/bash
 
-if [[ -z ${COSIM_DIR} ]]; then
-  . "${COSIM_DIR}/cosim.env"
+if [[ -z ${SIM_DIR} ]]; then
+  . "${SIM_DIR}/cosim.env"
 fi
 
 paths=(
-  "${COSIM_DIR}/src/cosim_toolbox/"
-  "${COSIM_DIR}/src/cosim_toolbox/"
+  "${SIM_DIR}/src/cosim_toolbox/"
+  "${SIM_DIR}/src/cosim_toolbox/"
   "./"
-  "${COSIM_DIR}/scripts/build/"
-  "./"
-  "./"
+  "${SIM_DIR}/scripts/build/"
   "./"
   "./"
-  "${COSIM_DIR}/src/cosim_toolbox/"
+  "./"
+  "./"
+  "${SIM_DIR}/src/cosim_toolbox/"
   "./"
   "./"
   "/home/d3j331/tesp/repository/mesp/"
@@ -48,6 +48,13 @@ builds=(
   1
   1
 )
+
+# make directories and set permissions
+cd "$SIM_DIR/run" || exit
+mkdir -p ./dags ./logs ./plugins ./config ./python
+# make wide open for now
+sudo chmod -R 777 ./dags ./logs ./plugins ./config ./python ../src
+cd "$DOCKER_DIR" || exit
 
 export BUILDKIT_PROGRESS=plain
 

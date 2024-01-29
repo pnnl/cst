@@ -1,7 +1,9 @@
 #!/bin/bash
 
-if [[ -z ${COSIM_DIR} ]]; then
-  . "${COSIM_DIR}/cosim.env"
+if [[ -z ${SIM_DIR} ]]; then
+  echo "Please source cosim.env in the root Co-Simulaton directory"
+  echo "Then run this script in this directory"
+  exit
 fi
 
 # Install yq (https://github.com/mikefarah/yq/#install) to parse the YAML file and retrieve the network name
@@ -16,12 +18,10 @@ fi
 image1=$(docker images -q "cosim-airflow:latest")
 if [[ $image1 == "" ]]; then
   echo "Please build-cosim-images in scripts/docker"
+  echo "Then run this script in this directory"
   exit
 fi
 
-cd "$COSIM_DIR/run" || exit
-mkdir -p ./dags ./logs ./plugins ./config ./python
-# make wide open for now
-sudo chmod -R 777 ./dags ./logs ./plugins ./config ./python ../src
+cd "$SIM_DIR/run" || exit
 docker-compose -f $STACK_DIR/postgres-docker-compose.yaml up -d
 docker-compose -f $STACK_DIR/docker-compose.yaml up -d
