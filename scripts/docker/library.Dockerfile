@@ -1,11 +1,9 @@
-ARG UBUNTU=ubuntu
-ARG UBUNTU_VERSION=:22.04
+# Build runtime image
+FROM cosim-ubuntu:latest AS cosim-library
 
-FROM ${UBUNTU}${UBUNTU_VERSION} AS cosim-libary
-
-# User name and work directory
-ENV USER_NAME=worker
-ENV USER_HOME=/home/$USER_NAME
+ARG SIM_UID
+ARG COSIM_USER
+ENV COSIM_HOME=/home/$COSIM_USER
 
 RUN echo "===== Building CoSim Library =====" && \
   export DEBIAN_FRONTEND=noninteractive && \
@@ -13,9 +11,6 @@ RUN echo "===== Building CoSim Library =====" && \
   echo "===== Install Libraries =====" && \
   apt-get update && \
   apt-get dist-upgrade -y && \
-  apt-get install -y software-properties-common && \
-  add-apt-repository ppa:deadsnakes/ppa -y && \
-  apt-get update && \
   apt-get install -y \
   sudo \
   wget \
@@ -48,20 +43,12 @@ RUN echo "===== Building CoSim Library =====" && \
   liblapack-dev \
   libmetis-dev \
   # Python support
-  python3.8 \
-  python3.8-venv \
   python3-pip \
-  python3.8-tk \
   python3-pil.imagetk && \
   ln -s /usr/lib/jvm/java-11-openjdk-amd64 /usr/lib/jvm/default-java && \
-  echo "===== Clean Up =====" && \
-  apt-get upgrade -y && \
-  apt-get clean -y && \
-  apt-get autoclean -y && \
-  apt-get autoremove -y && \
-  echo "root:worker" | chpasswd && \
-  echo "<<<< Adding the 'worker' user >>>>" && \
-  useradd -m -s /bin/bash -u $UID ${USER_NAME} && \
+  echo "root:${COSIM_USER}" | chpasswd && \
+  echo "<<<< Adding the '${COSIM_USER}' user >>>>" && \
+  useradd -m -s /bin/bash -u $SIM_UID ${COSIM_USER} && \
   echo "<<<< Changing new user password >>>>" && \
-  echo "${USER_NAME}:${USER_NAME}" | chpasswd && \
-  usermod -aG sudo ${USER_NAME}
+  echo "${COSIM_USER}:${COSIM_USER}" | chpasswd && \
+  usermod -aG sudo ${COSIM_USER}

@@ -3,10 +3,11 @@ FROM cosim-helics:latest AS cosim-gridlabd
 
 USER root
 
-# User name and work directory
-ENV USER_NAME=worker
-ENV USER_HOME=/home/$USER_NAME
-ENV INSTDIR=$USER_HOME/tenv
+ARG COSIM_USER
+ENV COSIM_HOME=/home/$COSIM_USER
+
+# Compile exports
+ENV INSTDIR=$COSIM_HOME/tenv
 
 # Compile exports
 ENV GLPATH=$INSTDIR/lib/gridlabd:$INSTDIR/share/gridlabd
@@ -25,8 +26,8 @@ RUN echo "===== BUILD RUN Gridlab-D =====" && \
 
 # Copy Binaries
 #COPY --from=cosim-build:latest $INSTDIR/ $INSTDIR/
-#RUN chown -hR $USER_NAME:$USER_NAME $USER_HOME
+#RUN chown -hR $COSIM_USER:$COSIM_USER $COSIM_HOME
 
-# Set 'worker' as user
-USER $USER_NAME
-WORKDIR $USER_HOME
+# Set as user
+USER $COSIM_USER
+WORKDIR $COSIM_HOME

@@ -1,12 +1,13 @@
 # Build runtime image
-FROM cosim-helics:latest AS cosim-run
+FROM cosim-helics:latest AS cosim-eplus
 
 USER root
 
-# User name and work directory
-ENV USER_NAME=worker
-ENV USER_HOME=/home/$USER_NAME
-ENV INSTDIR=$USER_HOME/tenv
+ARG COSIM_USER
+ENV COSIM_HOME=/home/$COSIM_USER
+
+# Compile exports
+ENV INSTDIR=$COSIM_HOME/tenv
 
 # PATH
 ENV PATH=$PATH:$INSTDIR/energyplus
@@ -23,8 +24,8 @@ RUN echo "===== BUILD RUN EnergyPlus =====" && \
 
 # Copy Binaries
 # COPY --from=cosim-build:latest $INSTDIR/ $INSTDIR/
-# RUN chown -hR $USER_NAME:$USER_NAME $USER_HOME
+# RUN chown -hR $COSIM_USER:$COSIM_USER $COSIM_HOME
 
-# Set 'worker' as user
-USER $USER_NAME
-WORKDIR $USER_HOME
+# Set as user
+USER $COSIM_USER
+WORKDIR $COSIM_HOME

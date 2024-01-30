@@ -3,10 +3,11 @@ FROM cosim-julia:latest AS cosim-mespapi
 
 USER root
 
-# User name and work directory
-ENV USER_NAME=worker
-ENV USER_HOME=/home/$USER_NAME
-ENV MESPDIR=$USER_HOME/mesp
+ARG COSIM_USER
+ENV COSIM_HOME=/home/$COSIM_USER
+
+# Compile exports
+ENV MESPDIR=$COSIM_HOME/mesp
 
 RUN echo "===== Building CoSim MESP API =====" && \
   export DEBIAN_FRONTEND=noninteractive && \
@@ -16,17 +17,17 @@ RUN echo "===== Building CoSim MESP API =====" && \
   apt-get dist-upgrade -y
 
 COPY . $MESPDIR/
-RUN chown -hR $USER_NAME:$USER_NAME $USER_HOME
+RUN chown -hR $COSIM_USER:$COSIM_USER $COSIM_HOME
 
-# Set 'worker' as user
-USER $USER_NAME
-WORKDIR $USER_HOME
+# Set user
+USER $COSIM_USER
+WORKDIR $COSIM_HOME
 
 RUN echo "Install Python Libraries" && \
 #  echo "Activate the python virtual environment" && \
 #  . venv/bin/activate && \
-#  cd $USER_HOME/mesp_support/mesp_support || exit && \
-#  pip3 install -e .  >> "pypi.log" && \
+#  cd $COSIM_HOME/mesp_support/mesp_support || exit && \
+#  pip install -e .  >> "pypi.log" && \
   echo "Install Julia Libraries" && \
   julia $MESPDIR/prototype/install_julia_packages.jl
 

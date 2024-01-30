@@ -30,7 +30,7 @@ class TestFederate(unittest.TestCase):
         self.federate.connect_to_helics_config = MagicMock()
         self.federate.create_helics_fed = MagicMock()
         self.federate.create_federate(scenario_name)
-        self.federate.connect_to_metadataDB.assert_called_with(self.federate.mddb.cu_uri, self.federate.mddb.cu_database)
+        self.federate.connect_to_metadataDB.assert_called_with(self.federate.mddb.cosim_mongo_host, self.federate.mddb.cosim_mongo_db)
         self.federate.connect_to_helics_config.assert_called()
         self.federate.create_helics_fed.assert_called()
 

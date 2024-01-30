@@ -1,16 +1,17 @@
-FROM cosim-library AS cosim-production
+# Build runtime image
+FROM cosim-library:latest AS cosim-production
 
-ENV USER_NAME=worker
-ENV USER_EMAIL=pnnl.com
-ENV USER_HOME=/home/$USER_NAME
+ARG COSIM_USER
+ENV COSIM_HOME=/home/$COSIM_USER
+ENV COSIM_EMAIL=pnnl.com
 
-USER $USER_NAME
-WORKDIR $USER_HOME
+USER $COSIM_USER
+WORKDIR $COSIM_HOME
 
 # CoSim exports
-ENV INSTDIR=$USER_HOME/tenv
-ENV BUILDDIR=$USER_HOME/builder
-ENV REPODIR=$USER_HOME/repository
+ENV INSTDIR=$COSIM_HOME/tenv
+ENV BUILD_DIR=$COSIM_HOME/build
+ENV REPO_DIR=$COSIM_HOME/repository
 
 # COMPILE exports
 ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
@@ -35,79 +36,77 @@ ENV PSST_WARNING=ignore
 
 RUN echo "===== Building CoSim Build =====" && \
   echo "Configure name and email for" && \
-  git config --global user.name "${USER_NAME}" && \
-  git config --global user.email "${USER_NAME}@${USER_NAME}.com" && \
-  echo "User .name=${USER_NAME} and .email=${USER_NAME}@${USER_EMAIL} have been set for git repositories!" && \
+  git config --global user.name "${COSIM_USER}" && \
+  git config --global user.email "${COSIM_USER}@${COSIM_USER}.com" && \
+  echo "User .name=${COSIM_USER} and .email=${COSIM_USER}@${COSIM_EMAIL} have been set for git repositories!" && \
   git config --global credential.helper store && \
   echo "Directory structure for build" && \
   mkdir -p tenv && \
-  mkdir -p builder && \
+  mkdir -p build && \
   mkdir -p repository
 
 # Copy the build instructions
-COPY . ${BUILDDIR}
+COPY . ${BUILD_DIR}
 
 RUN echo "Cloning or download all relevant repositories..." && \
-  cd ${REPODIR} || exit && \
+  cd "${REPO_DIR}" || exit && \
   echo ++++++++++++++ TESP && \
   git clone -b main https://github.com/pnnl/tesp.git && \
-#  ${BUILDDIR}/patch.sh tesp tesp && \
+#  ${BUILD_DIR}/patch.sh tesp tesp && \
   echo "++++++++++++++ PSST" && \
   git clone -b master https://github.com/ames-market/AMES-V5.0.git && \
-  echo "Applying the patch for AMES...... from ${BUILDDIR}" && \
-  ${BUILDDIR}/patch.sh AMES-V5.0 AMES-V5.0 && \
+  echo "Applying the patch for AMES...... from ${BUILD_DIR}" && \
+  ${BUILD_DIR}/patch.sh AMES-V5.0 AMES-V5.0 && \
   echo "++++++++++++++ FNCS" && \
   git clone -b feature/opendss https://github.com/FNCS/fncs.git && \
-  ${BUILDDIR}/patch.sh fncs fncs && \
+  ${BUILD_DIR}/patch.sh fncs fncs && \
   echo "++++++++++++++ HELICS" && \
   git clone -b main https://github.com/GMLC-TDC/HELICS-src && \
-  ${BUILDDIR}/patch.sh HELICS-src HELICS-src && \
+  ${BUILD_DIR}/patch.sh HELICS-src HELICS-src && \
   echo "++++++++++++++ GRIDLAB" && \
   git clone -b develop https://github.com/gridlab-d/gridlab-d.git && \
-  ${BUILDDIR}/patch.sh gridlab-d gridlab-d && \
+  ${BUILD_DIR}/patch.sh gridlab-d gridlab-d && \
   echo "++++++++++++++ ENERGYPLUS" && \
   git clone -b fncs_9.3.0 https://github.com/FNCS/EnergyPlus.git && \
-  ${BUILDDIR}/patch.sh EnergyPlus EnergyPlus && \
+  ${BUILD_DIR}/patch.sh EnergyPlus EnergyPlus && \
   echo "++++++++++++++ NS-3" && \
   git clone https://gitlab.com/nsnam/ns-3-dev.git && \
-  ${BUILDDIR}/patch.sh ns-3-dev ns-3-dev && \
+  ${BUILD_DIR}/patch.sh ns-3-dev ns-3-dev && \
   echo "++++++++++++++ HELICS-NS-3" && \
   git clone -b main https://github.com/GMLC-TDC/helics-ns3 ns-3-dev/contrib/helics && \
-  ${BUILDDIR}/patch.sh ns-3-dev/contrib/helics helics-ns3 && \
+  ${BUILD_DIR}/patch.sh ns-3-dev/contrib/helics helics-ns3 && \
   echo "++++++++++++++ KLU SOLVER" && \
-# Add cp because svn can't seem be used this way anymore
-  cp -r ${BUILDDIR}/KLU_DLL ${REPODIR}/KLU_DLL && \
-#  svn export https://github.com/gridlab-d/tools/branches/klu-build-update/solver_klu/source/KLU_DLL && \
+  unzip -q ${BUILD_DIR}/KLU_DLL.zip -d ./KLU_DLL && \
   echo "++++++++++++++  Compiling and Installing TESP software is starting!  ++++++++++++++" && \
-  cd ${BUILDDIR} || exit && \
+  cd ${BUILD_DIR} || exit && \
   echo "Compiling and Installing FNCS..." && \
   ./fncs_b.sh clean > fncs.log 2>&1 && \
   echo "Compiling and Installing FNCS for Java..." && \
   ./fncs_j_b.sh clean > fncs_j.log 2>&1 && \
-  /bin/rm -r ${REPODIR}/fncs && \
+  /bin/rm -r ${REPO_DIR}/fncs && \
   echo "Compiling and Installing HELICS..." && \
   ./HELICS-src_b.sh clean > HELICS-src.log 2>&1 && \
-  /bin/rm -r ${REPODIR}/HELICS-src && \
+  /bin/rm -r ${REPO_DIR}/HELICS-src && \
   echo "Compiling and Installing KLU..." && \
   ./KLU_DLL_b.sh clean > KLU_DLL.log 2>&1 && \
-  /bin/rm -r ${REPODIR}/KLU_DLL && \
+  /bin/rm -r ${REPO_DIR}/KLU_DLL && \
   echo "Compiling and Installing Gridlabd..." && \
   ./gridlab-d_b.sh clean > gridlab-d.log 2>&1 && \
-  /bin/rm -r ${REPODIR}/gridlab-d && \
+  /bin/rm -r ${REPO_DIR}/gridlab-d && \
   echo "Compiling and Installing EnergyPlus..." && \
   ./EnergyPlus_b.sh clean > EnergyPlus.log 2>&1 && \
-  /bin/rm -r ${REPODIR}/EnergyPlus && \
+  /bin/rm -r ${REPO_DIR}/EnergyPlus && \
   echo "Compiling and Installing NS-3..." && \
   ./ns-3-dev_b.sh clean > ns-3-dev.log 2>&1 && \
-  /bin/rm -r ${REPODIR}/ns-3-dev && \
+  /bin/rm -r ${REPO_DIR}/ns-3-dev && \
   echo "Compiling and Installing Ipopt with ASL and Mumps..." && \
   ./ipopt_b.sh clean > ipopt.log 2>&1 && \
-  /bin/rm -r ${REPODIR}/Ipopt && \
-  /bin/rm -r ${REPODIR}/ThirdParty-ASL && \
-  /bin/rm -r ${REPODIR}/ThirdParty-Mumps && \
+  /bin/rm -r ${REPO_DIR}/Ipopt && \
+  /bin/rm -r ${REPO_DIR}/ThirdParty-ASL && \
+  /bin/rm -r ${REPO_DIR}/ThirdParty-Mumps && \
   echo "Compiling and Installing TESP agents and converter..." && \
   ./tesp_b.sh clean > EnergyPlus_j.log 2>&1 && \
-  /bin/rm -r ${REPODIR}/tesp && \
-  echo "${USER_NAME}" | sudo -S ldconfig && \
-  cd ${BUILDDIR} || exit && \
+  /bin/rm -r ${REPO_DIR}/tesp && \
+  echo "${COSIM_USER}" | sudo -S ldconfig && \
+  cd ${BUILD_DIR} || exit && \
   ./versions.sh

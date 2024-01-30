@@ -11,7 +11,7 @@ from airflow import DAG
 import cosim_toolbox.metadataDB as mDB
 
 # Add new code
-sys.path.insert(0, '/python_extended')
+sys.path.insert(0, '/python_extended/test_federation')
 import runner as myr
 
 
@@ -25,11 +25,12 @@ def prepare_case():
 
 def prepare_yaml():
     _scenario_name = "test_MyTest"
-    os.chdir("/python_extended")
+    os.chdir("/python_extended/test_federation")
     mDB.Docker.define_yaml(_scenario_name)
 
 
 def run_yaml():
+    cosim = os.environ.get("SIM_DIR", "/home/worker/copper")
     _scenario_name = "test_MyTest"
     ssh = SSHHook(ssh_conn_id='myssh')
     ssh_client = None
@@ -39,9 +40,8 @@ def run_yaml():
         channel = ssh_client.invoke_shell()
         stdin = channel.makefile('wb')
         stdout = channel.makefile('rb')
-
         stdin.write('''
-cd ~/tesp/repository/copper/run/python
+cd ''' + cosim + '''/run/python/test_federation || exit
 docker-compose -f ''' + _scenario_name + '''.yaml up
 docker-compose -f ''' + _scenario_name + '''.yaml down
 exit
