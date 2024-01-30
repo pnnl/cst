@@ -16,26 +16,6 @@ ENV POSTGRES_HOST="$SIM_HOST"
 ENV POSTGRES_PORT=$POSTGRES_PORT
 ENV MONGO_HOST="$MONGO_HOST"
 
-# PATH
-ENV PYHELICS_INSTALL=$COSIM_HOME/tenv
-
-RUN echo "===== Building CoSim Python =====" && \
-  export DEBIAN_FRONTEND=noninteractive && \
-  export DEBCONF_NONINTERACTIVE_SEEN=true && \
-  echo "===== Install Libraries =====" && \
-  apt-get update && \
-  apt-get dist-upgrade -y && \
-  apt-get install -y \
-# Ipopt cbc solver support libraries
-  coinor-cbc \
-  coinor-libcbc-dev \
-  coinor-libipopt-dev \
-  liblapack-dev \
-  libmetis-dev \
-# Python support
-  python3-pip \
-  python3-pil.imagetk
-
 # Copy Files
 COPY . $COSIM_HOME/cosim_toolbox/cosim_toolbox/
 COPY --from=cosim-build:latest $COSIM_HOME/repository/AMES-V5.0/psst/ $COSIM_HOME/psst/psst/

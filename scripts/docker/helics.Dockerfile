@@ -8,11 +8,16 @@ ENV COSIM_HOME=/home/$COSIM_USER
 
 # Compile exports
 ENV INSTDIR=$COSIM_HOME/tenv
-ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
 ENV PYHELICS_INSTALL=$INSTDIR
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$INSTDIR/lib
+ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
 
 # PATH
+ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
 ENV PATH=$JAVA_HOME:$INSTDIR/bin:$PATH
+ENV PATH=$PATH:$INSTDIR/energyplus
+ENV PATH=$PATH:$INSTDIR/energyplus/PreProcess
+ENV PATH=$PATH:$INSTDIR/energyplus/PostProcess
 
 RUN echo "===== Building CoSim HELICS =====" && \
   export DEBIAN_FRONTEND=noninteractive && \
@@ -20,15 +25,6 @@ RUN echo "===== Building CoSim HELICS =====" && \
   echo "===== Install Libraries =====" && \
   apt-get update && \
   apt-get dist-upgrade -y && \
-  apt-get install -y \
-# Java libraries
-  openjdk-11-jdk \
-# HELICS and FNCS support libraries
-  lsof \
-  libzmq5-dev \
-  libczmq-dev \
-  libboost-dev && \
-  ln -s /usr/lib/jvm/java-11-openjdk-amd64 /usr/lib/jvm/default-java && \
 # protect images by changing root password
   echo "root:${COSIM_USER}" | chpasswd && \
   echo "<<<< Adding the '${COSIM_USER}' user >>>>" && \

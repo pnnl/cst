@@ -377,11 +377,11 @@ class Docker:
         logger.info('====  Broker Exit in\n        ' + os.getcwd())
 
     @staticmethod
-    def run_remote_yaml(scenario_name):
+    def run_remote_yaml(scenario_name, path="/run/python/test_federation"):
         cosim = os.environ.get("SIM_DIR", "/home/worker/copper")
         logger.info('====  ' + scenario_name + ' Broker Start in\n        ' + os.getcwd())
         docker_compose = "docker-compose -f " + scenario_name + ".yaml"
-        cmd = ("sh -c 'cd " + cosim + "/run/python/test_federation && " +
+        cmd = ("sh -c 'cd " + cosim + path + " && " +
                docker_compose + " up && " + docker_compose + " down'")
         subprocess.Popen("ssh -i  ~/copper-key-ecdsa " + sim_user + "@" + sim_host +
                          " \"nohup " + cmd + " > /dev/null &\"", shell=True)

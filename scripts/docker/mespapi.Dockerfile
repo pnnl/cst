@@ -9,13 +9,6 @@ ENV COSIM_HOME=/home/$COSIM_USER
 # Compile exports
 ENV MESPDIR=$COSIM_HOME/mesp
 
-RUN echo "===== Building CoSim MESP API =====" && \
-  export DEBIAN_FRONTEND=noninteractive && \
-  export DEBCONF_NONINTERACTIVE_SEEN=true && \
-  echo "===== Install Libraries =====" && \
-  apt-get update && \
-  apt-get dist-upgrade -y
-
 COPY . $MESPDIR/
 RUN chown -hR $COSIM_USER:$COSIM_USER $COSIM_HOME
 

@@ -13,9 +13,6 @@ paths=(
   "./"
   "${SIM_DIR}/scripts/build/"
   "./"
-  "./"
-  "./"
-  "./"
   "${SIM_DIR}/src/cosim_toolbox/"
   "./"
   "./"
@@ -29,9 +26,6 @@ names=(
   "library"
   "build"
   "helics"
-  "gridlabd"
-  "eplus"
-  "ns3"
   "python"
   "tespapi"
   "julia"
@@ -39,9 +33,6 @@ names=(
 )
 
 builds=(
-  1
-  1
-  1
   1
   1
   1
