@@ -1,4 +1,5 @@
-FROM cosim-library AS cosim-production
+# Build runtime image
+FROM cosim-library:latest AS cosim-production
 
 ARG COSIM_USER
 ENV COSIM_HOME=/home/$COSIM_USER

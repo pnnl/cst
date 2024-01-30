@@ -1,9 +1,5 @@
-# Declare arguments
-ARG UBUNTU=ubuntu
-ARG UBUNTU_VERSION=:22.04
-
 # Build runtime image
-FROM ${UBUNTU}${UBUNTU_VERSION} AS cosim-helics
+FROM cosim-ubuntu:latest AS cosim-helics
 
 # User name and work directory
 ARG SIM_UID
@@ -13,6 +9,7 @@ ENV COSIM_HOME=/home/$COSIM_USER
 # Compile exports
 ENV INSTDIR=$COSIM_HOME/tenv
 ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+ENV PYHELICS_INSTALL=$INSTDIR
 
 # PATH
 ENV PATH=$JAVA_HOME:$INSTDIR/bin:$PATH
@@ -33,8 +30,8 @@ RUN echo "===== Building CoSim HELICS =====" && \
   libboost-dev && \
   ln -s /usr/lib/jvm/java-11-openjdk-amd64 /usr/lib/jvm/default-java && \
 # protect images by changing root password
-  echo "root:worker" | chpasswd && \
-  echo "<<<< Adding the 'worker' user >>>>" && \
+  echo "root:${COSIM_USER}" | chpasswd && \
+  echo "<<<< Adding the '${COSIM_USER}' user >>>>" && \
   useradd -m -s /bin/bash -u $SIM_UID ${COSIM_USER} && \
   echo "<<<< Changing new user password >>>>" && \
   echo "${COSIM_USER}:${COSIM_USER}" | chpasswd && \

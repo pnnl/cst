@@ -25,7 +25,7 @@ def prepare_case():
 
 def prepare_yaml():
     _scenario_name = "test_MyTest"
-    os.chdir("/python_extended")
+    os.chdir("/python_extended/test_federation")
     mDB.Docker.define_yaml(_scenario_name)
 
 

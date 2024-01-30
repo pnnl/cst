@@ -23,8 +23,6 @@ RUN echo "===== Building CoSim Python =====" && \
   export DEBIAN_FRONTEND=noninteractive && \
   export DEBCONF_NONINTERACTIVE_SEEN=true && \
   echo "===== Install Libraries =====" && \
-  apt-get install -y software-properties-common && \
-  add-apt-repository ppa:deadsnakes/ppa -y && \
   apt-get update && \
   apt-get dist-upgrade -y && \
   apt-get install -y \
@@ -35,10 +33,7 @@ RUN echo "===== Building CoSim Python =====" && \
   liblapack-dev \
   libmetis-dev \
 # Python support
-  python3.8 \
-  python3.8-venv \
   python3-pip \
-  python3.8-tk \
   python3-pil.imagetk
 
 # Copy Files

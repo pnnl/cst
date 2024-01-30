@@ -7,6 +7,7 @@ if [[ -z ${SIM_DIR} ]]; then
 fi
 
 paths=(
+  "./"
   "${SIM_DIR}/src/cosim_toolbox/"
   "${SIM_DIR}/src/cosim_toolbox/"
   "./"
@@ -22,6 +23,7 @@ paths=(
 )
 
 names=(
+  "ubuntu"
   "jupyter"
   "airflow"
   "library"
@@ -37,6 +39,7 @@ names=(
 )
 
 builds=(
+  1
   1
   1
   1

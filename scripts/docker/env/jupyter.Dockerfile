@@ -21,12 +21,12 @@ ENV GRANT_SUDO=yes
 COPY . cosim_toolbox/
 
 RUN echo "===== Building CoSim Jupyter =====" && \
-  echo "root:worker" | chpasswd && \
-  echo "<<<< Adding the 'worker' user >>>>" && \
+  echo "root:${COSIM_USER}" | chpasswd && \
+  echo "<<<< Adding the '${COSIM_USER}' user >>>>" && \
   useradd -m -s /bin/bash -u $SIM_UID ${COSIM_USER} && \
   echo "<<<< Changing new user password >>>>" && \
   echo "${COSIM_USER}:${COSIM_USER}" | chpasswd && \
-  echo "jovyan:worker" | chpasswd && \
+  echo "jovyan:${COSIM_USER}" | chpasswd && \
   usermod -aG ${COSIM_USER} jovyan && \
   #  usermod -aG sudo ${COSIM_USER} && \   sudo does not work, also the passwords don't work
   #  usermod -aG sudo jovyan && \

@@ -1,5 +1,5 @@
 # Build runtime image
-FROM cosim-helics:latest AS cosim-run
+FROM cosim-helics:latest AS cosim-eplus
 
 USER root
 
