@@ -1,0 +1,68 @@
+version: "3.8"
+# Optional Jupyter Notebook service
+services:
+  jupyter_notebook:
+    image: "cosim-jupyter:latest"
+    container_name: ${CONTAINER_NAME:-jupyter_notebook}
+    environment:
+      JUPYTER_ENABLE_LAB: "yes"
+      GRANT_SUDO: "yes"
+    ports:
+      - "8888:8888"
+    volumes:
+      - ${RUNFLOW}:/home/jovyan/work
+    depends_on:
+      - database
+    links:
+      - database
+    networks:
+      - cu_net
+
+  database:
+    image: "postgres:13"
+    container_name: ${CONTAINER_NAME:-database}
+    ports:
+      - "5432:5432"
+    expose:
+      - "5432"
+    environment:
+      POSTGRES_DB: "${POSTGRES_DB}"
+      POSTGRES_HOST: "${POSTGRES_HOST}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      POSTGRES_PORT: "${POSTGRES_PORT}"
+      POSTGRES_USER: "${POSTGRES_USER}"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "pg_isready",
+          "-U",
+          "${POSTGRES_USER}",
+          "-d",
+          "${POSTGRES_DB}"
+        ]
+      interval: 5s
+      retries: 5
+    restart: always
+    volumes:
+      - cu_vol_user:/var/lib/postgresql/data
+      - $WORKFLOW/init-db.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - cu_net
+
+  mongodb:
+    image: mongodb/mongodb-community-server:latest
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    expose:
+      - "27017"
+    networks:
+      - cu_net
+
+volumes:
+  cu_vol_user: null
+
+# Create a custom network for bridging the containers
+networks:
+  cu_net: null

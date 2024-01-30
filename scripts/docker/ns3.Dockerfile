@@ -1,14 +1,15 @@
 # Build runtime image
-FROM tesp-helics:latest AS tesp-run
+FROM cosim-helics:latest AS cosim-ns3
 
-# TESP user name and work directory
+USER root
+
+# User name and work directory
 ENV USER_NAME=worker
 ENV USER_HOME=/home/$USER_NAME
-ENV TESPDIR=$USER_HOME/tesp
-ENV INSTDIR=$TESPDIR/tenv
+ENV INSTDIR=$USER_HOME/tenv
 
-# Copy Binaries
-# COPY --from=tesp-build:latest $INSTDIR/ $INSTDIR/
+# PATH
+#ENV PATH=$PATH
 
 RUN echo "===== BUILD RUN NS3 =====" && \
   export DEBIAN_FRONTEND=noninteractive && \
@@ -16,3 +17,11 @@ RUN echo "===== BUILD RUN NS3 =====" && \
   echo "===== Install Libraries =====" && \
   apt-get update && \
   apt-get dist-upgrade -y
+
+# Copy Binaries
+#COPY --from=cosim-build:latest $INSTDIR/ $INSTDIR/
+#RUN chown -hR $USER_NAME:$USER_NAME $USER_HOME
+
+# Set 'worker' as user
+USER $USER_NAME
+WORKDIR $USER_HOME

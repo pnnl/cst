@@ -1,0 +1,1 @@
+docker run -it --rm cosim-airflow bash

@@ -8,7 +8,7 @@ fi
 
 JAVAPATH=${INSTDIR}/java
 
-cd "${TESPBUILD}"
+cd "${BUILDDIR}"
 if ! [ -f "test_helics.class" ]; then
   javac -classpath ".:$JAVAPATH/helics.jar" test_helics.java
 fi

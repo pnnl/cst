@@ -1,33 +1,65 @@
-
-# To initiate the DAG Object
-from airflow import DAG
+import os
+import sys
 # Importing datetime and timedelta modules for scheduling the DAGs
 from datetime import datetime
 # Importing operators
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.bash import BashOperator
-from airflow.operators.python import BranchPythonOperator
+from airflow.operators.python import PythonOperator
+from airflow.contrib.hooks.ssh_hook import SSHHook
+# To initiate the DAG Object
+from airflow import DAG
+# Import cosim toolbox
+import cosim_toolbox.metadataDB as mDB
+
+# Add new code
+sys.path.insert(0, '/python_extended')
+import runner as myr
+
+
+def prepare_case():
+    _scenario_name = "test_MyTest"
+    _schema_name = "test_MySchema2"
+    _federation_name = "test_MyFederation"
+    r = myr.Runner(_scenario_name, _schema_name, _federation_name, True)
+    r.define_scenario()
+
+
+def prepare_yaml():
+    _scenario_name = "test_MyTest"
+    os.chdir("/python_extended")
+    mDB.Docker.define_yaml(_scenario_name)
+
+
+def run_yaml():
+    _scenario_name = "test_MyTest"
+    ssh = SSHHook(ssh_conn_id='myssh')
+    ssh_client = None
+    try:
+        ssh_client = ssh.get_conn()
+        ssh_client.load_system_host_keys()
+        channel = ssh_client.invoke_shell()
+        stdin = channel.makefile('wb')
+        stdout = channel.makefile('rb')
+
+        stdin.write('''
+cd ~/tesp/repository/copper/run/python
+docker-compose -f ''' + _scenario_name + '''.yaml up
+docker-compose -f ''' + _scenario_name + '''.yaml down
+exit
+        ''')
+        print(stdout.read())
+        stdout.close()
+        stdin.close()
+
+    finally:
+        if ssh_client:
+            ssh_client.close()
+
 
 # Initiating the default_args
 default_args = {
         'owner': 'airflow',
         'start_date': datetime(2022, 11, 12)
 }
-
-
-def my_python_function():
-    return 'hello'
-
-
-task_a = BranchPythonOperator(
-    task_id='task_a',
-    python_callable=my_python_function
-)
-
-task_b = BashOperator(
-    task_id='task_b',
-    bash_command='echo "hello"'
-)
 
 # Creating DAG Object
 dag = DAG(dag_id='DAG-1',
@@ -36,11 +68,22 @@ dag = DAG(dag_id='DAG-1',
           catchup=False
           )
 
+task_a = PythonOperator(
+    dag=dag,    
+    task_id='prepare_federation_case',
+    python_callable=prepare_case
+)
 
-# Creating first task
-start = DummyOperator(task_id='start', dag=dag)
+task_b = PythonOperator(
+    dag=dag,    
+    task_id='prepare_compose_file',
+    python_callable=prepare_yaml
+)
 
-# Creating second task
-end = DummyOperator(task_id='end', dag=dag)
+task_c = PythonOperator(
+    dag=dag,
+    task_id='run_compose_file',
+    python_callable=run_yaml
+)
 
-start >> end
+task_a >> task_b >> task_c
