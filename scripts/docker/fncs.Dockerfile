@@ -5,13 +5,13 @@ ARG UBUNTU_VERSION=:22.04
 # Build runtime image
 FROM ${UBUNTU}${UBUNTU_VERSION} AS cosim-fncs
 
-ARG UID
 # User name and work directory
-ENV USER_NAME=worker
-ENV USER_HOME=/home/$USER_NAME
-ENV INSTDIR=$USER_HOME/tenv
+ARG SIM_UID
+ARG COSIM_USER
+ENV COSIM_HOME=/home/$COSIM_USER
 
 # Compile exports
+ENV INSTDIR=$COSIM_HOME/tenv
 ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
 ENV PYHELICS_INSTALL=$INSTDIR
 
@@ -36,15 +36,15 @@ RUN echo "===== Building CoSim FNCS =====" && \
 # protect images by changing root password
   echo "root:worker" | chpasswd && \
   echo "<<<< Adding the 'worker' user >>>>" && \
-  useradd -m -s /bin/bash -u $UID ${USER_NAME} && \
+  useradd -m -s /bin/bash -u $SIM_UID ${COSIM_USER} && \
   echo "<<<< Changing new user password >>>>" && \
-  echo "${USER_NAME}:${USER_NAME}" | chpasswd && \
-  usermod -aG sudo ${USER_NAME}
+  echo "${COSIM_USER}:${COSIM_USER}" | chpasswd && \
+  usermod -aG sudo ${COSIM_USER}
 
 # Copy Binaries
 COPY --from=cosim-build:latest $INSTDIR/ $INSTDIR/
-RUN chown -hR $USER_NAME:$USER_NAME $USER_HOME
+RUN chown -hR $COSIM_USER:$COSIM_USER $COSIM_HOME
 
-# Set 'worker' as user
-USER $USER_NAME
-WORKDIR $USER_HOME
+# Set as user
+USER $COSIM_USER
+WORKDIR $COSIM_HOME

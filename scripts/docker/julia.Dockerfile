@@ -3,13 +3,14 @@ FROM cosim-python:latest AS cosim-julia
 
 USER root
 
-# User name and work directory
-ENV USER_NAME=worker
-ENV USER_HOME=/home/$USER_NAME
-ENV INSTDIR=$USER_NAME/tenv
+ARG COSIM_USER
+ENV COSIM_HOME=/home/$COSIM_USER
+
+# Compile exports
+ENV INSTDIR=$COSIM_HOME/tenv
 
 # PATH
-ENV PATH=$USER_HOME/julia-1.9.4/bin:$PATH
+ENV PATH=$COSIM_HOME/julia-1.9.4/bin:$PATH
 
 RUN echo "===== Building CoSim Julia =====" && \
   export DEBIAN_FRONTEND=noninteractive && \
@@ -19,11 +20,11 @@ RUN echo "===== Building CoSim Julia =====" && \
   apt-get dist-upgrade -y && \
   apt-get install -y \
   wget && \
-  chown -hR $USER_NAME:$USER_NAME $USER_HOME
+  chown -hR $COSIM_USER:$COSIM_USER $COSIM_HOME
 
-# Set 'worker' as user
-USER $USER_NAME
-WORKDIR $USER_HOME
+# Set as user
+USER $COSIM_USER
+WORKDIR $COSIM_HOME
 
 RUN echo "Directory structure for running" && \
   wget https://julialang-s3.julialang.org/bin/linux/x64/1.9/julia-1.9.4-linux-x86_64.tar.gz && \

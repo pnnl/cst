@@ -15,16 +15,56 @@ IMAGE_NAME="cosim-airflow:latest"
 #IMAGE_NAME="cosim-julia:latest"
 #IMAGE_NAME="cosim-mespapi:latest"
 
-USER_NAME=airflow
-#USER_NAME=jovyan
-#USER_NAME=worker
-USER_HOME=/home/$USER_NAME
+names=(
+  "jupyter"
+  "airflow"
+  "library"
+  "build"
+  "helics"
+  "gridlabd"
+  "eplus"
+  "ns3"
+  "python"
+  "tespapi"
+  "julia"
+  "mespapi"
+)
+
+builds=(
+  1
+  1
+  0
+  0
+  0
+  0
+  0
+  0
+  1
+  1
+  1
+  1
+)
+
+
+COSIM_USER=airflow
+#COSIM_USER=jovyan
+#COSIM_USER=worker
+COSIM_HOME=/home/$COSIM_USER
 CONTENT=/home/d3j331/tesp/repository/copper/src/cosim_toolbox
 
-#           -w=${USER_HOME} \
+#           -w=${COSIM_HOME} \
 #           -v $CONTENT:/copper \
-
+#           -e env_var=value <imageName>
 clear
-docker run -it --rm \
-           -v $CONTENT:/copper \
-           --name ${DOCKER_NAME} ${IMAGE_NAME} bash
+#docker run -it --rm \
+#           -e env_var=value <imageName>
+#           -v $CONTENT:/copper \
+#           --name ${DOCKER_NAME} ${IMAGE_NAME} bash
+
+for i in "${!names[@]}"; do
+  IMAGE_NAME="cosim-${names[$i]}:latest"
+
+  if [ "${builds[$i]}" -eq 1 ]; then
+    docker run -e SIM_HOST=gage.pnl.gov ${IMAGE_NAME}
+  fi
+done

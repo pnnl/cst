@@ -1,15 +1,21 @@
 #!/bin/bash
 
+if [[ -z ${SIM_DIR} ]]; then
+  echo "Please run 'source cosim.env' in the root Co-Simulation directory"
+  echo "Then run this script in this directory"
+  exit
+fi
+
 paths=(
-  "/home/d3j331/tesp/repository/copper/src/cosim_toolbox/"
-  "/home/d3j331/tesp/repository/copper/src/cosim_toolbox/"
+  "${SIM_DIR}/src/cosim_toolbox/"
+  "${SIM_DIR}/src/cosim_toolbox/"
   "./"
-  "/home/d3j331/tesp/repository/copper/scripts/builder/"
-  "./"
-  "./"
+  "${SIM_DIR}/scripts/build/"
   "./"
   "./"
-  "/home/d3j331/tesp/repository/copper/src/cosim_toolbox/"
+  "./"
+  "./"
+  "${SIM_DIR}/src/cosim_toolbox/"
   "./"
   "./"
   "/home/d3j331/tesp/repository/mesp/"
@@ -33,17 +39,24 @@ names=(
 builds=(
   1
   1
-  0
-  0
-  0
-  0
-  0
-  0
-  0
-  0
-  0
-  0
+  1
+  1
+  1
+  1
+  1
+  1
+  1
+  1
+  1
+  1
 )
+
+# make directories and set permissions
+cd "$SIM_DIR/run" || exit
+mkdir -p ./dags ./logs ./plugins ./config ./python
+# make wide open for now
+sudo chmod -R 777 ./dags ./logs ./plugins ./config ./python ../src
+cd "$DOCKER_DIR" || exit
 
 export BUILDKIT_PROGRESS=plain
 
@@ -57,7 +70,10 @@ for i in "${!names[@]}"; do
     echo "Creating ${IMAGE_NAME} from ${DOCKERFILE}"
     image1=$(docker images -q "${IMAGE_NAME}")
     docker build --no-cache --rm \
-                 --build-arg UID=$UID \
+                 --build-arg COSIM_USER="${COSIM_USER}" \
+                 --build-arg SIM_HOST="${SIM_HOST}" \
+                 --build-arg SIM_USER="${SIM_USER}" \
+                 --build-arg SIM_UID=$SIM_UID \
                  --network=host \
                  -f "${DOCKERFILE}" \
                  -t "${IMAGE_NAME}" "${CONTEXT}"

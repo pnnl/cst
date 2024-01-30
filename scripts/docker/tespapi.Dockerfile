@@ -3,9 +3,8 @@ FROM cosim-python:latest AS cosim-tespapi
 
 USER root
 
-# User name and work directory
-ENV USER_NAME=worker
-ENV USER_HOME=/home/$USER_NAME
+ARG COSIM_USER
+ENV COSIM_HOME=/home/$COSIM_USER
 
 RUN echo "===== Building CoSim TESP API =====" && \
   export DEBIAN_FRONTEND=noninteractive && \
@@ -18,11 +17,11 @@ RUN echo "===== Building CoSim TESP API =====" && \
 
 # Copy Binaries
 #COPY --from=cosim-build:latest $INSTDIR/ $INSTDIR/
-#RUN chown -hR $USER_NAME:$USER_NAME $USER_HOME
+#RUN chown -hR $COSIM_USER:$COSIM_USER $COSIM_HOME
 
-# Set 'worker' as user
-USER $USER_NAME
-WORKDIR $USER_HOME
+# Set as user
+USER $COSIM_USER
+WORKDIR $COSIM_HOME
 
 # Add directories and files
 RUN echo "Install Python Libraries" && \

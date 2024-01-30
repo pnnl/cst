@@ -7,6 +7,7 @@ Copper.
 @author: Mitch Pelton
 mitch.pelton@pnnl.gov
 """
+from os import environ
 import sys
 import psycopg2
 
@@ -15,14 +16,14 @@ from cosim_toolbox.federate import Federate
 
 
 def open_logger():
-    #    "host": os.environ.get("POSTGRES_HOST"),
     connection = {
-        "host": "gage.pnl.gov",
-        "dbname": "copper",
-        "user": "postgres",
-        "password": "postgres",
-        "port": 5432
+        "host": environ.get("POSTGRES_HOST", "localhost"),
+        "port": environ.get("POSTGRES_PORT", 5432),
+        "dbname": environ.get("COSIM_DB", "copper"),
+        "user": environ.get("COSIM_USER", "worker"),
+        "password": environ.get("COSIM_PASSWORD", "worker")
     }
+    print(connection)
     try:
         return psycopg2.connect(**connection)
     except:
@@ -73,7 +74,6 @@ def drop_schema(conn, schema_name: str):
 
 
 class DataLogger(Federate):
-
     hdt_type = {'HDT_STRING': 'text',
                 'HDT_DOUBLE': 'double precision',
                 'HDT_INT': 'bigint',
@@ -97,7 +97,6 @@ class DataLogger(Federate):
         if clear:
             self.remove_scenario()
         self.conn.commit()
-
 
     """
         HELICS_DATA_TYPE_UNKNOWN = -1,
@@ -128,6 +127,7 @@ class DataLogger(Federate):
         /** open type that can be anything*/
         HELICS_DATA_TYPE_ANY = 25262
     """
+
     def remove_scenario(self):
         query = ""
         for key in self.hdt_type:
@@ -140,7 +140,7 @@ class DataLogger(Federate):
         return ("CREATE TABLE IF NOT EXISTS "
                 f"{self.schema_name}.{table_name} ("
                 "time double precision NOT NULL, "
-                "scenario VARCHAR (255) NOT NULL, " 
+                "scenario VARCHAR (255) NOT NULL, "
                 "federate VARCHAR (255) NOT NULL, "
                 "data_name VARCHAR (255) NOT NULL, "
                 f"data_value {data_type} NOT NULL);")
