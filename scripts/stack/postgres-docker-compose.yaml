@@ -45,7 +45,7 @@ services:
       retries: 5
     restart: always
     volumes:
-      - cu_vol_user:/var/lib/postgresql/data
+      - cu_postgres:/var/lib/postgresql/data
       - $STACK_DIR/init-db.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - cu_net
@@ -62,7 +62,7 @@ services:
       MONGO_INITDB_ROOT_USERNAME: "${MONGO_INITDB_ROOT_USERNAME}"
       MONGO_INITDB_ROOT_PASSWORD: "{MONGO_INITDB_ROOT_PASSWORD}"
     volumes:
-      - cu_vol_user:data/db
+      - cu_mongo:/data/db
       - $STACK_DIR/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
     networks:
       - cu_net
@@ -79,7 +79,8 @@ services:
       - cu_net
 
 volumes:
-  cu_vol_user: null
+  cu_mongo: null
+  cu_postgres: null
 
 # Create a custom network for bridging the containers
 networks:

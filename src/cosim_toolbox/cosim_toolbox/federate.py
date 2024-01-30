@@ -161,7 +161,7 @@ class Federate:
         if scenario_name is None:
             raise NameError("scenario_name is None")
         self.scenario_name = scenario_name
-        self.connect_to_metadataDB(mDB.cu_uri, mDB.cu_database)
+        self.connect_to_metadataDB(mDB.cosim_mongo_host, mDB.cosim_mongo_db)
         self.connect_to_helics_config()
 
         # Provide internal copies of the HELICS interfaces for convenience during debugging.

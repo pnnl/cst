@@ -74,8 +74,8 @@ class MockHelicsMessage:
 
 
 class MockMetadataDB:
-    cu_uri = None
-    cu_database = None
+    cosim_mongo_host = None
+    cosim_mongo_db = None
     cu_federations = "federations"
     cu_scenarios = "scenarios"
 

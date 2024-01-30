@@ -16,18 +16,19 @@ import cosim_toolbox.helics_config as hm
 logger = logging.getLogger(__name__)
 pp = pprint.PrettyPrinter(indent=4, )
 
-cu_user = os.environ.get("SIM_USER", "worker")
-cu_host = os.environ.get("SIM_HOST", "localhost")
+sim_user = os.environ.get("SIM_USER", "worker")
+sim_host = os.environ.get("SIM_HOST", "localhost")
 
-cu_uri = os.environ.get("MONGO_HOST", "mongodb://localhost:27017")
-cu_database = os.environ.get("COSIM_DB", "copper")
+cosim_mongo_host = os.environ.get("MONGO_HOST", "mongodb://localhost:27017")
+cosim_mongo_db = os.environ.get("COSIM_DB", "copper")
+
 cu_federations = "federations"
 cu_scenarios = "scenarios"
 cu_logger = "cu_logger"
 
 
 def federation_database(clear: bool = False):
-    db = MetaDB(cu_uri, cu_database)
+    db = MetaDB(cosim_mongo_host, cosim_mongo_db)
     logger.info("Before: ",  db.update_collection_names())
     if clear:
         db.db[cu_federations].drop()
@@ -45,10 +46,7 @@ class MetaDB:
     def __init__(self, uri=None, db_name=None):
         self.collections = None
 
-        if uri is not None:
-            self.client = self._connect_to_database(uri)
-        else:
-            self.client = self._connect_to_database()
+        self.client = self._connect_to_database(uri, db_name)
 
         if db_name is not None:
             self.db = self.client[db_name]
@@ -69,22 +67,28 @@ class MetaDB:
             return fh
 
     @staticmethod
-    def _connect_to_database(uri=None):
+    def _connect_to_database(uri=None, db=None):
         """
         Sets up connection to server port for mongodb
         """
+        cosim_user = os.environ.get("COSIM_USER", "worker")
+        cosim_password = os.environ.get("COSIM_PASSWORD", "worker")
+
         # Set up default uri_string to the server Trevor was using on the EIOC
         if uri is None:
-            uri = os.environ.get("MONGO_HOST", "mongodb://localhost:27017")
+            uri = cosim_mongo_host
+        if db is None:
+            db = cosim_mongo_db
         # Set up connection
-        client = MongoClient(uri)
+        uri = uri.replace('//', '//' + cosim_user + ':' + cosim_password + '@')
+        client = MongoClient(uri + '/?authSource=' + db + '&authMechanism=SCRAM-SHA-1')
         # Test connection
         try:
             client.admin.command('ping')
             logger.info("Pinged your deployment. You successfully connected to MongoDB!")
         except Exception as e:
             logger.info(e)
-        
+
         return client
 
     def _check_unique_doc_name(self, collection_name, new_name):
@@ -216,8 +220,8 @@ class MetaDB:
         Adds the Python dictionary to the specified MongoDB collection as a
         MongoDB document. Checks to make sure another document does not exist
         by that name; if it does, throw an error.
-        
-        To allow later access to the document by name, 
+
+        To allow later access to the document by name,
         the field "cu_007" is added to the dictionary before adding
         it to the collection (the assumption is that "cu_007" will
         always be a unique field in the dictionary).
@@ -228,7 +232,7 @@ class MetaDB:
             raise NameError(f"{dict_name} is not unique in collection {collection_name} and cannot be added.")
 
         obj_id = self.db[collection_name].insert_one(dict_to_add).inserted_id
-        
+
         return str(obj_id)
 
     def get_dict(self, collection_name, object_id=None, dict_name=None):
@@ -251,7 +255,7 @@ class MetaDB:
         elif object_id is not None:
             doc = self.db[collection_name].find_one({"_id": object_id})
         # Pulling out the metaDB secret name field that was added when we put
-        #   the dictionary into the database. Will not raise an error if 
+        #   the dictionary into the database. Will not raise an error if
         #   somehow that key does not exist in the dictionary
         doc.pop(self._cu_dict_name, None)
         doc.pop("_id", None)
@@ -262,7 +266,7 @@ class MetaDB:
         """
         Updates the dictionary on the database (under the same object_ID/name)
         with the passed in updated dictionary.
-        
+
         User must enter either the dictionary name used or the object_ID that
         was created when the dictionary was added but not both.
         """
@@ -332,7 +336,7 @@ class Docker:
 
     @staticmethod
     def define_yaml(scenario_name):
-        mdb = MetaDB(cu_uri, cu_database)
+        mdb = MetaDB(cosim_mongo_host, cosim_mongo_db)
 
         scenario_def = mdb.get_dict(cu_scenarios, None, scenario_name)
         federation_name = scenario_def["federation"]
@@ -379,7 +383,7 @@ class Docker:
         docker_compose = "docker-compose -f " + scenario_name + ".yaml"
         cmd = ("sh -c 'cd " + cosim + "/run/python/test_federation && " +
                docker_compose + " up && " + docker_compose + " down'")
-        subprocess.Popen("ssh -i  ~/copper-key-ecdsa " + cu_user + "@" + cu_host +
+        subprocess.Popen("ssh -i  ~/copper-key-ecdsa " + sim_user + "@" + sim_host +
                          " \"nohup " + cmd + " > /dev/null &\"", shell=True)
         logger.info('====  Broker Exit in\n        ' + os.getcwd())
 
@@ -387,13 +391,13 @@ class Docker:
 def mytest1():
     """
     Main method for launching metadata class to ping local container of mongodb.
-    First user's will need to set up docker desktop (through the PNNL App Store), install mongodb community: 
+    First user's will need to set up docker desktop (through the PNNL App Store), install mongodb community:
     https://www.mongodb.com/docs/manual/tutorial/install-mongodb-community-with-docker/
-    But run docker with the port number exposed to the host so that it can be pinged from outside the container: 
+    But run docker with the port number exposed to the host so that it can be pinged from outside the container:
     docker run --name mongodb -d -p 27017:27017 mongodb/mongodb-community-server:$MONGODB_VERSION
     If no version number is important the tag MONGODB_VERSION=latest can be used
     """
-    db = MetaDB(cu_uri, cu_database)
+    db = MetaDB(cosim_mongo_host, cosim_mongo_db)
     logger.info(db.update_collection_names())
     scenarios = db.add_collection(cu_scenarios)
     federates = db.add_collection(cu_federations)
@@ -442,7 +446,7 @@ def mytest2():
     docker run --name mongodb -d -p 27017:27017 mongodb/mongodb-community-server:$MONGODB_VERSION
     If no version number is important the tag MONGODB_VERSION=latest can be used
     """
-    db = MetaDB(cu_uri, cu_database)
+    db = MetaDB(cosim_mongo_host, cosim_mongo_db)
     logger.info(db.update_collection_names())
     db.add_collection(cu_scenarios)
     db.add_collection(cu_federations)
