@@ -3,7 +3,6 @@ FROM cosim-ubuntu:latest AS cosim-library
 
 ARG SIM_UID
 ARG COSIM_USER
-ENV COSIM_HOME=/home/$COSIM_USER
 
 RUN echo "===== Building CoSim Library =====" && \
   export DEBIAN_FRONTEND=noninteractive && \
@@ -24,6 +23,6 @@ RUN echo "===== Building CoSim Library =====" && \
   echo "root:${COSIM_USER}" | chpasswd && \
   echo "<<<< Adding the '${COSIM_USER}' user >>>>" && \
   useradd -m -s /bin/bash -u $SIM_UID ${COSIM_USER} && \
-  echo "<<<< Changing new user password >>>>" && \
+  echo "<<<< Changing ${COSIM_USER} password >>>>" && \
   echo "${COSIM_USER}:${COSIM_USER}" | chpasswd && \
   usermod -aG sudo ${COSIM_USER}

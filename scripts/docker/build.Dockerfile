@@ -33,9 +33,10 @@ ENV PATH=$PATH:$INSTDIR/energyplus/PostProcess
 ENV PSST_SOLVER=cbc
 # 'PSST_SOLVER path' -- one of "cbc", "ipopt", "/ibm/cplex/bin/x86-64_linux/cplexamp"
 ENV PSST_WARNING=ignore
+# 'PSST_WARNING action' -- one of "error", "ignore", "always", "default", "module", or "once"
 
 RUN echo "===== Building CoSim Build =====" && \
-  echo "Configure name and email for" && \
+  echo "Configure name and email for git" && \
   git config --global user.name "${COSIM_USER}" && \
   git config --global user.email "${COSIM_USER}@${COSIM_USER}.com" && \
   echo "User .name=${COSIM_USER} and .email=${COSIM_USER}@${COSIM_EMAIL} have been set for git repositories!" && \

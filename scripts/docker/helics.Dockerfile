@@ -6,14 +6,19 @@ ARG SIM_UID
 ARG COSIM_USER
 ENV COSIM_HOME=/home/$COSIM_USER
 
-# Compile exports
 ENV INSTDIR=$COSIM_HOME/tenv
-ENV PYHELICS_INSTALL=$INSTDIR
-ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$INSTDIR/lib
+
+# Compile exports
 ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+ENV PYHELICS_INSTALL=$INSTDIR
+ENV GLPATH=$INSTDIR/lib/gridlabd:$INSTDIR/share/gridlabd
+# ENV CPLUS_INCLUDE_PATH=/usr/include/hdf5/serial:$INSTDIR/include
+# ENV FNCS_INCLUDE_DIR=$INSTDIR/include
+# ENV FNCS_LIBRARY=$INSTDIR/lib
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$INSTDIR/lib
+# ENV LD_RUN_PATH=$INSTDIR/lib
 
 # PATH
-ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
 ENV PATH=$JAVA_HOME:$INSTDIR/bin:$PATH
 ENV PATH=$PATH:$INSTDIR/energyplus
 ENV PATH=$PATH:$INSTDIR/energyplus/PreProcess
@@ -32,6 +37,13 @@ RUN echo "===== Building CoSim HELICS =====" && \
   echo "<<<< Changing new user password >>>>" && \
   echo "${COSIM_USER}:${COSIM_USER}" | chpasswd && \
   usermod -aG sudo ${COSIM_USER}
+
+#Add cplex
+#COPY $COSIM_HOME/cplex_studio129.linux-x86-64.bin
+#RUN cd $COSIM_HOME || exit && \
+#CPLEX_BIN=cplex_studio129.linux-x86-64.bin && \
+#chmod a+x ${CPLEX_BIN} && \
+#./cplex_studio129.linux-x86-64.bin -i silent -DLICENSE_ACCEPTED=TRUE -DUSER_INSTALL_DIR=$INSTDIR/ibm \
 
 # Copy Binaries
 COPY --from=cosim-build:latest $INSTDIR/ $INSTDIR/
