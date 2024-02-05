@@ -4,42 +4,12 @@ Created on 12/14/2023
 Data logger class that defines the basic operations of Python-based logger federate in
 Copper.
 
-@author: Mitch Pelton
+@author:
 mitch.pelton@pnnl.gov
 """
-from os import environ
 import sys
-import psycopg2
 
 from cosim_toolbox.federate import Federate
-
-
-def open_logger():
-    connection = {
-        "host": environ.get("POSTGRES_HOST", "localhost"),
-        "port": environ.get("POSTGRES_PORT", 5432),
-        "dbname": environ.get("COSIM_DB", "copper"),
-        "user": environ.get("COSIM_USER", "worker"),
-        "password": environ.get("COSIM_PASSWORD", "worker")
-    }
-
-    conn = None
-    try:
-        conn = psycopg2.connect(**connection)
-    except:
-        pass
-    return conn
-
-
-def check_version():
-    cur = conn.cursor()
-    print('PostgreSQL database version:')
-    cur.execute('SELECT version()')
-    # display the PostgreSQL database server version
-    db_version = cur.fetchone()
-    print(db_version)
-    # close the communication with the PostgreSQL
-    cur.close()
 
 
 class SimpleFederate(Federate):
@@ -71,10 +41,6 @@ class SimpleFederate(Federate):
 
 
 if __name__ == "__main__":
-    conn = open_logger()
-    if conn:
-        check_version()
-
     if sys.argv.__len__() > 2:
         test_fed = SimpleFederate(sys.argv[1])
         test_fed.create_federate(sys.argv[2])

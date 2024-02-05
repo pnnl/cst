@@ -1,13 +1,67 @@
-from os import environ
+"""
+Created on 12/14/2023
 
-import psycopg2 as psy
+Data logger class that defines the basic operations of Python-based data logger in
+Co-Simulation Toolbox.
+
+@authors:
+fred.rutz@pnnl.gov
+mitch.pelton@pnnl.gov
+
+"""
+from os import environ
+import logging
 import pandas as pd
 import datetime as dt
+import psycopg2 as pg
 
 import cosim_toolbox.metadataDB as mDB
 
+logger = logging.getLogger(__name__)
+
+"""
+    HELICS_DATA_TYPE_UNKNOWN = -1,
+    /** a sequence of characters*/
+    HELICS_DATA_TYPE_STRING = 0,
+    /** a double precision floating point number*/
+    HELICS_DATA_TYPE_DOUBLE = 1,
+    /** a 64 bit integer*/
+    HELICS_DATA_TYPE_INT = 2,
+    /** a pair of doubles representing a complex number*/
+    HELICS_DATA_TYPE_COMPLEX = 3,
+    /** an array of doubles*/
+    HELICS_DATA_TYPE_VECTOR = 4,
+    /** a complex vector object*/
+    HELICS_DATA_TYPE_COMPLEX_VECTOR = 5,
+    /** a named point consisting of a string and a double*/
+    HELICS_DATA_TYPE_NAMED_POINT = 6,
+    /** a boolean data type*/
+    HELICS_DATA_TYPE_BOOLEAN = 7,
+    /** time data type*/
+    HELICS_DATA_TYPE_TIME = 8,
+    /** raw data type*/
+    HELICS_DATA_TYPE_RAW = 25,
+    /** type converts to a valid json string*/
+    HELICS_DATA_TYPE_JSON = 30,
+    /** the data type can change*/
+    HELICS_DATA_TYPE_MULTI = 33,
+    /** open type that can be anything*/
+    HELICS_DATA_TYPE_ANY = 25262
+"""
+
 
 class DataLogger:
+
+    hdt_type = {'HDT_STRING': 'text',
+                'HDT_DOUBLE': 'double precision',
+                'HDT_INT': 'bigint',
+                'HDT_COMPLEX': 'VARCHAR (30)',
+                'HDT_VECTOR': 'text',
+                'HDT_COMPLEX_VECTOR': 'text',
+                'HDT_NAMED_POINT': 'VARCHAR (255)',
+                'HDT_BOOLEAN': 'boolean',
+                'HDT_TIME': 'TIMESTAMP',
+                'HDT_JSON': 'text'}
 
     def __init__(self):
         self.scenario_name = None
@@ -18,6 +72,63 @@ class DataLogger:
         self.scenario = None
         self.cosim_db = None
         self.logger_db = None
+
+    def check_version(self, conn):
+        cur = conn.cursor()
+        logger.info('PostgresSQL database version:')
+        cur.execute('SELECT version()')
+        # display the PostgresSQL database server version
+        db_version = cur.fetchone()
+        logger.info(db_version)
+        # close the communication with the PostgresSQL
+        cur.close()
+
+    def table_exist(self, conn, scheme_name: str, table_name: str):
+        query = ("SELECT EXISTS ( SELECT FROM pg_tables WHERE "
+                 "schemaname = '" + scheme_name + "' AND tablename = '" + table_name + "');")
+        cur = conn.cursor()
+        cur.execute(query)
+        result = cur.fetchone()
+        cur.close()
+        return result[0]
+
+    def create_schema(self, conn, schema_name: str):
+        query = "CREATE SCHEMA IF NOT EXISTS " + schema_name + ";"
+        cur = conn.cursor()
+        cur.execute(query)
+        cur.close()
+
+    def drop_schema(self, conn, schema_name: str):
+        query = "DROP SCHEMA IF EXISTS " + schema_name + ";"
+        cur = conn.cursor()
+        cur.execute(query)
+        cur.close()
+
+    def remove_scenario(self, conn, schema_name: str, scenario_name: str):
+        query = ""
+        for key in self.hdt_type:
+            query += f"DELETE FROM {schema_name}.{key} WHERE scenario='{scenario_name}'; "
+        cur = conn.cursor()
+        cur.execute(query)
+        cur.close()
+
+    def create_table(self, schema_name: str, table_name: str, data_type: str):
+        return ("CREATE TABLE IF NOT EXISTS "
+                f"{schema_name}.{table_name} ("
+                "time double precision NOT NULL, "
+                "scenario VARCHAR (255) NOT NULL, "
+                "federate VARCHAR (255) NOT NULL, "
+                "data_name VARCHAR (255) NOT NULL, "
+                f"data_value {data_type} NOT NULL);")
+
+    def make_logger_database(self, conn, schema_name):
+        # scheme is a set of like scenario (like DSOT bau, battery, flex load)
+        query = ""
+        for key in self.hdt_type:
+            query += self.create_table(schema_name, key, self.hdt_type[key])
+        cur = conn.cursor()
+        cur.execute(query)
+        cur.close()
 
     def connect_logger_database(self):
         """This function defines the connection to the logger database
@@ -34,13 +145,13 @@ class DataLogger:
             "user": environ.get("COSIM_USER", "worker"),
             "password": environ.get("COSIM_PASSWORD", "worker")
         }
-        print(connection)
+        logger.info(connection)
         self.logger_db = None
         try:
-            self.logger_db = psy.connect(**connection)
+            self.logger_db = pg.connect(**connection)
+            return self.logger_db
         except:
             return None
-        return self.logger_db
 
     def connect_scenario_database(self):
         self.cosim_db = mDB.MetaDB()
@@ -439,7 +550,7 @@ class DataLogger:
             time_list.append(date_time + dt.timedelta(seconds=sec_time))
             t_date_time = time_list[x]
         dataframe['time_stamp'] = time_list
-        print(dataframe)
+        # print(dataframe)
         ts = dataframe.set_index('time_stamp')
         return ts
 

@@ -7,7 +7,6 @@ Copper.
 @author: Mitch Pelton
 mitch.pelton@pnnl.gov
 """
-
 import cosim_toolbox.metadataDB as mDB
 from cosim_toolbox.helicsConfig import HelicsMsg
 
@@ -110,10 +109,10 @@ if __name__ == "__main__":
     _scenario_name = "test_MyTest"
     _schema_name = "test_MySchema2"
     _federation_name = "test_MyFederation"
-    r = Runner(_scenario_name, _schema_name, _federation_name, True)
+    r = Runner(_scenario_name, _schema_name, _federation_name, False)
     r.define_scenario()
     mDB.Docker.define_yaml(r.scenario_name)
-    if remote:
-        mDB.Docker.run_remote_yaml(_scenario_name)
-    else:
-        mDB.Docker.run_yaml(_scenario_name)
+    # if remote:
+    #     mDB.Docker.run_remote_yaml(_scenario_name)
+    # else:
+    #     mDB.Docker.run_yaml(_scenario_name)
