@@ -70,11 +70,70 @@ class DataLogger:
         self.start = None
         self.federation_name = None
         self.scenario = None
-        self.cosim_db = None
-        self.logger_db = None
+        self.meta_db = None
+        self.data_db = None
 
-    def check_version(self, conn):
-        cur = conn.cursor()
+    def _connect_logger_database(self, connection: dict = None):
+        """This function defines the connection to the datalogger database
+        and opens a connection to the postgres database
+
+        Returns:
+            psycopg2 connection object - connection object that provides
+            access to the postgres database
+        """
+        if connection is None:
+            connection = {
+                "host": environ.get("POSTGRES_HOST", "localhost"),
+                "port": environ.get("POSTGRES_PORT", 5432),
+                "dbname": environ.get("COSIM_DB", "copper"),
+                "user": environ.get("COSIM_USER", "worker"),
+                "password": environ.get("COSIM_PASSWORD", "worker")
+            }
+        logger.info(connection)
+        try:
+            return pg.connect(**connection)
+        except:
+            return None
+
+    def _connect_scenario_database(self, connection: dict = None):
+        """This function defines the connection to the meta database
+        and opens a connection to the mongo database
+
+        Returns:
+            metadataDB object - connection object that provides
+            access to the mongo database
+        """
+        if connection is None:
+            connection = {
+                "host": environ.get("MONGO_HOST", "mongo://localhost"),
+                "port": environ.get("MONGO_POST", 27017),
+                "dbname": environ.get("COSIM_DB", "copper"),
+                "user": environ.get("COSIM_USER", "worker"),
+                "password": environ.get("COSIM_PASSWORD", "worker")
+            }
+        logger.info(connection)
+        try:
+            # TODO use connection correctly
+            return mDB.MetaDB()
+        except:
+            return None
+
+    def close_database_connections(self, commit=True):
+        self.meta_db = None
+        if commit:
+            self.data_db.commit()
+        self.data_db.close()
+
+    def open_database_connections(self, meta_connection: dict = None, data_connection: dict = None):
+        self.meta_db = self._connect_scenario_database(meta_connection)
+        self.data_db = self._connect_logger_database(data_connection)
+        if self.meta_db is None or self.data_db is None:
+            return False
+        else:
+            return True
+
+    def check_version(self):
+        cur = self.data_db.cursor()
         logger.info('PostgresSQL database version:')
         cur.execute('SELECT version()')
         # display the PostgresSQL database server version
@@ -83,34 +142,34 @@ class DataLogger:
         # close the communication with the PostgresSQL
         cur.close()
 
-    def table_exist(self, conn, scheme_name: str, table_name: str):
+    def create_schema(self, schema_name: str):
+        query = "CREATE SCHEMA IF NOT EXISTS " + schema_name + ";"
+        cur = self.data_db.cursor()
+        cur.execute(query)
+        cur.close()
+
+    def drop_schema(self, schema_name: str):
+        query = "DROP SCHEMA IF EXISTS " + schema_name + ";"
+        cur = self.data_db.cursor()
+        cur.execute(query)
+        cur.close()
+
+    def remove_scenario(self, schema_name: str, scenario_name: str):
+        query = ""
+        for key in self.hdt_type:
+            query += f"DELETE FROM {schema_name}.{key} WHERE scenario='{scenario_name}'; "
+        cur = self.data_db.cursor()
+        cur.execute(query)
+        cur.close()
+
+    def table_exist(self, scheme_name: str, table_name: str):
         query = ("SELECT EXISTS ( SELECT FROM pg_tables WHERE "
                  "schemaname = '" + scheme_name + "' AND tablename = '" + table_name + "');")
-        cur = conn.cursor()
+        cur = self.data_db.cursor()
         cur.execute(query)
         result = cur.fetchone()
         cur.close()
         return result[0]
-
-    def create_schema(self, conn, schema_name: str):
-        query = "CREATE SCHEMA IF NOT EXISTS " + schema_name + ";"
-        cur = conn.cursor()
-        cur.execute(query)
-        cur.close()
-
-    def drop_schema(self, conn, schema_name: str):
-        query = "DROP SCHEMA IF EXISTS " + schema_name + ";"
-        cur = conn.cursor()
-        cur.execute(query)
-        cur.close()
-
-    def remove_scenario(self, conn, schema_name: str, scenario_name: str):
-        query = ""
-        for key in self.hdt_type:
-            query += f"DELETE FROM {schema_name}.{key} WHERE scenario='{scenario_name}'; "
-        cur = conn.cursor()
-        cur.execute(query)
-        cur.close()
 
     def create_table(self, schema_name: str, table_name: str, data_type: str):
         return ("CREATE TABLE IF NOT EXISTS "
@@ -121,54 +180,19 @@ class DataLogger:
                 "data_name VARCHAR (255) NOT NULL, "
                 f"data_value {data_type} NOT NULL);")
 
-    def make_logger_database(self, conn, schema_name):
+    def make_logger_database(self, schema_name):
         # scheme is a set of like scenario (like DSOT bau, battery, flex load)
         query = ""
         for key in self.hdt_type:
             query += self.create_table(schema_name, key, self.hdt_type[key])
-        cur = conn.cursor()
+        cur = self.data_db.cursor()
         cur.execute(query)
         cur.close()
-
-    def connect_logger_database(self):
-        """This function defines the connection to the logger database
-        and opens a connection to the postgres database
-
-        Returns:
-            db_conn (psycog2 connection object) - connection object that provides
-            access to the postgres database
-        """
-        connection = {
-            "host": environ.get("POSTGRES_HOST", "localhost"),
-            "port": environ.get("POSTGRES_PORT", 5432),
-            "dbname": environ.get("COSIM_DB", "copper"),
-            "user": environ.get("COSIM_USER", "worker"),
-            "password": environ.get("COSIM_PASSWORD", "worker")
-        }
-        logger.info(connection)
-        self.logger_db = None
-        try:
-            self.logger_db = pg.connect(**connection)
-            return self.logger_db
-        except:
-            return None
-
-    def connect_scenario_database(self):
-        self.cosim_db = mDB.MetaDB()
-        return self.cosim_db
-
-    def close_database_connections(self):
-        self.cosim_db = None
-        self.logger_db.close()
-
-    def open_database_connections(self):
-        self.connect_scenario_database()
-        self.connect_logger_database()
 
     def get_scenario_document(self, scenario_name):
         if self.scenario_name == scenario_name:
             return
-        self.scenario = self.cosim_db.get_dict(mDB.cu_scenarios, None, scenario_name)
+        self.scenario = self.meta_db.get_dict(mDB.cu_scenarios, None, scenario_name)
         self.federation_name = self.scenario["federation"]
         self.start = self.scenario["start_time"]
         self.stop = self.scenario["stop_time"]
@@ -232,7 +256,7 @@ class DataLogger:
         """
         if scenario_name is None or scenario_name == "":
             return ""
-        return "scenario=" + "'" + scenario_name + "'"
+        return f"scenario='{scenario_name}'"
 
     def get_federate_select_string(self, federate_name):
         """This function creates the federate filter portion of the query string
@@ -247,7 +271,7 @@ class DataLogger:
         """
         if federate_name is None or federate_name == "":
             return ""
-        return "federate=" + "'" + federate_name + "'"
+        return f"federate='{federate_name}'"
 
     def get_data_name_select_string(self, data_name):
         """This function creates the data_name filter portion of the query string
@@ -262,7 +286,7 @@ class DataLogger:
         """
         if data_name is None or data_name == "":
             return ""
-        return "data_name=" + "'" + data_name + "'"
+        return f"data_name='{data_name}'"
 
     def get_query_string(self, start_time, duration, scenario_name, federate_name, data_name, data_type):
         """This function creates the query string to pull time series data from the
@@ -355,7 +379,7 @@ class DataLogger:
             returned from the query of the database
         """
         qry_string = self.get_query_string(start_time, duration, scenario_name, federate_name, data_name, data_type)
-        cur = self.logger_db.cursor()
+        cur = self.data_db.cursor()
         cur.execute(qry_string)
         column_names = [desc[0] for desc in cur.description]
         data = cur.fetchall()
@@ -374,7 +398,7 @@ class DataLogger:
             returned from the query of the database
         """
         scheme_name = self.get_scenario_document(scenario_name)
-        cur = self.logger_db.cursor()
+        cur = self.data_db.cursor()
         qry_string = ("SELECT * FROM " + scheme_name + "." + data_type +
                       " WHERE Scenario='" + scenario_name + "'")
         cur.execute(qry_string)
@@ -402,8 +426,8 @@ class DataLogger:
             return None
         if data_type is None:
             return None
-        cur = self.logger_db.cursor()
-        # Todo: check against cosim_db to see if schema name exist?
+        cur = self.data_db.cursor()
+        # Todo: check against meta_db to see if schema name exist?
         qry_string = ("SELECT * FROM " + scheme_name + "." + data_type +
                       " WHERE Federate='" + federate_name + "'")
         cur.execute(qry_string)
@@ -432,9 +456,9 @@ class DataLogger:
             return None
         if data_type is None:
             return None
-        # Todo: check against cosim_db to see if schema name exist?
+        # Todo: check against meta_db to see if schema name exist?
         qry_string = "SELECT DISTINCT scenario FROM " + scheme_name + "." + data_type
-        cur = self.logger_db.cursor()
+        cur = self.data_db.cursor()
         cur.execute(qry_string)
         column_names = ["scenario"]
         data = cur.fetchall()
@@ -457,9 +481,9 @@ class DataLogger:
             return None
         if data_type is None:
             return None
-        # Todo: check against cosim_db to see if schema name exist?
+        # Todo: check against meta_db to see if schema name exist?
         qry_string = "SELECT DISTINCT federate FROM " + scheme_name + "." + data_type
-        cur = self.logger_db.cursor()
+        cur = self.data_db.cursor()
         cur.execute(qry_string)
         column_names = ["federate"]
         data = cur.fetchall()
@@ -482,9 +506,9 @@ class DataLogger:
             return None
         if data_type is None:
             return None
-        # Todo: check against cosim_db to see if schema name exist?
+        # Todo: check against meta_db to see if schema name exist?
         qry_string = "SELECT DISTINCT data_name FROM " + scheme_name + "." + data_type
-        cur = self.logger_db.cursor()
+        cur = self.data_db.cursor()
         cur.execute(qry_string)
         column_names = ["data_name"]
         data = cur.fetchall()
@@ -521,7 +545,7 @@ class DataLogger:
         if scenario_name is not None and federate_name is not None:
             qry_string = ("SELECT MIN(time), MAX(time) FROM " + scheme_name + "." + data_type +
                           " WHERE federate='" + federate_name + "' AND scenario='" + scenario_name + "'")
-        cur = self.logger_db.cursor()
+        cur = self.data_db.cursor()
         cur.execute(qry_string)
         column_names = ["min", "max"]
         data = cur.fetchall()
@@ -560,7 +584,7 @@ if __name__ == "__main__":
     d_time = dt.datetime.now()
     logger_data = DataLogger()
     logger_data.open_database_connections()
-    t_mongo_data = logger_data.cosim_db
+    t_mongo_data = logger_data.meta_db
     print(t_mongo_data)
     df = logger_data.query_scenario_federate_times(500, 1000, "test_MyTest", "DataLogger",
                                                    "Battery/current3", "hdt_boolean")

@@ -21,19 +21,19 @@ class FederateLogger(Federate):
 
     def __init__(self, fed_name="", schema_name="default", clear=True, **kwargs):
         super().__init__(fed_name, **kwargs)
-        self.fed_pubs = None
-        dl = DataLogger()
-        self.conn = dl.connect_logger_database()
-        dl.check_version(self.conn)
         self.schema_name = schema_name
+        self.fed_pubs = None
+        self.dl = DataLogger()
+        self.dl.open_database_connections()
+        self.dl.check_version()
         # uncomment debug, clears schema
         # which means all scenarios are gone in that scheme
-        # dl.drop_schema(self.conn, self.schema_name)
-        dl.create_schema(self.conn, self.schema_name)
-        dl.make_logger_database(self.conn, self.schema_name)
+        # dl.drop_schema(self.schema_name)
+        self.dl.create_schema(self.schema_name)
+        self.dl.make_logger_database(self.schema_name)
         if clear:
-            dl.remove_scenario(self.conn, self.schema_name, self.scenario_name)
-        self.conn.commit()
+            self.dl.remove_scenario(self.schema_name, self.scenario_name)
+        self.dl.data_db.commit()
 
     def connect_to_helics_config(self):
         self.federate_type = "combo"
@@ -79,12 +79,12 @@ class FederateLogger(Federate):
             # add to logger database
         try:
             if query != "":
-                cur = self.conn.cursor()
+                cur = self.dl.data_db.cursor()
                 cur.execute(query)
                 cur.close()
+                self.dl.data_db.commit()
         except:
             logger.error("Bad data type in update_internal_model")
-        self.conn.commit()
 
 
 def main(federate_name, schema_name, scenario_name):
@@ -92,8 +92,7 @@ def main(federate_name, schema_name, scenario_name):
     fed_logger.create_federate(scenario_name)
     fed_logger.run_cosim_loop()
     fed_logger.destroy_federate()
-    if fed_logger.conn:
-        fed_logger.conn.close()
+    fed_logger.dl.close_database_connections(True)
 
 
 if __name__ == "__main__":

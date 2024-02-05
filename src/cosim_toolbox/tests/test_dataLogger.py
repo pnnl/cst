@@ -31,8 +31,8 @@ class TestLoggerApi(unittest.TestCase):
     def test_open_databases(self):
         test_db = cla.DataLogger()
         test_db.open_database_connections()
-        self.assertIsNotNone(test_db.logger_db)
-        self.assertIsNotNone(test_db.cosim_db)
+        self.assertIsNotNone(test_db.data_db)
+        self.assertIsNotNone(test_db.meta_db)
         test_db.close_database_connections()
 
     def test_get_select_string(self):
@@ -97,25 +97,32 @@ class TestLoggerApi(unittest.TestCase):
     def test_query_scenario_federate_times(self):
         test_db = cla.DataLogger()
         test_db.open_database_connections()
-        df = test_db.query_scenario_federate_times(500, 1000, "test_MyTest", "FederateLogger",
-                                                 "Battery/current3", "hdt_boolean")
+        df = test_db.query_scenario_federate_times(500, 1000, "test_MyTest",
+                                                   "FederateLogger", "Battery/current3",
+                                                   "hdt_boolean")
         self.assertTrue(len(df) > 0)
-        df2 = test_db.query_scenario_federate_times(None, 1000, "test_MyTest", "FederateLogger",
-                                                  "Battery/current3", "hdt_boolean")
+        df2 = test_db.query_scenario_federate_times(None, 1000, "test_MyTest",
+                                                    "FederateLogger", "Battery/current3",
+                                                    "hdt_boolean")
         self.assertTrue(len(df2) > 0)
-        df3 = test_db.query_scenario_federate_times(500, None, "test_MyTest", "FederateLogger",
-                                                  "Battery/current3", "hdt_boolean")
+        df3 = test_db.query_scenario_federate_times(500, None, "test_MyTest",
+                                                    "FederateLogger", "Battery/current3",
+                                                    "hdt_boolean")
         self.assertTrue(len(df3) > 0)
-        df4 = test_db.query_scenario_federate_times(500, 1000, None, "FederateLogger",
-                                                  "Battery/current3", "hdt_boolean")
+        df4 = test_db.query_scenario_federate_times(500, 1000, None,
+                                                    "FederateLogger","Battery/current3",
+                                                    "hdt_boolean")
         self.assertTrue(len(df4) > 0)
-        df5 = test_db.query_scenario_federate_times(500, 1000, "test_MyTest", None, "Battery/current3",
-                                                  "hdt_boolean")
+        df5 = test_db.query_scenario_federate_times(500, 1000, "test_MyTest",
+                                                    None, "Battery/current3",
+                                                    "hdt_boolean")
         self.assertTrue(len(df5) > 0)
-        df6 = test_db.query_scenario_federate_times(500, 1000, "test_MyTest", "FederateLogger", None,
-                                                  "hdt_boolean")
+        df6 = test_db.query_scenario_federate_times(500, 1000, "test_MyTest",
+                                                    "FederateLogger", None,
+                                                    "hdt_boolean")
         self.assertTrue(len(df6) > 0)
-        df7 = test_db.query_scenario_federate_times(None, None, None, None, None, "hdt_boolean")
+        df7 = test_db.query_scenario_federate_times(None, None, None,
+                                                    None, None, "hdt_boolean")
         self.assertTrue(len(df7) > 0)
         test_db.close_database_connections()
 
@@ -129,7 +136,8 @@ class TestLoggerApi(unittest.TestCase):
     def test_query_scheme_federate_all_times(self):
         test_db = cla.DataLogger()
         test_db.open_database_connections()
-        df = test_db.query_scheme_federate_all_times("test_myschema2", "FederateLogger", "hdt_boolean")
+        df = test_db.query_scheme_federate_all_times("test_myschema2", "FederateLogger",
+                                                     "hdt_boolean")
         test_db.close_database_connections()
         self.assertTrue(len(df) > 0)
 
@@ -157,7 +165,8 @@ class TestLoggerApi(unittest.TestCase):
     def test_get_time_range(self):
         test_db = cla.DataLogger()
         test_db.open_database_connections()
-        df = test_db.get_time_range("test_myschema2", "hdt_boolean", "test_MyTest", "FederateLogger")
+        df = test_db.get_time_range("test_myschema2", "hdt_boolean", "test_MyTest",
+                                    "FederateLogger")
         test_db.close_database_connections()
         self.assertTrue(len(df) > 0)
 
