@@ -27,7 +27,8 @@ USER $COSIM_USER
 WORKDIR $COSIM_HOME
 
 # Add directories and files
-RUN echo "Directory structure for running" && \
+RUN echo "===== Building CoSim Python =====" && \
+  echo "Pip install for virtual environment" && \
   pip install --upgrade pip > "_pypi.log" && \
   pip install virtualenv >> "_pypi.log" && \
   ".local/bin/virtualenv" venv --prompt TESP && \

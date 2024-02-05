@@ -11,7 +11,7 @@ import subprocess
 import gridfs
 from pymongo import MongoClient
 
-import cosim_toolbox.helics_config as hm
+import cosim_toolbox.helicsConfig as hm
 
 logger = logging.getLogger(__name__)
 pp = pprint.PrettyPrinter(indent=4, )
@@ -359,7 +359,7 @@ class Docker:
 
         # Add data logger federate
         cnt += 1
-        env = ["", "source /home/worker/venv/bin/activate && exec python3 -c \\\"import cosim_toolbox.data_logger as datalog; datalog.main('DataLogger', '" +
+        env = ["", "source /home/worker/venv/bin/activate && exec python3 -c \\\"import cosim_toolbox.federateLogger as datalog; datalog.main('FederateLogger', '" +
                schema_name + "', '" + scenario_name + "')\\\""]
         yaml += Docker._service(cu_logger, "cosim-python:latest", env, cnt, depends=None)
 

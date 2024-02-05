@@ -11,7 +11,7 @@ from os import environ
 import sys
 import psycopg2
 
-from cosim_toolbox.helics_config import HelicsMsg
+from cosim_toolbox.helicsConfig import HelicsMsg
 from cosim_toolbox.federate import Federate
 
 
@@ -73,7 +73,7 @@ def drop_schema(conn, schema_name: str):
     cur.close()
 
 
-class DataLogger(Federate):
+class FederateLogger(Federate):
     hdt_type = {'HDT_STRING': 'text',
                 'HDT_DOUBLE': 'double precision',
                 'HDT_INT': 'bigint',
@@ -201,12 +201,12 @@ class DataLogger(Federate):
 
 
 def main(federate_name, schema_name, scenario_name):
-    datalogger = DataLogger(federate_name, schema_name)
-    datalogger.create_federate(scenario_name)
-    datalogger.run_cosim_loop()
-    datalogger.destroy_federate()
-    if datalogger.conn:
-        datalogger.conn.close()
+    fed_logger = FederateLogger(federate_name, schema_name)
+    fed_logger.create_federate(scenario_name)
+    fed_logger.run_cosim_loop()
+    fed_logger.destroy_federate()
+    if fed_logger.conn:
+        fed_logger.conn.close()
 
 
 if __name__ == "__main__":

@@ -9,7 +9,7 @@ mitch.pelton@pnnl.gov
 """
 
 import cosim_toolbox.metadataDB as mDB
-from cosim_toolbox.helics_config import HelicsMsg
+from cosim_toolbox.helicsConfig import HelicsMsg
 
 
 class Runner:

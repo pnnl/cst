@@ -26,7 +26,7 @@ def open_logger():
         return
 
 
-_federate_name = "DataLogger"   # TODO: fix the proper federated name
+_federate_name = "FederateLogger"   # TODO: fix the proper federated name
 _scenario_name = "test_MyTest"
 _schema_name = "test_MySchema2"
 _federation_name = "test_MyFederation"

@@ -27,7 +27,7 @@
     "commands": [
       {
         "federate": "logger",
-        "command": "/bin/bash -c \"source /home/worker/venv/bin/activate && exec python3 -c \"import cosim_toolbox.data_logger as datalog; datalog.main('DataLogger', 'test_MySchema2', 'test_MyTest')\"",
+        "command": "/bin/bash -c \"source /home/worker/venv/bin/activate && exec python3 -c \"import cosim_toolbox.federateLogger as datalog; datalog.main('FederateLogger', 'test_MySchema2', 'test_MyTest')\"",
         "federate_type": "value",
         "time_step": 120
       },

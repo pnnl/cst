@@ -38,8 +38,7 @@ ENV PSST_WARNING=ignore
 RUN echo "===== Building CoSim Build =====" && \
   echo "Configure name and email for git" && \
   git config --global user.name "${COSIM_USER}" && \
-  git config --global user.email "${COSIM_USER}@${COSIM_USER}.com" && \
-  echo "User .name=${COSIM_USER} and .email=${COSIM_USER}@${COSIM_EMAIL} have been set for git repositories!" && \
+  git config --global user.email "${COSIM_USER}@${COSIM_EMAIL}" && \
   git config --global credential.helper store && \
   echo "Directory structure for build" && \
   mkdir -p tenv && \

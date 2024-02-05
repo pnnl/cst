@@ -2,7 +2,7 @@ import json
 import os
 import unittest
 
-from cosim_toolbox.helics_config import HelicsMsg
+from cosim_toolbox.helicsConfig import HelicsMsg
 
 
 class TestHelicsMsg(unittest.TestCase):

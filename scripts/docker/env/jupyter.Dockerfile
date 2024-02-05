@@ -3,6 +3,8 @@ FROM jupyter/minimal-notebook:7285848c0a11
 
 USER root
 
+ENV GRANT_SUDO=yes
+
 ENV SIM_UID=$SIM_UID
 ENV SIM_USER=$SIM_USER
 ENV SIM_HOST=$SIM_HOST
@@ -16,8 +18,6 @@ ENV COSIM_HOME=$COSIM_HOME
 ENV POSTGRES_HOST="$SIM_HOST"
 ENV POSTGRES_PORT=$POSTGRES_PORT
 ENV MONGO_HOST="$MONGO_HOST"
-
-ENV GRANT_SUDO=yes
 
 COPY . cosim_toolbox/
 
@@ -33,12 +33,6 @@ RUN echo "===== Building CoSim Jupyter =====" && \
   pip install --no-cache-dir -e . && \
   chown -R jovyan ../cosim_toolbox
 
-# RUN chown -hR $COSIM_USER:$COSIM_USER $COSIM_HOME
-# Copy Binaries
-#COPY --from=cosim-build:latest $INSTDIR/ $INSTDIR/
-#RUN chown -hR $COSIM_USER:$COSIM_USER $COSIM_HOME
-
-# Set as user
 USER jovyan
 WORKDIR /home/jovyan
 
@@ -50,7 +44,3 @@ RUN echo "==" && \
   ssh-keygen -f copper-key-ecdsa -t ecdsa -b 521
 # Line below needs to set at run for right now in the terminal for user:
 # ssh-copy-id -i copper-key-ecdsa ${SIM_USER}@${SIM_HOST}
-
-# Set as user
-#USER $COSIM_USER
-#WORKDIR $COSIM_HOME
