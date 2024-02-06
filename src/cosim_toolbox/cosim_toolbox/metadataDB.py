@@ -62,7 +62,7 @@ class MetaDB:
             return fh
 
     @staticmethod
-    def _connect_to_database(self, uri=None, db=None):
+    def _connect_to_database(uri=None, db=None):
         """
         Sets up connection to server port for mongodb
         """
