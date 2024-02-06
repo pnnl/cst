@@ -51,7 +51,6 @@ logger = logging.getLogger(__name__)
 
 
 class DataLogger:
-
     hdt_type = {'HDT_STRING': 'text',
                 'HDT_DOUBLE': 'double precision',
                 'HDT_INT': 'bigint',
@@ -580,47 +579,46 @@ class DataLogger:
 
 
 if __name__ == "__main__":
-
     d_time = dt.datetime.now()
     logger_data = DataLogger()
     logger_data.open_database_connections()
     t_mongo_data = logger_data.meta_db
     print(t_mongo_data)
-    df = logger_data.query_scenario_federate_times(500, 1000, "test_MyTest", "DataLogger",
+    df = logger_data.query_scenario_federate_times(500, 1000, "test_Scenario", "DataLogger",
                                                    "Battery/current3", "hdt_boolean")
     print(df)
     logger_data.close_database_connections()
 
     # t_data = db.scenario()
     # print(db)
-    # df = get_scenario_list("test_MyTest", "hdt_boolean")
+    # df = get_scenario_list("test_Scenario", "hdt_boolean")
     # print(df)
-    # df = get_federate_list("test_MyTest", "hdt_boolean")
+    # df = get_federate_list("test_Scenario", "hdt_boolean")
     # print(df)
-    # df = get_data_name_list("test_MyTest", "hdt_boolean")
+    # df = get_data_name_list("test_Scenario", "hdt_boolean")
     # print(df)
     # df = get_table_data(conn, "hdt_string")
-    # df = query_time_series(780, 250, "test_MyTest", "FederateLogger", "EVehicle/voltage4", "hdt_string")
-    # df = query_time_series(None, 1000, "test_MyTest", "FederateLogger", "EVehicle/voltage4", "hdt_boolean")
+    # df = query_time_series(780, 250, "test_Scenario", "FederateLogger", "EVehicle/voltage4", "hdt_string")
+    # df = query_time_series(None, 1000, "test_Scenario", "FederateLogger", "EVehicle/voltage4", "hdt_boolean")
     # print(df)
-    # df = query_time_series(None, 1000, "test_MyTest", "FederateLogger", "EVehicle/voltage4", "hdt_int")
+    # df = query_time_series(None, 1000, "test_Scenario", "FederateLogger", "EVehicle/voltage4", "hdt_int")
     # print(df)
-    # df = query_time_series(None, 1000, "test_MyTest", "FederateLogger", "EVehicle/voltage4", "hdt_double")
+    # df = query_time_series(None, 1000, "test_Scenario", "FederateLogger", "EVehicle/voltage4", "hdt_double")
     # print(df)
-    # df = query_time_series(None, 1000, "test_MyTest", "FederateLogger", "EVehicle/voltage4", "hdt_complex")
+    # df = query_time_series(None, 1000, "test_Scenario", "FederateLogger", "EVehicle/voltage4", "hdt_complex")
     # print(df)
-    # df = query_time_series(None, 1000, "test_MyTest", "FederateLogger", "EVehicle/voltage4", "hdt_complex_vector")
+    # df = query_time_series(None, 1000, "test_Scenario", "FederateLogger", "EVehicle/voltage4", "hdt_complex_vector")
     # print(df)
-    # df = query_time_series(None, 1000, "test_MyTest", "FederateLogger", "EVehicle/voltage4", "hdt_string")
+    # df = query_time_series(None, 1000, "test_Scenario", "FederateLogger", "EVehicle/voltage4", "hdt_string")
     # print(df)
-    # df = query_time_series(None, 1000, "test_MyTest", "FederateLogger", "EVehicle/voltage4", "hdt_json")
+    # df = query_time_series(None, 1000, "test_Scenario", "FederateLogger", "EVehicle/voltage4", "hdt_json")
     # print(df)
-    # df = query_time_series(None, 1000, "test_MyTest", "FederateLogger", "EVehicle/voltage4", "hdt_vector")
+    # df = query_time_series(None, 1000, "test_Scenario", "FederateLogger", "EVehicle/voltage4", "hdt_vector")
     # print(df)
-    # df = query_time_series(None, 1000, "test_MyTest", "FederateLogger", "EVehicle/voltage4", "hdt_time")
+    # df = query_time_series(None, 1000, "test_Scenario", "FederateLogger", "EVehicle/voltage4", "hdt_time")
     # print(df)
-    # df = query_time_series(None, 1000, "test_MyTest", "FederateLogger", "EVehicle/voltage4", "hdt_named_point")
+    # df = query_time_series(None, 1000, "test_Scenario", "FederateLogger", "EVehicle/voltage4", "hdt_named_point")
     # print(df)
-    # df = query_time_series(25000, None, "test_MyTest", "FederateLogger", "EVehicle/voltage4", "hdt_boolean")
-    # df = query_time_series(None, 1020, "test_MyTest", "FederateLogger", "EVehicle/voltage4", "hdt_string")
+    # df = query_time_series(25000, None, "test_Scenario", "FederateLogger", "EVehicle/voltage4", "hdt_boolean")
+    # df = query_time_series(None, 1020, "test_Scenario", "FederateLogger", "EVehicle/voltage4", "hdt_string")
     # print(df)

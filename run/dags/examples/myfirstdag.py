@@ -16,22 +16,22 @@ import runner as myr
 
 
 def prepare_case():
-    _scenario_name = "test_MyTest"
-    _schema_name = "test_MySchema2"
-    _federation_name = "test_MyFederation"
+    _scenario_name = "test_Scenario"
+    _schema_name = "test_Schema"
+    _federation_name = "test_Federation"
     r = myr.Runner(_scenario_name, _schema_name, _federation_name, True)
     r.define_scenario()
 
 
 def prepare_yaml():
-    _scenario_name = "test_MyTest"
+    _scenario_name = "test_Scenario"
     os.chdir("/python_extended/test_federation")
     mDB.Docker.define_yaml(_scenario_name)
 
 
 def run_yaml():
     cosim = os.environ.get("SIM_DIR", "/home/worker/copper")
-    _scenario_name = "test_MyTest"
+    _scenario_name = "test_Scenario"
     ssh = SSHHook(ssh_conn_id='myssh')
     ssh_client = None
     try:

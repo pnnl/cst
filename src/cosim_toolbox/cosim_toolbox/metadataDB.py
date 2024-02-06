@@ -45,13 +45,8 @@ class MetaDB:
 
     def __init__(self, uri=None, db_name=None):
         self.collections = None
-
-        self.client = self._connect_to_database(uri, db_name)
-
-        if db_name is not None:
-            self.db = self.client[db_name]
-        else:
-            self.db = self.client["meta_db"]
+        self.db_name, self.client = self._connect_to_database(uri, db_name)
+        self.db = self.client[self.db_name]
         self.fs = gridfs.GridFS(self.db)
 
     @staticmethod
@@ -67,7 +62,7 @@ class MetaDB:
             return fh
 
     @staticmethod
-    def _connect_to_database(uri=None, db=None):
+    def _connect_to_database(self, uri=None, db=None):
         """
         Sets up connection to server port for mongodb
         """
@@ -89,7 +84,7 @@ class MetaDB:
         except Exception as e:
             logger.info(e)
 
-        return client
+        return db, client
 
     def _check_unique_doc_name(self, collection_name, new_name):
         """
@@ -100,9 +95,10 @@ class MetaDB:
         method decide what to do with it.
         """
         ret_val = True
-        for doc in (self.db[collection_name].find({self._cu_dict_name: 1})):
-            if doc[self._cu_dict_name] == new_name:
-                ret_val = False
+        for doc in (self.db[collection_name].find({}, {"_id": 0, self._cu_dict_name: 1})):
+            if doc.__len__():
+                if doc[self._cu_dict_name] == new_name:
+                    ret_val = False
         return ret_val
 
     def add_file(self, file, conflict='fail', name=None):
@@ -200,11 +196,11 @@ class MetaDB:
         self.collections = self.db.list_collection_names()
         return self.collections
 
-    def get_collection_document_names(self, collection):
+    def get_collection_document_names(self, collection_name):
         """
         """
         doc_names = []
-        for doc in (self.db[collection].find({"_id": 0, self._cu_dict_name: 1})):
+        for doc in (self.db[collection_name].find({}, {"_id": 0, self._cu_dict_name: 1})):
             if doc.__len__():
                 doc_names.append(doc[self._cu_dict_name])
         return doc_names

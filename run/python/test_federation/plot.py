@@ -26,10 +26,9 @@ def open_logger():
         return
 
 
-_federate_name = "FederateLogger"   # TODO: fix the proper federated name
-_scenario_name = "test_MyTest"
-_schema_name = "test_MySchema2"
-_federation_name = "test_MyFederation"
+_federate_name = "Battery"
+_scenario_name = "test_Scenario"
+_schema_name = "test_Schema"
 
 names = ["Battery", "EVehicle"]
 items = ["current", "voltage"]

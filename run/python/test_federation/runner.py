@@ -93,6 +93,7 @@ class Runner:
         self.db.remove_document(mDB.cu_federations, None, self.federation_name)
         self.db.add_dict(mDB.cu_federations, self.federation_name, diction)
         # print(mDB.cu_federations, self.db.get_collection_document_names(mDB.cu_federations))
+        # print(self.federation_name, self.db.get_dict(mDB.cu_federations, None, self.federation_name))
 
         scenario = self.db.scenario(self.schema_name,
                                     self.federation_name,
@@ -102,15 +103,18 @@ class Runner:
         self.db.remove_document(mDB.cu_scenarios, None, self.scenario_name)
         self.db.add_dict(mDB.cu_scenarios, self.scenario_name, scenario)
         # print(mDB.cu_scenarios, self.db.get_collection_document_names(mDB.cu_scenarios))
+        # print(self.scenario_name, self.db.get_dict(mDB.cu_scenarios, None, self.scenario_name))
 
 
 if __name__ == "__main__":
     remote = True
-    _scenario_name = "test_MyTest"
-    _schema_name = "test_MySchema2"
-    _federation_name = "test_MyFederation"
+    _scenario_name = "test_Scenario"
+    _schema_name = "test_Schema"
+    _federation_name = "test_Federation"
     r = Runner(_scenario_name, _schema_name, _federation_name, False)
     r.define_scenario()
+    # print(r.db.get_collection_document_names(mDB.cu_scenarios))
+    # print(r.db.get_collection_document_names(mDB.cu_federations))
     mDB.Docker.define_yaml(r.scenario_name)
     # if remote:
     #     mDB.Docker.run_remote_yaml(_scenario_name)
