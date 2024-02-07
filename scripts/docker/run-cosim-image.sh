@@ -1,15 +1,14 @@
 #!/bin/bash
 
 DOCKER_NAME="cosim-docker"
-#IMAGE_NAME="ubuntu:20.04"
+
+#IMAGE_NAME="ubuntu:22.04"
+#IMAGE_NAME="cosim-ubuntu:latest"
 #IMAGE_NAME="cosim-airflow:latest"
 #IMAGE_NAME="cosim-jupyter:latest"
 #IMAGE_NAME="cosim-library:latest"
 #IMAGE_NAME="cosim-build:latest"
 #IMAGE_NAME="cosim-helics:latest"
-#IMAGE_NAME="cosim-gridlabd:latest"
-#IMAGE_NAME="cosim-eplus:latest"
-#IMAGE_NAME="cosim-ns3:latest"
 #IMAGE_NAME="cosim-python:latest"
 IMAGE_NAME="cosim-tespapi:latest"
 #IMAGE_NAME="cosim-julia:latest"
@@ -21,9 +20,6 @@ names=(
   "library"
   "build"
   "helics"
-  "gridlabd"
-  "eplus"
-  "ns3"
   "python"
   "tespapi"
   "julia"
@@ -33,9 +29,6 @@ names=(
 builds=(
   1
   1
-  0
-  0
-  0
   0
   0
   0

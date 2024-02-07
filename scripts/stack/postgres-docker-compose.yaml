@@ -16,7 +16,7 @@ services:
     links:
       - database
     networks:
-      - cu_net
+      - sim_net
 
   database:
     image: "postgres:13"
@@ -48,7 +48,7 @@ services:
       - cu_postgres:/var/lib/postgresql/data
       - $STACK_DIR/init-db.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
-      - cu_net
+      - sim_net
 
   mongodb:
     image: mongodb/mongodb-community-server:latest
@@ -65,7 +65,7 @@ services:
       - cu_mongo:/data/db
       - $STACK_DIR/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
     networks:
-      - cu_net
+      - sim_net
 
   pgadmin:
     image: dpage/pgadmin4:latest
@@ -76,7 +76,7 @@ services:
       PGADMIN_DEFAULT_EMAIL: "${PGADMIN_DEFAULT_EMAIL}"
       PGADMIN_DEFAULT_PASSWORD: "${PGADMIN_DEFAULT_PASSWORD}"
     networks:
-      - cu_net
+      - sim_net
 
 volumes:
   cu_mongo: null
@@ -84,4 +84,4 @@ volumes:
 
 # Create a custom network for bridging the containers
 networks:
-  cu_net: null
+  sim_net: null
