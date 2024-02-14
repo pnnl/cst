@@ -29,19 +29,6 @@ class TestLoggerApi(unittest.TestCase):
         self.test_DL = dL.DataLogger()
         # self.test_DL.open_database_connections()
 
-    def test_create_table(self):
-        scheme_name = "test_Schema"
-        table_name = "htd_double"
-        data_type = "htd_double"
-        expected_query = (f"CREATE TABLE IF NOT EXISTS {scheme_name}.{table_name} ("
-                          "time double precision NOT NULL, "
-                          "scenario VARCHAR (255) NOT NULL, "
-                          "federate VARCHAR (255) NOT NULL, "
-                          "data_name VARCHAR (255) NOT NULL, "
-                          f"data_value {data_type} NOT NULL);")
-        # actual_query = self.test_DL.create_table(scheme_name, table_name, data_type)
-        # self.assertEqual(actual_query, expected_query)
-
     def test_make_logger_database(self):
         scheme_name = "test_Schema"
         # Ensure that make_logger_database constructs the expected queries

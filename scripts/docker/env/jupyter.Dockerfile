@@ -8,6 +8,8 @@ ENV GRANT_SUDO=yes
 ENV SIM_UID=$SIM_UID
 ENV SIM_USER=$SIM_USER
 ENV SIM_HOST=$SIM_HOST
+ENV SIM_WSL_HOST=$SIM_WSL_HOST
+ENV SIM_WSL_PORT=$SIM_WSL_PORT
 ENV SIM_DIR=$SIM_DIR
 
 ENV COSIM_DB="$COSIM_DB"
@@ -37,7 +39,7 @@ USER jovyan
 WORKDIR /home/jovyan
 
 RUN echo "==" && \
-  # add the new finger print for each host connection
+# add the new finger print for each host connection
   mkdir -p .ssh && \
   touch .ssh/known_hosts && \
 #  ssh-keyscan ${SIM_HOST} >> .ssh/known_hosts && \

@@ -19,20 +19,20 @@ logger = logging.getLogger(__name__)
 
 class FederateLogger(Federate):
 
-    def __init__(self, fed_name="", schema_name="default", clear=True, **kwargs):
+    def __init__(self, fed_name="", scheme_name="default", clear=True, **kwargs):
         super().__init__(fed_name, **kwargs)
-        self.schema_name = schema_name
+        self.scheme_name = scheme_name
         self.fed_pubs = None
         self.dl = DataLogger()
         self.dl.open_database_connections()
         self.dl.check_version()
         # uncomment debug, clears schema
         # which means all scenarios are gone in that scheme
-        # dl.drop_schema(self.schema_name)
-        self.dl.create_schema(self.schema_name)
-        self.dl.make_logger_database(self.schema_name)
+        # dl.drop_schema(self.scheme_name)
+        self.dl.create_schema(self.scheme_name)
+        self.dl.make_logger_database(self.scheme_name)
         if clear:
-            self.dl.remove_scenario(self.schema_name, self.scenario_name)
+            self.dl.remove_scenario(self.scheme_name, self.scenario_name)
         self.dl.data_db.commit()
 
     def connect_to_helics_config(self):
@@ -68,7 +68,7 @@ class FederateLogger(Federate):
                     for fed in self.fed_pubs:
                         if key in self.fed_pubs[fed]:
                             break
-                    qry = (f"INSERT INTO {self.schema_name}.{table} (time, scenario, federate, data_name, data_value)"
+                    qry = (f"INSERT INTO {self.scheme_name}.{table} (time, scenario, federate, data_name, data_value)"
                            f" VALUES({self.granted_time}, '{self.scenario_name}', '{fed}', '{key}', ")
                     if type(value) is str or type(value) is complex or type(value) is list:
                         qry += f" '{value}'); "
@@ -87,8 +87,8 @@ class FederateLogger(Federate):
             logger.error("Bad data type in update_internal_model")
 
 
-def main(federate_name, schema_name, scenario_name):
-    fed_logger = FederateLogger(federate_name, schema_name)
+def main(federate_name, scheme_name, scenario_name):
+    fed_logger = FederateLogger(federate_name, scheme_name)
     fed_logger.create_federate(scenario_name)
     fed_logger.run_cosim_loop()
     fed_logger.destroy_federate()

@@ -63,12 +63,10 @@ class DataLogger:
                 'HDT_JSON': 'text'}
 
     def __init__(self):
-        self.scenario_name = None
-        self.scheme_name = None
-        self.stop = None
-        self.start = None
+        self.federation = None
         self.federation_name = None
         self.scenario = None
+        self.scenario_name = None
         self.meta_db = None
         self.data_db = None
 
@@ -141,22 +139,22 @@ class DataLogger:
         # close the communication with the PostgresSQL
         cur.close()
 
-    def create_schema(self, schema_name: str):
-        query = "CREATE SCHEMA IF NOT EXISTS " + schema_name + ";"
+    def create_schema(self, scheme_name: str):
+        query = "CREATE SCHEMA IF NOT EXISTS " + scheme_name + ";"
         cur = self.data_db.cursor()
         cur.execute(query)
         cur.close()
 
-    def drop_schema(self, schema_name: str):
-        query = "DROP SCHEMA IF EXISTS " + schema_name + ";"
+    def drop_schema(self, scheme_name: str):
+        query = "DROP SCHEMA IF EXISTS " + scheme_name + ";"
         cur = self.data_db.cursor()
         cur.execute(query)
         cur.close()
 
-    def remove_scenario(self, schema_name: str, scenario_name: str):
+    def remove_scenario(self, scheme_name: str, scenario_name: str):
         query = ""
         for key in self.hdt_type:
-            query += f"DELETE FROM {schema_name}.{key} WHERE scenario='{scenario_name}'; "
+            query += f"DELETE FROM {scheme_name}.{key} WHERE scenario='{scenario_name}'; "
         cur = self.data_db.cursor()
         cur.execute(query)
         cur.close()
@@ -170,33 +168,30 @@ class DataLogger:
         cur.close()
         return result[0]
 
-    def create_table(self, schema_name: str, table_name: str, data_type: str):
-        return ("CREATE TABLE IF NOT EXISTS "
-                f"{schema_name}.{table_name} ("
-                "time double precision NOT NULL, "
-                "scenario VARCHAR (255) NOT NULL, "
-                "federate VARCHAR (255) NOT NULL, "
-                "data_name VARCHAR (255) NOT NULL, "
-                f"data_value {data_type} NOT NULL);")
-
-    def make_logger_database(self, schema_name):
+    def make_logger_database(self, scheme_name):
         # scheme is a set of like scenario (like DSOT bau, battery, flex load)
         query = ""
         for key in self.hdt_type:
-            query += self.create_table(schema_name, key, self.hdt_type[key])
+            query += ("CREATE TABLE IF NOT EXISTS "
+                      f"{scheme_name}.{key} ("
+                      "time double precision NOT NULL, "
+                      "scenario VARCHAR (255) NOT NULL, "
+                      "federate VARCHAR (255) NOT NULL, "
+                      "data_name VARCHAR (255) NOT NULL, "
+                      f"data_value {self.hdt_type[key]} NOT NULL);")
         cur = self.data_db.cursor()
         cur.execute(query)
         cur.close()
 
     def get_scenario_document(self, scenario_name):
-        if self.scenario_name == scenario_name:
-            return
-        self.scenario = self.meta_db.get_dict(mDB.cu_scenarios, None, scenario_name)
-        self.federation_name = self.scenario["federation"]
-        self.start = self.scenario["start_time"]
-        self.stop = self.scenario["stop_time"]
-        self.scheme_name = self.scenario["schema"]
-        return self.scheme_name
+        if self.scenario_name != scenario_name:
+            self.scenario = self.meta_db.get_dict(mDB.cu_scenarios, None, scenario_name)
+        return self.scenario
+
+    def get_federation_document(self, federation_name):
+        if self.federation_name != federation_name:
+            self.federation = self.meta_db.get_dict(mDB.cu_federations, None, federation_name)
+        return self.federation
 
     def get_select_string(self, scheme_name, data_type):
         """This function creates the SELECT portion of the query string
@@ -318,7 +313,8 @@ class DataLogger:
             qry_string (string) - string representing the query to be used in pulling time series
             data from logger database
         """
-        scheme_name = self.get_scenario_document(scenario_name)
+        scheme = self.get_scenario_document(scenario_name)
+        scheme_name = scheme["schema"]
         qry_string = self.get_select_string(scheme_name, data_type)
         time_string = self.get_time_select_string(start_time, duration)
         scenario_string = self.get_scenario_select_string(scenario_name)
@@ -396,7 +392,8 @@ class DataLogger:
             dataframe (pandas dataframe object) - dataframe that contains the result records
             returned from the query of the database
         """
-        scheme_name = self.get_scenario_document(scenario_name)
+        scheme = self.get_scenario_document(scenario_name)
+        scheme_name = scheme["schema"]
         cur = self.data_db.cursor()
         qry_string = ("SELECT * FROM " + scheme_name + "." + data_type +
                       " WHERE Scenario='" + scenario_name + "'")
@@ -405,6 +402,9 @@ class DataLogger:
         data = cur.fetchall()
         dataframe = pd.DataFrame(data, columns=column_names)
         return dataframe
+
+    def query_scheme_all_times(self, scheme_name, data_type):
+        pass
 
     def query_scheme_federate_all_times(self, scheme_name, federate_name, data_type):
         """This function queries data from the logger database filtered only by federate_name and data_name
@@ -456,6 +456,7 @@ class DataLogger:
         if data_type is None:
             return None
         # Todo: check against meta_db to see if schema name exist?
+        # This should take from the meta documents and verify
         qry_string = "SELECT DISTINCT scenario FROM " + scheme_name + "." + data_type
         cur = self.data_db.cursor()
         cur.execute(qry_string)

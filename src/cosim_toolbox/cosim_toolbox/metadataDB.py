@@ -19,6 +19,10 @@ pp = pprint.PrettyPrinter(indent=4, )
 sim_user = os.environ.get("SIM_USER", "worker")
 sim_host = os.environ.get("SIM_HOST", "localhost")
 
+wsl_host = os.environ.get("SIM_WSL_HOST")
+if wsl_host:
+    wsl_port = os.environ.get("SIM_WSL_PORT", "2222")
+
 cosim_mongo_host = os.environ.get("MONGO_HOST", "mongodb://localhost:27017")
 cosim_mongo_db = os.environ.get("COSIM_DB", "copper")
 
@@ -377,10 +381,13 @@ class Docker:
         cosim = os.environ.get("SIM_DIR", "/home/worker/copper")
         logger.info('====  ' + scenario_name + ' Broker Start in\n        ' + os.getcwd())
         docker_compose = "docker-compose -f " + scenario_name + ".yaml"
-        cmd = ("sh -c 'cd " + cosim + path + " && " +
-               docker_compose + " up && " + docker_compose + " down'")
-        subprocess.Popen("ssh -i  ~/copper-key-ecdsa " + sim_user + "@" + sim_host +
-                         " \"nohup " + cmd + " > /dev/null &\"", shell=True)
+        # in wsl_post and wsl_host
+        if wsl_host is None:
+            ssh = "ssh -i ~/copper-key-ecdsa " + sim_user + "@" + sim_host
+        else:
+            ssh = "ssh -p " + wsl_port + "-i ~/copper-key-ecdsa " + sim_user + "@" + wsl_host
+        cmd = ("sh -c 'cd " + cosim + path + " && " + docker_compose + " up && " + docker_compose + " down'")
+        subprocess.Popen(ssh + " \"nohup " + cmd + " > /dev/null &\"", shell=True)
         logger.info('====  Broker Exit in\n        ' + os.getcwd())
 
 
