@@ -24,10 +24,10 @@ COPY . cosim_toolbox/
 RUN echo "===== Building CoSim Airflow =====" && \
   pip install --no-cache-dir --upgrade pip && \
   cd cosim_toolbox || exit && \
-  pip install --no-cache-dir -e .
-  mkdir -p .ssh && \
-  touch .ssh/known_hosts && \
-#  ssh-keyscan ${SIM_HOST} >> .ssh/known_hosts && \
-  ssh-keygen -f copper-key-ecdsa -t ecdsa -b 521
+  pip install --no-cache-dir -e . && \
+  mkdir -p /home/airflow/.ssh && \
+  touch /home/airflow/.ssh/known_hosts && \
+#  ssh-keyscan ${SIM_HOST} >> /home/airflow/.ssh/known_hosts && \
+  ssh-keygen -f /home/airflow/.ssh/copper-key-ecdsa -t ecdsa -b 521
 # Line below needs to set at run for right now in the terminal to copy to 'authorized_keys' to user:
-# ssh-copy-id -i copper-key-ecdsa ${SIM_USER}@${SIM_HOST}
+# ssh-copy-id -i /home/airflow/.ssh/copper-key-ecdsa ${SIM_USER}@${SIM_HOST}

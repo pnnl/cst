@@ -566,15 +566,12 @@ class DataLogger:
             ts(pandas time series) - time series that contains the result records
             returned from the query of the database
         """
-        tdf = dataframe
         time_list = []
         for x in range(len(dataframe)):
             trow = dataframe.iloc[x]
             sec_time = trow.time
             time_list.append(date_time + dt.timedelta(seconds=sec_time))
-            t_date_time = time_list[x]
         dataframe['time_stamp'] = time_list
-        # print(dataframe)
         ts = dataframe.set_index('time_stamp')
         return ts
 

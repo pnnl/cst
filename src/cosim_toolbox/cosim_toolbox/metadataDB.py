@@ -385,7 +385,7 @@ class Docker:
         if wsl_host is None:
             ssh = "ssh -i ~/copper-key-ecdsa " + sim_user + "@" + sim_host
         else:
-            ssh = "ssh -p " + wsl_port + "-i ~/copper-key-ecdsa " + sim_user + "@" + wsl_host
+            ssh = "ssh -i ~/copper-key-ecdsa " + sim_user + "@" + wsl_host
         cmd = ("sh -c 'cd " + cosim + path + " && " + docker_compose + " up && " + docker_compose + " down'")
         subprocess.Popen(ssh + " \"nohup " + cmd + " > /dev/null &\"", shell=True)
         logger.info('====  Broker Exit in\n        ' + os.getcwd())

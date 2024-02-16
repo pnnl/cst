@@ -47,7 +47,7 @@ builds=(
 
 # make directories and set permissions
 cd "$SIM_DIR/run" || exit
-mkdir -p ./dags ./logs ./plugins ./config ./python ../src/cosim_toolbox.egg-info
+mkdir -p ./dags ./logs ./plugins ./config ./python ../src/cosim_toolbox/cosim_toolbox.egg-info
 # make wide open for now
 sudo chmod -R 777 ./dags ./logs ./plugins ./config ./python ../src
 cd "$DOCKER_DIR" || exit
