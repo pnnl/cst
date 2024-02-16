@@ -13,12 +13,12 @@ class HelicsMsg(object):
                       "logging": "warning",
                       }
 
-    def write_json(self):
+    def write_json(self) -> None:
         self.config("publications", self._pubs)
         self.config("subscriptions", self._subs)
         return self._cnfg
 
-    def write_file(self, _fn):
+    def write_file(self, _fn: str) -> None:
         self.config("publications", self._pubs)
         self.config("subscriptions", self._subs)
         op = open(_fn, 'w', encoding='utf-8')

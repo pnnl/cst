@@ -21,7 +21,7 @@ class FederateLogger(Federate):
 
     def __init__(self, fed_name="", scheme_name="default", clear=True, **kwargs):
         super().__init__(fed_name, **kwargs)
-        self.scheme_name = scheme_name
+        self.scheme_name: str = scheme_name
         self.fed_pubs = None
         self.dl = DataLogger()
         self.dl.open_database_connections()
@@ -35,9 +35,9 @@ class FederateLogger(Federate):
             self.dl.remove_scenario(self.scheme_name, self.scenario_name)
         self.dl.data_db.commit()
 
-    def connect_to_helics_config(self):
-        self.federate_type = "combo"
-        self.time_step = 30
+    def connect_to_helics_config(self) -> None:
+        self.federate_type: str = "combo"
+        self.time_step = 30.0
         publications = []
         self.fed_pubs = {}
 
@@ -57,7 +57,7 @@ class FederateLogger(Federate):
             t1.config("brokeraddress", "10.5.0.2")
         self.config = t1.config("subscriptions", publications)
 
-    def update_internal_model(self):
+    def update_internal_model(self) -> None:
         query = ""
         for key in self.data_from_federation["inputs"]:
             qry = ""
@@ -87,7 +87,7 @@ class FederateLogger(Federate):
             logger.error("Bad data type in update_internal_model")
 
 
-def main(federate_name, scheme_name, scenario_name):
+def main(federate_name: str, scheme_name: str, scenario_name: str):
     fed_logger = FederateLogger(federate_name, scheme_name)
     fed_logger.create_federate(scenario_name)
     fed_logger.run_cosim_loop()
