@@ -5,7 +5,14 @@ test:
   stage: test
   image: python:3.10
   before_script:
-    - apt-get update && apt-get install make
+    - apt-get update && apt-get install -y make wget ca-certificates
+    - update-ca-certificates
+    - export JULIA_VERSION=1.6.7
+    - wget --no-check-certificate https://julialang-s3.julialang.org/bin/linux/x64/1.6/julia-${JULIA_VERSION}-linux-x86_64.tar.gz
+    - tar -xvzf julia-${JULIA_VERSION}-linux-x86_64.tar.gz -C /opt
+    - ln -s /opt/julia-${JULIA_VERSION}/bin/julia /usr/local/bin/julia
+    - rm julia-${JULIA_VERSION}-linux-x86_64.tar.gz
+    - julia --version # Verify Julia installation
   script:
     - export HTTPS_PROXY=http://proxy01.pnl.gov:3128
     - export https_proxy=http://proxy01.pnl.gov:3128
