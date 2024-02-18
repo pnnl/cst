@@ -18,5 +18,6 @@ test:
     - export https_proxy=http://proxy01.pnl.gov:3128
     - make venv test  
   only:
-  - merge_requests
+    - merge_requests
+    - dev
   
