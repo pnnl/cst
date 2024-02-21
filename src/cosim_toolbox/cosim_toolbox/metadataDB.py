@@ -382,7 +382,7 @@ MONGO_HOST: \"""" + cosim_mongo_host + """\"
     @staticmethod
     def run_yaml(scenario_name):
         logger.info('====  ' + scenario_name + ' Broker Start in\n        ' + os.getcwd())
-        docker_compose = "docker-compose -f " + scenario_name + ".yaml"
+        docker_compose = "docker compose -f " + scenario_name + ".yaml"
         subprocess.Popen(docker_compose + " up", shell=True).wait()
         subprocess.Popen(docker_compose + " down", shell=True).wait()
         logger.info('====  Broker Exit in\n        ' + os.getcwd())
@@ -391,7 +391,7 @@ MONGO_HOST: \"""" + cosim_mongo_host + """\"
     def run_remote_yaml(scenario_name, path="/run/python/test_federation"):
         cosim = os.environ.get("SIM_DIR", "/home/worker/copper")
         logger.info('====  ' + scenario_name + ' Broker Start in\n        ' + os.getcwd())
-        docker_compose = "docker-compose -f " + scenario_name + ".yaml"
+        docker_compose = "docker compose -f " + scenario_name + ".yaml"
         # in wsl_post and wsl_host
         if wsl_host is None:
             ssh = "ssh -i ~/copper-key-ecdsa " + sim_user + "@" + sim_host
