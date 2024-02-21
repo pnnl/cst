@@ -7,6 +7,10 @@ services:
     environment:
       JUPYTER_ENABLE_LAB: "yes"
       GRANT_SUDO: "yes"
+      SIM_HOST: ${SIM_HOST}
+      SIM_USER: ${SIM_USER}
+      MONGO_HOST: ${MONGO_HOST}
+      POSTGRES_HOST: ${POSTGRES_HOST}
     ports:
       - "8888:8888"
     volumes:
@@ -51,7 +55,7 @@ services:
       - sim_net
 
   mongodb:
-    image: mongodb/mongodb-community-server:latest
+    image: mongodb/mongodb-community-server:7.0-ubuntu2204
     container_name: ${CONTAINER_NAME:-mongodb}
     ports:
       - "27017:27017"
@@ -59,8 +63,8 @@ services:
       - "27017"
     environment:
       MONGO_INITDB_DATABASE: "${COSIM_DB}"
-      MONGO_INITDB_ROOT_USERNAME: "${MONGO_INITDB_ROOT_USERNAME}"
-      MONGO_INITDB_ROOT_PASSWORD: "{MONGO_INITDB_ROOT_PASSWORD}"
+      MONGODB_INITDB_ROOT_USERNAME: "${MONGODB_INITDB_ROOT_USERNAME}"
+      MONGODB_INITDB_ROOT_PASSWORD: "${MONGODB_INITDB_ROOT_PASSWORD}"
     volumes:
       - cu_mongo:/data/db
       - $STACK_DIR/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro

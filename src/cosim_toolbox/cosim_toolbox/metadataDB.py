@@ -24,7 +24,14 @@ if wsl_host:
     wsl_port = os.environ.get("SIM_WSL_PORT", "2222")
 
 cosim_mongo_host = os.environ.get("MONGO_HOST", "mongodb://localhost:27017")
-cosim_mongo_db = os.environ.get("COSIM_DB", "copper")
+cosim_mongo_db = os.environ.get("COSIM_MONGO_DB", "copper")
+
+cosim_pg_host = os.environ.get("POSTGRES_HOST", "localhost")
+cosim_pg_db = os.environ.get("COSIM_POSTGRES_DB", "copper")
+
+# Same credentials for both databases
+cosim_user = os.environ.get("COSIM_USER", "worker")
+cosim_password = os.environ.get("COSIM_PASSWORD", "worker")
 
 cu_federations = "federations"
 cu_scenarios = "scenarios"
@@ -70,9 +77,6 @@ class MetaDB:
         """
         Sets up connection to server port for mongodb
         """
-        cosim_user = os.environ.get("COSIM_USER", "worker")
-        cosim_password = os.environ.get("COSIM_PASSWORD", "worker")
-
         # Set up default uri_string to the server Trevor was using on the EIOC
         if uri is None:
             uri = cosim_mongo_host
@@ -343,23 +347,30 @@ class Docker:
         schema_name = scenario_def["schema"]
         fed_def = mdb.get_dict(cu_federations, None, federation_name)["federation"]
 
+        cosim_env = """
+SIM_HOST: \"""" + sim_host + """\"
+SIM_USER: \"""" + sim_user + """\"
+POSTGRES_HOST: \"""" + cosim_pg_host + """\"
+MONGO_HOST: \"""" + cosim_mongo_host + """\"
+"""
+
         yaml = 'version: "3.8"\n'
         yaml += 'services:\n'
         # Add helics broker federate
         cnt = 2
         fed_cnt = str(fed_def.__len__() + 1)
-        env = ["", "exec helics_broker --ipv4 -f " + fed_cnt + " --loglevel=warning --name=broker"]
+        env = [cosim_env, "exec helics_broker --ipv4 -f " + fed_cnt + " --loglevel=warning --name=broker"]
         yaml += Docker._service("helics", "cosim-helics:latest", env, cnt, depends=None)
 
         for name in fed_def:
             cnt += 1
             image = fed_def[name]['image']
-            env = ["", fed_def[name]['command']]
+            env = [cosim_env, fed_def[name]['command']]
             yaml += Docker._service(name, image, env, cnt, depends=None)
 
         # Add data logger federate
         cnt += 1
-        env = ["", "source /home/worker/venv/bin/activate && exec python3 -c \\\"import cosim_toolbox.federateLogger as datalog; datalog.main('FederateLogger', '" +
+        env = ["cosim_env", "source /home/worker/venv/bin/activate && exec python3 -c \\\"import cosim_toolbox.federateLogger as datalog; datalog.main('FederateLogger', '" +
                schema_name + "', '" + scenario_name + "')\\\""]
         yaml += Docker._service(cu_logger, "cosim-python:latest", env, cnt, depends=None)
 
