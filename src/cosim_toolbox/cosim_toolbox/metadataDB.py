@@ -11,7 +11,7 @@ import subprocess
 import gridfs
 from pymongo import MongoClient
 
-import cosim_toolbox.helicsConfig as hm
+import cosim_toolbox.helicsConfig as hC
 
 logger = logging.getLogger(__name__)
 pp = pprint.PrettyPrinter(indent=4, )
@@ -247,6 +247,7 @@ class MetaDB:
         User must enter either the dictionary name used or the object_ID that
         was created when the dictionary was added but not both.
         """
+        doc = None
         if dict_name is None and object_id is None:
             raise AttributeError("Must provide the name or object ID of the dictionary to be retrieved.")
         elif dict_name is not None and object_id is not None:
@@ -261,9 +262,9 @@ class MetaDB:
         # Pulling out the metaDB secret name field that was added when we put
         #   the dictionary into the database. Will not raise an error if
         #   somehow that key does not exist in the dictionary
-        doc.pop(self._cu_dict_name, None)
-        doc.pop("_id", None)
-
+        if doc:
+            doc.pop(self._cu_dict_name, None)
+            doc.pop("_id", None)
         return doc
 
     def update_dict(self, collection_name, updated_dict, object_id=None, dict_name=None):
@@ -274,6 +275,7 @@ class MetaDB:
         User must enter either the dictionary name used or the object_ID that
         was created when the dictionary was added but not both.
         """
+        doc = None
         updated_dict[self._cu_dict_name] = dict_name
         if dict_name is None and object_id is None:
             raise AttributeError("Must provide the name or object ID of the dictionary to be modified.")
@@ -288,8 +290,8 @@ class MetaDB:
                 raise NameError(f"{dict_name} does not exist in collection {collection_name} and cannot be updated.")
         elif object_id is not None:
             doc = self.db[collection_name].replace({"_id": object_id}, updated_dict)
-
-        return str(doc["_id"])
+        if doc:
+            return str(doc["_id"])
 
     @staticmethod
     def scenario(schema_name: str, federation_name: str, start: str, stop: str, docker: bool = False):
@@ -347,13 +349,11 @@ class Docker:
         schema_name = scenario_def["schema"]
         fed_def = mdb.get_dict(cu_federations, None, federation_name)["federation"]
 
-        cosim_env = """
-SIM_HOST: \"""" + sim_host + """\"
-SIM_USER: \"""" + sim_user + """\"
-POSTGRES_HOST: \"""" + cosim_pg_host + """\"
-MONGO_HOST: \"""" + cosim_mongo_host + """\"
+        cosim_env = """      SIM_HOST: \"""" + sim_host + """\"
+      SIM_USER: \"""" + sim_user + """\"
+      POSTGRES_HOST: \"""" + cosim_pg_host + """\"
+      MONGO_HOST: \"""" + cosim_mongo_host + """\"
 """
-
         yaml = 'version: "3.8"\n'
         yaml += 'services:\n'
         # Add helics broker federate
@@ -370,7 +370,9 @@ MONGO_HOST: \"""" + cosim_mongo_host + """\"
 
         # Add data logger federate
         cnt += 1
-        env = ["cosim_env", "source /home/worker/venv/bin/activate && exec python3 -c \\\"import cosim_toolbox.federateLogger as datalog; datalog.main('FederateLogger', '" +
+        env = [cosim_env,
+               "source /home/worker/venv/bin/activate && " +
+               "exec python3 -c \\\"import cosim_toolbox.federateLogger as datalog; datalog.main('FederateLogger', '" +
                schema_name + "', '" + scenario_name + "')\\\""]
         yaml += Docker._service(cu_logger, "cosim-python:latest", env, cnt, depends=None)
 
@@ -413,10 +415,10 @@ def mytest1():
     """
     db = MetaDB(cosim_mongo_host, cosim_mongo_db)
     logger.info(db.update_collection_names())
-    scenarios = db.add_collection(cu_scenarios)
-    federates = db.add_collection(cu_federations)
+    db.add_collection(cu_scenarios)
+    db.add_collection(cu_federations)
 
-    t1 = hm.HelicsMsg("Battery", 30)
+    t1 = hC.HelicsMsg("Battery", 30)
     t1.config("core_type", "zmq")
     t1.config("log_level", "warning")
     t1.config("period", 60)
@@ -465,7 +467,7 @@ def mytest2():
     db.add_collection(cu_scenarios)
     db.add_collection(cu_federations)
 
-    t1 = hm.HelicsMsg("Battery", 30)
+    t1 = hC.HelicsMsg("Battery", 30)
     t1.config("core_type", "zmq")
     t1.config("log_level", "warning")
     t1.config("period", 60)
@@ -481,7 +483,7 @@ def mytest2():
         "HELICS_config": t1.write_json()
     }
 
-    t2 = hm.HelicsMsg("EVehicle", 30)
+    t2 = hC.HelicsMsg("EVehicle", 30)
     t2.config("core_type", "zmq")
     t2.config("log_level", "warning")
     t2.config("period", 60)
