@@ -42,8 +42,8 @@ def run_yaml():
         stdout = channel.makefile('rb')
         stdin.write('''
 cd ''' + cosim + '''/run/python/test_federation || exit
-docker-compose -f ''' + _scenario_name + '''.yaml up
-docker-compose -f ''' + _scenario_name + '''.yaml down
+docker compose -f ''' + _scenario_name + '''.yaml up
+docker compose -f ''' + _scenario_name + '''.yaml down
 exit
         ''')
         print(stdout.read())
