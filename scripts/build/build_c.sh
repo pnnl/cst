@@ -1,11 +1,7 @@
 #!/bin/bash
 
 # Copyright (C) 2021-2023 Battelle Memorial Institute
-# file: tesp_c.sh
-
-if [[ -z ${INSTDIR} ]]; then
-  . "${HOME}/tespEnv"
-fi
+# file: build_c.sh
 
 echo
 echo "++++++++++++++  Compiling and Installing TESP software is starting!  ++++++++++++++"
@@ -57,10 +53,9 @@ if [[ $1 == "develop" ]]; then
   echo "Compiling and Installing Ipopt with ASL and Mumps..."
   ./ipopt_b.sh clean > ipopt.log 2>&1
 
-  echo "Compiling and Installing TMY3toTMY2_ansi..."
-  cd "${TESPDIR}/data/weather/TMY2EPW/source_code" || exit
-  gcc TMY3toTMY2_ansi.c -o TMY3toTMY2_ansi
-  mv TMY3toTMY2_ansi "${INSTDIR}/bin"
+  echo "Compiling and Installing TESP EnergyPlus agents and TMY converter..."
+  ./tesp_b.sh clean > tesp.log 2>&1
+
 else
 
   ver=$(cat "${BUILD_DIR}/version")
@@ -83,7 +78,7 @@ echo "Installing TESP documentation..."
 # and in the trusted directories (/lib and /usr/lib).
 sudo ldconfig
 echo
-echo "TESP installation logs are found in ${BUILD_DIR}"
+echo "Grid application installation logs are found in ${BUILD_DIR}"
 echo "++++++++++++++  Compiling and Installing TESP software is complete!  ++++++++++++++"
 
 cd "${BUILD_DIR}" || exit

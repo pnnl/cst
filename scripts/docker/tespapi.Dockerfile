@@ -6,16 +6,17 @@ USER root
 ARG COSIM_USER
 ENV COSIM_HOME=/home/$COSIM_USER
 
-# Copy Binaries
-#COPY --from=cosim-build:latest $INSTDIR/ $INSTDIR/
-#RUN chown -hR $COSIM_USER:$COSIM_USER $COSIM_HOME
+# Compile exports
+# ENV TESPDIR=$COSIM_HOME/tesp
+
+# Copy files
 
 # Set as user
 USER $COSIM_USER
 WORKDIR $COSIM_HOME
 
 # Add directories and files
-RUN echo "Install Python Libraries" && \
+RUN echo "Building CoSim TESP api" && \
   echo "Activate the python virtual environment" && \
   . venv/bin/activate && \
   pip install --no-cache-dir tesp-support >> pypi.log && \
