@@ -2,17 +2,17 @@
 
 if [[ -z ${INSTDIR} ]]; then
   echo "Edit cosim.env in the Co-Simulation directory"
-  echo "Then please run 'source cosim.env' in that same directory"
+  echo "Then run 'source cosim.env' in that same directory"
   exit
 fi
 
 echo
-echo "++++++++++++++  Compiling and Installing Grid applications software is starting!  ++++++++++++++"
+echo "++++++++++++++  Compiling and Installing grid applications software is starting!  ++++++++++++++"
 echo
 
 echo "Activate Virtual Environment..."
 . "$REPO_DIR/venv/bin/activate"
-echo "Installing Python Libraries..."
+echo "Installing Python Libraries Requirements for TESP..."
 which python > "${BUILD_DIR}/tesp_pypi.log" 2>&1
 pip install --upgrade pip >> "${BUILD_DIR}/tesp_pypi.log" 2>&1
 pip install -r "${TESPDIR}/requirements.txt" >> "${BUILD_DIR}/tesp_pypi.log" 2>&1
@@ -66,7 +66,7 @@ else
   ver=$(cat "${BUILD_DIR}/version")
   echo "Installing HELICS, FNCS, GridLabD, EnergyPlus, NS3, and solver binaries..."
   cd "${INSTDIR}" || exit
-  wget --no-check-certificate https://github.com/pnnl/tesp/releases/download/${ver}/grid_binaries.zip
+  wget --no-check-certificate "https://github.com/pnnl/tesp/releases/download/${ver}/grid_binaries.zip"
   unzip grid_binaries.zip > "${BUILD_DIR}/grid_binaries.log" 2>&1
   rm grid_binaries.zip
 fi
@@ -83,12 +83,12 @@ echo "Installing TESP documentation..."
 # and in the trusted directories (/lib and /usr/lib).
 sudo ldconfig
 echo
-echo "Grid application installation logs are found in ${BUILD_DIR}"
-echo "++++++++++++++  Compiling and Installing Grid applications software is complete!  ++++++++++++++"
+echo "Grid applications software installation logs are found in ${BUILD_DIR}"
+echo "++++++++++++++  Compiling and Installing grid applications software is complete!  ++++++++++++++"
 
 cd "${BUILD_DIR}" || exit
 ./versions.sh
 
 echo
-echo "++++++++++++++  Grid applications has been installed! That's all folks!  ++++++++++++++"
+echo "++++++++++++++  Grid applications software has been installed! That's all folks!  ++++++++++++++"
 echo

@@ -2,15 +2,15 @@
 
 if [[ -z ${INSTDIR} ]]; then
   echo "Edit cosim.env in the Co-Simulation directory"
-  echo "Then please run 'source cosim.env' in that same directory"
+  echo "Then run 'source cosim.env' in that same directory"
   exit
 fi
 
 ver="22.04.1"
-cosim_ver="1.0"
+cosim_ver="1.0.0"
 
 echo
-echo "Stamping Grid $ver, if you want to change the version, edit this file."
+echo "Stamping grid applications software $ver, if you want to change the version, edit this file."
 echo "You should also update any documentation CHANGELOG.TXT or README.rst before stamping."
 echo "The command below can show the branch and merge history to help you update documentation."
 echo
@@ -27,7 +27,7 @@ while true; do
 done
 
 if [[ $stamp == "no" ]]; then
-  echo "Exiting Grid stamping"
+  echo "Exiting grid applications software stamping"
   exit
 fi
 
@@ -58,16 +58,16 @@ if [ -d "$dir" ]; then
   cd "${REPO_DIR}" || exit
 fi
 
-echo "Creating grid_binaries.zip for installed binaries for Grid application install"
+echo "Creating grid_binaries.zip for installed binaries for grid applications software install"
 cd "${INSTDIR}" || exit
 zip -r -9 "${BUILD_DIR}/grid_binaries.zip" . &> "${BUILD_DIR}/grid_binaries.log" &
 
 pip list > "${BUILD_DIR}/tesp_pypi.id"
 
-echo "Stamping Grid $ver for install"
-cd "${TESPDIR}" || exit
+echo "Stamping grid applications software $ver for install"
+cd "${SIM_DIR}" || exit
 echo "$ver" > "scripts/version"
-echo "$cosim_ver" > "src/tesp_support/version"
+echo "$cosim_ver" > "src/cosim_toolbox/version"
 
 # un-comment for final version
 # git tag "v$cosim_ver"
@@ -76,7 +76,7 @@ echo "$cosim_ver" > "src/tesp_support/version"
 echo "Creating CoSimulation Toolbox distribution package for pypi"
 cd "${SIM_DIR}/src/cosim_toolbox" || exit
 python3 -m build . > "${BUILD_DIR}/package.log"
-echo "Checking TESP distribution package for pypi"
+echo "Checking CoSimulation Toolbox distribution package for pypi"
 twine check dist/*
 echo
 echo "To upload the new CoSimulation Toolbox $ver pypi,"

@@ -5,7 +5,7 @@
 
 if [[ -z ${SIM_DIR} ]]; then
   echo "Edit cosim.env in the Co-Simulation directory"
-  echo "Then please run 'source cosim.env' in that same directory"
+  echo "Then run 'source cosim.env' in that same directory"
   exit
 fi
 
@@ -121,22 +121,28 @@ echo
 echo "Download all relevant repositories..."
 if [[ $binaries == "develop" ]]; then
 
-  echo "Clone directory structure for TESP"
+  echo
   echo ++++++++++++++ TESP
   git clone -b develop https://github.com/pnnl/tesp.git
-  "${BUILD_DIR}/patch.sh" AMES-V5.0 AMES-V5.0
+  "${BUILD_DIR}/patch.sh" tesp tesp
+
+  echo
+  echo ++++++++++++++ MESP
+  # git clone -b develop https://github.com/pnnl/mesp.git
+  # "${BUILD_DIR}/patch.sh" mesp mesp
 
   echo
   echo ++++++++++++++ PSST
-  # git clone https://github.com/ames-market/psst.git
+  # git clone -b master https://github.com/ames-market/psst.git
+  # For dsot
   git clone -b master https://github.com/ames-market/AMES-V5.0.git
   "${BUILD_DIR}/patch.sh" AMES-V5.0 AMES-V5.0
 
   echo
   echo ++++++++++++++ FNCS
   git clone -b feature/opendss https://github.com/FNCS/fncs.git
-  #For dsot
-  #git clone -b develop https://github.com/FNCS/fncs.git
+  # For different calling no cpp
+  # git clone -b develop https://github.com/FNCS/fncs.git
   "${BUILD_DIR}/patch.sh" fncs fncs
 
   echo
@@ -146,8 +152,6 @@ if [[ $binaries == "develop" ]]; then
 
   echo
   echo ++++++++++++++ GRIDLAB
-  #develop - dec21 commit number for dsot
-  #ENV GLD_VERSION=6c983d8daae8c6116f5fd4d4ccb7cfada5f8c9fc
   git clone -b master https://github.com/gridlab-d/gridlab-d.git
   "${BUILD_DIR}/patch.sh" gridlab-d gridlab-d
 

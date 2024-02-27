@@ -2,7 +2,7 @@
 
 if [[ -z ${INSTDIR} ]]; then
   echo "Edit cosim.env in the Co-Simulation directory"
-  echo "Then please run 'source cosim.env' in that same directory"
+  echo "Then run 'source cosim.env' in that same directory"
   exit
 fi
 
