@@ -2,12 +2,12 @@
 
 if [[ -z ${INSTDIR} ]]; then
   echo "Edit cosim.env in the Co-Simulation directory"
-  echo "Then please run 'source cosim.env' in that same directory"
+  echo "Then run 'source cosim.env' in that same directory"
   exit
 fi
 
 echo
-echo "Co-Simulation software modules installed are:"
+echo "Grid applications software installed are:"
 
 FILE="${INSTDIR}/bin/fncs_broker"
 if [[ -f "${FILE}" ]]; then
