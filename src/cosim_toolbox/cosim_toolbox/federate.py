@@ -338,6 +338,8 @@ class Federate:
             # Delete out old message list to avoid confusion about when the message came in
             self.data_from_federation[ep.name] = []
             for message in range(0, ep.n_pending_messages):
+                if ep.name not in self.data_to_federation["endpoints"]:
+                    self.data_from_federation["endpoints"][ep.name] = []
                 self.data_from_federation["endpoints"][ep.name].append(ep.get_message().data)
 
     def update_internal_model(self) -> None:

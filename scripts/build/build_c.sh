@@ -1,16 +1,17 @@
 #!/bin/bash
 
-# Copyright (C) 2021-2023 Battelle Memorial Institute
-# file: tesp_c.sh
-
 if [[ -z ${INSTDIR} ]]; then
-  . "${HOME}/tespEnv"
+  echo "Edit cosim.env in the Co-Simulation directory"
+  echo "Then please run 'source cosim.env' in that same directory"
+  exit
 fi
 
 echo
-echo "++++++++++++++  Compiling and Installing TESP software is starting!  ++++++++++++++"
+echo "++++++++++++++  Compiling and Installing Grid applications software is starting!  ++++++++++++++"
 echo
 
+echo "Activate Virtual Environment..."
+. "$REPO_DIR/venv/bin/activate"
 echo "Installing Python Libraries..."
 which python > "${BUILD_DIR}/tesp_pypi.log" 2>&1
 pip install --upgrade pip >> "${BUILD_DIR}/tesp_pypi.log" 2>&1
@@ -57,18 +58,17 @@ if [[ $1 == "develop" ]]; then
   echo "Compiling and Installing Ipopt with ASL and Mumps..."
   ./ipopt_b.sh clean > ipopt.log 2>&1
 
-  echo "Compiling and Installing TMY3toTMY2_ansi..."
-  cd "${TESPDIR}/data/weather/TMY2EPW/source_code" || exit
-  gcc TMY3toTMY2_ansi.c -o TMY3toTMY2_ansi
-  mv TMY3toTMY2_ansi "${INSTDIR}/bin"
+  echo "Compiling and Installing TESP EnergyPlus agents and TMY converter..."
+  ./tesp_b.sh clean > tesp.log 2>&1
+
 else
 
   ver=$(cat "${BUILD_DIR}/version")
   echo "Installing HELICS, FNCS, GridLabD, EnergyPlus, NS3, and solver binaries..."
   cd "${INSTDIR}" || exit
-  wget --no-check-certificate https://github.com/pnnl/tesp/releases/download/${ver}/tesp_binaries.zip
-  unzip tesp_binaries.zip > "${BUILD_DIR}/tesp_binaries.log" 2>&1
-  rm tesp_binaries.zip
+  wget --no-check-certificate https://github.com/pnnl/tesp/releases/download/${ver}/grid_binaries.zip
+  unzip grid_binaries.zip > "${BUILD_DIR}/grid_binaries.log" 2>&1
+  rm grid_binaries.zip
 fi
 
 cd "${BUILD_DIR}" || exit
@@ -83,12 +83,12 @@ echo "Installing TESP documentation..."
 # and in the trusted directories (/lib and /usr/lib).
 sudo ldconfig
 echo
-echo "TESP installation logs are found in ${BUILD_DIR}"
-echo "++++++++++++++  Compiling and Installing TESP software is complete!  ++++++++++++++"
+echo "Grid application installation logs are found in ${BUILD_DIR}"
+echo "++++++++++++++  Compiling and Installing Grid applications software is complete!  ++++++++++++++"
 
 cd "${BUILD_DIR}" || exit
 ./versions.sh
 
 echo
-echo "++++++++++++++  TESP has been installed! That's all folks!  ++++++++++++++"
+echo "++++++++++++++  Grid applications has been installed! That's all folks!  ++++++++++++++"
 echo

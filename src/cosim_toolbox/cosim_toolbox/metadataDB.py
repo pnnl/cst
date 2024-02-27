@@ -13,7 +13,7 @@ import gridfs
 from pymongo import MongoClient
 import bson
 
-import cosim_toolbox.helicsConfig as hm
+import cosim_toolbox.helicsConfig as hC
 
 logger = logging.getLogger(__name__)
 pp = pprint.PrettyPrinter(indent=4, )
@@ -25,8 +25,15 @@ wsl_host: str = os.environ.get("SIM_WSL_HOST")
 if wsl_host:
     wsl_port: str = os.environ.get("SIM_WSL_PORT", "2222")
 
-cosim_mongo_host: str = os.environ.get("MONGO_HOST", "mongodb://localhost:27017")
-cosim_mongo_db: str = os.environ.get("COSIM_DB", "copper")
+cosim_mongo_host = os.environ.get("MONGO_HOST", "mongodb://localhost:27017")
+cosim_mongo_db = os.environ.get("COSIM_MONGO_DB", "copper")
+
+cosim_pg_host = os.environ.get("POSTGRES_HOST", "localhost")
+cosim_pg_db = os.environ.get("COSIM_POSTGRES_DB", "copper")
+
+# Same credentials for both databases
+cosim_user = os.environ.get("COSIM_USER", "worker")
+cosim_password = os.environ.get("COSIM_PASSWORD", "worker")
 
 cu_federations: str = "federations"
 cu_scenarios: str = "scenarios"
@@ -72,9 +79,6 @@ class MetaDB:
         """
         Sets up connection to server port for mongodb
         """
-        cosim_user: str = os.environ.get("COSIM_USER", "worker")
-        cosim_password: str = os.environ.get("COSIM_PASSWORD", "worker")
-
         # Set up default uri_string to the server Trevor was using on the EIOC
         if uri is None:
             uri = cosim_mongo_host
@@ -272,6 +276,7 @@ class MetaDB:
         User must enter either the dictionary name used or the object_ID that
         was created when the dictionary was added but not both.
         """
+        doc = None
         if dict_name is None and object_id is None:
             raise AttributeError("Must provide the name or object ID of the dictionary to be retrieved.")
         elif dict_name is not None and object_id is not None:
@@ -286,9 +291,9 @@ class MetaDB:
         # Pulling out the metaDB secret name field that was added when we put
         #   the dictionary into the database. Will not raise an error if
         #   somehow that key does not exist in the dictionary
-        doc.pop(self._cu_dict_name, None)
-        doc.pop("_id", None)
-
+        if doc:
+            doc.pop(self._cu_dict_name, None)
+            doc.pop("_id", None)
         return doc
 
     def update_dict(self, collection_name: str, 
@@ -302,6 +307,7 @@ class MetaDB:
         User must enter either the dictionary name used or the object_ID that
         was created when the dictionary was added but not both.
         """
+        doc = None
         updated_dict[self._cu_dict_name] = dict_name
         if dict_name is None and object_id is None:
             raise AttributeError("Must provide the name or object ID of the dictionary to be modified.")
@@ -316,8 +322,8 @@ class MetaDB:
                 raise NameError(f"{dict_name} does not exist in collection {collection_name} and cannot be updated.")
         elif object_id is not None:
             doc = self.db[collection_name].replace({"_id": object_id}, updated_dict)
-
-        return str(doc["_id"])
+        if doc:
+            return str(doc["_id"])
 
     @staticmethod
     def scenario(schema_name: str, federation_name: str, start: str, stop: str, docker: bool = False) -> dict:
@@ -379,23 +385,30 @@ class Docker:
         schema_name: str = scenario_def["schema"]
         fed_def: dict = mdb.get_dict(cu_federations, None, federation_name)["federation"]
 
+        cosim_env = """      SIM_HOST: \"""" + sim_host + """\"
+      SIM_USER: \"""" + sim_user + """\"
+      POSTGRES_HOST: \"""" + cosim_pg_host + """\"
+      MONGO_HOST: \"""" + cosim_mongo_host + """\"
+"""
         yaml = 'version: "3.8"\n'
         yaml += 'services:\n'
         # Add helics broker federate
         cnt = 2
         fed_cnt = str(fed_def.__len__() + 1)
-        env = ["", "exec helics_broker --ipv4 -f " + fed_cnt + " --loglevel=warning --name=broker"]
+        env = [cosim_env, "exec helics_broker --ipv4 -f " + fed_cnt + " --loglevel=warning --name=broker"]
         yaml += Docker._service("helics", "cosim-helics:latest", env, cnt, depends=None)
 
         for name in fed_def:
             cnt += 1
             image = fed_def[name]['image']
-            env = ["", fed_def[name]['command']]
+            env = [cosim_env, fed_def[name]['command']]
             yaml += Docker._service(name, image, env, cnt, depends=None)
 
         # Add data logger federate
         cnt += 1
-        env = ["", "source /home/worker/venv/bin/activate && exec python3 -c \\\"import cosim_toolbox.federateLogger as datalog; datalog.main('FederateLogger', '" +
+        env = [cosim_env,
+               "source /home/worker/venv/bin/activate && " +
+               "exec python3 -c \\\"import cosim_toolbox.federateLogger as datalog; datalog.main('FederateLogger', '" +
                schema_name + "', '" + scenario_name + "')\\\""]
         yaml += Docker._service(cu_logger, "cosim-python:latest", env, cnt, depends=None)
 
@@ -407,7 +420,7 @@ class Docker:
     @staticmethod
     def run_yaml(scenario_name: str) -> None:
         logger.info('====  ' + scenario_name + ' Broker Start in\n        ' + os.getcwd())
-        docker_compose = "docker-compose -f " + scenario_name + ".yaml"
+        docker_compose = "docker compose -f " + scenario_name + ".yaml"
         subprocess.Popen(docker_compose + " up", shell=True).wait()
         subprocess.Popen(docker_compose + " down", shell=True).wait()
         logger.info('====  Broker Exit in\n        ' + os.getcwd())
@@ -416,7 +429,7 @@ class Docker:
     def run_remote_yaml(scenario_name: str, path: str="/run/python/test_federation") -> None:
         cosim = os.environ.get("SIM_DIR", "/home/worker/copper")
         logger.info('====  ' + scenario_name + ' Broker Start in\n        ' + os.getcwd())
-        docker_compose = "docker-compose -f " + scenario_name + ".yaml"
+        docker_compose = "docker compose -f " + scenario_name + ".yaml"
         # in wsl_post and wsl_host
         if wsl_host is None:
             ssh = "ssh -i ~/copper-key-ecdsa " + sim_user + "@" + sim_host
@@ -438,10 +451,10 @@ def mytest1():
     """
     db = MetaDB(cosim_mongo_host, cosim_mongo_db)
     logger.info(db.update_collection_names())
-    scenarios = db.add_collection(cu_scenarios)
-    federates = db.add_collection(cu_federations)
+    db.add_collection(cu_scenarios)
+    db.add_collection(cu_federations)
 
-    t1 = hm.HelicsMsg("Battery", 30)
+    t1 = hC.HelicsMsg("Battery", 30)
     t1.config("core_type", "zmq")
     t1.config("log_level", "warning")
     t1.config("period", 60)
@@ -490,7 +503,7 @@ def mytest2():
     db.add_collection(cu_scenarios)
     db.add_collection(cu_federations)
 
-    t1 = hm.HelicsMsg("Battery", 30)
+    t1 = hC.HelicsMsg("Battery", 30)
     t1.config("core_type", "zmq")
     t1.config("log_level", "warning")
     t1.config("period", 60)
@@ -506,7 +519,7 @@ def mytest2():
         "HELICS_config": t1.write_json()
     }
 
-    t2 = hm.HelicsMsg("EVehicle", 30)
+    t2 = hC.HelicsMsg("EVehicle", 30)
     t2.config("core_type", "zmq")
     t2.config("log_level", "warning")
     t2.config("period", 60)
