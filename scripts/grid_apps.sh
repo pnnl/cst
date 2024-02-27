@@ -4,8 +4,8 @@
 # file: grid_apps.sh
 
 if [[ -z ${SIM_DIR} ]]; then
-  echo "Please run 'source cosim.env' in the root Co-Simulation directory"
-  echo "Then run this script in this directory"
+  echo "Edit cosim.env in the Co-Simulation directory"
+  echo "Then please run 'source cosim.env' in that same directory"
   exit
 fi
 
@@ -116,10 +116,6 @@ python3 -m pip install virtualenv
 
 echo "Install executables environment to $HOME/grid/tenv"
 mkdir -p tenv
-
-echo "Install repositories to $HOME/grid/repository"
-mkdir -p repository
-cd repository || exit
 
 echo
 echo "Download all relevant repositories..."

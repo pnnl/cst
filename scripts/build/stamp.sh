@@ -1,13 +1,16 @@
 #!/bin/bash
 
 if [[ -z ${INSTDIR} ]]; then
-  . "${HOME}/tespEnv"
+  echo "Edit cosim.env in the Co-Simulation directory"
+  echo "Then please run 'source cosim.env' in that same directory"
+  exit
 fi
 
-ver="1.3.5"
+ver="22.04.1"
+cosim_ver="1.0"
 
 echo
-echo "Stamping TESP $ver, if you want to change the version, edit this file."
+echo "Stamping Grid $ver, if you want to change the version, edit this file."
 echo "You should also update any documentation CHANGELOG.TXT or README.rst before stamping."
 echo "The command below can show the branch and merge history to help you update documentation."
 echo
@@ -15,7 +18,7 @@ echo "    git log --pretty=format:"%h %s" --graph"
 echo
 
 while true; do
-    read -p "Are you ready to stamp TESP $ver? " yn
+    read -p "Are you ready to stamp Grid $ver? " yn
     case $yn in
         [Yy]* ) stamp="yes" break;;
         [Nn]* ) stamp="no"; break;;
@@ -24,7 +27,7 @@ while true; do
 done
 
 if [[ $stamp == "no" ]]; then
-  echo "Exiting TESP stamping"
+  echo "Exiting Grid stamping"
   exit
 fi
 
@@ -55,26 +58,28 @@ if [ -d "$dir" ]; then
   cd "${REPO_DIR}" || exit
 fi
 
-echo "Creating tesp_binaries.zip for installed binaries on TESP install"
+echo "Creating grid_binaries.zip for installed binaries for Grid application install"
 cd "${INSTDIR}" || exit
-zip -r -9 "${BUILD_DIR}/tesp_binaries.zip" . &> "${BUILD_DIR}/tesp_binaries.log" &
+zip -r -9 "${BUILD_DIR}/grid_binaries.zip" . &> "${BUILD_DIR}/grid_binaries.log" &
+
 pip list > "${BUILD_DIR}/tesp_pypi.id"
 
-echo "Stamping TESP $ver for install"
+echo "Stamping Grid $ver for install"
 cd "${TESPDIR}" || exit
 echo "$ver" > "scripts/version"
-echo "$ver" > "src/tesp_support/version"
+echo "$cosim_ver" > "src/tesp_support/version"
 
 # un-comment for final version
-# git tag "v$ver"
+# git tag "v$cosim_ver"
 
-echo "Creating TESP distribution package for pypi"
-cd "${TESPDIR}/src/tesp_support" || exit
+# for sampling cosim
+echo "Creating CoSimulation Toolbox distribution package for pypi"
+cd "${SIM_DIR}/src/cosim_toolbox" || exit
 python3 -m build . > "${BUILD_DIR}/package.log"
 echo "Checking TESP distribution package for pypi"
 twine check dist/*
 echo
-echo "To upload the new TESP $ver pypi,"
-echo "change directory to ${TESPDIR}/src/tesp_support"
+echo "To upload the new CoSimulation Toolbox $ver pypi,"
+echo "change directory to ${SIM_DIR}/src/cosim_toolbox"
 echo "and run the command 'twine upload dist/*'"
 echo

@@ -1,7 +1,9 @@
 #!/bin/bash
 
 if [[ -z ${INSTDIR} ]]; then
-  . "${HOME}/tespEnv"
+  echo "Edit cosim.env in the Co-Simulation directory"
+  echo "Then please run 'source cosim.env' in that same directory"
+  exit
 fi
 
 # Install HELICS Python3 bindings for a version that exactly matches the local build
