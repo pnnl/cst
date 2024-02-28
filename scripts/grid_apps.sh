@@ -3,9 +3,14 @@
 # Copyright (c) 2021-2023 Battelle Memorial Institute
 # file: grid_apps.sh
 
-if [[ -z ${SIM_DIR} ]]; then
-  echo "Edit cosim.env in the Co-Simulation directory"
-  echo "Then run 'source cosim.env' in that same directory"
+if [[ -z ${INSTDIR} ]]; then
+  echo
+  echo "To build a local environment:"
+  echo "  Edit cosim.env in the Co-Simulation directory"
+  echo "  Define LOCAL_ENV other than a blank in that file"
+  echo "  Run 'source cosim.env' in that same directory"
+  echo "  Run './grid_apps.sh [git login] [git email]' in this directory"
+  echo
   exit
 fi
 

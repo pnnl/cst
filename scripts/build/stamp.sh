@@ -2,7 +2,7 @@
 
 if [[ -z ${INSTDIR} ]]; then
   echo "Edit cosim.env in the Co-Simulation directory"
-  echo "Then run 'source cosim.env' in that same directory"
+  echo "Run 'source cosim.env' in that same directory"
   exit
 fi
 
@@ -58,9 +58,9 @@ if [ -d "$dir" ]; then
   cd "${REPO_DIR}" || exit
 fi
 
-echo "Creating grid_binaries.zip for installed binaries for grid applications software"
+echo "Creating grid_binaries_$ver.zip for installed binaries for grid applications software"
 cd "${INSTDIR}" || exit
-zip -r -9 "${BUILD_DIR}/grid_binaries.zip" . &> "${BUILD_DIR}/grid_binaries.log" &
+zip -r -9 "${BUILD_DIR}/grid_binaries_$ver.zip" . &> "${BUILD_DIR}/grid_binaries.log" &
 
 pip list > "${BUILD_DIR}/tesp_pypi.id"
 

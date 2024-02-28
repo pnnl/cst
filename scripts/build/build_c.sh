@@ -2,7 +2,7 @@
 
 if [[ -z ${INSTDIR} ]]; then
   echo "Edit cosim.env in the Co-Simulation directory"
-  echo "Then run 'source cosim.env' in that same directory"
+  echo "Run 'source cosim.env' in that same directory"
   exit
 fi
 
@@ -69,7 +69,8 @@ else
   echo "Installing HELICS, FNCS, GridLabD, EnergyPlus, NS3, and solver binaries..."
   cd "${INSTDIR}" || exit
 #  wget --no-check-certificate "https://github.com/pnnl/tesp/releases/download/${ver}/grid_binaries.zip"
-  unzip grid_binaries.zip > "${BUILD_DIR}/grid_binaries.log" 2>&1
+  wget --no-check-certificate "https://mepas.pnnl.gov/FramesV1/Install/grid_binaries_$ver.zip"
+  unzip "grid_binaries_$ver.zip" > "${BUILD_DIR}/grid_binaries.log" 2>&1
 #  rm grid_binaries.zip
 fi
 
