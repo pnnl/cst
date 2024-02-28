@@ -58,7 +58,7 @@ if [ -d "$dir" ]; then
   cd "${REPO_DIR}" || exit
 fi
 
-echo "Creating grid_binaries.zip for installed binaries for grid applications software install"
+echo "Creating grid_binaries.zip for installed binaries for grid applications software"
 cd "${INSTDIR}" || exit
 zip -r -9 "${BUILD_DIR}/grid_binaries.zip" . &> "${BUILD_DIR}/grid_binaries.log" &
 

@@ -18,20 +18,16 @@ echo "Installing Python Libraries Requirements for TESP..."
 pip install --upgrade pip >> "${BUILD_DIR}/tesp_pypi.log" 2>&1
 pip install -r "${REPO_DIR}/tesp/requirements.txt" >> "${BUILD_DIR}/tesp_pypi.log" 2>&1
 
-echo "Installing Python TESP API..."
-cd "${REPO_DIR}/tesp/src/tesp_support" || exit
-pip install -e . > "${BUILD_DIR}/tesp_api.log" 2>&1
-
-echo "Installing Python PSST..."
-cd "${REPO_DIR}/AMES-V5.0/psst" || exit
-pip install -e . > "${BUILD_DIR}/AMES-V5.0.log" 2>&1
-
-#  pip install tesp_support --upgrade
-#  pip install psst --upgrade
-
-cd "${BUILD_DIR}" || exit
 if [[ $1 == "develop" ]]; then
+  cd "${REPO_DIR}/tesp/src/tesp_support" || exit
+  echo "Installing Python TESP API..."
+  pip install -e . > "${BUILD_DIR}/tesp_api.log" 2>&1
 
+  cd "${REPO_DIR}/AMES-V5.0/psst" || exit
+  echo "Installing Python PSST..."
+  pip install -e . > "${BUILD_DIR}/AMES-V5.0.log" 2>&1
+
+  cd "${BUILD_DIR}" || exit
   echo "Compiling and Installing FNCS..."
   ./fncs_b.sh clean > fncs.log 2>&1
 
@@ -62,22 +58,24 @@ if [[ $1 == "develop" ]]; then
   echo "Compiling and Installing TESP EnergyPlus agents and TMY converter..."
   ./tesp_b.sh clean > tesp.log 2>&1
 
+  echo "Installing TESP documentation..."
+  ./docs_b.sh clean > docs.log 2>&1
 else
+  echo "Installing Python TESP API..."
+  pip install tesp_support --upgrade > "${BUILD_DIR}/tesp_api.log" 2>&1
+#  pip install psst --upgrade
 
-  ver=$(cat "${BUILD_DIR}/version")
+  ver=$(cat ../version)
   echo "Installing HELICS, FNCS, GridLabD, EnergyPlus, NS3, and solver binaries..."
   cd "${INSTDIR}" || exit
-  wget --no-check-certificate "https://github.com/pnnl/tesp/releases/download/${ver}/grid_binaries.zip"
+#  wget --no-check-certificate "https://github.com/pnnl/tesp/releases/download/${ver}/grid_binaries.zip"
   unzip grid_binaries.zip > "${BUILD_DIR}/grid_binaries.log" 2>&1
-  rm grid_binaries.zip
+#  rm grid_binaries.zip
 fi
 
 cd "${BUILD_DIR}" || exit
 echo "Installing HELICS Python bindings..."
 ./HELICS-py.sh clean > HELICS-py.log 2>&1
-
-echo "Installing TESP documentation..."
-./docs_b.sh clean > docs.log 2>&1
 
 # Creates the necessary links and cache to the most recent shared libraries found
 # in the directories specified on the command line, in the file /etc/ld.so.conf,
