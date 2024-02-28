@@ -66,7 +66,7 @@ pip list > "${BUILD_DIR}/tesp_pypi.id"
 
 echo "Stamping grid applications software $ver for install"
 cd "${SIM_DIR}" || exit
-echo "$ver" > "scripts/version"
+echo "$ver" > "scripts/grid_version"
 echo "$cosim_ver" > "src/cosim_toolbox/version"
 
 # un-comment for final version

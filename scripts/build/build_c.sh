@@ -65,7 +65,8 @@ else
   pip install tesp_support --upgrade > "${BUILD_DIR}/tesp_api.log" 2>&1
 #  pip install psst --upgrade
 
-  ver=$(cat ../version)
+
+  ver=$(cat ../grid_version)
   echo "Installing HELICS, FNCS, GridLabD, EnergyPlus, NS3, and solver binaries..."
   cd "${INSTDIR}" || exit
 #  wget --no-check-certificate "https://github.com/pnnl/tesp/releases/download/${ver}/grid_binaries.zip"
