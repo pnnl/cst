@@ -11,14 +11,15 @@ echo "++++++++++++++  Compiling and Installing grid applications software is sta
 echo
 
 echo "Activate Virtual Environment..."
-. "$REPO_DIR/venv/bin/activate"
-echo "Installing Python Libraries Requirements for TESP..."
+. "$HOME/grid/venv/bin/activate"
 which python > "${BUILD_DIR}/tesp_pypi.log" 2>&1
+
+echo "Installing Python Libraries Requirements for TESP..."
 pip install --upgrade pip >> "${BUILD_DIR}/tesp_pypi.log" 2>&1
-pip install -r "${TESPDIR}/requirements.txt" >> "${BUILD_DIR}/tesp_pypi.log" 2>&1
+pip install -r "${REPO_DIR}/tesp/requirements.txt" >> "${BUILD_DIR}/tesp_pypi.log" 2>&1
 
 echo "Installing Python TESP API..."
-cd "${TESPDIR}/src/tesp_support" || exit
+cd "${REPO_DIR}/tesp/src/tesp_support" || exit
 pip install -e . > "${BUILD_DIR}/tesp_api.log" 2>&1
 
 echo "Installing Python PSST..."

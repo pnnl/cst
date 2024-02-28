@@ -107,15 +107,21 @@ cd "${HOME}" || exit
 echo "Install environment to $HOME/grid"
 mkdir -p grid
 cd grid || exit
-echo
 
+echo
 echo "Install a virtual python environment to $HOME/grid/venv"
 python3 -m pip install --upgrade pip
 python3 -m pip install virtualenv
 "${HOME}/.local/bin/virtualenv" venv --prompt GRID
 
+echo
 echo "Install executables environment to $HOME/grid/tenv"
 mkdir -p tenv
+
+echo
+echo "Install grid applications software to $HOME/grid/repo"
+mkdir -p repo
+cd repo || exit
 
 echo
 echo "Download all relevant repositories..."
