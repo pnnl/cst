@@ -6,6 +6,9 @@ Unit tests for Python federate
 @author: Trevor Hardy
 trevor.hardy@pnnl.gov
 """
+import collections
+collections.Callable = collections.abc.Callable
+
 import logging
 
 logger = logging.getLogger(__name__)

@@ -63,14 +63,14 @@ class DataLogger:
                 'HDT_JSON': 'text'}
 
     def __init__(self):
-        self.federation = None
-        self.federation_name = None
-        self.scenario = None
-        self.scenario_name = None
-        self.meta_db = None
+        self.federation: dict = None
+        self.federation_name: str = None
+        self.scenario: dict = None
+        self.scenario_name: str = None
+        self.meta_db: mDB.MetaDB = None
         self.data_db = None
 
-    def _connect_logger_database(self, connection: dict = None):
+    def _connect_logger_database(self, connection: dict = None) -> object | None:
         """This function defines the connection to the datalogger database
         and opens a connection to the postgres database
 
@@ -92,7 +92,7 @@ class DataLogger:
         except:
             return None
 
-    def _connect_scenario_database(self, connection: dict = None):
+    def _connect_scenario_database(self, connection: dict = None) -> mDB.MetaDB | None:
         """This function defines the connection to the meta database
         and opens a connection to the mongo database
 
@@ -115,13 +115,13 @@ class DataLogger:
         except:
             return None
 
-    def close_database_connections(self, commit=True):
+    def close_database_connections(self, commit: bool = True) -> None:
         self.meta_db = None
         if commit:
             self.data_db.commit()
         self.data_db.close()
 
-    def open_database_connections(self, meta_connection: dict = None, data_connection: dict = None):
+    def open_database_connections(self, meta_connection: dict = None, data_connection: dict = None) -> bool:
         self.meta_db = self._connect_scenario_database(meta_connection)
         self.data_db = self._connect_logger_database(data_connection)
         if self.meta_db is None or self.data_db is None:
@@ -129,7 +129,7 @@ class DataLogger:
         else:
             return True
 
-    def check_version(self):
+    def check_version(self) -> None:
         cur = self.data_db.cursor()
         logger.info('PostgresSQL database version:')
         cur.execute('SELECT version()')
@@ -139,19 +139,19 @@ class DataLogger:
         # close the communication with the PostgresSQL
         cur.close()
 
-    def create_schema(self, scheme_name: str):
+    def create_schema(self, scheme_name: str) -> None:
         query = "CREATE SCHEMA IF NOT EXISTS " + scheme_name + ";"
         cur = self.data_db.cursor()
         cur.execute(query)
         cur.close()
 
-    def drop_schema(self, scheme_name: str):
+    def drop_schema(self, scheme_name: str) -> None:
         query = "DROP SCHEMA IF EXISTS " + scheme_name + ";"
         cur = self.data_db.cursor()
         cur.execute(query)
         cur.close()
 
-    def remove_scenario(self, scheme_name: str, scenario_name: str):
+    def remove_scenario(self, scheme_name: str, scenario_name: str) -> None:
         query = ""
         for key in self.hdt_type:
             query += f"DELETE FROM {scheme_name}.{key} WHERE scenario='{scenario_name}'; "
@@ -159,7 +159,7 @@ class DataLogger:
         cur.execute(query)
         cur.close()
 
-    def table_exist(self, scheme_name: str, table_name: str):
+    def table_exist(self, scheme_name: str, table_name: str) -> None:
         query = ("SELECT EXISTS ( SELECT FROM pg_tables WHERE "
                  "schemaname = '" + scheme_name + "' AND tablename = '" + table_name + "');")
         cur = self.data_db.cursor()
@@ -168,7 +168,7 @@ class DataLogger:
         cur.close()
         return result[0]
 
-    def make_logger_database(self, scheme_name):
+    def make_logger_database(self, scheme_name: str) -> None:
         # scheme is a set of like scenario (like DSOT bau, battery, flex load)
         query = ""
         for key in self.hdt_type:
@@ -183,17 +183,17 @@ class DataLogger:
         cur.execute(query)
         cur.close()
 
-    def get_scenario_document(self, scenario_name):
+    def get_scenario_document(self, scenario_name: str) -> dict:
         if self.scenario_name != scenario_name:
             self.scenario = self.meta_db.get_dict(mDB.cu_scenarios, None, scenario_name)
         return self.scenario
 
-    def get_federation_document(self, federation_name):
+    def get_federation_document(self, federation_name: str) -> dict:
         if self.federation_name != federation_name:
             self.federation = self.meta_db.get_dict(mDB.cu_federations, None, federation_name)
         return self.federation
 
-    def get_select_string(self, scheme_name, data_type):
+    def get_select_string(self, scheme_name: str, data_type: str) -> str | None:
         """This function creates the SELECT portion of the query string
 
         Args:
@@ -211,7 +211,7 @@ class DataLogger:
         qry_string = "SELECT * FROM " + scheme_name + "." + data_type + " WHERE "
         return qry_string
 
-    def get_time_select_string(self, start_time, duration):
+    def get_time_select_string(self, start_time: int, duration: int) -> str:
         """This function creates the time filter portion of the query string
 
         Args:
@@ -237,7 +237,7 @@ class DataLogger:
             end_time = start_time + duration
         return "time>=" + str(start_time) + " AND time<=" + str(end_time)
 
-    def get_scenario_select_string(self, scenario_name):
+    def get_scenario_select_string(self, scenario_name: str) -> str:
         """This function creates the scenario filter portion of the query string
 
         Args:
@@ -252,7 +252,7 @@ class DataLogger:
             return ""
         return f"scenario='{scenario_name}'"
 
-    def get_federate_select_string(self, federate_name):
+    def get_federate_select_string(self, federate_name: str) -> str:
         """This function creates the federate filter portion of the query string
 
         Args:
@@ -267,7 +267,7 @@ class DataLogger:
             return ""
         return f"federate='{federate_name}'"
 
-    def get_data_name_select_string(self, data_name):
+    def get_data_name_select_string(self, data_name: str) -> str:
         """This function creates the data_name filter portion of the query string
 
         Args:
@@ -282,7 +282,12 @@ class DataLogger:
             return ""
         return f"data_name='{data_name}'"
 
-    def get_query_string(self, start_time, duration, scenario_name, federate_name, data_name, data_type):
+    def get_query_string(self, start_time: int, 
+                         duration: int, 
+                         scenario_name: str, 
+                         federate_name: str, 
+                         data_name: str, 
+                         data_type: str) -> str:
         """This function creates the query string to pull time series data from the
         logger database, and depends upon the keys identified by the user input arguments.
 
@@ -342,7 +347,12 @@ class DataLogger:
                 qry_string += data_string
         return qry_string
 
-    def query_scenario_federate_times(self, start_time, duration, scenario_name, federate_name, data_name, data_type):
+    def query_scenario_federate_times(self, start_time: int,
+                                      duration: int, 
+                                      scenario_name: str,
+                                      federate_name: str,
+                                      data_name: str, 
+                                      data_type: str) -> pd.DataFrame:
         """This function queries time series data from the logger database and
         depends upon the keys identified by the user input arguments.
 
@@ -381,7 +391,7 @@ class DataLogger:
         dataframe = pd.DataFrame(data, columns=column_names)
         return dataframe
 
-    def query_scenario_all_times(self, scenario_name, data_type):
+    def query_scenario_all_times(self, scenario_name: str, data_type: str) -> pd.DataFrame:
         """This function queries data from the logger database filtered only by scenario_name and data_name
 
         Args:
@@ -403,10 +413,10 @@ class DataLogger:
         dataframe = pd.DataFrame(data, columns=column_names)
         return dataframe
 
-    def query_scheme_all_times(self, scheme_name, data_type):
+    def query_scheme_all_times(self, scheme_name: str, data_type: str) -> None:
         pass
 
-    def query_scheme_federate_all_times(self, scheme_name, federate_name, data_type):
+    def query_scheme_federate_all_times(self, scheme_name: str, federate_name: str, data_type) -> pd.DataFrame | None:
         """This function queries data from the logger database filtered only by federate_name and data_name
         and data_type
 
@@ -419,11 +429,7 @@ class DataLogger:
             dataframe (pandas dataframe object) - dataframe that contains the result records
             returned from the query of the database
         """
-        if scheme_name is None:
-            return None
-        if federate_name is None:
-            return None
-        if data_type is None:
+        if (scheme_name is None) or (federate_name is None) or (data_type is None):
             return None
         cur = self.data_db.cursor()
         # Todo: check against meta_db to see if schema name exist?
@@ -435,11 +441,11 @@ class DataLogger:
         dataframe = pd.DataFrame(data, columns=column_names)
         return dataframe
 
-    def get_schema_list(self):
+    def get_schema_list(self) -> None:
         # Todo: get schema from scenario documents
         pass
 
-    def get_scenario_list(self, scheme_name, data_type):
+    def get_scenario_list(self, scheme_name: str, data_type: str) -> pd.DataFrame | None:
         """This function queries the distinct list of scenario names from the database table
         defined by scheme_name and data_type
 
@@ -451,9 +457,7 @@ class DataLogger:
             dataframe (pandas dataframe object) - dataframe that contains the result records
             returned from the query of the database
         """
-        if scheme_name is None:
-            return None
-        if data_type is None:
+        if (scheme_name is None) or (data_type is None):
             return None
         # Todo: check against meta_db to see if schema name exist?
         # This should take from the meta documents and verify
@@ -465,7 +469,7 @@ class DataLogger:
         dataframe = pd.DataFrame(data, columns=column_names)
         return dataframe
 
-    def get_federate_list(self, scheme_name, data_type):
+    def get_federate_list(self, scheme_name: str, data_type: str) -> pd.DataFrame | None:
         """This function queries the distinct list of federate names from the database table
         defined by scheme_name and data_type
 
@@ -477,9 +481,7 @@ class DataLogger:
             dataframe (pandas dataframe object) - dataframe that contains the result records
             returned from the query of the database
         """
-        if scheme_name is None:
-            return None
-        if data_type is None:
+        if (scheme_name is None) or (data_type is None):
             return None
         # Todo: check against meta_db to see if schema name exist?
         qry_string = "SELECT DISTINCT federate FROM " + scheme_name + "." + data_type
@@ -490,7 +492,7 @@ class DataLogger:
         dataframe = pd.DataFrame(data, columns=column_names)
         return dataframe
 
-    def get_data_name_list(self, scheme_name, data_type):
+    def get_data_name_list(self, scheme_name: str, data_type: str) -> pd.DataFrame | None:
         """This function queries the distinct list of data names from the database table
         defined by scheme_name and data_type
 
@@ -502,9 +504,7 @@ class DataLogger:
             dataframe (pandas dataframe object) - dataframe that contains the result records
             returned from the query of the database
         """
-        if scheme_name is None:
-            return None
-        if data_type is None:
+        if (scheme_name is None) or (data_type is None):
             return None
         # Todo: check against meta_db to see if schema name exist?
         qry_string = "SELECT DISTINCT data_name FROM " + scheme_name + "." + data_type
@@ -515,7 +515,7 @@ class DataLogger:
         dataframe = pd.DataFrame(data, columns=column_names)
         return dataframe
 
-    def get_time_range(self, scheme_name, data_type, scenario_name, federate_name):
+    def get_time_range(self, scheme_name: str, data_type: str, scenario_name: str, federate_name: str) -> pd.DataFrame | None:
         """This function queries the minimum and maximum of time from the database
             table defined by scheme_name, data_type, scenario_name, and federate
 
@@ -530,11 +530,9 @@ class DataLogger:
             returned from the query of the database
         """
         qry_string = ""
-        if scheme_name is None:
+        if (scheme_name is None) or (data_type is None):
             return None
-        if data_type is None:
-            return None
-        if scenario_name is None and federate_name is None:
+        if (scenario_name is None) and (federate_name is None):
             return None
         if scenario_name is not None and federate_name is None:
             qry_string = ("SELECT MIN(time), MAX(time) FROM " + scheme_name + "." + data_type +
@@ -552,7 +550,7 @@ class DataLogger:
         dataframe = pd.DataFrame(data, columns=column_names)
         return dataframe
 
-    def set_time_stamps(self, dataframe, date_time):
+    def set_time_stamps(self, dataframe: pd.DataFrame, date_time: str):
         """This function calculates the time stamp for each time step in the dataframe and adds them
             to the dataframe in a column named time_stamp
 
@@ -563,6 +561,7 @@ class DataLogger:
             time stamps
 
         Returns:
+            # TODO: is ts a pd.Timestamp or something else?
             ts(pandas time series) - time series that contains the result records
             returned from the query of the database
         """
