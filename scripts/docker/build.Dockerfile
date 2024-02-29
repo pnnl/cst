@@ -11,7 +11,7 @@ WORKDIR $COSIM_HOME
 # CoSim exports
 ENV INSTDIR=$COSIM_HOME/tenv
 ENV BUILD_DIR=$COSIM_HOME/build
-ENV REPO_DIR=$COSIM_HOME/repository
+ENV REPO_DIR=$COSIM_HOME/repo
 
 # COMPILE exports
 ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64

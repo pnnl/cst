@@ -1,8 +1,8 @@
 #!/bin/bash
 
 if [[ -z ${SIM_DIR} ]]; then
-  echo "Please run 'source cosim.env' in the root Co-Simulation directory"
-  echo "Then run this script in this directory"
+  echo "Edit cosim.env in the Co-Simulation directory"
+  echo "Run 'source cosim.env' in that same directory"
   exit
 fi
 

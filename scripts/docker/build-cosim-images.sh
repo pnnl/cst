@@ -1,8 +1,8 @@
 #!/bin/bash
 
 if [[ -z ${SIM_DIR} ]]; then
-  echo "Please run 'source cosim.env' in the root Co-Simulation directory"
-  echo "Then run this script in this directory"
+  echo "Edit cosim.env in the Co-Simulation directory"
+  echo "Run 'source cosim.env' in that same directory"
   exit
 fi
 
@@ -45,13 +45,15 @@ builds=(
   1
 )
 
-# make directories and set permissions
+# Remove log files from build directory
+rm -f "$BUILD_DIR/*.logs" "$BUILD_DIR/out.txt"
+# Make directories and set permissions
 cd "$SIM_DIR/run" || exit
 mkdir -p ./dags ./logs ./plugins ./config ./python ../src/cosim_toolbox/cosim_toolbox.egg-info
-# make wide open for now
+# Make wide open for now
 sudo chmod -R 777 ./dags ./logs ./plugins ./config ./python ../src
-cd "$DOCKER_DIR" || exit
 
+cd "$DOCKER_DIR" || exit
 export BUILDKIT_PROGRESS=plain
 
 for i in "${!names[@]}"; do

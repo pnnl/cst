@@ -3,9 +3,14 @@
 # Copyright (c) 2021-2023 Battelle Memorial Institute
 # file: grid_apps.sh
 
-if [[ -z ${SIM_DIR} ]]; then
-  echo "Edit cosim.env in the Co-Simulation directory"
-  echo "Then please run 'source cosim.env' in that same directory"
+if [[ -z ${INSTDIR} ]]; then
+  echo
+  echo "To build a local environment:"
+  echo "  Edit cosim.env in the Co-Simulation directory"
+  echo "  Define LOCAL_ENV other than a blank in that file"
+  echo "  Run 'source cosim.env' in that same directory"
+  echo "  Run './grid_apps.sh [git login] [git email]' in this directory"
+  echo
   exit
 fi
 
@@ -107,36 +112,48 @@ cd "${HOME}" || exit
 echo "Install environment to $HOME/grid"
 mkdir -p grid
 cd grid || exit
-echo
 
+echo
 echo "Install a virtual python environment to $HOME/grid/venv"
 python3 -m pip install --upgrade pip
 python3 -m pip install virtualenv
 "${HOME}/.local/bin/virtualenv" venv --prompt GRID
 
+echo
 echo "Install executables environment to $HOME/grid/tenv"
 mkdir -p tenv
+
+echo
+echo "Install grid applications software to $HOME/grid/repo"
+mkdir -p repo
+cd repo || exit
 
 echo
 echo "Download all relevant repositories..."
 if [[ $binaries == "develop" ]]; then
 
-  echo "Clone directory structure for TESP"
+  echo
   echo ++++++++++++++ TESP
   git clone -b develop https://github.com/pnnl/tesp.git
-  "${BUILD_DIR}/patch.sh" AMES-V5.0 AMES-V5.0
+  "${BUILD_DIR}/patch.sh" tesp tesp
+
+  echo
+  echo ++++++++++++++ MESP
+  # git clone -b develop https://github.com/pnnl/mesp.git
+  # "${BUILD_DIR}/patch.sh" mesp mesp
 
   echo
   echo ++++++++++++++ PSST
-  # git clone https://github.com/ames-market/psst.git
+  # git clone -b master https://github.com/ames-market/psst.git
+  # For dsot
   git clone -b master https://github.com/ames-market/AMES-V5.0.git
   "${BUILD_DIR}/patch.sh" AMES-V5.0 AMES-V5.0
 
   echo
   echo ++++++++++++++ FNCS
   git clone -b feature/opendss https://github.com/FNCS/fncs.git
-  #For dsot
-  #git clone -b develop https://github.com/FNCS/fncs.git
+  # For different calling no cpp
+  # git clone -b develop https://github.com/FNCS/fncs.git
   "${BUILD_DIR}/patch.sh" fncs fncs
 
   echo
@@ -146,8 +163,6 @@ if [[ $binaries == "develop" ]]; then
 
   echo
   echo ++++++++++++++ GRIDLAB
-  #develop - dec21 commit number for dsot
-  #ENV GLD_VERSION=6c983d8daae8c6116f5fd4d4ccb7cfada5f8c9fc
   git clone -b master https://github.com/gridlab-d/gridlab-d.git
   "${BUILD_DIR}/patch.sh" gridlab-d gridlab-d
 

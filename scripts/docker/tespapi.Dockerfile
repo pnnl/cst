@@ -7,7 +7,6 @@ ARG COSIM_USER
 ENV COSIM_HOME=/home/$COSIM_USER
 
 # Compile exports
-# ENV TESPDIR=$COSIM_HOME/tesp
 
 # Copy files
 
