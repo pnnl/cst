@@ -115,7 +115,7 @@ class DataLogger:
         except:
             return None
 
-    def close_database_connections(self, commit=True) -> None:
+    def close_database_connections(self, commit: bool = True) -> None:
         self.meta_db = None
         if commit:
             self.data_db.commit()
@@ -130,24 +130,24 @@ class DataLogger:
             return True
 
     def check_version(self) -> None:
-        cur: pg.cursor = self.data_db.cursor()
+        cur = self.data_db.cursor()
         logger.info('PostgresSQL database version:')
         cur.execute('SELECT version()')
         # display the PostgresSQL database server version
-        db_version: str = cur.fetchone()
+        db_version = cur.fetchone()
         logger.info(db_version)
         # close the communication with the PostgresSQL
         cur.close()
 
     def create_schema(self, scheme_name: str) -> None:
-        query: str = "CREATE SCHEMA IF NOT EXISTS " + scheme_name + ";"
-        cur: pg.cursor = self.data_db.cursor()
+        query = "CREATE SCHEMA IF NOT EXISTS " + scheme_name + ";"
+        cur = self.data_db.cursor()
         cur.execute(query)
         cur.close()
 
     def drop_schema(self, scheme_name: str) -> None:
-        query: str = "DROP SCHEMA IF EXISTS " + scheme_name + ";"
-        cur: pg.cursor = self.data_db.cursor()
+        query = "DROP SCHEMA IF EXISTS " + scheme_name + ";"
+        cur = self.data_db.cursor()
         cur.execute(query)
         cur.close()
 
@@ -155,14 +155,14 @@ class DataLogger:
         query = ""
         for key in self.hdt_type:
             query += f"DELETE FROM {scheme_name}.{key} WHERE scenario='{scenario_name}'; "
-        cur: pg.cursor = self.data_db.cursor()
+        cur = self.data_db.cursor()
         cur.execute(query)
         cur.close()
 
     def table_exist(self, scheme_name: str, table_name: str) -> None:
         query = ("SELECT EXISTS ( SELECT FROM pg_tables WHERE "
                  "schemaname = '" + scheme_name + "' AND tablename = '" + table_name + "');")
-        cur: pg.cursor = self.data_db.cursor()
+        cur = self.data_db.cursor()
         cur.execute(query)
         result = cur.fetchone()
         cur.close()
@@ -179,7 +179,7 @@ class DataLogger:
                       "federate VARCHAR (255) NOT NULL, "
                       "data_name VARCHAR (255) NOT NULL, "
                       f"data_value {self.hdt_type[key]} NOT NULL);")
-        cur: pg.cursor = self.data_db.cursor()
+        cur = self.data_db.cursor()
         cur.execute(query)
         cur.close()
 
@@ -319,7 +319,7 @@ class DataLogger:
             data from logger database
         """
         scheme = self.get_scenario_document(scenario_name)
-        scheme_name: str = scheme["schema"]
+        scheme_name = scheme["schema"]
         qry_string = self.get_select_string(scheme_name, data_type)
         time_string = self.get_time_select_string(start_time, duration)
         scenario_string = self.get_scenario_select_string(scenario_name)
@@ -384,10 +384,10 @@ class DataLogger:
             returned from the query of the database
         """
         qry_string = self.get_query_string(start_time, duration, scenario_name, federate_name, data_name, data_type)
-        cur: pg.cursor = self.data_db.cursor()
+        cur = self.data_db.cursor()
         cur.execute(qry_string)
         column_names = [desc[0] for desc in cur.description]
-        data: list = cur.fetchall()
+        data = cur.fetchall()
         dataframe = pd.DataFrame(data, columns=column_names)
         return dataframe
 
@@ -403,20 +403,20 @@ class DataLogger:
             returned from the query of the database
         """
         scheme = self.get_scenario_document(scenario_name)
-        scheme_name: str = scheme["schema"]
-        cur: pg.cursor = self.data_db.cursor()
-        qry_string: str = ("SELECT * FROM " + scheme_name + "." + data_type +
+        scheme_name = scheme["schema"]
+        cur = self.data_db.cursor()
+        qry_string = ("SELECT * FROM " + scheme_name + "." + data_type +
                       " WHERE Scenario='" + scenario_name + "'")
         cur.execute(qry_string)
         column_names = [desc[0] for desc in cur.description]
-        data: list = cur.fetchall()
+        data = cur.fetchall()
         dataframe = pd.DataFrame(data, columns=column_names)
         return dataframe
 
     def query_scheme_all_times(self, scheme_name: str, data_type: str) -> None:
         pass
 
-    def query_scheme_federate_all_times(self, scheme_name: str, federate_name: str, data_type) -> pd.DataFrame:
+    def query_scheme_federate_all_times(self, scheme_name: str, federate_name: str, data_type) -> pd.DataFrame | None:
         """This function queries data from the logger database filtered only by federate_name and data_name
         and data_type
 
@@ -429,19 +429,15 @@ class DataLogger:
             dataframe (pandas dataframe object) - dataframe that contains the result records
             returned from the query of the database
         """
-        if scheme_name is None:
+        if (scheme_name is None) or (federate_name is None) or (data_type is None):
             return None
-        if federate_name is None:
-            return None
-        if data_type is None:
-            return None
-        cur: pg.cursor = self.data_db.cursor()
+        cur = self.data_db.cursor()
         # Todo: check against meta_db to see if schema name exist?
-        qry_string: str = ("SELECT * FROM " + scheme_name + "." + data_type +
+        qry_string = ("SELECT * FROM " + scheme_name + "." + data_type +
                       " WHERE Federate='" + federate_name + "'")
         cur.execute(qry_string)
         column_names = [desc[0] for desc in cur.description]
-        data: list = cur.fetchall()
+        data = cur.fetchall()
         dataframe = pd.DataFrame(data, columns=column_names)
         return dataframe
 
@@ -449,7 +445,7 @@ class DataLogger:
         # Todo: get schema from scenario documents
         pass
 
-    def get_scenario_list(self, scheme_name: str, data_type: str) -> pd.DataFrame:
+    def get_scenario_list(self, scheme_name: str, data_type: str) -> pd.DataFrame | None:
         """This function queries the distinct list of scenario names from the database table
         defined by scheme_name and data_type
 
@@ -461,21 +457,19 @@ class DataLogger:
             dataframe (pandas dataframe object) - dataframe that contains the result records
             returned from the query of the database
         """
-        if scheme_name is None:
-            return None
-        if data_type is None:
+        if (scheme_name is None) or (data_type is None):
             return None
         # Todo: check against meta_db to see if schema name exist?
         # This should take from the meta documents and verify
         qry_string = "SELECT DISTINCT scenario FROM " + scheme_name + "." + data_type
-        cur: pg.cursor = self.data_db.cursor()
+        cur = self.data_db.cursor()
         cur.execute(qry_string)
         column_names = ["scenario"]
-        data: list = cur.fetchall()
+        data = cur.fetchall()
         dataframe = pd.DataFrame(data, columns=column_names)
         return dataframe
 
-    def get_federate_list(self, scheme_name: str, data_type: str) -> pd.DataFrame:
+    def get_federate_list(self, scheme_name: str, data_type: str) -> pd.DataFrame | None:
         """This function queries the distinct list of federate names from the database table
         defined by scheme_name and data_type
 
@@ -487,20 +481,18 @@ class DataLogger:
             dataframe (pandas dataframe object) - dataframe that contains the result records
             returned from the query of the database
         """
-        if scheme_name is None:
-            return None
-        if data_type is None:
+        if (scheme_name is None) or (data_type is None):
             return None
         # Todo: check against meta_db to see if schema name exist?
         qry_string = "SELECT DISTINCT federate FROM " + scheme_name + "." + data_type
-        cur: pg.cursor = self.data_db.cursor()
+        cur = self.data_db.cursor()
         cur.execute(qry_string)
         column_names = ["federate"]
-        data: list = cur.fetchall()
+        data = cur.fetchall()
         dataframe = pd.DataFrame(data, columns=column_names)
         return dataframe
 
-    def get_data_name_list(self, scheme_name: str, data_type: str ) -> pd.DataFrame:
+    def get_data_name_list(self, scheme_name: str, data_type: str) -> pd.DataFrame | None:
         """This function queries the distinct list of data names from the database table
         defined by scheme_name and data_type
 
@@ -512,20 +504,18 @@ class DataLogger:
             dataframe (pandas dataframe object) - dataframe that contains the result records
             returned from the query of the database
         """
-        if scheme_name is None:
-            return None
-        if data_type is None:
+        if (scheme_name is None) or (data_type is None):
             return None
         # Todo: check against meta_db to see if schema name exist?
         qry_string = "SELECT DISTINCT data_name FROM " + scheme_name + "." + data_type
-        cur: pg.cursor = self.data_db.cursor()
+        cur = self.data_db.cursor()
         cur.execute(qry_string)
         column_names = ["data_name"]
-        data: list = cur.fetchall()
+        data = cur.fetchall()
         dataframe = pd.DataFrame(data, columns=column_names)
         return dataframe
 
-    def get_time_range(self, scheme_name: str, data_type: str, scenario_name: str, federate_name: str) -> pd.DataFrame:
+    def get_time_range(self, scheme_name: str, data_type: str, scenario_name: str, federate_name: str) -> pd.DataFrame | None:
         """This function queries the minimum and maximum of time from the database
             table defined by scheme_name, data_type, scenario_name, and federate
 
@@ -540,11 +530,9 @@ class DataLogger:
             returned from the query of the database
         """
         qry_string = ""
-        if scheme_name is None:
+        if (scheme_name is None) or (data_type is None):
             return None
-        if data_type is None:
-            return None
-        if scenario_name is None and federate_name is None:
+        if (scenario_name is None) and (federate_name is None):
             return None
         if scenario_name is not None and federate_name is None:
             qry_string = ("SELECT MIN(time), MAX(time) FROM " + scheme_name + "." + data_type +
@@ -555,14 +543,14 @@ class DataLogger:
         if scenario_name is not None and federate_name is not None:
             qry_string = ("SELECT MIN(time), MAX(time) FROM " + scheme_name + "." + data_type +
                           " WHERE federate='" + federate_name + "' AND scenario='" + scenario_name + "'")
-        cur: pg.cursor = self.data_db.cursor()
+        cur = self.data_db.cursor()
         cur.execute(qry_string)
         column_names = ["min", "max"]
-        data: list = cur.fetchall()
+        data = cur.fetchall()
         dataframe = pd.DataFrame(data, columns=column_names)
         return dataframe
 
-    def set_time_stamps(self, dataframe: str, date_time: str):
+    def set_time_stamps(self, dataframe: pd.DataFrame, date_time: str):
         """This function calculates the time stamp for each time step in the dataframe and adds them
             to the dataframe in a column named time_stamp
 

@@ -41,7 +41,7 @@ cu_logger: str = "cu_logger"
 
 
 def federation_database(clear: bool = False) -> None:
-    db: MetaDB = MetaDB(cosim_mongo_host, cosim_mongo_db)
+    db = MetaDB(cosim_mongo_host, cosim_mongo_db)
     logger.info("Before: ",  db.update_collection_names())
     if clear:
         db.db[cu_federations].drop()
@@ -56,14 +56,14 @@ class MetaDB:
     """
     _cu_dict_name = 'cu_007'
 
-    def __init__(self, uri: str=None, db_name: str=None) -> None:
-        self.collections: list[str] = None
+    def __init__(self, uri: str = None, db_name: str = None) -> None:
+        self.collections = None
         self.db_name, self.client = self._connect_to_database(uri, db_name)
         self.db = self.client[self.db_name]
         self.fs = gridfs.GridFS(self.db)
 
     @staticmethod
-    def _open_file(file_path: str, mode='r') -> typing.IO:
+    def _open_file(file_path: str, mode: str = 'r') -> typing.IO:
         """
         Utility function to open file with reasonable error handling.
         """
@@ -75,7 +75,7 @@ class MetaDB:
             return fh
 
     @staticmethod
-    def _connect_to_database(uri: str=None, db: str=None) -> tuple[str, MongoClient]:
+    def _connect_to_database(uri: str = None, db: str = None) -> tuple[str, MongoClient]:
         """
         Sets up connection to server port for mongodb
         """
@@ -86,7 +86,7 @@ class MetaDB:
             db = cosim_mongo_db
         # Set up connection
         uri = uri.replace('//', '//' + cosim_user + ':' + cosim_password + '@')
-        client: MongoClient = MongoClient(uri + '/?authSource=' + db + '&authMechanism=SCRAM-SHA-1')
+        client = MongoClient(uri + '/?authSource=' + db + '&authMechanism=SCRAM-SHA-1')
         # Test connection
         try:
             client.admin.command('ping')
@@ -104,14 +104,14 @@ class MetaDB:
         Doesn't throw an error if the name is not unique and lets the calling
         method decide what to do with it.
         """
-        ret_val: bool = True
+        ret_val = True
         for doc in (self.db[collection_name].find({}, {"_id": 0, self._cu_dict_name: 1})):
             if doc.__len__():
                 if doc[self._cu_dict_name] == new_name:
                     ret_val = False
         return ret_val
 
-    def add_file(self, file: str, conflict: str='fail', name: str=None) -> None:
+    def add_file(self, file: str, conflict: str = 'fail', name: str = None) -> None:
         """
         Gets file from disk and adds it to the metadataDB for all federates
         to use.
@@ -134,10 +134,10 @@ class MetaDB:
         if not name:
             path, file = os.path.split(file)
             name = file
-        fh: typing.IO = self._open_file(file, mode='rb')
+        fh = self._open_file(file, mode='rb')
 
         # Check for unique filename
-        db_file: gridfs.GridOutCursor = self.fs.files.find({'filename': name})
+        db_file = self.fs.files.find({'filename': name})
         if db_file:
             if conflict == "fail":
                 raise NameError(f"File '{name}' already exists, set 'conflict' to 'overwrite' to overwrite it.")
@@ -150,7 +150,7 @@ class MetaDB:
                                 f"must be 'fail', 'overwrite' or 'add version' ")
         self.fs.put(fh, filename=name)
 
-    def get_file(self, name: str, disk_name: str=None, path: str=None) -> gridfs.GridOut:
+    def get_file(self, name: str, disk_name: str = None, path: str = None) -> gridfs.GridOut:
         """
         Pulls a file from the metadataDB by "name" and optionally writes it to
         disk. This method only gets the latest version of the file (if
@@ -162,7 +162,7 @@ class MetaDB:
         disk. If it is, the file is written at the location specified by "path"
         using the provided "disk_name".
         """
-        db_file:  gridfs.GridOutCursor = self.fs.files.find({'filename': name})
+        db_file = self.fs.files.find({'filename': name})
         if not db_file:
             raise NameError(f"File '{name}' does not exist in metadataDB.")
         else:
@@ -185,9 +185,9 @@ class MetaDB:
         self.db[collection_name].drop()
         self.update_collection_names()
 
-    def remove_document(self, collection_name: str, 
-                        object_id: bson.objectID.ObjectID=None, 
-                        dict_name: str=None) -> None:
+    def remove_document(self, collection_name: str,
+                        object_id: bson.objectid.ObjectId = None,
+                        dict_name: str = None) -> None:
         """
         Remove the document specified by "object_id" or "dict_name" from the
         collection specified by "collection_name".
@@ -228,13 +228,13 @@ class MetaDB:
         Provides list of document names in collection specified by 
         "collection_name"
         """
-        doc_names: list = []
+        doc_names = []
         for doc in (self.db[collection_name].find({}, {"_id": 0, self._cu_dict_name: 1})):
             if doc.__len__():
                 doc_names.append(doc[self._cu_dict_name])
         return doc_names
 
-    def get_dict_key_names(self, collection_name: str, doc_name: str) -> list:
+    def get_dict_key_names(self, collection_name: str, doc_name: str) -> list[str]:
         """
         Provides the list of keys for the document (dictionary) specified
         by "doc_name" in the collection "collection_name".
@@ -267,8 +267,8 @@ class MetaDB:
         return str(obj_id)
 
     def get_dict(self, collection_name: str, 
-                 object_id: bson.objectID.ObjectID=None, 
-                 dict_name: str=None) -> dict:
+                 object_id: bson.objectid.ObjectId = None,
+                 dict_name: str = None) -> dict:
         """
         Returns the dictionary in the database based on the user-provided
         object ID or name.
@@ -297,9 +297,9 @@ class MetaDB:
         return doc
 
     def update_dict(self, collection_name: str, 
-                    updated_dict: str, 
-                    object_id: bson.objectID.ObjectID=None, 
-                    dict_name: str=None) -> str:
+                    updated_dict: dict,
+                    object_id: bson.objectid.ObjectId = None,
+                    dict_name: str = None) -> str:
         """
         Updates the dictionary on the database (under the same object_ID/name)
         with the passed in updated dictionary.
@@ -345,7 +345,7 @@ class Docker:
         pass
 
     @staticmethod
-    def _service(name: str, image: str, env, cnt, depends=None) -> str:
+    def _service(name: str, image: str, env: list[str], cnt: int, depends: str = None) -> str:
         _service = "  " + name + ":\n"
         _service += "    image: \"" + image + "\"\n"
         if env[0] != '':
@@ -378,12 +378,12 @@ class Docker:
 
     @staticmethod
     def define_yaml(scenario_name: str) -> None:
-        mdb: MetaDB = MetaDB(cosim_mongo_host, cosim_mongo_db)
+        mdb = MetaDB(cosim_mongo_host, cosim_mongo_db)
 
-        scenario_def: dict = mdb.get_dict(cu_scenarios, None, scenario_name)
-        federation_name : str= scenario_def["federation"]
-        schema_name: str = scenario_def["schema"]
-        fed_def: dict = mdb.get_dict(cu_federations, None, federation_name)["federation"]
+        scenario_def = mdb.get_dict(cu_scenarios, None, scenario_name)
+        federation_name = scenario_def["federation"]
+        schema_name = scenario_def["schema"]
+        fed_def = mdb.get_dict(cu_federations, None, federation_name)["federation"]
 
         cosim_env = """      SIM_HOST: \"""" + sim_host + """\"
       SIM_USER: \"""" + sim_user + """\"
@@ -426,12 +426,12 @@ class Docker:
         logger.info('====  Broker Exit in\n        ' + os.getcwd())
 
     @staticmethod
-    def run_remote_yaml(scenario_name: str, path: str="/run/python/test_federation") -> None:
+    def run_remote_yaml(scenario_name: str, path: str = "/run/python/test_federation") -> None:
         cosim = os.environ.get("SIM_DIR", "/home/worker/copper")
         logger.info('====  ' + scenario_name + ' Broker Start in\n        ' + os.getcwd())
         docker_compose = "docker compose -f " + scenario_name + ".yaml"
         # in wsl_post and wsl_host
-        if wsl_host is None:
+        if not wsl_host:
             ssh = "ssh -i ~/copper-key-ecdsa " + sim_user + "@" + sim_host
         else:
             ssh = "ssh -i ~/copper-key-ecdsa " + sim_user + "@" + wsl_host
