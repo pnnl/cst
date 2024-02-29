@@ -70,7 +70,7 @@ class DataLogger:
         self.meta_db: mDB.MetaDB = None
         self.data_db = None
 
-    def _connect_logger_database(self, connection: dict = None) -> pg.connection | None:
+    def _connect_logger_database(self, connection: dict = None) -> object | None:
         """This function defines the connection to the datalogger database
         and opens a connection to the postgres database
 

@@ -69,7 +69,7 @@ class Federate:
 
     def __init__(self, fed_name="", **kwargs):
         self.hfed: h.HelicsFederate = None
-        self.mddb: mDB.MetaDB  = None
+        self.mddb: mDB.MetaDB = None
         self.config: dict = None
         self.scenario: dict = None
         self.scenario_name: str = None

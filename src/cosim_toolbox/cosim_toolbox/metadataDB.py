@@ -9,9 +9,12 @@ import typing
 import pprint
 import logging
 import subprocess
+from typing import Any, Mapping
+
 import gridfs
 from pymongo import MongoClient
 import bson
+from pymongo.collection import Collection
 
 import cosim_toolbox.helicsConfig as hC
 
@@ -203,7 +206,7 @@ class MetaDB:
             self.db[collection_name].delete_one({"_id": object_id})
         # TODO: Add check for success on delete.
 
-    def add_collection(self, name: str) -> pymongo.collection.Collection:
+    def add_collection(self, name: str) -> Collection[Mapping[str, Any] | Any]:
         """
         Collections don't really exist in MongoDB until at least one document
         has been added to the collection. This method adds a small identifier
