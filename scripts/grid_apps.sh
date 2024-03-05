@@ -57,46 +57,44 @@ done
 if [[ $binaries == "develop" ]]; then
 # build tools
 sudo apt-get -y upgrade
-sudo apt-get -y install pkgconf
-sudo apt-get -y install git
-sudo apt-get -y install build-essential
-sudo apt-get -y install autoconf
-sudo apt-get -y install libtool
-sudo apt-get -y install libjsoncpp-dev
-sudo apt-get -y install gfortran
-sudo apt-get -y install cmake
-sudo apt-get -y install subversion
-sudo apt-get -y install unzip
+sudo apt-get -y install pkgconf \
+git \
+build-essential \
+autoconf \
+libtool \
+libjsoncpp-dev \
+gfortran \
+install cmake \
+subversion \
+unzip
 fi
 
 # Java support
-sudo apt-get -y install openjdk-11-jdk
-sudo ln -sf /usr/lib/jvm/java-11-openjdk-amd64 /usr/lib/jvm/default-java
-
+sudo apt-get -y install openjdk-11-jdk && \
 # for HELICS and FNCS
-sudo apt-get -y install libzmq5-dev
-sudo apt-get -y install libczmq-dev
-sudo apt-get -y install libboost-dev
-
+libzmq5-dev \
+libczmq-dev \
+libboost-dev \
 # for GridLAB-D
-sudo apt-get -y install libxerces-c-dev
-sudo apt-get -y install libhdf5-serial-dev
-
+libxerces-c-dev \
+libhdf5-serial-dev \
 # for solvers used by AMES/Agents/GridLAB-D
 # needed for KLU
-sudo apt-get -y install libsuitesparse-dev
+libsuitesparse-dev \
 # end users replace libsuitesparse-dev with libklu1, which is licensed LGPL
 # needed for Ipopt/cbc
-sudo apt-get -y install coinor-cbc
-sudo apt-get -y install coinor-libcbc-dev
-sudo apt-get -y install coinor-libipopt-dev
-sudo apt-get -y install liblapack-dev
-sudo apt-get -y install libmetis-dev
+coinor-cbc \
+coinor-libcbc-dev \
+coinor-libipopt-dev \
+liblapack-dev \
+libmetis-dev \
+# python
+python3-venv \
+python3-pip \
+python3-tk \
+python3-pil.imagetk
 
-sudo apt-get -y install python3-venv
-sudo apt-get -y install python3-pip
-sudo apt-get -y install python3-tk
-sudo apt-get -y install python3-pil.imagetk
+sudo ln -sf /usr/lib/jvm/java-11-openjdk-amd64 /usr/lib/jvm/default-java
 
 echo
 if [[ -z $1 && -z $2 ]]; then

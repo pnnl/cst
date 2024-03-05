@@ -16,7 +16,7 @@ which python > "${BUILD_DIR}/tesp_pypi.log" 2>&1
 
 echo "Installing Python Libraries Requirements for TESP..."
 pip install --upgrade pip >> "${BUILD_DIR}/tesp_pypi.log" 2>&1
-pip install -r "${REPO_DIR}/tesp/requirements.txt" >> "${BUILD_DIR}/tesp_pypi.log" 2>&1
+# pip install -r "${REPO_DIR}/tesp/requirements.txt" >> "${BUILD_DIR}/tesp_pypi.log" 2>&1
 
 if [[ $1 == "develop" ]]; then
   cd "${REPO_DIR}/tesp/src/tesp_support" || exit
@@ -65,19 +65,22 @@ else
   pip install tesp_support --upgrade > "${BUILD_DIR}/tesp_api.log" 2>&1
 #  pip install psst --upgrade
 
-
   ver=$(cat ../grid_version)
   echo "Installing HELICS, FNCS, GridLabD, EnergyPlus, NS3, and solver binaries..."
   cd "${INSTDIR}" || exit
 #  wget --no-check-certificate "https://github.com/pnnl/tesp/releases/download/${ver}/grid_binaries.zip"
   wget --no-check-certificate "https://mepas.pnnl.gov/FramesV1/Install/grid_binaries_$ver.zip"
   unzip "grid_binaries_$ver.zip" > "${BUILD_DIR}/grid_binaries.log" 2>&1
-#  rm grid_binaries.zip
+  rm "grid_binaries_$ver.zip"
 fi
+
+cd "${SIM_DIR}/src/cosim_toolbox" || exit
+echo "Installing Python CoSim ToolBox API..."
+pip install -e . > "${BUILD_DIR}/cosim_api.log" 2>&1
 
 cd "${BUILD_DIR}" || exit
 echo "Installing HELICS Python bindings..."
-./HELICS-py.sh clean > HELICS-py.log 2>&1
+./HELICS-py.sh clean > "${BUILD_DIR}/HELICS-py.log" 2>&1
 
 # Creates the necessary links and cache to the most recent shared libraries found
 # in the directories specified on the command line, in the file /etc/ld.so.conf,
