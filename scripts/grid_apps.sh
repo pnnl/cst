@@ -55,7 +55,8 @@ done
 
 
 if [[ $binaries == "develop" ]]; then
-# build tools
+
+# add build tools OS
 sudo apt-get -y upgrade
 sudo apt-get -y install pkgconf \
 git \
@@ -69,26 +70,19 @@ subversion \
 unzip
 fi
 
-# Java support
-sudo apt-get -y install openjdk-11-jdk && \
-# for HELICS and FNCS
+# add tools/libs for Java support, HELICS, FNCS, GridLAB-D, Ipopt/cbc
+sudo apt-get -y install openjdk-11-jdk \
 libzmq5-dev \
 libczmq-dev \
 libboost-dev \
-# for GridLAB-D
 libxerces-c-dev \
 libhdf5-serial-dev \
-# for solvers used by AMES/Agents/GridLAB-D
-# needed for KLU
 libsuitesparse-dev \
-# end users replace libsuitesparse-dev with libklu1, which is licensed LGPL
-# needed for Ipopt/cbc
 coinor-cbc \
 coinor-libcbc-dev \
 coinor-libipopt-dev \
 liblapack-dev \
 libmetis-dev \
-# python
 python3-venv \
 python3-pip \
 python3-tk \
