@@ -82,6 +82,14 @@ services:
     networks:
       - sim_net
 
+  grafana:
+    image: grafana/grafana:10.2.4-ubuntu
+    container_name: ${CONTAINER_NAME:-grafana}
+    ports:
+      - "3000:3000"
+    networks:
+      - sim_net
+
 volumes:
   cu_mongo: null
   cu_postgres: null

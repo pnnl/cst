@@ -140,13 +140,14 @@ class DataLogger:
         cur.close()
 
     def create_schema(self, scheme_name: str) -> None:
-        query = "CREATE SCHEMA IF NOT EXISTS " + scheme_name + ";"
+        query = f"CREATE SCHEMA IF NOT EXISTS {scheme_name};"
+        query += f" GRANT USAGE ON SCHEMA {scheme_name} TO grafanareader;"
         cur = self.data_db.cursor()
         cur.execute(query)
         cur.close()
 
     def drop_schema(self, scheme_name: str) -> None:
-        query = "DROP SCHEMA IF EXISTS " + scheme_name + ";"
+        query = f"DROP SCHEMA IF EXISTS {scheme_name};"
         cur = self.data_db.cursor()
         cur.execute(query)
         cur.close()
@@ -154,14 +155,14 @@ class DataLogger:
     def remove_scenario(self, scheme_name: str, scenario_name: str) -> None:
         query = ""
         for key in self.hdt_type:
-            query += f"DELETE FROM {scheme_name}.{key} WHERE scenario='{scenario_name}'; "
+            query += f" DELETE FROM {scheme_name}.{key} WHERE scenario='{scenario_name}'; "
         cur = self.data_db.cursor()
         cur.execute(query)
         cur.close()
 
     def table_exist(self, scheme_name: str, table_name: str) -> None:
         query = ("SELECT EXISTS ( SELECT FROM pg_tables WHERE "
-                 "schemaname = '" + scheme_name + "' AND tablename = '" + table_name + "');")
+                 f"schemaname = '{scheme_name}' AND tablename = '{table_name}');")
         cur = self.data_db.cursor()
         cur.execute(query)
         result = cur.fetchone()
@@ -179,6 +180,8 @@ class DataLogger:
                       "federate VARCHAR (255) NOT NULL, "
                       "data_name VARCHAR (255) NOT NULL, "
                       f"data_value {self.hdt_type[key]} NOT NULL);")
+            query += f" GRANT SELECT ON {scheme_name}.{key} TO grafanareader;"
+        query += f" ALTER ROLE grafanareader SET search_path = {scheme_name};"
         cur = self.data_db.cursor()
         cur.execute(query)
         cur.close()

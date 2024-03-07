@@ -9,12 +9,12 @@ if [[ -z ${INSTDIR} ]]; then
   echo "  Edit cosim.env in the Co-Simulation directory"
   echo "  Define LOCAL_ENV other than a blank in that file"
   echo "  Run 'source cosim.env' in that same directory"
-  echo "  Run './grid_apps.sh [git login] [git email]' in this directory"
+  echo "  Run './scripts/grid_apps.sh [git login] [git email]' in that same directory"
   echo
   exit
 fi
 
-# You should get familiar with the command line to have good success with TESP
+# You should get familiar with the command line to have good success with CoSim Toolbox
 # As such, you may want to run in remote shh terminal.
 # Here is to how to install and configured ssh server
 #   sudo apt-get -y install openssh-server
@@ -23,25 +23,14 @@ fi
 #   sudo service ssh start
 #   sudo systemctl status ssh
 
-# From terminal in the VM, enter the these lines to build
-#   cd
-#	  wget --no-check-certificate https://raw.githubusercontent.com/pnnl/tesp/main/scripts/tesp.sh
-# if vpn is used --no-check-certificate in wget command line
-#	  chmod 755 tesp.sh
-# Set the the first and second parameter on the command line:
-#	  ./tesp.sh username username@email
-
 # If you would to use and IDE here's to install snap Pycharm IDE for python
 #   sudo snap install pycharm-community --classic
-# Here is how to start pycharm and capture pycharm log for any errors
+# Here is how to start env and pycharm and capture pycharm log for any errors
+#   source ~home/copper/cosim.env
 #   pycharm-community &> ~/charm.log&
-
 
 #alternatives command line for java or python
 #sudo update-alternatives --config java
-
-# repo for git
-# sudo add-apt-repository ppa:git-core/ppa
 
 while true; do
     # shellcheck disable=SC2162
@@ -53,9 +42,7 @@ while true; do
     esac
 done
 
-
 if [[ $binaries == "develop" ]]; then
-
 # add build tools OS
 sudo apt-get -y upgrade
 sudo apt-get -y install pkgconf \
@@ -66,12 +53,12 @@ libtool \
 libjsoncpp-dev \
 gfortran \
 install cmake \
-subversion \
-unzip
+subversion
 fi
 
 # add tools/libs for Java support, HELICS, FNCS, GridLAB-D, Ipopt/cbc
 sudo apt-get -y install openjdk-11-jdk \
+unzip \
 libzmq5-dev \
 libczmq-dev \
 libboost-dev \
@@ -126,52 +113,71 @@ if [[ $binaries == "develop" ]]; then
 
   echo
   echo ++++++++++++++ TESP
-  git clone -b develop https://github.com/pnnl/tesp.git
-  "${BUILD_DIR}/patch.sh" tesp tesp
+  if [[ -d "${REPO_DIR}/tesp" ]]; then
+    git clone -b develop https://github.com/pnnl/tesp.git
+    "${BUILD_DIR}/patch.sh" tesp tesp
+  fi
 
   echo
   echo ++++++++++++++ MESP
-  # git clone -b develop https://github.com/pnnl/mesp.git
-  # "${BUILD_DIR}/patch.sh" mesp mesp
+  if [[ -d "${REPO_DIR}/mesp" ]]; then
+    echo ""
+    # git clone -b develop https://github.com/pnnl/mesp.git
+    # "${BUILD_DIR}/patch.sh" mesp mesp
+  fi
 
   echo
   echo ++++++++++++++ PSST
-  # git clone -b master https://github.com/ames-market/psst.git
-  # For dsot
-  git clone -b master https://github.com/ames-market/AMES-V5.0.git
-  "${BUILD_DIR}/patch.sh" AMES-V5.0 AMES-V5.0
+  if [[ -d "${REPO_DIR}/AMES-V5.0" ]]; then
+    # git clone -b master https://github.com/ames-market/psst.git
+    # For dsot
+    git clone -b master https://github.com/ames-market/AMES-V5.0.git
+    "${BUILD_DIR}/patch.sh" AMES-V5.0 AMES-V5.0
+  fi
 
   echo
   echo ++++++++++++++ FNCS
-  git clone -b feature/opendss https://github.com/FNCS/fncs.git
-  # For different calling no cpp
-  # git clone -b develop https://github.com/FNCS/fncs.git
-  "${BUILD_DIR}/patch.sh" fncs fncs
+  if [[ -d "${REPO_DIR}/fncs" ]]; then
+    git clone -b feature/opendss https://github.com/FNCS/fncs.git
+    # For different calling no cpp
+    # git clone -b develop https://github.com/FNCS/fncs.git
+    "${BUILD_DIR}/patch.sh" fncs fncs
+  fi
 
   echo
   echo ++++++++++++++ HELICS
-  git clone -b main https://github.com/GMLC-TDC/HELICS-src
-  "${BUILD_DIR}/patch.sh" HELICS-src HELICS-src
+  if [[ -d "${REPO_DIR}/HELICS-src" ]]; then
+    git clone -b main https://github.com/GMLC-TDC/HELICS-src
+    "${BUILD_DIR}/patch.sh" HELICS-src HELICS-src
+  fi
 
   echo
   echo ++++++++++++++ GRIDLAB
-  git clone -b master https://github.com/gridlab-d/gridlab-d.git
-  "${BUILD_DIR}/patch.sh" gridlab-d gridlab-d
+  if [[ -d "${REPO_DIR}/gridlab-d" ]]; then
+    git clone -b master https://github.com/gridlab-d/gridlab-d.git
+    "${BUILD_DIR}/patch.sh" gridlab-d gridlab-d
+  fi
 
   echo
   echo ++++++++++++++ ENERGYPLUS
-  git clone -b fncs_9.3.0 https://github.com/FNCS/EnergyPlus.git
-  "${BUILD_DIR}/patch.sh" EnergyPlus EnergyPlus
+  if [[ -d "${REPO_DIR}/EnergyPlus" ]]; then
+    git clone -b fncs_9.3.0 https://github.com/FNCS/EnergyPlus.git
+    "${BUILD_DIR}/patch.sh" EnergyPlus EnergyPlus
+  fi
 
   echo
   echo ++++++++++++++ NS-3
-  git clone -b master https://gitlab.com/nsnam/ns-3-dev.git
-  "${BUILD_DIR}/patch.sh" ns-3-dev ns-3-dev
+  if [[ -d "${REPO_DIR}/gridlab-d" ]]; then
+    git clone -b master https://gitlab.com/nsnam/ns-3-dev.git
+    "${BUILD_DIR}/patch.sh" ns-3-dev ns-3-dev
+  fi
 
   echo
   echo ++++++++++++++ HELICS-NS-3
-  git clone -b main https://github.com/GMLC-TDC/helics-ns3 ns-3-dev/contrib/helics
-  "${BUILD_DIR}/patch.sh" ns-3-dev/contrib/helics helics-ns3
+  if [[ -d "${REPO_DIR}/gridlab-d" ]]; then
+    git clone -b main https://github.com/GMLC-TDC/helics-ns3 ns-3-dev/contrib/helics
+    "${BUILD_DIR}/patch.sh" ns-3-dev/contrib/helics helics-ns3
+  fi
 
   echo
   echo ++++++++++++++ KLU SOLVER

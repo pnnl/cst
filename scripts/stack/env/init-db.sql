@@ -1,1 +1,2 @@
+CREATE USER grafanareader WITH PASSWORD 'password';
 CREATE DATABASE ${COSIM_DB};
