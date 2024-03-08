@@ -78,7 +78,7 @@ class MetaDB:
             return fh
 
     @staticmethod
-    def _connect_to_database(uri: str = None, db: str = None) -> tuple[str, MongoClient]:
+    def _connect_to_database(uri: str = None, db: str = None):
         """
         Sets up connection to server port for mongodb
         """
@@ -206,7 +206,7 @@ class MetaDB:
             self.db[collection_name].delete_one({"_id": object_id})
         # TODO: Add check for success on delete.
 
-    def add_collection(self, name: str) -> Collection[Mapping[str, Any] | Any]:
+    def add_collection(self, name: str):
         """
         Collections don't really exist in MongoDB until at least one document
         has been added to the collection. This method adds a small identifier
@@ -218,7 +218,7 @@ class MetaDB:
         self.update_collection_names()
         return collection
 
-    def update_collection_names(self) -> list[str]:
+    def update_collection_names(self) -> list:
         """
         Updates the list of collection names in the db object from the database.
         As you can see in the code below, this is pure syntax sugar.
@@ -226,7 +226,7 @@ class MetaDB:
         self.collections = self.db.list_collection_names()
         return self.collections
 
-    def get_collection_document_names(self, collection_name: str) -> list[str]:
+    def get_collection_document_names(self, collection_name: str) -> list:
         """
         Provides list of document names in collection specified by 
         "collection_name"
@@ -237,7 +237,7 @@ class MetaDB:
                 doc_names.append(doc[self._cu_dict_name])
         return doc_names
 
-    def get_dict_key_names(self, collection_name: str, doc_name: str) -> list[str]:
+    def get_dict_key_names(self, collection_name: str, doc_name: str) -> list:
         """
         Provides the list of keys for the document (dictionary) specified
         by "doc_name" in the collection "collection_name".
@@ -348,7 +348,7 @@ class Docker:
         pass
 
     @staticmethod
-    def _service(name: str, image: str, env: list[str], cnt: int, depends: str = None) -> str:
+    def _service(name: str, image: str, env: list, cnt: int, depends: str = None) -> str:
         _service = "  " + name + ":\n"
         _service += "    image: \"" + image + "\"\n"
         if env[0] != '':

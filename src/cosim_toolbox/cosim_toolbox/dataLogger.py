@@ -70,7 +70,7 @@ class DataLogger:
         self.meta_db: mDB.MetaDB = None
         self.data_db = None
 
-    def _connect_logger_database(self, connection: dict = None) -> object | None:
+    def _connect_logger_database(self, connection: dict = None):
         """This function defines the connection to the datalogger database
         and opens a connection to the postgres database
 
@@ -92,7 +92,7 @@ class DataLogger:
         except:
             return None
 
-    def _connect_scenario_database(self, connection: dict = None) -> mDB.MetaDB | None:
+    def _connect_scenario_database(self, connection: dict = None):
         """This function defines the connection to the meta database
         and opens a connection to the mongo database
 
@@ -141,7 +141,7 @@ class DataLogger:
 
     def create_schema(self, scheme_name: str) -> None:
         query = f"CREATE SCHEMA IF NOT EXISTS {scheme_name};"
-        query += f" GRANT USAGE ON SCHEMA {scheme_name} TO grafanareader;"
+        query += f" GRANT USAGE ON SCHEMA {scheme_name} TO reader;"
         cur = self.data_db.cursor()
         cur.execute(query)
         cur.close()
@@ -175,13 +175,15 @@ class DataLogger:
         for key in self.hdt_type:
             query += ("CREATE TABLE IF NOT EXISTS "
                       f"{scheme_name}.{key} ("
-                      "time double precision NOT NULL, "
+                      "data_time double precision NOT NULL, "
                       "scenario VARCHAR (255) NOT NULL, "
                       "federate VARCHAR (255) NOT NULL, "
                       "data_name VARCHAR (255) NOT NULL, "
                       f"data_value {self.hdt_type[key]} NOT NULL);")
-            query += f" GRANT SELECT ON {scheme_name}.{key} TO grafanareader;"
-        query += f" ALTER ROLE grafanareader SET search_path = {scheme_name};"
+        query += f" GRANT SELECT ON ALL TABLES IN SCHEMA {scheme_name} TO reader;"
+        query += f" GRANT USAGE ON ALL SEQUENCES IN SCHEMA {scheme_name} TO reader;"
+        query += f" GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA {scheme_name} TO reader;"
+        query += f" ALTER ROLE reader SET search_path = {scheme_name};"
         cur = self.data_db.cursor()
         cur.execute(query)
         cur.close()
@@ -196,7 +198,7 @@ class DataLogger:
             self.federation = self.meta_db.get_dict(mDB.cu_federations, None, federation_name)
         return self.federation
 
-    def get_select_string(self, scheme_name: str, data_type: str) -> str | None:
+    def get_select_string(self, scheme_name: str, data_type: str) -> str:
         """This function creates the SELECT portion of the query string
 
         Args:
@@ -240,51 +242,6 @@ class DataLogger:
             end_time = start_time + duration
         return "time>=" + str(start_time) + " AND time<=" + str(end_time)
 
-    def get_scenario_select_string(self, scenario_name: str) -> str:
-        """This function creates the scenario filter portion of the query string
-
-        Args:
-            scenario_name (string) - the name of the scenario which the data will be filtered on
-            If None is entered, data will not be filtered based upon the scenario field
-
-        Returns:
-            qry_string (string) - string containing the scenario filter portion of the sql query
-            'scenario=scenario'
-        """
-        if scenario_name is None or scenario_name == "":
-            return ""
-        return f"scenario='{scenario_name}'"
-
-    def get_federate_select_string(self, federate_name: str) -> str:
-        """This function creates the federate filter portion of the query string
-
-        Args:
-            federate_name (string) - the name of the Federate which the data will be filtered on
-            If None is entered, data will not be filtered based upon the federate field
-
-        Returns:
-            qry_string (string) - string containing the federate filter portion of the sql query
-            'federate=federate_name'
-        """
-        if federate_name is None or federate_name == "":
-            return ""
-        return f"federate='{federate_name}'"
-
-    def get_data_name_select_string(self, data_name: str) -> str:
-        """This function creates the data_name filter portion of the query string
-
-        Args:
-            data_name (string) - the name of the data which will be used to filter the return data
-            If None is entered, data will not be filtered based upon the data_name field
-
-        Returns:
-            qry_string (string) - string containing the data_name filter portion of the sql query
-            'data_name=data_name'
-        """
-        if data_name is None or data_name == "":
-            return ""
-        return f"data_name='{data_name}'"
-
     def get_query_string(self, start_time: int, 
                          duration: int, 
                          scenario_name: str, 
@@ -325,9 +282,9 @@ class DataLogger:
         scheme_name = scheme["schema"]
         qry_string = self.get_select_string(scheme_name, data_type)
         time_string = self.get_time_select_string(start_time, duration)
-        scenario_string = self.get_scenario_select_string(scenario_name)
-        federate_string = self.get_federate_select_string(federate_name)
-        data_string = self.get_data_name_select_string(data_name)
+        scenario_string = f"scenario='{scenario_name}'" if scenario_name is None or scenario_name == "" else ""
+        federate_string = f"federate='{federate_name}'" if federate_name is None or federate_name == "" else ""
+        data_string = f"data_name='{data_name}'" if data_name is None or data_name == "" else ""
         if time_string == "" and scenario_string == "" and federate_string == "" and data_string == "":
             qry_string = qry_string.replace(" WHERE ", "")
             return qry_string
@@ -405,11 +362,14 @@ class DataLogger:
             dataframe (pandas dataframe object) - dataframe that contains the result records
             returned from the query of the database
         """
+        if type(scenario_name) is not str:
+            return None
+        if type(data_type) is not str:
+            return None
         scheme = self.get_scenario_document(scenario_name)
         scheme_name = scheme["schema"]
         cur = self.data_db.cursor()
-        qry_string = ("SELECT * FROM " + scheme_name + "." + data_type +
-                      " WHERE Scenario='" + scenario_name + "'")
+        qry_string = f"SELECT * FROM {scheme_name}.{data_type} WHERE scenario='{scenario_name}'"
         cur.execute(qry_string)
         column_names = [desc[0] for desc in cur.description]
         data = cur.fetchall()
@@ -419,7 +379,7 @@ class DataLogger:
     def query_scheme_all_times(self, scheme_name: str, data_type: str) -> None:
         pass
 
-    def query_scheme_federate_all_times(self, scheme_name: str, federate_name: str, data_type) -> pd.DataFrame | None:
+    def query_scheme_federate_all_times(self, scheme_name: str, federate_name: str, data_type) -> pd.DataFrame:
         """This function queries data from the logger database filtered only by federate_name and data_name
         and data_type
 
@@ -432,12 +392,15 @@ class DataLogger:
             dataframe (pandas dataframe object) - dataframe that contains the result records
             returned from the query of the database
         """
-        if (scheme_name is None) or (federate_name is None) or (data_type is None):
+        if type(scheme_name) is not str:
+            return None
+        if type(federate_name) is not str:
+            return None
+        if type(data_type) is not str:
             return None
         cur = self.data_db.cursor()
         # Todo: check against meta_db to see if schema name exist?
-        qry_string = ("SELECT * FROM " + scheme_name + "." + data_type +
-                      " WHERE Federate='" + federate_name + "'")
+        qry_string = f"SELECT * FROM {scheme_name}.{data_type} WHERE federate='{federate_name}'";
         cur.execute(qry_string)
         column_names = [desc[0] for desc in cur.description]
         data = cur.fetchall()
@@ -448,7 +411,7 @@ class DataLogger:
         # Todo: get schema from scenario documents
         pass
 
-    def get_scenario_list(self, scheme_name: str, data_type: str) -> pd.DataFrame | None:
+    def get_scenario_list(self, scheme_name: str, data_type: str) -> pd.DataFrame:
         """This function queries the distinct list of scenario names from the database table
         defined by scheme_name and data_type
 
@@ -460,11 +423,13 @@ class DataLogger:
             dataframe (pandas dataframe object) - dataframe that contains the result records
             returned from the query of the database
         """
-        if (scheme_name is None) or (data_type is None):
+        if type(scheme_name) is not str:
+            return None
+        if type(data_type) is not str:
             return None
         # Todo: check against meta_db to see if schema name exist?
         # This should take from the meta documents and verify
-        qry_string = "SELECT DISTINCT scenario FROM " + scheme_name + "." + data_type
+        qry_string = f"SELECT DISTINCT scenario FROM {scheme_name}.{data_type};"
         cur = self.data_db.cursor()
         cur.execute(qry_string)
         column_names = ["scenario"]
@@ -472,7 +437,7 @@ class DataLogger:
         dataframe = pd.DataFrame(data, columns=column_names)
         return dataframe
 
-    def get_federate_list(self, scheme_name: str, data_type: str) -> pd.DataFrame | None:
+    def get_federate_list(self, scheme_name: str, data_type: str) -> pd.DataFrame:
         """This function queries the distinct list of federate names from the database table
         defined by scheme_name and data_type
 
@@ -484,10 +449,12 @@ class DataLogger:
             dataframe (pandas dataframe object) - dataframe that contains the result records
             returned from the query of the database
         """
-        if (scheme_name is None) or (data_type is None):
+        if type(scheme_name) is not str:
+            return None
+        if type(data_type) is not str:
             return None
         # Todo: check against meta_db to see if schema name exist?
-        qry_string = "SELECT DISTINCT federate FROM " + scheme_name + "." + data_type
+        qry_string = f"SELECT DISTINCT federate FROM {scheme_name}.{data_type};"
         cur = self.data_db.cursor()
         cur.execute(qry_string)
         column_names = ["federate"]
@@ -495,7 +462,7 @@ class DataLogger:
         dataframe = pd.DataFrame(data, columns=column_names)
         return dataframe
 
-    def get_data_name_list(self, scheme_name: str, data_type: str) -> pd.DataFrame | None:
+    def get_data_name_list(self, scheme_name: str, data_type: str) -> pd.DataFrame:
         """This function queries the distinct list of data names from the database table
         defined by scheme_name and data_type
 
@@ -507,10 +474,12 @@ class DataLogger:
             dataframe (pandas dataframe object) - dataframe that contains the result records
             returned from the query of the database
         """
-        if (scheme_name is None) or (data_type is None):
+        if type(scheme_name) is not str:
+            return None
+        if type(data_type) is not str:
             return None
         # Todo: check against meta_db to see if schema name exist?
-        qry_string = "SELECT DISTINCT data_name FROM " + scheme_name + "." + data_type
+        qry_string = f"SELECT DISTINCT data_name FROM {scheme_name}.{data_type};"
         cur = self.data_db.cursor()
         cur.execute(qry_string)
         column_names = ["data_name"]
@@ -518,34 +487,36 @@ class DataLogger:
         dataframe = pd.DataFrame(data, columns=column_names)
         return dataframe
 
-    def get_time_range(self, scheme_name: str, data_type: str, scenario_name: str, federate_name: str) -> pd.DataFrame | None:
+    def get_time_range(self, scheme_name: str, data_type: str, scenario_name: str, federate_name: str) -> pd.DataFrame:
         """This function queries the minimum and maximum of time from the database
             table defined by scheme_name, data_type, scenario_name, and federate
 
         Args:
             scheme_name (string) - the name of the schema to filter the query results by
             data_type (string) - the id of the database table that will be queried. Must be
-            scenario_name (string) - the name of the scenario to filter the query results by
+            scenario_name (string) - the name of the Scenario to filter the query results by
             federate_name (string) - the name of the Federate to filter the query results by
 
         Returns:
             dataframe (pandas dataframe object) - dataframe that contains the result records
             returned from the query of the database
         """
-        qry_string = ""
-        if (scheme_name is None) or (data_type is None):
+        if type(scheme_name) is not str:
             return None
-        if (scenario_name is None) and (federate_name is None):
+        if type(data_type) is not str:
             return None
+        qry_string = f"SELECT MIN(time), MAX(time) FROM {scheme_name}.{data_type}"
         if scenario_name is not None and federate_name is None:
-            qry_string = ("SELECT MIN(time), MAX(time) FROM " + scheme_name + "." + data_type +
-                          " WHERE scenario='" + scenario_name + "'")
-        if federate_name is not None and scenario_name is None:
-            qry_string = ("SELECT MIN(time), MAX(time) FROM " + scheme_name + "." + data_type +
-                          " WHERE federate='" + federate_name + "'")
+            if type(scenario_name) is str:
+                qry_string += f" WHERE scenario='{scenario_name}';"
+        if scenario_name is None and federate_name is not None:
+            if type(federate_name) is str:
+                qry_string += f" WHERE federate='{federate_name}';"
         if scenario_name is not None and federate_name is not None:
-            qry_string = ("SELECT MIN(time), MAX(time) FROM " + scheme_name + "." + data_type +
-                          " WHERE federate='" + federate_name + "' AND scenario='" + scenario_name + "'")
+            if type(scenario_name) is str and type(scenario_name) is str:
+                qry_string += f" WHERE federate='{federate_name}' AND scenario='{scenario_name}';"
+        else:
+            qry_string += ";"
         cur = self.data_db.cursor()
         cur.execute(qry_string)
         column_names = ["min", "max"]

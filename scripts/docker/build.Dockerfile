@@ -43,7 +43,7 @@ RUN echo "===== Building CoSim Build =====" && \
   echo "Directory structure for build" && \
   mkdir -p tenv && \
   mkdir -p build && \
-  mkdir -p repository
+  mkdir -p repo
 
 # Copy the build instructions
 COPY . ${BUILD_DIR}

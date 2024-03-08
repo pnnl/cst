@@ -33,16 +33,16 @@ names=(
 )
 
 builds=(
+  0
   1
   1
+  0
+  0
+  0
   1
-  1
-  1
-  1
-  1
-  1
-  1
-  1
+  0
+  0
+  0
 )
 
 # Remove log files from build directory

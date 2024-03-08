@@ -68,7 +68,7 @@ class FederateLogger(Federate):
                     for fed in self.fed_pubs:
                         if key in self.fed_pubs[fed]:
                             break
-                    qry = (f"INSERT INTO {self.scheme_name}.{table} (time, scenario, federate, data_name, data_value)"
+                    qry = (f"INSERT INTO {self.scheme_name}.{table} (data_time, scenario, federate, data_name, data_value)"
                            f" VALUES({self.granted_time}, '{self.scenario_name}', '{fed}', '{key}', ")
                     if type(value) is str or type(value) is complex or type(value) is list:
                         qry += f" '{value}'); "

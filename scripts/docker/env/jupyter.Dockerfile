@@ -1,5 +1,5 @@
 # Build runtime image
-FROM jupyter/minimal-notebook:7285848c0a11
+FROM jupyter/minimal-notebook:python-3.10
 
 USER root
 

@@ -58,24 +58,6 @@ class TestLoggerApi(unittest.TestCase):
         qry_string2 = self.test_DL.get_time_select_string(None, None)
         self.assertEqual(qry_string2, "")
 
-    def test_get_scenario_select_string(self):
-        qry_string = self.test_DL.get_scenario_select_string("test_Scenario")
-        self.assertEqual(qry_string, "scenario='test_Scenario'")
-        qry_string2 = self.test_DL.get_scenario_select_string(None)
-        self.assertEqual(qry_string2, "")
-
-    def test_get_federate_select_string(self):
-        qry_string = self.test_DL.get_federate_select_string("test_Federate")
-        self.assertEqual(qry_string, "federate='test_Federate'")
-        qry_string2 = self.test_DL.get_federate_select_string(None)
-        self.assertEqual(qry_string2, "")
-
-    def test_get_data_name_select_string(self):
-        qry_string = self.test_DL.get_data_name_select_string("test_data_name")
-        self.assertEqual(qry_string, "data_name='test_data_name'")
-        qry_string2 = self.test_DL.get_data_name_select_string(None)
-        self.assertEqual(qry_string2, "")
-
     def test_get_query_string(self):
         self.test_DL.open_database_connections()
         qry_string = self.test_DL.get_query_string(500, 1000, "test_Scenario", "Battery", "Battery/current3", "hdt_boolean")
