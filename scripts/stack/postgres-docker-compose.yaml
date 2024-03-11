@@ -68,6 +68,7 @@ services:
     volumes:
       - cu_mongo:/data/db
       - $STACK_DIR/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    restart: unless-stopped
     networks:
       - sim_net
 
