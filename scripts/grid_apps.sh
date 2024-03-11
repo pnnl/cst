@@ -32,15 +32,35 @@ fi
 #alternatives command line for java or python
 #sudo update-alternatives --config java
 
-while true; do
-    # shellcheck disable=SC2162
-    read -p "Do you wish to build the binaries? " yn
-    case $yn in
-        [Yy]* ) binaries="develop"; break;;
-        [Nn]* ) binaries="copy"; break;;
-        * ) echo "Please answer [y]es or [n]o.";;
-    esac
-done
+# Check for the presence of the binary build flag in command arguments
+binary_flag=""
+if [[ "$3" == "-y" ]]; then
+  binary_flag="Y"
+elif [[ "$3" == "-n" ]]; then
+  binary_flag="N"
+fi
+
+if [[ -z "$binary_flag" ]]; then
+  # Ask the user if the flag is not set via command arguments
+  while true; do
+      read -p "Do you wish to build the binaries? (Yy/Nn)" yn
+      case $yn in
+          [Yy]* ) binaries="develop"; break;;
+          [Nn]* ) binaries="copy"; break;;
+          * ) echo "Please answer [y]es or [n]o.";;
+      esac
+  done
+else
+  # Set binaries based on the command argument
+  case $binary_flag in
+      [Yy]* ) binaries="develop";;
+      [Nn]* ) binaries="copy";;
+  esac
+  echo "Binaries setting chosen through command argument: $binaries"
+fi
+
+echo "Binaries setting: $binaries; username: $1; email: $2"
+exit 0
 
 if [[ $binaries == "develop" ]]; then
 # add build tools OS

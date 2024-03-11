@@ -1,9 +1,24 @@
+variables:
+  DEVOPS_SERVER: "172.18.67.59"
+  DEVOPS_USER: "devops"
+  GIT_URL: "https://$ENV_GIT_USER:$ENV_GIT_TOKEN@devops.pnnl.gov/e-comp/thrust-3/copper.git"
+
+image: python:3.10
+
+.__setup_ssh: &setup_ssh |
+  mkdir -p ~/.ssh && chmod 0700 ~/.ssh
+  touch ~/.ssh/known_hosts && chmod 0700 ~/.ssh/known_hosts
+  ssh-keyscan $DEVOPS_SERVER | tee --output-error=warn ~/.ssh/known_hosts
+  echo "$ENV_SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+  chmod 0600 ~/.ssh/id_rsa
+  export SSH_CMD="ssh -i ~/.ssh/id_rsa -l $DEVOPS_USER $DEVOPS_SERVER"
+
 stages:
   - test
+  - integration-test
 
 test:
   stage: test
-  image: python:3.10
   before_script:
     - apt-get update && apt-get install -y make wget ca-certificates
 # Julia install for future use.
@@ -21,4 +36,23 @@ test:
   only:
     - merge_requests
     - dev
-  
+
+integration-test:
+  stage: integration-test
+  tags:
+    - ecomp-integration-test
+  variables:
+    GIT_STRATEGY: none
+  only:
+    - devops
+    - dev
+  script:
+    - *setup_ssh
+    - COPPER_DIR="copper_$CI_JOB_ID"
+    # Git clone repo and start integration test script.
+    - >
+      $SSH_CMD '
+      mkdir -p ~/integration && cd ~/integration &&
+      git clone --depth 1 --branch '$CI_COMMIT_BRANCH' --single-branch '$GIT_URL' '$COPPER_DIR' &&
+      cd '$COPPER_DIR'/scripts &&
+      ./integration_test.sh '$DEVOPS_SERVER''
