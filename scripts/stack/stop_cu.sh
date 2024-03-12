@@ -6,5 +6,5 @@
 docker compose down --volumes --remove-orphans
 
 # to remove all volumes from stack
-docker volume rm stack_cu_mongo stack_cu_postgres
-echo y | docker volume prune
+docker volume rm stack_cu_mongo stack_cu_postgres -f
+docker volume prune -f
