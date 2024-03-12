@@ -117,9 +117,11 @@ class DataLogger:
 
     def close_database_connections(self, commit: bool = True) -> None:
         self.meta_db = None
-        if commit:
-            self.data_db.commit()
-        self.data_db.close()
+        if self.data_db:
+            if commit:
+                self.data_db.commit()
+            self.data_db.close()
+        self.data_db = None
 
     def open_database_connections(self, meta_connection: dict = None, data_connection: dict = None) -> bool:
         self.meta_db = self._connect_scenario_database(meta_connection)
@@ -130,44 +132,38 @@ class DataLogger:
             return True
 
     def check_version(self) -> None:
-        cur = self.data_db.cursor()
-        logger.info('PostgresSQL database version:')
-        cur.execute('SELECT version()')
-        # display the PostgresSQL database server version
-        db_version = cur.fetchone()
-        logger.info(db_version)
-        # close the communication with the PostgresSQL
-        cur.close()
+        with self.data_db.cursor() as cur:
+            logger.info('PostgresSQL database version:')
+            cur.execute('SELECT version()')
+            # display the PostgresSQL database server version
+            db_version = cur.fetchone()
+            logger.info(db_version)
 
     def create_schema(self, scheme_name: str) -> None:
         query = f"CREATE SCHEMA IF NOT EXISTS {scheme_name};"
         query += f" GRANT USAGE ON SCHEMA {scheme_name} TO reader;"
-        cur = self.data_db.cursor()
-        cur.execute(query)
-        cur.close()
+        with self.data_db.cursor() as cur:
+            cur.execute(query)
 
     def drop_schema(self, scheme_name: str) -> None:
         query = f"DROP SCHEMA IF EXISTS {scheme_name};"
-        cur = self.data_db.cursor()
-        cur.execute(query)
-        cur.close()
+        with self.data_db.cursor() as cur:
+            cur.execute(query)
 
     def remove_scenario(self, scheme_name: str, scenario_name: str) -> None:
         query = ""
         for key in self.hdt_type:
             query += f" DELETE FROM {scheme_name}.{key} WHERE scenario='{scenario_name}'; "
-        cur = self.data_db.cursor()
-        cur.execute(query)
-        cur.close()
+        with self.data_db.cursor() as cur:
+            cur.execute(query)
 
     def table_exist(self, scheme_name: str, table_name: str) -> None:
         query = ("SELECT EXISTS ( SELECT FROM pg_tables WHERE "
                  f"schemaname = '{scheme_name}' AND tablename = '{table_name}');")
-        cur = self.data_db.cursor()
-        cur.execute(query)
-        result = cur.fetchone()
-        cur.close()
-        return result[0]
+        with self.data_db.cursor() as cur:
+            cur.execute(query)
+            result = cur.fetchone()
+            return result[0]
 
     def make_logger_database(self, scheme_name: str) -> None:
         # scheme is a set of like scenario (like DSOT bau, battery, flex load)
@@ -184,9 +180,8 @@ class DataLogger:
         query += f" GRANT USAGE ON ALL SEQUENCES IN SCHEMA {scheme_name} TO reader;"
         query += f" GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA {scheme_name} TO reader;"
         query += f" ALTER ROLE reader SET search_path = {scheme_name};"
-        cur = self.data_db.cursor()
-        cur.execute(query)
-        cur.close()
+        with self.data_db.cursor() as cur:
+            cur.execute(query)
 
     def get_scenario_document(self, scenario_name: str) -> dict:
         if self.scenario_name != scenario_name:
@@ -230,17 +225,17 @@ class DataLogger:
 
         Returns:
             qry_string (string) - string containing the time filter portion of the sql query
-            'time>=start_time AND time<= end_time'
+            'data_time>=start_time AND data_time<= end_time'
         """
         if start_time is None and duration is None:
             return ""
         elif start_time is not None and duration is None:
-            return "time>=" + str(start_time)
+            return "data_time>=" + str(start_time)
         elif start_time is None and duration is not None:
-            return "time<=" + str(duration)
+            return "data_time<=" + str(duration)
         else:
             end_time = start_time + duration
-        return "time>=" + str(start_time) + " AND time<=" + str(end_time)
+        return "data_time>=" + str(start_time) + " AND data_time<=" + str(end_time)
 
     def get_query_string(self, start_time: int, 
                          duration: int, 
@@ -282,9 +277,9 @@ class DataLogger:
         scheme_name = scheme["schema"]
         qry_string = self.get_select_string(scheme_name, data_type)
         time_string = self.get_time_select_string(start_time, duration)
-        scenario_string = f"scenario='{scenario_name}'" if scenario_name is None or scenario_name == "" else ""
-        federate_string = f"federate='{federate_name}'" if federate_name is None or federate_name == "" else ""
-        data_string = f"data_name='{data_name}'" if data_name is None or data_name == "" else ""
+        scenario_string = f"scenario='{scenario_name}'" if scenario_name is None or scenario_name != "" else ""
+        federate_string = f"federate='{federate_name}'" if federate_name is None or federate_name != "" else ""
+        data_string = f"data_name='{data_name}'" if data_name is None or data_name != "" else ""
         if time_string == "" and scenario_string == "" and federate_string == "" and data_string == "":
             qry_string = qry_string.replace(" WHERE ", "")
             return qry_string
@@ -344,12 +339,12 @@ class DataLogger:
             returned from the query of the database
         """
         qry_string = self.get_query_string(start_time, duration, scenario_name, federate_name, data_name, data_type)
-        cur = self.data_db.cursor()
-        cur.execute(qry_string)
-        column_names = [desc[0] for desc in cur.description]
-        data = cur.fetchall()
-        dataframe = pd.DataFrame(data, columns=column_names)
-        return dataframe
+        with self.data_db.cursor() as cur:
+            cur.execute(qry_string)
+            column_names = [desc[0] for desc in cur.description]
+            data = cur.fetchall()
+            dataframe = pd.DataFrame(data, columns=column_names)
+            return dataframe
 
     def query_scenario_all_times(self, scenario_name: str, data_type: str) -> pd.DataFrame:
         """This function queries data from the logger database filtered only by scenario_name and data_name
@@ -368,13 +363,13 @@ class DataLogger:
             return None
         scheme = self.get_scenario_document(scenario_name)
         scheme_name = scheme["schema"]
-        cur = self.data_db.cursor()
         qry_string = f"SELECT * FROM {scheme_name}.{data_type} WHERE scenario='{scenario_name}'"
-        cur.execute(qry_string)
-        column_names = [desc[0] for desc in cur.description]
-        data = cur.fetchall()
-        dataframe = pd.DataFrame(data, columns=column_names)
-        return dataframe
+        with self.data_db.cursor() as cur:
+            cur.execute(qry_string)
+            column_names = [desc[0] for desc in cur.description]
+            data = cur.fetchall()
+            dataframe = pd.DataFrame(data, columns=column_names)
+            return dataframe
 
     def query_scheme_all_times(self, scheme_name: str, data_type: str) -> None:
         pass
@@ -398,14 +393,14 @@ class DataLogger:
             return None
         if type(data_type) is not str:
             return None
-        cur = self.data_db.cursor()
         # Todo: check against meta_db to see if schema name exist?
         qry_string = f"SELECT * FROM {scheme_name}.{data_type} WHERE federate='{federate_name}'";
-        cur.execute(qry_string)
-        column_names = [desc[0] for desc in cur.description]
-        data = cur.fetchall()
-        dataframe = pd.DataFrame(data, columns=column_names)
-        return dataframe
+        with self.data_db.cursor() as cur:
+            cur.execute(qry_string)
+            column_names = [desc[0] for desc in cur.description]
+            data = cur.fetchall()
+            dataframe = pd.DataFrame(data, columns=column_names)
+            return dataframe
 
     def get_schema_list(self) -> None:
         # Todo: get schema from scenario documents
@@ -430,12 +425,12 @@ class DataLogger:
         # Todo: check against meta_db to see if schema name exist?
         # This should take from the meta documents and verify
         qry_string = f"SELECT DISTINCT scenario FROM {scheme_name}.{data_type};"
-        cur = self.data_db.cursor()
-        cur.execute(qry_string)
-        column_names = ["scenario"]
-        data = cur.fetchall()
-        dataframe = pd.DataFrame(data, columns=column_names)
-        return dataframe
+        with self.data_db.cursor() as cur:
+            cur.execute(qry_string)
+            column_names = ["scenario"]
+            data = cur.fetchall()
+            dataframe = pd.DataFrame(data, columns=column_names)
+            return dataframe
 
     def get_federate_list(self, scheme_name: str, data_type: str) -> pd.DataFrame:
         """This function queries the distinct list of federate names from the database table
@@ -455,12 +450,12 @@ class DataLogger:
             return None
         # Todo: check against meta_db to see if schema name exist?
         qry_string = f"SELECT DISTINCT federate FROM {scheme_name}.{data_type};"
-        cur = self.data_db.cursor()
-        cur.execute(qry_string)
-        column_names = ["federate"]
-        data = cur.fetchall()
-        dataframe = pd.DataFrame(data, columns=column_names)
-        return dataframe
+        with self.data_db.cursor() as cur:
+            cur.execute(qry_string)
+            column_names = ["federate"]
+            data = cur.fetchall()
+            dataframe = pd.DataFrame(data, columns=column_names)
+            return dataframe
 
     def get_data_name_list(self, scheme_name: str, data_type: str) -> pd.DataFrame:
         """This function queries the distinct list of data names from the database table
@@ -480,12 +475,12 @@ class DataLogger:
             return None
         # Todo: check against meta_db to see if schema name exist?
         qry_string = f"SELECT DISTINCT data_name FROM {scheme_name}.{data_type};"
-        cur = self.data_db.cursor()
-        cur.execute(qry_string)
-        column_names = ["data_name"]
-        data = cur.fetchall()
-        dataframe = pd.DataFrame(data, columns=column_names)
-        return dataframe
+        with self.data_db.cursor() as cur:
+            cur.execute(qry_string)
+            column_names = ["data_name"]
+            data = cur.fetchall()
+            dataframe = pd.DataFrame(data, columns=column_names)
+            return dataframe
 
     def get_time_range(self, scheme_name: str, data_type: str, scenario_name: str, federate_name: str) -> pd.DataFrame:
         """This function queries the minimum and maximum of time from the database
@@ -517,12 +512,12 @@ class DataLogger:
                 qry_string += f" WHERE federate='{federate_name}' AND scenario='{scenario_name}';"
         else:
             qry_string += ";"
-        cur = self.data_db.cursor()
-        cur.execute(qry_string)
-        column_names = ["min", "max"]
-        data = cur.fetchall()
-        dataframe = pd.DataFrame(data, columns=column_names)
-        return dataframe
+        with self.data_db.cursor() as cur:
+            cur.execute(qry_string)
+            column_names = ["min", "max"]
+            data = cur.fetchall()
+            dataframe = pd.DataFrame(data, columns=column_names)
+            return dataframe
 
     def set_time_stamps(self, dataframe: pd.DataFrame, date_time: str):
         """This function calculates the time stamp for each time step in the dataframe and adds them
@@ -555,7 +550,7 @@ if __name__ == "__main__":
     logger_data.open_database_connections()
     t_mongo_data = logger_data.meta_db
     print(t_mongo_data)
-    df = logger_data.query_scenario_federate_times(500, 1000, "test_Scenario", "DataLogger",
+    df = logger_data.query_scenario_federate_times(500, 1000, "test_Scenario", "Battery",
                                                    "Battery/current3", "hdt_boolean")
     print(df)
     logger_data.close_database_connections()

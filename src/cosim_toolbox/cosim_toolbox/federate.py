@@ -431,6 +431,7 @@ class Federate:
         logger.info(f'{h.helicsFederateGetName(self.hfed)} granted time {granted_time}')
         h.helicsFederateDisconnect(self.hfed)
         h.helicsFederateFree(self.hfed)
+        h.helicsFederateFree(self.hfed)
         # h.helicsCloseLibrary()
         logger.debug(f'Federate {h.helicsFederateGetName(self.hfed)} finalized')
 

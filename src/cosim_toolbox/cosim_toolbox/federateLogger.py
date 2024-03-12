@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 class FederateLogger(Federate):
 
-    def __init__(self, fed_name: str = "", scheme_name: str = "default", clear: bool = True, **kwargs):
+    def __init__(self, fed_name: str = "", scheme_name: str = "default", **kwargs):
         super().__init__(fed_name, **kwargs)
         self.scheme_name = scheme_name
         self.fed_pubs = None
@@ -31,9 +31,6 @@ class FederateLogger(Federate):
         # dl.drop_schema(self.scheme_name)
         self.dl.create_schema(self.scheme_name)
         self.dl.make_logger_database(self.scheme_name)
-        if clear:
-            self.dl.remove_scenario(self.scheme_name, self.scenario_name)
-        self.dl.data_db.commit()
 
     def connect_to_helics_config(self) -> None:
         self.federate_type = "combo"
@@ -68,7 +65,8 @@ class FederateLogger(Federate):
                     for fed in self.fed_pubs:
                         if key in self.fed_pubs[fed]:
                             break
-                    qry = (f"INSERT INTO {self.scheme_name}.{table} (data_time, scenario, federate, data_name, data_value)"
+                    qry = (f"INSERT INTO {self.scheme_name}.{table} "
+                           "(data_time, scenario, federate, data_name, data_value)"
                            f" VALUES({self.granted_time}, '{self.scenario_name}', '{fed}', '{key}', ")
                     if type(value) is str or type(value) is complex or type(value) is list:
                         qry += f" '{value}'); "
@@ -79,16 +77,18 @@ class FederateLogger(Federate):
             # add to logger database
         try:
             if query != "":
-                cur = self.dl.data_db.cursor()
-                cur.execute(query)
-                cur.close()
-                self.dl.data_db.commit()
+                with self.dl.data_db.cursor() as cur:
+                    cur.execute(query)
+                    # should be commit once in while, not every update
+                    self.dl.data_db.commit()
         except:
             logger.error("Bad data type in update_internal_model")
 
 
 def main(federate_name: str, scheme_name: str, scenario_name: str) -> None:
     fed_logger = FederateLogger(federate_name, scheme_name)
+    fed_logger.dl.remove_scenario(scheme_name, scenario_name)
+    fed_logger.dl.data_db.commit()
     fed_logger.create_federate(scenario_name)
     fed_logger.run_cosim_loop()
     fed_logger.destroy_federate()
