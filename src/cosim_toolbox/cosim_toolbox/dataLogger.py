@@ -135,7 +135,6 @@ class DataLogger:
         with self.data_db.cursor() as cur:
             logger.info('PostgresSQL database version:')
             cur.execute('SELECT version()')
-            # display the PostgresSQL database server version
             db_version = cur.fetchone()
             logger.info(db_version)
 
@@ -146,7 +145,7 @@ class DataLogger:
             cur.execute(query)
 
     def drop_schema(self, scheme_name: str) -> None:
-        query = f"DROP SCHEMA IF EXISTS {scheme_name};"
+        query = f"DROP SCHEMA IF EXISTS {scheme_name} CASCADE;"
         with self.data_db.cursor() as cur:
             cur.execute(query)
 
@@ -171,11 +170,12 @@ class DataLogger:
         for key in self.hdt_type:
             query += ("CREATE TABLE IF NOT EXISTS "
                       f"{scheme_name}.{key} ("
-                      "data_time double precision NOT NULL, "
+                      "real_time timestamp with time zone NOT NULL, "
+                      "sim_time double precision NOT NULL, "
                       "scenario VARCHAR (255) NOT NULL, "
                       "federate VARCHAR (255) NOT NULL, "
-                      "data_name VARCHAR (255) NOT NULL, "
-                      f"data_value {self.hdt_type[key]} NOT NULL);")
+                      "sim_name VARCHAR (255) NOT NULL, "
+                      f"sim_value {self.hdt_type[key]} NOT NULL);")
         query += f" GRANT SELECT ON ALL TABLES IN SCHEMA {scheme_name} TO reader;"
         query += f" GRANT USAGE ON ALL SEQUENCES IN SCHEMA {scheme_name} TO reader;"
         query += f" GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA {scheme_name} TO reader;"
@@ -225,23 +225,23 @@ class DataLogger:
 
         Returns:
             qry_string (string) - string containing the time filter portion of the sql query
-            'data_time>=start_time AND data_time<= end_time'
+            'sim_time>=start_time AND sim_time<= end_time'
         """
         if start_time is None and duration is None:
             return ""
         elif start_time is not None and duration is None:
-            return "data_time>=" + str(start_time)
+            return "sim_time>=" + str(start_time)
         elif start_time is None and duration is not None:
-            return "data_time<=" + str(duration)
+            return "sim_time<=" + str(duration)
         else:
             end_time = start_time + duration
-        return "data_time>=" + str(start_time) + " AND data_time<=" + str(end_time)
+        return "sim_time>=" + str(start_time) + " AND sim_time<=" + str(end_time)
 
     def get_query_string(self, start_time: int, 
                          duration: int, 
                          scenario_name: str, 
                          federate_name: str, 
-                         data_name: str, 
+                         sim_name: str, 
                          data_type: str) -> str:
         """This function creates the query string to pull time series data from the
         logger database, and depends upon the keys identified by the user input arguments.
@@ -262,8 +262,8 @@ class DataLogger:
             None is entered for the scenario_name the query will not use scenario_name as a filter
             federate_name (string) - the name of the Federate to filter the query results by. If
             None is entered for the federate_name the query will not use federate_name as a filter
-            data_name (string) - the name of the data to filter the query results by. If
-            None is entered for the data_name the query will not use data_name as a filter
+            sim_name (string) - the name of the data to filter the query results by. If
+            None is entered for the sim_name the query will not use sim_name as a filter
             data_type (string) - the id of the database table that will be queried. Must be
             one of the following options:
                 [ hdt_boolean, hdt_complex, hdt_complex_vector, hdt_double, hdt_int
@@ -277,9 +277,9 @@ class DataLogger:
         scheme_name = scheme["schema"]
         qry_string = self.get_select_string(scheme_name, data_type)
         time_string = self.get_time_select_string(start_time, duration)
-        scenario_string = f"scenario='{scenario_name}'" if scenario_name is None or scenario_name != "" else ""
-        federate_string = f"federate='{federate_name}'" if federate_name is None or federate_name != "" else ""
-        data_string = f"data_name='{data_name}'" if data_name is None or data_name != "" else ""
+        scenario_string = f"scenario='{scenario_name}'" if scenario_name is not None and scenario_name != "" else ""
+        federate_string = f"federate='{federate_name}'" if federate_name is not None and federate_name != "" else ""
+        data_string = f"sim_name='{sim_name}'" if sim_name is not None and sim_name != "" else ""
         if time_string == "" and scenario_string == "" and federate_string == "" and data_string == "":
             qry_string = qry_string.replace(" WHERE ", "")
             return qry_string
@@ -306,7 +306,7 @@ class DataLogger:
                                       duration: int, 
                                       scenario_name: str,
                                       federate_name: str,
-                                      data_name: str, 
+                                      sim_name: str, 
                                       data_type: str) -> pd.DataFrame:
         """This function queries time series data from the logger database and
         depends upon the keys identified by the user input arguments.
@@ -327,8 +327,8 @@ class DataLogger:
             None is entered for the scenario_name the query will not use scenario_name as a filter
             federate_name (string) - the name of the Federate to filter the query results by. If
             None is entered for the federate_name the query will not use federate_name as a filter
-            data_name (string) - the name of the data to filter the query results by. If
-            None is entered for the data_name the query will not use data_name as a filter
+            sim_name (string) - the name of the data to filter the query results by. If
+            None is entered for the sim_name the query will not use sim_name as a filter
             data_type (string) - the id of the database table that will be queried. Must be
             one of the following options:
                 [ hdt_boolean, hdt_complex, hdt_complex_vector, hdt_double, hdt_int
@@ -338,7 +338,7 @@ class DataLogger:
             dataframe (pandas dataframe object) - dataframe that contains the result records
             returned from the query of the database
         """
-        qry_string = self.get_query_string(start_time, duration, scenario_name, federate_name, data_name, data_type)
+        qry_string = self.get_query_string(start_time, duration, scenario_name, federate_name, sim_name, data_type)
         with self.data_db.cursor() as cur:
             cur.execute(qry_string)
             column_names = [desc[0] for desc in cur.description]
@@ -347,7 +347,7 @@ class DataLogger:
             return dataframe
 
     def query_scenario_all_times(self, scenario_name: str, data_type: str) -> pd.DataFrame:
-        """This function queries data from the logger database filtered only by scenario_name and data_name
+        """This function queries data from the logger database filtered only by scenario_name and sim_name
 
         Args:
             scenario_name (string) - the name of the scenario to filter the query results by
@@ -375,7 +375,7 @@ class DataLogger:
         pass
 
     def query_scheme_federate_all_times(self, scheme_name: str, federate_name: str, data_type) -> pd.DataFrame:
-        """This function queries data from the logger database filtered only by federate_name and data_name
+        """This function queries data from the logger database filtered only by federate_name and sim_name
         and data_type
 
         Args:
@@ -457,7 +457,7 @@ class DataLogger:
             dataframe = pd.DataFrame(data, columns=column_names)
             return dataframe
 
-    def get_data_name_list(self, scheme_name: str, data_type: str) -> pd.DataFrame:
+    def get_sim_name_list(self, scheme_name: str, data_type: str) -> pd.DataFrame:
         """This function queries the distinct list of data names from the database table
         defined by scheme_name and data_type
 
@@ -474,10 +474,10 @@ class DataLogger:
         if type(data_type) is not str:
             return None
         # Todo: check against meta_db to see if schema name exist?
-        qry_string = f"SELECT DISTINCT data_name FROM {scheme_name}.{data_type};"
+        qry_string = f"SELECT DISTINCT sim_name FROM {scheme_name}.{data_type};"
         with self.data_db.cursor() as cur:
             cur.execute(qry_string)
-            column_names = ["data_name"]
+            column_names = ["sim_name"]
             data = cur.fetchall()
             dataframe = pd.DataFrame(data, columns=column_names)
             return dataframe
@@ -500,7 +500,7 @@ class DataLogger:
             return None
         if type(data_type) is not str:
             return None
-        qry_string = f"SELECT MIN(time), MAX(time) FROM {scheme_name}.{data_type}"
+        qry_string = f"SELECT MIN(sim_time), MAX(sim_time) FROM {scheme_name}.{data_type}"
         if scenario_name is not None and federate_name is None:
             if type(scenario_name) is str:
                 qry_string += f" WHERE scenario='{scenario_name}';"
@@ -561,7 +561,7 @@ if __name__ == "__main__":
     # print(df)
     # df = get_federate_list("test_Scenario", "hdt_boolean")
     # print(df)
-    # df = get_data_name_list("test_Scenario", "hdt_boolean")
+    # df = get_sim_name_list("test_Scenario", "hdt_boolean")
     # print(df)
     # df = get_table_data(conn, "hdt_string")
     # df = query_time_series(780, 250, "test_Scenario", "FederateLogger", "EVehicle/voltage4", "hdt_string")

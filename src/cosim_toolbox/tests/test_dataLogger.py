@@ -1,3 +1,7 @@
+
+import collections
+collections.Callable = collections.abc.Callable
+
 from os import environ
 import unittest
 
@@ -54,26 +58,26 @@ class TestLoggerApi(unittest.TestCase):
 
     def test_get_time_select_string(self):
         qry_string = self.test_DL.get_time_select_string(500, 1000)
-        self.assertEqual(qry_string, "time>=500 AND time<=1500")
+        self.assertEqual(qry_string, "sim_time>=500 AND sim_time<=1500")
         qry_string2 = self.test_DL.get_time_select_string(None, None)
         self.assertEqual(qry_string2, "")
 
     def test_get_query_string(self):
         self.test_DL.open_database_connections()
         qry_string = self.test_DL.get_query_string(500, 1000, "test_Scenario", "Battery", "Battery/current3", "hdt_boolean")
-        self.assertEqual(qry_string, "SELECT * FROM test_Schema.hdt_boolean WHERE time>=500 AND time<=1500 AND scenario='test_Scenario' AND federate='Battery' AND data_name='Battery/current3'")
+        self.assertEqual(qry_string, "SELECT * FROM test_Schema.hdt_boolean WHERE sim_time>=500 AND sim_time<=1500 AND scenario='test_Scenario' AND federate='Battery' AND sim_name='Battery/current3'")
         qry_string2 = self.test_DL.get_query_string(None, 1000, "test_Scenario", "Battery", "Battery/current3", "hdt_boolean")
-        self.assertEqual(qry_string2, "SELECT * FROM test_Schema.hdt_boolean WHERE time<=1000 AND scenario='test_Scenario' AND federate='Battery' AND data_name='Battery/current3'")
+        self.assertEqual(qry_string2, "SELECT * FROM test_Schema.hdt_boolean WHERE sim_time<=1000 AND scenario='test_Scenario' AND federate='Battery' AND sim_name='Battery/current3'")
         qry_string3 = self.test_DL.get_query_string(500, None, "test_Scenario", "Battery", "Battery/current3", "hdt_boolean")
-        self.assertEqual(qry_string3, "SELECT * FROM test_Schema.hdt_boolean WHERE time>=500 AND scenario='test_Scenario' AND federate='Battery' AND data_name='Battery/current3'")
-        # qry_string4 = self.test_DL.get_query_string(500, 1000, None, "Battery", "Battery/current3", "hdt_boolean")
-        # self.assertEqual(qry_string4, "SELECT * FROM test_Schema.hdt_boolean WHERE time>=500 AND time<=1500 AND federate='Battery' AND data_name='Battery/current3'")
+        self.assertEqual(qry_string3, "SELECT * FROM test_Schema.hdt_boolean WHERE sim_time>=500 AND scenario='test_Scenario' AND federate='Battery' AND sim_name='Battery/current3'")
+        qry_string4 = self.test_DL.get_query_string(500, 1000, None, "Battery", "Battery/current3", "hdt_boolean")
+        self.assertEqual(qry_string4, "SELECT * FROM test_Schema.hdt_boolean WHERE sim_time>=500 AND sim_time<=1500 AND federate='Battery' AND sim_name='Battery/current3'")
         qry_string5 = self.test_DL.get_query_string(500, 1000, "test_Scenario", None, "Battery/current3", "hdt_boolean")
-        self.assertEqual(qry_string5, "SELECT * FROM test_Schema.hdt_boolean WHERE time>=500 AND time<=1500 AND scenario='test_Scenario' AND data_name='Battery/current3'")
+        self.assertEqual(qry_string5, "SELECT * FROM test_Schema.hdt_boolean WHERE sim_time>=500 AND sim_time<=1500 AND scenario='test_Scenario' AND sim_name='Battery/current3'")
         qry_string6 = self.test_DL.get_query_string(500, 1000, "test_Scenario", "Battery", None, "hdt_boolean")
-        self.assertEqual(qry_string6, "SELECT * FROM test_Schema.hdt_boolean WHERE time>=500 AND time<=1500 AND scenario='test_Scenario' AND federate='Battery'")
-        # qry_string7 = self.test_DL.get_query_string(None, None, None, None, None, "hdt_boolean")
-        # self.assertEqual(qry_string7, "SELECT * FROM test_Schema.hdt_boolean")
+        self.assertEqual(qry_string6, "SELECT * FROM test_Schema.hdt_boolean WHERE sim_time>=500 AND sim_time<=1500 AND scenario='test_Scenario' AND federate='Battery'")
+        qry_string7 = self.test_DL.get_query_string(None, None, None, None, None, "hdt_boolean")
+        self.assertEqual(qry_string7, "SELECT * FROM test_Schema.hdt_boolean")
         self.test_DL.close_database_connections()
 
     def test_query_scenario_federate_times(self):
@@ -90,10 +94,10 @@ class TestLoggerApi(unittest.TestCase):
                                                     "Battery", "Battery/current3",
                                                     "hdt_boolean")
         self.assertTrue(len(df3) > 0)
-        # df4 = self.test_DL.query_scenario_federate_times(500, 1000, None,
-        #                                             "Battery","Battery/current3",
-        #                                             "hdt_boolean")
-        # self.assertTrue(len(df4) > 0)
+        df4 = self.test_DL.query_scenario_federate_times(500, 1000, None,
+                                                    "Battery","Battery/current3",
+                                                    "hdt_boolean")
+        self.assertTrue(len(df4) > 0)
         df5 = self.test_DL.query_scenario_federate_times(500, 1000, "test_Scenario",
                                                     None, "Battery/current3",
                                                     "hdt_boolean")
@@ -102,9 +106,9 @@ class TestLoggerApi(unittest.TestCase):
                                                     "Battery", None,
                                                     "hdt_boolean")
         self.assertTrue(len(df6) > 0)
-        # df7 = self.test_DL.query_scenario_federate_times(None, None, None,
-        #                                             None, None, "hdt_boolean")
-        # self.assertTrue(len(df7) > 0)
+        df7 = self.test_DL.query_scenario_federate_times(None, None, None,
+                                                    None, None, "hdt_boolean")
+        self.assertTrue(len(df7) > 0)
         self.test_DL.close_database_connections()
 
     def test_query_scenario_all_times(self):
@@ -131,9 +135,9 @@ class TestLoggerApi(unittest.TestCase):
         self.test_DL.close_database_connections()
         self.assertTrue(len(df) > 0)
 
-    def test_get_data_name_list(self):
+    def test_get_sim_name_list(self):
         self.test_DL.open_database_connections()
-        df = self.test_DL.get_data_name_list("test_Schema", "hdt_boolean")
+        df = self.test_DL.get_sim_name_list("test_Schema", "hdt_boolean")
         self.test_DL.close_database_connections()
         self.assertTrue(len(df) > 0)
 

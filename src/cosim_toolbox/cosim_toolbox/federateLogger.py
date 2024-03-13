@@ -28,7 +28,7 @@ class FederateLogger(Federate):
         self.dl.check_version()
         # uncomment debug, clears schema
         # which means all scenarios are gone in that scheme
-        # dl.drop_schema(self.scheme_name)
+        # self.dl.drop_schema(self.scheme_name)
         self.dl.create_schema(self.scheme_name)
         self.dl.make_logger_database(self.scheme_name)
 
@@ -66,8 +66,9 @@ class FederateLogger(Federate):
                         if key in self.fed_pubs[fed]:
                             break
                     qry = (f"INSERT INTO {self.scheme_name}.{table} "
-                           "(data_time, scenario, federate, data_name, data_value)"
-                           f" VALUES({self.granted_time}, '{self.scenario_name}', '{fed}', '{key}', ")
+                           "(real_time, sim_time, scenario, federate, sim_name, sim_value)"
+                           f" VALUES( to_timestamp('{self.start}','%Y-%m-%dT%H:%M:%S') + interval '1s' * "
+                           f"{self.granted_time}, {self.granted_time}, '{self.scenario_name}', '{fed}', '{key}', ")
                     if type(value) is str or type(value) is complex or type(value) is list:
                         qry += f" '{value}'); "
                     else:
@@ -79,7 +80,7 @@ class FederateLogger(Federate):
             if query != "":
                 with self.dl.data_db.cursor() as cur:
                     cur.execute(query)
-                    # should be commit once in while, not every update
+                    # should be commit once in a while, not every update
                     self.dl.data_db.commit()
         except:
             logger.error("Bad data type in update_internal_model")
