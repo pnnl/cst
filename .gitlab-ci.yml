@@ -1,5 +1,5 @@
 variables:
-  DEVOPS_SERVER: "172.18.67.59"
+  DEVOPS_SERVER: "ecomp-devops.pnl.gov"
   DEVOPS_USER: "devops"
   GIT_URL: "https://$ENV_GIT_USER:$ENV_GIT_TOKEN@devops.pnnl.gov/e-comp/thrust-3/copper.git"
   COPPER_DIR: "copper_$CI_JOB_ID"
