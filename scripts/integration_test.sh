@@ -84,12 +84,17 @@ python runner.py
 docker ps
 
 #
+# Check test status
+#
+echo "Checking test status... TODO"
+
+#
 # Clean up
 #
-echo "Cleaning CoSim tests..."
-source $COPPER_HOME/cosim.env
-cd $COPPER_HOME/scripts/stack
-./stop_cu.sh
-docker network prune -f
-docker ps
-ps
+echo "Cleaning CoSim tests... Dummy operation for now"
+#source $COPPER_HOME/cosim.env
+#cd $COPPER_HOME/scripts/stack
+#./stop_cu.sh
+#docker network prune -f
+#docker ps
+#ps
