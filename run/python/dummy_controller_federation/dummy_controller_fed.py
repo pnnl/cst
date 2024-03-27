@@ -176,8 +176,7 @@ class DummyControllerFederate(Federate):
             raise NotImplementedError("Subclass from Federate and write code to update internal model")
         
         #keys for publications
-        # TDH: Move these to the "__init__()" method of the class 
-        # TDH: use the federate.py attribute self.pubs to store these.
+        # TDH: Move to "__init__()" of this class 
         DAM_pub_key = "Controller/DAM_bid"
         freq_pub_key = "Controller/frequency_bid"
         realtime_pub_key = "Controller/realtime_bid"
@@ -196,7 +195,8 @@ class DummyControllerFederate(Federate):
         #   that defines at what simulation times these functions need to run
         #   For example, we may define the day-ahead bids need to be created 
         #   at 10am each day or the real-time bids need to be created every
-        #   15 minutes.
+        #   15 minutes. We can discuss more when you get a chance to look 
+        #   at this again.
         #get market clearing info from the market federate via HELICS
         DAM_clearing_info = self.data_from_federation["inputs"][DAM_sub_key]
         freq_clearing_info = self.data_from_federation["inputs"][freq_sub_key]
