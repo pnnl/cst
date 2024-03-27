@@ -166,6 +166,21 @@ class DummyControllerFederate(Federate):
         turbine_parameters = 0
         number_of_turbines = 0
 
+    def calculate_next_requested_time(self) -> float:
+        """Determines the next simulated time to request from HELICS
+
+        TDH: We may need to do something fancier here, depending on how the
+        market timing works. We may just be able to set self.time_step to 
+        fifteen minutes as that will also likely give us a granted time
+        when we need to run the DAM code, too. That is, the DAM market
+        will likely run at a multiple of 15 minutes.
+
+        Returns:
+            self.next_requested_time: Calculated time for the next HELICS time request
+        """
+        self.next_requested_time = self.granted_time + self.time_step
+        return self.next_requested_time
+
     def update_internal_model(self):
         """
         Controls the operation of the off-shore wind farm into the wholesale
