@@ -18,7 +18,7 @@ class DummyControllerFederate(Federate):
     # TDH: Add class attributes/parameters here. See federate.py for example
 
     # TDH: Add type hinting to all class methods. See federate.py for example.
-    def populate_bid(self, c0, c1, c2, Pmin, Pmax):
+    def populate_bid(self, c0:float, c1:float, c2:float, Pmin:float, Pmax:float):
         """
         Takes input parameters and puts them into the bid dictionary and
         returns it.
@@ -32,13 +32,15 @@ class DummyControllerFederate(Federate):
         return bid
 
 
-    def create_day_ahead_energy_bid(self, current_time, wind_forecast_24_36hr, market_info):
+    def create_day_ahead_energy_bid(self, current_time:float, wind_forecast_24_36hr:list , market_info:dict) -> list:
         """
         Creates the day-ahead energy bid based on the provided forecasts and returns
         the bid data dictionary.
+
+        Return value is a vector of 24 bid lists.
         """
         
-        #do optimization  and generate coefficients. 
+        #do optimization and generate coefficients. 
         c0 = 0
         c1 = 0
         c2 = 0
@@ -50,10 +52,12 @@ class DummyControllerFederate(Federate):
         return bid
 
 
-    def create_frequency_bid(self, current_time, wind_forecast_24_36hr, market_info):
+    def create_frequency_bid(self, current_time:float, wind_forecast_24_36hr:list , market_info:dict) -> list:
         """
         Creates the frequency bid based on the provided forecasts and returns
         the bid data dictionary.
+
+        Return value is a vector of 24 bid lists.
         """
         #do optimization and generate coefficients. 
         c0 = 0
@@ -67,7 +71,7 @@ class DummyControllerFederate(Federate):
         return bid
 
 
-    def create_real_time_energy_bid(self, current_time, wind_speed_current_period, market_info):
+    def create_real_time_energy_bid(self, current_time:float, wind_speed_current_period:float, market_info:dict) -> list:
         """
         Creates the real-time energy bid based on current power system state and 
         returns the bid data dictionary.
@@ -85,7 +89,7 @@ class DummyControllerFederate(Federate):
         return bid
 
 
-    def create_dispatch(self, current_time):
+    def create_dispatch(self, current_time:float) -> dict:
         """
         Transmit dispatch signals to the Grid + Market federate. The model of the
         physical grid state is maintained by the Grid + Market federate. For the 
@@ -104,7 +108,7 @@ class DummyControllerFederate(Federate):
         return dispatch
 
 
-    def update_OSW_ES_model_state(self, current_time, wind_speed_current_period):
+    def update_OSW_ES_model_state(self, current_time: float, wind_speed_current_period: float) -> float:
         """
         One specific function not previously mentioned is not a part of the market
         interaction: updating the OSW + energy storage model state. This function
@@ -116,7 +120,7 @@ class DummyControllerFederate(Federate):
         new_time = current_time
         new_wind_speed = wind_speed_current_period
 
-    def get_wind_forecast(self, current_time, num_hours) -> list:
+    def get_wind_forecast(self, current_time:float, num_hours:int) -> list:
         """
         Pulls in the wind forecast and returns it.
 
@@ -152,11 +156,14 @@ class DummyControllerFederate(Federate):
         return dummy_windspeed
 
 
-    def gather_day_ahead_clearing_results(self, current_time, day_ahead_clearing, reserve_clearing):
+    def gather_day_ahead_clearing_results(self, current_time:float, day_ahead_clearing:list, reserve_clearing:list) -> None:
         #not sure about this one
+        # TDH: This may not be needed. I suspect we will just need to show the 
+        #   T2 folks where the data is stored in this object (maybe add)
+        #   it as class attributes?
         placeholder = 0
 
-    def init_windfarm(self): 
+    def init_windfarm(self) -> None: 
         # TDH: Create these as attributes of the class defined in the
         #   "__init__()" method.
         capacity = 0
@@ -181,7 +188,7 @@ class DummyControllerFederate(Federate):
         self.next_requested_time = self.granted_time + self.time_step
         return self.next_requested_time
 
-    def update_internal_model(self):
+    def update_internal_model(self) -> None:
         """
         Controls the operation of the off-shore wind farm into the wholesale
         market. Calls methods defined by T2 to create the bids for market
@@ -232,7 +239,6 @@ class DummyControllerFederate(Federate):
         self.data_to_federation["publication"][realtime_pub_key] = RTM_bid
 
     
-        return super().update_internal_model()   
     
         
 if __name__ == "__main__":
