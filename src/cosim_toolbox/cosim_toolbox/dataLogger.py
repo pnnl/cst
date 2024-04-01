@@ -110,9 +110,10 @@ class DataLogger:
             }
         logger.info(connection)
         try:
-            # TODO use connection correctly
-            return mDB.MetaDB()
-        except:
+            uri = f"{connection['host']}:{connection['port']}"
+            return mDB.MetaDB(uri=uri, db_name=connection["dbname"])
+        except Exception:
+            logger.exception("Failed to create MetaDB instance.")
             return None
 
     def close_database_connections(self, commit: bool = True) -> None:

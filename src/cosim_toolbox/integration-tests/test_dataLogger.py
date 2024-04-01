@@ -47,7 +47,7 @@ class TestLoggerApi(unittest.TestCase):
         # self.assertEqual(self.test_DL.remove_scenario(scheme_name, scenario_name), expected_query)
 
     def test_open_databases(self):
-        self.test_DL.open_database_connections()
+        self.test_DL.open_database_connections(data_connection=self._data_db, meta_connection=self._meta_db)
         self.assertIsNotNone(self.test_DL.data_db)
         self.assertIsNotNone(self.test_DL.meta_db)
         self.test_DL.close_database_connections()
