@@ -82,19 +82,19 @@ rm -rf *.yaml *.log
 python runner.py
 ./runner.sh
 docker ps
+ps
 
 #
-# Check test status
+# Run integration test validation
 #
-echo "Checking test status... TODO"
+echo "Running integration test validation... "
+cd $COPPER_HOME
+make venv integration-test
 
 #
 # Clean up
 #
-echo "Cleaning CoSim tests... Dummy operation for now"
-#source $COPPER_HOME/cosim.env
-#cd $COPPER_HOME/scripts/stack
-#./stop_cu.sh
-#docker network prune -f
-#docker ps
-#ps
+echo "Cleaning older federation tests..."
+DAYS_OLD=60
+INTEGRATION_DIR="/home/devops/integration"
+find "$INTEGRATION_DIR" -mindepth 1 -maxdepth 1 -type d -mtime +$DAYS_OLD -exec rm -rf {} \;
