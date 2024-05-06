@@ -28,7 +28,9 @@ wsl_host: str = os.environ.get("SIM_WSL_HOST")
 if wsl_host:
     wsl_port: str = os.environ.get("SIM_WSL_PORT", "2222")
 
-cosim_mongo_host = os.environ.get("MONGO_HOST", "mongodb://localhost:27017")
+cosim_mg_host = os.environ.get("MONGO_HOST", "mongodb://localhost")
+cosim_mg_port = os.environ.get("MONGO_PORT", "27017")
+cosim_mongo_host = cosim_mg_host + ":" + cosim_mg_port
 cosim_mongo_db = os.environ.get("COSIM_MONGO_DB", "copper")
 
 cosim_pg_host = os.environ.get("POSTGRES_HOST", "localhost")
@@ -390,10 +392,10 @@ class Docker:
         cosim_env = """      SIM_HOST: \"""" + sim_host + """\"
       SIM_USER: \"""" + sim_user + """\"
       POSTGRES_HOST: \"""" + cosim_pg_host + """\"
-      MONGO_HOST: \"""" + cosim_mongo_host + """\"
+      MONGO_HOST: \"""" + cosim_mg_host + """\"
+      MONGO_PORT: \"""" + cosim_mg_port + """\"
 """
-        yaml = 'version: "3.8"\n'
-        yaml += 'services:\n'
+        yaml = 'services:\n'
         # Add helics broker federate
         cnt = 2
         fed_cnt = str(fed_def.__len__() + 1)

@@ -1,4 +1,3 @@
-version: "3.8"
 # Optional Jupyter Notebook service
 services:
   jupyter_notebook:
@@ -10,6 +9,7 @@ services:
       SIM_HOST: ${SIM_HOST}
       SIM_USER: ${SIM_USER}
       MONGO_HOST: ${MONGO_HOST}
+      MONGO_PORT: ${MONGO_PORT}
       POSTGRES_HOST: ${POSTGRES_HOST}
     ports:
       - "8888:8888"
