@@ -302,7 +302,7 @@ class MetaDB:
     def update_dict(self, collection_name: str, 
                     updated_dict: dict,
                     object_id: bson.objectid.ObjectId = None,
-                    dict_name: str = None) -> str:
+                    dict_name: str = None) -> object:
         """
         Updates the dictionary on the database (under the same object_ID/name)
         with the passed in updated dictionary.
@@ -310,23 +310,22 @@ class MetaDB:
         User must enter either the dictionary name used or the object_ID that
         was created when the dictionary was added but not both.
         """
-        doc = None
+        result = None
         updated_dict[self._cu_dict_name] = dict_name
         if dict_name is None and object_id is None:
             raise AttributeError("Must provide the name or object ID of the dictionary to be modified.")
         elif dict_name is not None and object_id is not None:
             logger.warning("Using provided object ID (and not provided name) to update database.")
-            doc = self.db[collection_name].replace({"_id": object_id}, updated_dict)
+            result = self.db[collection_name].replace_one({"_id": object_id}, updated_dict)
         elif dict_name is not None:
             doc = self.db[collection_name].find_one({self._cu_dict_name: dict_name})
             if doc:
-                doc = self.db[collection_name].replace({self._cu_dict_name: dict_name}, updated_dict)
+                result = self.db[collection_name].replace_one({"_id":doc['_id']}, updated_dict)
             else:
                 raise NameError(f"{dict_name} does not exist in collection {collection_name} and cannot be updated.")
         elif object_id is not None:
-            doc = self.db[collection_name].replace({"_id": object_id}, updated_dict)
-        if doc:
-            return str(doc["_id"])
+            result = self.db[collection_name].replace_one({"_id": object_id}, updated_dict)
+        return result
 
     @staticmethod
     def scenario(schema_name: str, federation_name: str, start: str, stop: str, docker: bool = False) -> dict:
