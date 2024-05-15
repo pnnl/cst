@@ -1,8 +1,8 @@
 #!/bin/bash
 
 if [[ -z ${SIM_DIR} ]]; then
-  echo "Please run 'source cosim.env' in the root Co-Simulation directory"
-  echo "Then run this script in this directory"
+  echo "Edit cosim.env in the Co-Simulation directory"
+  echo "Run 'source cosim.env' in that same directory"
   exit
 fi
 
@@ -20,3 +20,5 @@ fi
 
 cd "$SIM_DIR/run" || exit
 docker compose -f $STACK_DIR/postgres-docker-compose.yaml -f $STACK_DIR/docker-compose.yaml up -d --remove-orphans
+# For development no need to run airflow, comment above, un-comment below
+#docker compose -f $STACK_DIR/postgres-docker-compose.yaml up -d --remove-orphans

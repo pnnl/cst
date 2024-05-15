@@ -1,5 +1,5 @@
 # Build runtime image
-FROM jupyter/minimal-notebook:7285848c0a11
+FROM jupyter/minimal-notebook:python-3.10
 
 USER root
 
@@ -20,6 +20,7 @@ ENV COSIM_HOME=$COSIM_HOME
 ENV POSTGRES_HOST="$SIM_HOST"
 ENV POSTGRES_PORT=$POSTGRES_PORT
 ENV MONGO_HOST="$MONGO_HOST"
+ENV MONGO_PORT=$MONGO_PORT
 
 COPY . cosim_toolbox/
 

@@ -68,22 +68,22 @@ class Federate:
     """
 
     def __init__(self, fed_name="", **kwargs):
-        self.hfed = None
-        self.mddb = None
-        self.config = None
-        self.scenario = None
-        self.scenario_name = None
-        self.federation = None
-        self.federation_name = None
-        self.federate = None
-        self.federate_type = None
-        self.federate_name = fed_name
-        self.start = None
-        self.stop = None
-        self.time_step = -1
-        self.stop_time = -1
-        self.granted_time = -1
-        self.next_requested_time = -1
+        self.hfed: h.HelicsFederate = None
+        self.mddb: mDB.MetaDB = None
+        self.config: dict = None
+        self.scenario: dict = None
+        self.scenario_name: str = None
+        self.federation: dict = None
+        self.federation_name: str = None
+        self.federate: dict = None
+        self.federate_type: str = None
+        self.federate_name: str = fed_name
+        self.start: float = None
+        self.stop: float = None
+        self.time_step = -1.0
+        self.stop_time = -1.0
+        self.granted_time = -1.0
+        self.next_requested_time = -1.0
         self.pubs = {}
         self.inputs = {}
         self.endpoints = {}
@@ -96,7 +96,7 @@ class Federate:
         # if not wanting to debug, add debug=False as an argument
         self.__dict__.update(kwargs)
 
-    def connect_to_metadataDB(self, uri, db_name):
+    def connect_to_metadataDB(self, uri: str, db_name: str) -> None:
         """Connects to the Copper metadataDB
 
         The metadata database (metadataDB) contains the HELICS configuration
@@ -126,7 +126,7 @@ class Federate:
         e_idx = (e - ep).total_seconds()
         self.stop_time = int((e_idx - s_idx))
 
-    def connect_to_helics_config(self):
+    def connect_to_helics_config(self) -> None:
         """Sets instance attributes to enable HELICS config query of metadataDB
 
         HELICS configuration information is generally stored in the metadataDB
@@ -141,7 +141,7 @@ class Federate:
         self.config = self.federate["HELICS_config"]
         # self.image = self.federate["image"]
 
-    def create_federate(self, scenario_name):
+    def create_federate(self, scenario_name: str) -> None:
         """Create Copper and HELICS federates
 
         Creates and defines both the instance of this class,(the CoSimulation
@@ -187,7 +187,7 @@ class Federate:
 
         self.create_helics_fed()
 
-    def create_helics_fed(self):
+    def create_helics_fed(self) -> None:
         """Creates the HELICS federate object
 
         Using the HELICS configuration document from the metadataDB, this
@@ -209,7 +209,7 @@ class Federate:
             raise ValueError(f"Federate type \'{self.federate_type}\'"
                              f" not allowed; must be 'value', 'message', or 'combo'.")
 
-    def run_cosim_loop(self):
+    def run_cosim_loop(self) -> None:
         """Runs the generic HELICS co-sim loop
 
         This HELICS co-sim loop runs until it the simulated time reaches
@@ -226,7 +226,7 @@ class Federate:
         while self.granted_time < self.stop_time:
             self.simulate_next_step()
 
-    def enter_initialization(self):
+    def enter_initialization(self) -> None:
         """Moves federate to HELICS initializing mode
 
         There are a few stages to a federate in HELICS with initializing mode
@@ -239,7 +239,7 @@ class Federate:
         """
         self.hfed.enter_initializing_mode()
 
-    def enter_executing_mode(self):
+    def enter_executing_mode(self) -> None:
         """Moves the Federate to executing mode
 
         Similar to initializing mode, there are a few different ways of
@@ -249,7 +249,7 @@ class Federate:
         """
         self.hfed.enter_executing_mode()
 
-    def simulate_next_step(self):
+    def simulate_next_step(self) -> None:
         """Advances the Federate to its next simulated time
 
         This method is the core of the main co-simulation loop where the time
@@ -296,7 +296,7 @@ class Federate:
         self.granted_time = self.hfed.request_time(requested_time)
         return self.granted_time
 
-    def get_data_from_federation(self):
+    def get_data_from_federation(self) -> None:
         """Collects inputs from federation and stores them
 
         This method is an automated way of getting data the rest of the
@@ -342,7 +342,7 @@ class Federate:
                     self.data_from_federation["endpoints"][ep.name] = []
                 self.data_from_federation["endpoints"][ep.name].append(ep.get_message().data)
 
-    def update_internal_model(self):
+    def update_internal_model(self) -> None:
         """Perform federate specific calculations to bring model up to date
 
         After receiving inputs from the rest of the federation, each federate
@@ -379,7 +379,7 @@ class Federate:
             pub = self.hfed.get_publication_by_index(0)
             self.data_to_federation["publications"][pub.name] = dummy_value
 
-    def send_data_to_federation(self):
+    def send_data_to_federation(self) -> None:
         """Sends specified outputs to rest of HELICS federation
 
         This method provides an easy way for users to send out any data
@@ -412,7 +412,7 @@ class Federate:
             else:
                 ep.send_data(value["payload"], value["destination"])
 
-    def destroy_federate(self):
+    def destroy_federate(self) -> None:
         """Removes HELICS federate from federation
 
         As part of ending a HELICS co-simulation it is good housekeeping to
@@ -430,6 +430,7 @@ class Federate:
         granted_time = h.helicsFederateRequestTime(self.hfed, requested_time)
         logger.info(f'{h.helicsFederateGetName(self.hfed)} granted time {granted_time}')
         h.helicsFederateDisconnect(self.hfed)
+        h.helicsFederateFree(self.hfed)
         h.helicsFederateFree(self.hfed)
         # h.helicsCloseLibrary()
         logger.debug(f'Federate {h.helicsFederateGetName(self.hfed)} finalized')

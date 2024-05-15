@@ -1,8 +1,20 @@
 #!/bin/bash
 
+# build_<image_name>: 0 - skip; 1 - build image; <image_name> must be in sync with names array below
+build_ubuntu=0
+build_jupyter=1
+build_airflow=1
+build_library=0
+build_build=0
+build_helics=0
+build_python=1
+build_tespapi=0
+build_julia=0
+build_mespapi=0
+
 if [[ -z ${SIM_DIR} ]]; then
-  echo "Please run 'source cosim.env' in the root Co-Simulation directory"
-  echo "Then run this script in this directory"
+  echo "Edit cosim.env in the Co-Simulation directory"
+  echo "Run 'source cosim.env' in that same directory"
   exit
 fi
 
@@ -32,26 +44,22 @@ names=(
   "mespapi"
 )
 
-builds=(
-  1
-  1
-  1
-  1
-  1
-  1
-  1
-  1
-  1
-  1
-)
+# Dynamically build the 'builds' array based on the configuration
+builds=()
+for name in "${names[@]}"; do
+  var="build_$name"
+  builds+=( "${!var}" ) # Indirect variable reference
+done
 
-# make directories and set permissions
+# Remove log files from build directory
+rm -f "$BUILD_DIR/*.logs" "$BUILD_DIR/out.txt"
+# Make directories and set permissions
 cd "$SIM_DIR/run" || exit
 mkdir -p ./dags ./logs ./plugins ./config ./python ../src/cosim_toolbox/cosim_toolbox.egg-info
-# make wide open for now
+# Make wide open for now
 sudo chmod -R 777 ./dags ./logs ./plugins ./config ./python ../src
-cd "$DOCKER_DIR" || exit
 
+cd "$DOCKER_DIR" || exit
 export BUILDKIT_PROGRESS=plain
 
 for i in "${!names[@]}"; do

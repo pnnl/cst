@@ -18,6 +18,7 @@ class Runner:
         self.schema_name = schema_name
         self.federation_name = federation_name
         self.docker = docker
+        print(mDB.cosim_mongo_host)
         self.db = mDB.MetaDB(mDB.cosim_mongo_host, mDB.cosim_mongo_db)
 
     def define_scenario(self):

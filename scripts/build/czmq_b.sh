@@ -1,7 +1,9 @@
 #!/bin/bash
 
 if [[ -z ${INSTDIR} ]]; then
-  . "${HOME}/tespEnv"
+  echo "Edit cosim.env in the Co-Simulation directory"
+  echo "Run 'source cosim.env' in that same directory"
+  exit
 fi
 
 if [[ $1 == "clean" ]]; then

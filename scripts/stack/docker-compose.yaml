@@ -44,7 +44,6 @@
 #
 # Feel free to modify this file to suit your needs.
 ---
-version: '3.8'
 x-airflow-common:
   &airflow-common
   # In order to add custom dependencies or upgrade provider packages you can use your extended image.
@@ -263,7 +262,7 @@ services:
       _PIP_ADDITIONAL_REQUIREMENTS: ''
       SIM_HOST: ${SIM_HOST}
       SIM_USER: ${SIM_USER}
-      MONGO_HOST: ${MONGO_HOST}
+      MONGO_HOST: ${MONGO_HOST}:${MONGO_PORT}
       POSTGRES_HOST: ${POSTGRES_HOST}
     user: "0:0"
     volumes:
