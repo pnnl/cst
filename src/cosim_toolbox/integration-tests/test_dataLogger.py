@@ -8,7 +8,7 @@ import unittest
 
 import cosim_toolbox.dataLogger as dL
 import cosim_toolbox.metadataDB as mDB
-from cosim_toolbox.helicsConfig import HelicsMsg
+from cosim_toolbox.helicsConfig import HelicsMsg, Collect
 
 
 _data_db = {
@@ -30,7 +30,7 @@ _meta_db = {
 
 class Singleton(object):
     _instance = None
-    scenario_name = "test_scenario"
+    scenario_name = "test_my_scenario"
     schema_name = "test_my_schema"
     federation_name = "test_federation"
     docker = True
@@ -55,18 +55,18 @@ class Singleton(object):
             t1.config("terminate_on_error", True)
             #        t1.config("wait_for_current_time_update", True)
 
-            t1.pubs_e(True, names[0] + "/current", "double", "V")
-            t1.subs_e(True, names[1] + "/voltage", "double", "V")
-            t1.pubs_e(True, names[0] + "/current2", "integer", "A")
-            t1.subs_e(True, names[1] + "/voltage2", "integer", "V")
-            t1.pubs_e(True, names[0] + "/current3", "boolean", "A")
-            t1.subs_e(True, names[1] + "/voltage3", "boolean", "V")
-            t1.pubs_e(True, names[0] + "/current4", "string", "A")
-            t1.subs_e(True, names[1] + "/voltage4", "string", "V")
-            t1.pubs_e(True, names[0] + "/current5", "complex", "A")
-            t1.subs_e(True, names[1] + "/voltage5", "complex", "V")
-            t1.pubs_e(True, names[0] + "/current6", "vector", "A")
-            t1.subs_e(True, names[1] + "/voltage6", "vector", "V")
+            t1.pubs_e(names[0] + "/current", "double", "V", True, Collect.YES)
+            t1.subs_e(names[1] + "/voltage", "double", "V")
+            t1.pubs_e(names[0] + "/current2", "integer", "A", True, Collect.NO)
+            t1.subs_e(names[1] + "/voltage2", "integer", "V")
+            t1.pubs_e(names[0] + "/current3", "boolean", "A")
+            t1.subs_e(names[1] + "/voltage3", "boolean", "V")
+            t1.pubs_e(names[0] + "/current4", "string", "A")
+            t1.subs_e(names[1] + "/voltage4", "string", "V")
+            t1.pubs_e(names[0] + "/current5", "complex", "A", True, Collect.MAYBE)
+            t1.subs_e(names[1] + "/voltage5", "complex", "V")
+            t1.pubs_e(names[0] + "/current6", "vector", "A", True, Collect.NO)
+            t1.subs_e(names[1] + "/voltage6", "vector", "V")
             f1 = {
                 "image": "cosim-python:latest",
                 "command": prefix + "simple_federate.py " + names[0] + " " + cls.scenario_name,
@@ -85,18 +85,18 @@ class Singleton(object):
             t2.config("terminate_on_error", True)
             #        t2.config("wait_for_current_time_update", True)
 
-            t2.subs_e(True, names[0] + "/current", "double", "V")
-            t2.pubs_e(True, names[1] + "/voltage", "double", "V")
-            t2.subs_e(True, names[0] + "/current2", "integer", "A")
-            t2.pubs_e(True, names[1] + "/voltage2", "integer", "V")
-            t2.subs_e(True, names[0] + "/current3", "boolean", "A")
-            t2.pubs_e(True, names[1] + "/voltage3", "boolean", "V")
-            t2.subs_e(True, names[0] + "/current4", "string", "A")
-            t2.pubs_e(True, names[1] + "/voltage4", "string", "V")
-            t2.subs_e(True, names[0] + "/current5", "complex", "A")
-            t2.pubs_e(True, names[1] + "/voltage5", "complex", "V")
-            t2.subs_e(True, names[0] + "/current6", "vector", "A")
-            t2.pubs_e(True, names[1] + "/voltage6", "vector", "V")
+            t2.subs_e(names[0] + "/current", "double", "V")
+            t2.pubs_e(names[1] + "/voltage", "double", "V")
+            t2.subs_e(names[0] + "/current2", "integer", "A")
+            t2.pubs_e(names[1] + "/voltage2", "integer", "V")
+            t2.subs_e(names[0] + "/current3", "boolean", "A")
+            t2.pubs_e(names[1] + "/voltage3", "boolean", "V", True, Collect.NO)
+            t2.subs_e(names[0] + "/current4", "string", "A")
+            t2.pubs_e(names[1] + "/voltage4", "string", "V")
+            t2.subs_e(names[0] + "/current5", "complex", "A")
+            t2.pubs_e(names[1] + "/voltage5", "complex", "V")
+            t2.subs_e(names[0] + "/current6", "vector", "A")
+            t2.pubs_e(names[1] + "/voltage6", "vector", "V")
             f2 = {
                 "image": "cosim-python:latest",
                 "command": prefix + "simple_federate2.py " + names[1] + " " + cls.scenario_name,
@@ -139,6 +139,10 @@ class Singleton(object):
 
 class TestLoggerApi(unittest.TestCase):
 
+    scenario_name = "test_my_scenario"
+    schema_name = "test_my_schema"
+    federation_name = "test_federation"
+
     def setUp(self):
         Singleton()
         self.test_DL = dL.DataLogger()
@@ -149,8 +153,8 @@ class TestLoggerApi(unittest.TestCase):
         self.assertIsNotNone(self.test_DL.meta_db)
 
     def test_01_get_select_string(self):
-        qry_string = self.test_DL.get_select_string("test_my_schema", "hdt_double")
-        self.assertEqual(qry_string, "SELECT * FROM test_my_schema.hdt_double WHERE ")
+        qry_string = self.test_DL.get_select_string(self.schema_name, "hdt_double")
+        self.assertEqual(qry_string, f"SELECT * FROM {self.schema_name}.hdt_double WHERE ")
 
     def test_02_get_time_select_string(self):
         qry_string = self.test_DL.get_time_select_string(500, 1000)
@@ -159,90 +163,84 @@ class TestLoggerApi(unittest.TestCase):
         self.assertEqual(qry_string2, "")
 
     def test_03_get_query_string(self):
-        qry_string = self.test_DL.get_query_string(500, 1000, "test_Scenario", "Battery", "Battery/current3", "hdt_boolean")
-        self.assertEqual(qry_string, "SELECT * FROM test_my_schema.hdt_boolean WHERE sim_time>=500 AND sim_time<=1500 AND scenario='test_Scenario' AND federate='Battery' AND sim_name='Battery/current3'")
-        qry_string2 = self.test_DL.get_query_string(None, 1000, "test_Scenario", "Battery", "Battery/current3", "hdt_boolean")
-        self.assertEqual(qry_string2, "SELECT * FROM test_my_schema.hdt_boolean WHERE sim_time<=1000 AND scenario='test_Scenario' AND federate='Battery' AND sim_name='Battery/current3'")
-        qry_string3 = self.test_DL.get_query_string(500, None, "test_Scenario", "Battery", "Battery/current3", "hdt_boolean")
-        self.assertEqual(qry_string3, "SELECT * FROM test_my_schema.hdt_boolean WHERE sim_time>=500 AND scenario='test_Scenario' AND federate='Battery' AND sim_name='Battery/current3'")
+        qry_string = self.test_DL.get_query_string(500, 1000, self.scenario_name, "Battery", "Battery/current3", "hdt_boolean")
+        self.assertEqual(qry_string, f"SELECT * FROM {self.schema_name}.hdt_boolean WHERE sim_time>=500 AND sim_time<=1500 AND scenario='{self.scenario_name}' AND federate='Battery' AND sim_name='Battery/current3'")
+        qry_string2 = self.test_DL.get_query_string(None, 1000, self.scenario_name, "Battery", "Battery/current3", "hdt_boolean")
+        self.assertEqual(qry_string2, f"SELECT * FROM {self.schema_name}.hdt_boolean WHERE sim_time<=1000 AND scenario='{self.scenario_name}' AND federate='Battery' AND sim_name='Battery/current3'")
+        qry_string3 = self.test_DL.get_query_string(500, None, self.scenario_name, "Battery", "Battery/current3", "hdt_boolean")
+        self.assertEqual(qry_string3, f"SELECT * FROM {self.schema_name}.hdt_boolean WHERE sim_time>=500 AND scenario='{self.scenario_name}' AND federate='Battery' AND sim_name='Battery/current3'")
         qry_string4 = self.test_DL.get_query_string(500, 1000, None, "Battery", "Battery/current3", "hdt_boolean")
-        self.assertEqual(qry_string4, "SELECT * FROM test_my_schema.hdt_boolean WHERE sim_time>=500 AND sim_time<=1500 AND federate='Battery' AND sim_name='Battery/current3'")
-        qry_string5 = self.test_DL.get_query_string(500, 1000, "test_Scenario", None, "Battery/current3", "hdt_boolean")
-        self.assertEqual(qry_string5, "SELECT * FROM test_my_schema.hdt_boolean WHERE sim_time>=500 AND sim_time<=1500 AND scenario='test_Scenario' AND sim_name='Battery/current3'")
-        qry_string6 = self.test_DL.get_query_string(500, 1000, "test_Scenario", "Battery", None, "hdt_boolean")
-        self.assertEqual(qry_string6, "SELECT * FROM test_my_schema.hdt_boolean WHERE sim_time>=500 AND sim_time<=1500 AND scenario='test_Scenario' AND federate='Battery'")
+        self.assertEqual(qry_string4, f"SELECT * FROM {self.schema_name}.hdt_boolean WHERE sim_time>=500 AND sim_time<=1500 AND federate='Battery' AND sim_name='Battery/current3'")
+        qry_string5 = self.test_DL.get_query_string(500, 1000, self.scenario_name, None, "Battery/current3", "hdt_boolean")
+        self.assertEqual(qry_string5, f"SELECT * FROM {self.schema_name}.hdt_boolean WHERE sim_time>=500 AND sim_time<=1500 AND scenario='{self.scenario_name}' AND sim_name='Battery/current3'")
+        qry_string6 = self.test_DL.get_query_string(500, 1000, self.scenario_name, "Battery", None, "hdt_boolean")
+        self.assertEqual(qry_string6, f"SELECT * FROM {self.schema_name}.hdt_boolean WHERE sim_time>=500 AND sim_time<=1500 AND scenario='{self.scenario_name}' AND federate='Battery'")
         qry_string7 = self.test_DL.get_query_string(None, None, None, None, None, "hdt_boolean")
-        self.assertEqual(qry_string7, "SELECT * FROM test_my_schema.hdt_boolean")
+        self.assertEqual(qry_string7, f"SELECT * FROM {self.schema_name}.hdt_boolean")
 
     def test_04_query_scenario_federate_times(self):
-        df = self.test_DL.query_scenario_federate_times(500, 1000, "test_Scenario",
-                                                   "Battery", "Battery/current3",
-                                                   "hdt_boolean")
+        df = self.test_DL.query_scenario_federate_times(500, 1000, self.scenario_name,
+                                                    "Battery", "Battery/current3", "hdt_boolean")
         self.assertTrue(len(df) == 34)
-        df = self.test_DL.query_scenario_federate_times(None, 1000, "test_Scenario",
-                                                    "Battery", "Battery/current3",
-                                                    "hdt_boolean")
+        df = self.test_DL.query_scenario_federate_times(None, 1000, self.scenario_name,
+                                                    "Battery", "Battery/current3", "hdt_boolean")
         self.assertTrue(len(df) == 33)
-        df = self.test_DL.query_scenario_federate_times(500, None, "test_Scenario",
-                                                    "Battery", "Battery/current3",
-                                                    "hdt_boolean")
+        df = self.test_DL.query_scenario_federate_times(500, None, self.scenario_name,
+                                                    "Battery", "Battery/current3", "hdt_boolean")
         self.assertTrue(len(df) == 2864)
         df = self.test_DL.query_scenario_federate_times(500, 1000, None,
-                                                    "Battery","Battery/current3",
-                                                    "hdt_boolean")
+                                                    "Battery", "Battery/current3", "hdt_boolean")
         self.assertTrue(len(df) == 34)
-        df = self.test_DL.query_scenario_federate_times(500, 1000, "test_Scenario",
-                                                    None, "Battery/current3",
-                                                    "hdt_boolean")
+        df = self.test_DL.query_scenario_federate_times(500, 1000, self.scenario_name,
+                                                    None, "Battery/current3", "hdt_boolean")
         self.assertTrue(len(df) == 34)
-        df = self.test_DL.query_scenario_federate_times(500, 1000, "test_Scenario",
-                                                    "Battery", None,
-                                                    "hdt_boolean")
+        df = self.test_DL.query_scenario_federate_times(500, 1000, self.scenario_name,
+                                                    "Battery", None, "hdt_boolean")
         self.assertTrue(len(df) == 34)
         df = self.test_DL.query_scenario_federate_times(None, None, None,
                                                     None, None, "hdt_boolean")
-        self.assertTrue(len(df) == 5760)
+        self.assertTrue(len(df) == 2880)
 
     def test_05_query_scenario_all_times(self):
-        df = self.test_DL.query_scenario_all_times("test_Scenario", "hdt_boolean")
-        self.assertTrue(len(df) == 5760)
+        df = self.test_DL.query_scenario_all_times(self.scenario_name, "hdt_boolean")
+        self.assertTrue(len(df) == 2880)
 
     def test_06_query_scheme_federate_all_times(self):
-        df = self.test_DL.query_scheme_federate_all_times("test_my_schema", "Battery", "hdt_boolean")
+        df = self.test_DL.query_scheme_federate_all_times(self.schema_name, "Battery", "hdt_boolean")
         self.assertTrue(len(df) == 2880)
 
     def test_07_get_scenario_list(self):
-        df = self.test_DL.get_scenario_list("test_my_schema", "hdt_boolean")
+        df = self.test_DL.get_scenario_list(self.schema_name, "hdt_boolean")
         self.assertTrue(len(df) == 1)
-        self.assertTrue(df.values[0][0] == "test_Scenario")
+        self.assertTrue(df.values[0][0] == self.scenario_name)
 
     def test_08_get_federate_list(self):
-        df = self.test_DL.get_federate_list("test_my_schema", "hdt_boolean")
+        df = self.test_DL.get_federate_list(self.schema_name, "hdt_boolean")
         df = df.sort_values(by=['federate'])
-        self.assertTrue(len(df) == 2)
+        self.assertTrue(len(df) == 1)
         self.assertTrue(df.values[0][0] == "Battery")
-        self.assertTrue(df.values[1][0] == "EVehicle")
+        # self.assertTrue(df.values[1][0] == "EVehicle")
 
     def test_09_get_sim_name_list(self):
-        df = self.test_DL.get_sim_name_list("test_my_schema", "hdt_boolean")
+        df = self.test_DL.get_sim_name_list(self.schema_name, "hdt_boolean")
         df = df.sort_values(by=['sim_name'])
-        self.assertTrue(len(df) == 2)
+        self.assertTrue(len(df) == 1)
         self.assertTrue(df.values[0][0] == "Battery/current3")
-        self.assertTrue(df.values[1][0] == "EVehicle/voltage3")
+        # self.assertTrue(df.values[1][0] == "EVehicle/voltage3")
 
     def test_10_get_time_range(self):
-        df = self.test_DL.get_time_range("test_my_schema", "hdt_boolean", "test_Scenario", "Battery")
+        df = self.test_DL.get_time_range(self.schema_name, "hdt_boolean", self.scenario_name, "Battery")
         self.assertTrue(len(df) > 0)
 
     def test_11_make_logger_database(self):
-        scheme_name = "test_my_schema"
+        scheme_name = self.schema_name
         # Ensure that make_logger_database constructs the expected queries
         expected_query = ""  # Update this with the expected query based on your implementation
         # self.assertEqual(self.test_DL.make_logger_database(scheme_name), expected_query)
 
     def test_12_remove_scenario(self):
-        scheme_name = "test_my_schema"
-        scenario_name = "test_Scenario"
+        scheme_name = self.schema_name
+        scenario_name = self.scenario_name
         # Ensure that remove_scenario constructs the expected queries
         expected_query = ""  # Update this with the expected query based on your implementation
         # self.assertEqual(self.test_DL.remove_scenario(scheme_name, scenario_name), expected_query)

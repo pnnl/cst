@@ -53,7 +53,7 @@ logger = logging.getLogger(__name__)
 class DataLogger:
     hdt_type = {'HDT_STRING': 'text',
                 'HDT_DOUBLE': 'double precision',
-                'HDT_INT': 'bigint',
+                'HDT_INTEGER': 'bigint',
                 'HDT_COMPLEX': 'VARCHAR (30)',
                 'HDT_VECTOR': 'text',
                 'HDT_COMPLEX_VECTOR': 'text',
@@ -267,7 +267,7 @@ class DataLogger:
             None is entered for the sim_name the query will not use sim_name as a filter
             data_type (string) - the id of the database table that will be queried. Must be
             one of the following options:
-                [ hdt_boolean, hdt_complex, hdt_complex_vector, hdt_double, hdt_int
+                [ hdt_boolean, hdt_complex, hdt_complex_vector, hdt_double, hdt_integer
                 hdt_json, hdt_named_point, hdt_string, hdt_time, hdt_vector ]
 
         Returns:

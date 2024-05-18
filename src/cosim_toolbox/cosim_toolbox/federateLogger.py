@@ -15,7 +15,8 @@ from cosim_toolbox.dataLogger import DataLogger
 from cosim_toolbox.helicsConfig import HelicsMsg
 
 logger = logging.getLogger(__name__)
-
+logger.addHandler(logging.StreamHandler())
+logger.setLevel(logging.ERROR)
 
 class FederateLogger(Federate):
 
@@ -26,6 +27,10 @@ class FederateLogger(Federate):
         self.dl = DataLogger()
         self.dl.open_database_connections()
         self.dl.check_version()
+        # save possibilities yes, no, maybe
+        self.collect = "maybe"
+        self.interval = 40
+        self._count = 0
         # uncomment debug, clears schema
         # which means all scenarios are gone in that scheme
         # self.dl.drop_schema(self.scheme_name)
@@ -38,13 +43,42 @@ class FederateLogger(Federate):
         publications = []
         self.fed_pubs = {}
 
-        for fed in self.federation:
-            self.fed_pubs[fed] = []
-            config = self.federation[fed]["HELICS_config"]
-            if "publications" in config.keys():
-                for pub in config["publications"]:
-                    publications.append(pub)
-                    self.fed_pubs[fed].append(pub["key"])
+        #  federateLogger yes, no, maybe
+        if self.collect == "no":
+            for fed in self.federation:
+                self.fed_pubs[fed] = []
+        elif self.collect == "yes":
+            for fed in self.federation:
+                self.fed_pubs[fed] = []
+                config = self.federation[fed]["HELICS_config"]
+                if "publications" in config.keys():
+                    for pub in config["publications"]:
+                        publications.append(pub)
+                        self.fed_pubs[fed].append(pub["key"])
+        else:
+            for fed in self.federation:
+                self.fed_pubs[fed] = []
+                config = self.federation[fed]["HELICS_config"]
+                fed_collect = "maybe"
+                if self.federation[fed].get("tags"):
+                    fed_collect = self.federation[fed]["tags"].get("logger", fed_collect)
+                logger.info("fed_collect -> " + fed_collect)
+
+                if "publications" in config.keys():
+                    for pub in config["publications"]:
+                        item_collect = "maybe"
+                        if pub.get("tags"):
+                            item_collect = pub["tags"].get("logger", item_collect)
+                        logger.info(pub["key"] + " collect -> " + item_collect)
+
+                        if fed_collect == "no":
+                            if item_collect == "yes":
+                                publications.append(pub)
+                                self.fed_pubs[fed].append(pub["key"])
+                        else:  # fed_collect == "yes" or "maybe"
+                            if item_collect == "yes" or item_collect == "maybe":
+                                publications.append(pub)
+                                self.fed_pubs[fed].append(pub["key"])
 
         t1 = HelicsMsg(self.federate_name, self.time_step)
         t1.config("core_type", "zmq")
@@ -53,6 +87,7 @@ class FederateLogger(Federate):
         if self.scenario["docker"]:
             t1.config("brokeraddress", "10.5.0.2")
         self.config = t1.config("subscriptions", publications)
+        logger.debug(f"Subscribed pubs {publications}")
 
     def update_internal_model(self) -> None:
         query = ""
@@ -62,26 +97,34 @@ class FederateLogger(Federate):
 
             for table in DataLogger.hdt_type.keys():
                 if self.inputs[key]['type'].lower() in table.lower():
-                    for fed in self.fed_pubs:
-                        if key in self.fed_pubs[fed]:
-                            break
-                    qry = (f"INSERT INTO {self.scheme_name}.{table} "
-                           "(real_time, sim_time, scenario, federate, sim_name, sim_value)"
-                           f" VALUES( to_timestamp('{self.start}','%Y-%m-%dT%H:%M:%S') + interval '1s' * "
-                           f"{self.granted_time}, {self.granted_time}, '{self.scenario_name}', '{fed}', '{key}', ")
-                    if type(value) is str or type(value) is complex or type(value) is list:
-                        qry += f" '{value}'); "
-                    else:
-                        qry += f" {value}); "
+                    if len(self.fed_pubs):
+                        for fed in self.fed_pubs:
+                            if key in self.fed_pubs[fed]:
+                                logger.debug(f"type {self.inputs[key]['type']}")
+                                qry = (f"INSERT INTO {self.scheme_name}.{table} "
+                                       "(real_time, sim_time, scenario, federate, sim_name, sim_value)"
+                                       f" VALUES( to_timestamp('{self.start}','%Y-%m-%dT%H:%M:%S') + interval '1s' * "
+                                       f"{self.granted_time}, {self.granted_time}, "
+                                       f"'{self.scenario_name}', '{fed}', '{key}', ")
+                                if (type(value) is str) or (type(value) is complex) or (type(value) is list):
+                                    qry += f" '{value}'); "
+                                    logger.debug(f"stype {self.inputs[key]['type']}")
+                                else:
+                                    qry += f" {value}); "
+                                    logger.debug(f"ntype {self.inputs[key]['type']} table {table}")
+                                break
                     break
             query += qry
             # add to logger database
         try:
             if query != "":
                 with self.dl.data_db.cursor() as cur:
+                    self._count += 1
                     cur.execute(query)
-                    # should be commit once in a while, not every update
-                    self.dl.data_db.commit()
+                    # simple implementation of to commit once in a while, not every update 
+                    if self._count > self.interval:
+                        self.dl.data_db.commit()
+                        self._count = 0
         except:
             logger.error("Bad data type in update_internal_model")
 
