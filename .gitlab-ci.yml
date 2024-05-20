@@ -57,4 +57,4 @@ integration-test:
       mkdir -p ~/integration && cd ~/integration &&
       git clone --depth 1 --branch '$CI_COMMIT_BRANCH' --single-branch '$GIT_URL' '$COPPER_DIR' &&
       cd '$COPPER_DIR'/scripts &&
-      ./integration_test.sh '$DEVOPS_SERVER''
+      ./integration_test.sh '$DEVOPS_SERVER' -b'
