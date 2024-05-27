@@ -1,5 +1,10 @@
 #!/bin/bash
 
+echo ${COPPER_ACCESS_TOKEN}
+echo $COPPER_ACCESS_TOKEN
+
+exit 0
+
 #
 # Error handling:
 # -e: script will exit on any command that returns a non-zero exit code
