@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Configuration
-JSON_FILE="versions.json"
+JSON_FILE="docker/versions.json"
 USERNAME="COPPER_ACCESS_TOKEN"
 PASSWORD="z1kYDCJ-N2UChy54BG5s"
 REGISTRY_URL="devops-registry.pnnl.gov"
