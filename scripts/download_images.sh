@@ -6,6 +6,9 @@ JSON_FILE="docker/versions.json"
 #PASSWORD="z1kYDCJ-N2UChy54BG5s"
 REGISTRY_URL="devops-registry.pnnl.gov"
 
+echo "REGISTRY_USER: $REGISTRY_USER"
+echo "REGISTRY_PASS: $REGISTRY_PASS"
+
 
 # Check if jq is installed
 if ! command -v jq &> /dev/null; then
