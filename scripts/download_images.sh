@@ -6,6 +6,7 @@ USERNAME="COPPER_ACCESS_TOKEN"
 PASSWORD="z1kYDCJ-N2UChy54BG5s"
 REGISTRY_URL="devops-registry.pnnl.gov"
 
+
 # Check if jq is installed
 if ! command -v jq &> /dev/null; then
   echo "jq could not be found. Please install jq to use this script."
