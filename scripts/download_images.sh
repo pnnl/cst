@@ -2,8 +2,8 @@
 
 # Configuration
 JSON_FILE="docker/versions.json"
-USERNAME="COPPER_ACCESS_TOKEN"
-PASSWORD="z1kYDCJ-N2UChy54BG5s"
+#USERNAME="COPPER_ACCESS_TOKEN"
+#PASSWORD="z1kYDCJ-N2UChy54BG5s"
 REGISTRY_URL="devops-registry.pnnl.gov"
 
 
@@ -17,7 +17,7 @@ fi
 IMAGE_PATH=$(jq -r '.imagePath' $JSON_FILE)
 
 # Log into the Docker registry
-echo $PASSWORD | docker login -u $USERNAME --password-stdin $REGISTRY_URL
+echo $REGISTRY_PASS | docker login -u $REGISTRY_USER --password-stdin $REGISTRY_URL
 
 # Read the versions from the JSON file and iterate over each
 jq -r '.versions | to_entries[] | "\(.key) \(.value)"' $JSON_FILE | while read -r IMAGE VERSION; do
