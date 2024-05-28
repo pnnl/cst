@@ -1,7 +1,10 @@
 #!/bin/bash
 
 # Configuration
-JSON_FILE="docker/versions.json"
+JSON_FILE="versions.json"
+USERNAME="COPPER_ACCESS_TOKEN"
+PASSWORD="z1kYDCJ-N2UChy54BG5s"
+REGISTRY_URL="devops-registry.pnnl.gov"
 
 # Check if jq is installed
 if ! command -v jq &> /dev/null; then
@@ -11,6 +14,9 @@ fi
 
 # Read the image path from the JSON file
 IMAGE_PATH=$(jq -r '.imagePath' $JSON_FILE)
+
+# Log into the Docker registry
+echo $PASSWORD | docker login -u $USERNAME --password-stdin $REGISTRY_URL
 
 # Read the versions from the JSON file and iterate over each
 jq -r '.versions | to_entries[] | "\(.key) \(.value)"' $JSON_FILE | while read -r IMAGE VERSION; do

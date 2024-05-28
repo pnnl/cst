@@ -60,5 +60,4 @@ integration-test:
       mkdir -p ~/integration && cd ~/integration &&
       git clone --depth 1 --branch '$CI_COMMIT_BRANCH' --single-branch '$GIT_URL' '$COPPER_DIR' &&
       cd '$COPPER_DIR'/scripts &&
-      echo '$ENV_REGISTRY_PASS' | docker login -u '$ENV_REGISTRY_USER' --password-stdin devops-registry.pnnl.gov &&
       ./download_images.sh '$DEVOPS_SERVER' -b'
