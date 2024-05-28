@@ -48,8 +48,8 @@ integration-test:
   variables:
     GIT_STRATEGY: none
     # Make sure the token is available in the job environment
-    REGISTRY_USERNAME:  COPPER_ACCESS_TOKEN
-    REGISTRY_PASSWORD: $COPPER_ACCESS_TOKEN
+    REGISTRY_USERNAME: "$ENV_REGISTRY_USER"
+    REGISTRY_PASSWORD: "$ENV_REGISTRY_PASS"
   only:
     - devops
     - dev
