@@ -60,6 +60,6 @@ integration-test:
       mkdir -p ~/integration && cd ~/integration &&
       git clone --depth 1 --branch '$CI_COMMIT_BRANCH' --single-branch '$GIT_URL' '$COPPER_DIR' &&
       cd '$COPPER_DIR'/scripts &&
-      export REGISTRY_USER='$ENV_REGISTRY_USER' &&
-      export REGISTRY_PASS='$ENV_REGISTRY_PASS' &&
+      export REGISTRY_USER='$REGISTRY_USERNAME' &&
+      export REGISTRY_PASS='$REGISTRY_PASSWORD' &&
       ./download_images.sh '$DEVOPS_SERVER' -b'
