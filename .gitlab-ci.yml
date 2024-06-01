@@ -47,9 +47,6 @@ integration-test:
     - ecomp-integration-test
   variables:
     GIT_STRATEGY: none
-    # Make sure the token is available in the job environment
-    REGISTRY_USERNAME: "$ENV_REGISTRY_USER"
-    REGISTRY_PASSWORD: "$ENV_REGISTRY_PASS"
   only:
     - devops
     - dev
@@ -57,9 +54,8 @@ integration-test:
     - *setup_ssh
     - >
       $SSH_CMD '
+      echo '$COPPER_ACCESS_TOKEN' | docker login devops-registry.pnnl.gov -u COPPER_ACCESS_TOKEN --password-stdin &&
       mkdir -p ~/integration && cd ~/integration &&
       git clone --depth 1 --branch '$CI_COMMIT_BRANCH' --single-branch '$GIT_URL' '$COPPER_DIR' &&
       cd '$COPPER_DIR'/scripts &&
-      export REGISTRY_USER='$REGISTRY_USERNAME' &&
-      export REGISTRY_PASS='$REGISTRY_PASSWORD' &&
       ./download_images.sh '$DEVOPS_SERVER' -b'
