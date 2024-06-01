@@ -53,9 +53,10 @@ integration-test:
   script:
     - *setup_ssh
     - >
-      $SSH_CMD '
-      echo '$COPPER_ACCESS_TOKEN' | docker login devops-registry.pnnl.gov -u COPPER_ACCESS_TOKEN --password-stdin &&
-      mkdir -p ~/integration && cd ~/integration &&
-      git clone --depth 1 --branch '$CI_COMMIT_BRANCH' --single-branch '$GIT_URL' '$COPPER_DIR' &&
-      cd '$COPPER_DIR'/scripts &&
-      ./download_images.sh '$DEVOPS_SERVER' -b'
+      $SSH_CMD << 'EOF'
+      echo '$COPPER_ACCESS_TOKEN' | docker login devops-registry.pnnl.gov -u COPPER_ACCESS_TOKEN --password-stdin 
+      mkdir -p ~/integration && cd ~/integration 
+      git clone --depth 1 --branch '$CI_COMMIT_BRANCH' --single-branch '$GIT_URL' '$COPPER_DIR' 
+      cd '$COPPER_DIR'/scripts 
+      ./download_images.sh '$DEVOPS_SERVER' -b
+      EOF
