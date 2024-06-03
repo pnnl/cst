@@ -1,7 +1,7 @@
 {
   "imagePath": "devops-registry.pnnl.gov/e-comp/thrust-3/copper/",
   "versions": {
-    "cosim-ubuntu": "1.0.0",
+    "cosim-ubuntu": "1.1",
     "cosim-jupyter": "1.0.0",
     "cosim-airflow": "1.0.0",
     "cosim-library": "1.0.0",
