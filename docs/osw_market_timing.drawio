@@ -1,255 +1,208 @@
 <mxfile host="65bd71144e">
     <diagram id="3wqcLzqxSmU_hRkXba1D" name="Page-1">
-        <mxGraphModel dx="1210" dy="755" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="10000" pageHeight="10000" math="0" shadow="0">
+        <mxGraphModel dx="1938" dy="955" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="10000" pageHeight="10000" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
-                <mxCell id="2" value="" style="endArrow=classic;html=1;" edge="1" parent="1">
+                <mxCell id="2" value="" style="endArrow=classic;html=1;" parent="1" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="340" y="400" as="sourcePoint"/>
                         <mxPoint x="1670" y="400" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="5" value="&lt;font style=&quot;font-size: 20px;&quot;&gt;Simulated Time&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+                <mxCell id="5" value="&lt;font style=&quot;font-size: 20px;&quot;&gt;Simulated Time&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
                     <mxGeometry x="1680" y="380" width="160" height="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="9" value="&lt;font size=&quot;1&quot;&gt;create_day_ahead_energy_bid()&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;" vertex="1" parent="1">
+                <mxCell id="9" value="&lt;font size=&quot;1&quot;&gt;create_day_ahead_energy_bid()&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;" parent="1" vertex="1">
                     <mxGeometry x="750" y="350" width="150" height="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="11" value="&lt;font size=&quot;1&quot;&gt;May 1, 10:00am&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;fillColor=#0050ef;fontColor=#ffffff;strokeColor=#001DBC;" vertex="1" parent="1">
+                <mxCell id="11" value="&lt;font size=&quot;1&quot;&gt;May 1, 10:00am&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;fillColor=#0050ef;fontColor=#ffffff;strokeColor=#001DBC;" parent="1" vertex="1">
                     <mxGeometry x="750" y="400" width="150" height="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="12" value="&lt;font size=&quot;1&quot;&gt;(formulates bid based on forecast)&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;" vertex="1" parent="1">
+                <mxCell id="12" value="&lt;font size=&quot;1&quot;&gt;(formulates bid based on forecast)&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;" parent="1" vertex="1">
                     <mxGeometry x="750" y="200" width="150" height="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="13" value="" style="endArrow=classic;html=1;fontSize=14;exitX=0.25;exitY=0;exitDx=0;exitDy=0;entryX=0.25;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="9" target="12">
+                <mxCell id="13" value="" style="endArrow=classic;html=1;fontSize=14;exitX=0.25;exitY=0;exitDx=0;exitDy=0;entryX=0.25;entryY=1;entryDx=0;entryDy=0;" parent="1" source="9" target="12" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="910" y="390" as="sourcePoint"/>
                         <mxPoint x="960" y="340" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="14" value="" style="endArrow=classic;html=1;fontSize=14;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="12" target="9">
+                <mxCell id="14" value="" style="endArrow=classic;html=1;fontSize=14;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" parent="1" source="12" target="9" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="790" y="360" as="sourcePoint"/>
                         <mxPoint x="790" y="250" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="15" value="Day-Ahead&lt;br&gt;Energy Market" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=#005700;fillColor=#008a00;fontSize=14;fontColor=#ffffff;" vertex="1" parent="1">
+                <mxCell id="15" value="Day-Ahead&lt;br&gt;Energy Market" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=#005700;fillColor=#008a00;fontSize=14;fontColor=#ffffff;" parent="1" vertex="1">
                     <mxGeometry x="200" y="380" width="110" height="50" as="geometry"/>
                 </mxCell>
-                <mxCell id="16" value="&lt;div style=&quot;text-align: left;&quot;&gt;&lt;ul style=&quot;font-size: 12px;&quot;&gt;&lt;li&gt;&lt;span style=&quot;font-size: 12px; background-color: initial;&quot;&gt;current_time,&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;wind_forecast &lt;br&gt;(upoming 12 +&amp;nbsp;&lt;/span&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;24 hours)&lt;/span&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+                <mxCell id="16" value="&lt;div style=&quot;text-align: left;&quot;&gt;&lt;ul style=&quot;font-size: 12px;&quot;&gt;&lt;li&gt;&lt;span style=&quot;font-size: 12px; background-color: initial;&quot;&gt;current_time,&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;wind_forecast &lt;br&gt;(upoming 12 +&amp;nbsp;&lt;/span&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;24 hours)&lt;/span&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" parent="1" vertex="1">
                     <mxGeometry x="600" y="230" width="190" height="90" as="geometry"/>
                 </mxCell>
-                <mxCell id="17" value="&lt;div style=&quot;text-align: left;&quot;&gt;&lt;ul style=&quot;font-size: 12px;&quot;&gt;&lt;li&gt;bid curves &lt;br&gt;(24 of [c2, c1, c0 Pmax, Pmin]&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+                <mxCell id="17" value="&lt;div style=&quot;text-align: left;&quot;&gt;&lt;ul style=&quot;font-size: 12px;&quot;&gt;&lt;li&gt;bid curves &lt;br&gt;(24 of [c2, c1, c0 Pmax, Pmin]&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" parent="1" vertex="1">
                     <mxGeometry x="840" y="290" width="220" height="70" as="geometry"/>
                 </mxCell>
-                <mxCell id="18" value="&lt;font size=&quot;1&quot;&gt;May 1, 12:00pm&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;fillColor=#0050ef;fontColor=#ffffff;strokeColor=#001DBC;" vertex="1" parent="1">
-                    <mxGeometry x="1410" y="400" width="170" height="30" as="geometry"/>
-                </mxCell>
-                <mxCell id="19" value="&lt;font size=&quot;1&quot;&gt;gather_day_ahead_clearing_results()&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;" vertex="1" parent="1">
-                    <mxGeometry x="1410" y="350" width="170" height="30" as="geometry"/>
-                </mxCell>
-                <mxCell id="20" value="&lt;font size=&quot;1&quot;&gt;(??? Does T2 need to do anything in response to the clearing result?)&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;" vertex="1" parent="1">
-                    <mxGeometry x="1410" y="200" width="170" height="40" as="geometry"/>
-                </mxCell>
-                <mxCell id="21" value="" style="endArrow=classic;html=1;fontSize=14;exitX=0.25;exitY=0;exitDx=0;exitDy=0;entryX=0.25;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="19" target="20">
-                    <mxGeometry width="50" height="50" relative="1" as="geometry">
-                        <mxPoint x="1570" y="390" as="sourcePoint"/>
-                        <mxPoint x="1620" y="340" as="targetPoint"/>
-                    </mxGeometry>
-                </mxCell>
-                <mxCell id="22" value="" style="endArrow=classic;html=1;fontSize=14;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="20" target="19">
-                    <mxGeometry width="50" height="50" relative="1" as="geometry">
-                        <mxPoint x="1450" y="360" as="sourcePoint"/>
-                        <mxPoint x="1450" y="250" as="targetPoint"/>
-                    </mxGeometry>
-                </mxCell>
-                <mxCell id="23" value="&lt;div style=&quot;text-align: left;&quot;&gt;&lt;ul style=&quot;font-size: 12px;&quot;&gt;&lt;li&gt;&lt;span style=&quot;font-size: 12px; background-color: initial;&quot;&gt;current_time,&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;span style=&quot;font-size: 12px; background-color: initial;&quot;&gt;clearing results&lt;/span&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
-                    <mxGeometry x="1300" y="240" width="140" height="80" as="geometry"/>
-                </mxCell>
-                <mxCell id="25" value="" style="endArrow=classic;html=1;" edge="1" parent="1">
+                <mxCell id="25" value="" style="endArrow=classic;html=1;" parent="1" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="330" y="690" as="sourcePoint"/>
                         <mxPoint x="1670" y="690" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="26" value="&lt;font style=&quot;font-size: 20px;&quot;&gt;Simulated Time&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+                <mxCell id="26" value="&lt;font style=&quot;font-size: 20px;&quot;&gt;Simulated Time&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
                     <mxGeometry x="1680" y="670" width="160" height="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="27" value="&lt;font size=&quot;1&quot;&gt;create_reserves_bid()&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;" vertex="1" parent="1">
+                <mxCell id="27" value="&lt;font size=&quot;1&quot;&gt;create_reserves_bid()&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;" parent="1" vertex="1">
                     <mxGeometry x="770" y="640" width="120" height="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="28" value="&lt;font size=&quot;1&quot;&gt;May 1, 10:00am&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;fillColor=#0050ef;fontColor=#ffffff;strokeColor=#001DBC;" vertex="1" parent="1">
+                <mxCell id="28" value="&lt;font size=&quot;1&quot;&gt;May 1, 10:00am&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;fillColor=#0050ef;fontColor=#ffffff;strokeColor=#001DBC;" parent="1" vertex="1">
                     <mxGeometry x="770" y="690" width="120" height="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="29" value="&lt;span style=&quot;font-size: x-small;&quot;&gt;(formulates bid based on forecast)&lt;/span&gt;" style="whiteSpace=wrap;html=1;fontSize=15;" vertex="1" parent="1">
+                <mxCell id="29" value="&lt;span style=&quot;font-size: x-small;&quot;&gt;(formulates bid based on forecast)&lt;/span&gt;" style="whiteSpace=wrap;html=1;fontSize=15;" parent="1" vertex="1">
                     <mxGeometry x="770" y="490" width="120" height="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="30" value="" style="endArrow=classic;html=1;fontSize=14;exitX=0.25;exitY=0;exitDx=0;exitDy=0;entryX=0.25;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="27" target="29">
+                <mxCell id="30" value="" style="endArrow=classic;html=1;fontSize=14;exitX=0.25;exitY=0;exitDx=0;exitDy=0;entryX=0.25;entryY=1;entryDx=0;entryDy=0;" parent="1" source="27" target="29" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="930" y="680" as="sourcePoint"/>
                         <mxPoint x="980" y="630" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="31" value="" style="endArrow=classic;html=1;fontSize=14;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="29" target="27">
+                <mxCell id="31" value="" style="endArrow=classic;html=1;fontSize=14;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" parent="1" source="29" target="27" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="810" y="650" as="sourcePoint"/>
                         <mxPoint x="810" y="540" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="32" value="Reserves Market" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=#005700;fillColor=#008a00;fontSize=14;fontColor=#ffffff;" vertex="1" parent="1">
+                <mxCell id="32" value="Reserves Market" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=#005700;fillColor=#008a00;fontSize=14;fontColor=#ffffff;" parent="1" vertex="1">
                     <mxGeometry x="190" y="675" width="130" height="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="33" value="&lt;div style=&quot;text-align: left;&quot;&gt;&lt;ul style=&quot;font-size: 12px;&quot;&gt;&lt;li&gt;&lt;span style=&quot;font-size: 12px; background-color: initial;&quot;&gt;current_time,&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;wind_forecast &lt;br&gt;(upoming 12 +&amp;nbsp;&lt;/span&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;24 hours)&lt;/span&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+                <mxCell id="33" value="&lt;div style=&quot;text-align: left;&quot;&gt;&lt;ul style=&quot;font-size: 12px;&quot;&gt;&lt;li&gt;&lt;span style=&quot;font-size: 12px; background-color: initial;&quot;&gt;current_time,&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;wind_forecast &lt;br&gt;(upoming 12 +&amp;nbsp;&lt;/span&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;24 hours)&lt;/span&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" parent="1" vertex="1">
                     <mxGeometry x="610" y="500" width="190" height="90" as="geometry"/>
                 </mxCell>
-                <mxCell id="34" value="&lt;div style=&quot;text-align: left;&quot;&gt;&lt;ul style=&quot;font-size: 12px;&quot;&gt;&lt;li&gt;bid curves &lt;br&gt;(24 of [c2, c1, c0 Pmax, Pmin]&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+                <mxCell id="34" value="&lt;div style=&quot;text-align: left;&quot;&gt;&lt;ul style=&quot;font-size: 12px;&quot;&gt;&lt;li&gt;bid curves &lt;br&gt;(24 of [c2, c1, c0 Pmax, Pmin]&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" parent="1" vertex="1">
                     <mxGeometry x="830" y="580" width="220" height="70" as="geometry"/>
                 </mxCell>
-                <mxCell id="35" value="&lt;font size=&quot;1&quot;&gt;May 1, 12:00pm&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;fillColor=#0050ef;fontColor=#ffffff;strokeColor=#001DBC;" vertex="1" parent="1">
+                <mxCell id="35" value="&lt;font size=&quot;1&quot;&gt;May 1, 12:00pm&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;fillColor=#0050ef;fontColor=#ffffff;strokeColor=#001DBC;" parent="1" vertex="1">
                     <mxGeometry x="1410" y="690" width="170" height="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="36" value="&lt;font size=&quot;1&quot;&gt;gather_reserves_clearing_results()&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;" vertex="1" parent="1">
+                <mxCell id="36" value="&lt;font size=&quot;1&quot;&gt;gather_reserves_clearing_results()&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;" parent="1" vertex="1">
                     <mxGeometry x="1410" y="640" width="170" height="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="37" value="&lt;span style=&quot;font-size: x-small;&quot;&gt;(??? Does T2 need to do anything in response to the clearing result?)&lt;/span&gt;" style="whiteSpace=wrap;html=1;fontSize=15;" vertex="1" parent="1">
+                <mxCell id="37" value="&lt;font size=&quot;1&quot;&gt;(use reserve market results in RT bids)&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;" parent="1" vertex="1">
                     <mxGeometry x="1410" y="490" width="170" height="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="38" value="" style="endArrow=classic;html=1;fontSize=14;exitX=0.25;exitY=0;exitDx=0;exitDy=0;entryX=0.25;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="36" target="37">
+                <mxCell id="38" value="" style="endArrow=classic;html=1;fontSize=14;exitX=0.25;exitY=0;exitDx=0;exitDy=0;entryX=0.25;entryY=1;entryDx=0;entryDy=0;" parent="1" source="36" target="37" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="1570" y="680" as="sourcePoint"/>
                         <mxPoint x="1620" y="630" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="39" value="" style="endArrow=classic;html=1;fontSize=14;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="37" target="36">
+                <mxCell id="39" value="" style="endArrow=classic;html=1;fontSize=14;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" parent="1" source="37" target="36" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="1450" y="650" as="sourcePoint"/>
                         <mxPoint x="1450" y="540" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="42" value="" style="endArrow=classic;html=1;" edge="1" parent="1">
+                <mxCell id="42" value="" style="endArrow=classic;html=1;" parent="1" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="340" y="980" as="sourcePoint"/>
                         <mxPoint x="1670" y="980" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="43" value="&lt;font style=&quot;font-size: 20px;&quot;&gt;Simulated Time&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+                <mxCell id="43" value="&lt;font style=&quot;font-size: 20px;&quot;&gt;Simulated Time&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
                     <mxGeometry x="1680" y="960" width="160" height="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="44" value="&lt;font size=&quot;1&quot;&gt;create_real_time_energy_bid()&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;" vertex="1" parent="1">
+                <mxCell id="44" value="&lt;font size=&quot;1&quot;&gt;create_real_time_energy_bid()&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;" parent="1" vertex="1">
                     <mxGeometry x="360" y="930" width="150" height="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="45" value="&lt;font size=&quot;1&quot;&gt;May 1, 9:55am&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;fillColor=#0050ef;fontColor=#ffffff;strokeColor=#001DBC;" vertex="1" parent="1">
+                <mxCell id="45" value="&lt;font size=&quot;1&quot;&gt;May 1, 9:55am&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;fillColor=#0050ef;fontColor=#ffffff;strokeColor=#001DBC;" parent="1" vertex="1">
                     <mxGeometry x="360" y="980" width="150" height="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="46" value="&lt;font size=&quot;1&quot;&gt;(formulate bid based on current conditions)&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;" vertex="1" parent="1">
+                <mxCell id="46" value="&lt;font size=&quot;1&quot;&gt;(formulate bid based on current conditions)&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;" parent="1" vertex="1">
                     <mxGeometry x="360" y="780" width="150" height="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="47" value="" style="endArrow=classic;html=1;fontSize=14;exitX=0.25;exitY=0;exitDx=0;exitDy=0;entryX=0.25;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="44" target="46">
+                <mxCell id="47" value="" style="endArrow=classic;html=1;fontSize=14;exitX=0.25;exitY=0;exitDx=0;exitDy=0;entryX=0.25;entryY=1;entryDx=0;entryDy=0;" parent="1" source="44" target="46" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="520" y="970" as="sourcePoint"/>
                         <mxPoint x="570" y="920" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="48" value="" style="endArrow=classic;html=1;fontSize=14;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="46" target="44">
+                <mxCell id="48" value="" style="endArrow=classic;html=1;fontSize=14;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" parent="1" source="46" target="44" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="400" y="940" as="sourcePoint"/>
                         <mxPoint x="400" y="830" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="49" value="Real-Time&lt;br&gt;Energy Market" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=#005700;fillColor=#008a00;fontSize=14;fontColor=#ffffff;" vertex="1" parent="1">
+                <mxCell id="49" value="Real-Time&lt;br&gt;Energy Market" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=#005700;fillColor=#008a00;fontSize=14;fontColor=#ffffff;" parent="1" vertex="1">
                     <mxGeometry x="210" y="960" width="110" height="50" as="geometry"/>
                 </mxCell>
-                <mxCell id="50" value="&lt;div style=&quot;text-align: left;&quot;&gt;&lt;ul style=&quot;font-size: 12px;&quot;&gt;&lt;li&gt;&lt;span style=&quot;font-size: 12px; background-color: initial;&quot;&gt;current_time,&lt;/span&gt;&lt;/li&gt;&lt;li&gt;wind_speed_current_period&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+                <mxCell id="50" value="&lt;div style=&quot;text-align: left;&quot;&gt;&lt;ul style=&quot;font-size: 12px;&quot;&gt;&lt;li&gt;&lt;span style=&quot;font-size: 12px; background-color: initial;&quot;&gt;current_time,&lt;/span&gt;&lt;/li&gt;&lt;li&gt;wind_speed_current_period&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" parent="1" vertex="1">
                     <mxGeometry x="190" y="810" width="210" height="80" as="geometry"/>
                 </mxCell>
-                <mxCell id="51" value="&lt;div style=&quot;text-align: left;&quot;&gt;&lt;ul style=&quot;font-size: 12px;&quot;&gt;&lt;li&gt;bid curve&amp;nbsp;[c2, c1, c0 Pmax, Pmin]&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+                <mxCell id="51" value="&lt;div style=&quot;text-align: left;&quot;&gt;&lt;ul style=&quot;font-size: 12px;&quot;&gt;&lt;li&gt;bid curve&amp;nbsp;[c2, c1, c0 Pmax, Pmin]&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" parent="1" vertex="1">
                     <mxGeometry x="440" y="870" width="240" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="52" value="&lt;font size=&quot;1&quot;&gt;May 1, 10:00am&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;fillColor=#0050ef;fontColor=#ffffff;strokeColor=#001DBC;" vertex="1" parent="1">
+                <mxCell id="52" value="&lt;font size=&quot;1&quot;&gt;May 1, 10:00am&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;fillColor=#0050ef;fontColor=#ffffff;strokeColor=#001DBC;" parent="1" vertex="1">
                     <mxGeometry x="740" y="980" width="170" height="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="53" value="&lt;font size=&quot;1&quot;&gt;create_dispatch()&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;" vertex="1" parent="1">
+                <mxCell id="53" value="&lt;font size=&quot;1&quot;&gt;create_dispatch()&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;" parent="1" vertex="1">
                     <mxGeometry x="740" y="930" width="170" height="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="54" value="&lt;font size=&quot;1&quot;&gt;(update model state based on market clearing reults)&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;" vertex="1" parent="1">
+                <mxCell id="54" value="&lt;font size=&quot;1&quot;&gt;(update model state based on market clearing reults)&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;" parent="1" vertex="1">
                     <mxGeometry x="740" y="770" width="170" height="50" as="geometry"/>
                 </mxCell>
-                <mxCell id="55" value="" style="endArrow=classic;html=1;fontSize=14;exitX=0.25;exitY=0;exitDx=0;exitDy=0;entryX=0.25;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="53" target="54">
+                <mxCell id="55" value="" style="endArrow=classic;html=1;fontSize=14;exitX=0.25;exitY=0;exitDx=0;exitDy=0;entryX=0.25;entryY=1;entryDx=0;entryDy=0;" parent="1" source="53" target="54" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="900" y="970" as="sourcePoint"/>
                         <mxPoint x="950" y="920" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="56" value="" style="endArrow=classic;html=1;fontSize=14;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="54" target="53">
+                <mxCell id="56" value="" style="endArrow=classic;html=1;fontSize=14;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" parent="1" source="54" target="53" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="780" y="940" as="sourcePoint"/>
                         <mxPoint x="780" y="830" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="57" value="&lt;div style=&quot;&quot;&gt;&lt;ul style=&quot;font-size: 12px;&quot;&gt;&lt;li&gt;&lt;span style=&quot;font-size: 12px; background-color: initial;&quot;&gt;current_time&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;span style=&quot;font-size: 12px; background-color: initial;&quot;&gt;real_time_clearing_price_quantity&lt;/span&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+                <mxCell id="57" value="&lt;div style=&quot;&quot;&gt;&lt;ul style=&quot;font-size: 12px;&quot;&gt;&lt;li&gt;&lt;span style=&quot;font-size: 12px; background-color: initial;&quot;&gt;current_time&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;span style=&quot;font-size: 12px; background-color: initial;&quot;&gt;real_time_clearing_price_quantity&lt;/span&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" parent="1" vertex="1">
                     <mxGeometry x="550" y="800" width="240" height="80" as="geometry"/>
                 </mxCell>
-                <mxCell id="59" value="&lt;div style=&quot;text-align: left;&quot;&gt;&lt;ul style=&quot;font-size: 12px;&quot;&gt;&lt;li&gt;(&lt;i&gt;None&lt;/i&gt;)&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
-                    <mxGeometry x="1520" y="290" width="100" height="60" as="geometry"/>
-                </mxCell>
-                <mxCell id="60" value="&lt;div style=&quot;text-align: left;&quot;&gt;&lt;ul style=&quot;font-size: 12px;&quot;&gt;&lt;li&gt;&lt;span style=&quot;font-size: 12px; background-color: initial;&quot;&gt;current_time,&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;span style=&quot;font-size: 12px; background-color: initial;&quot;&gt;clearing results&lt;/span&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+                <mxCell id="60" value="&lt;div style=&quot;text-align: left;&quot;&gt;&lt;ul style=&quot;font-size: 12px;&quot;&gt;&lt;li&gt;&lt;span style=&quot;font-size: 12px; background-color: initial;&quot;&gt;current_time,&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;span style=&quot;font-size: 12px; background-color: initial;&quot;&gt;clearing results&lt;/span&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" parent="1" vertex="1">
                     <mxGeometry x="1300" y="530" width="140" height="80" as="geometry"/>
                 </mxCell>
-                <mxCell id="61" value="&lt;div style=&quot;text-align: left;&quot;&gt;&lt;ul style=&quot;font-size: 12px;&quot;&gt;&lt;li&gt;(&lt;i&gt;None&lt;/i&gt;)&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+                <mxCell id="61" value="&lt;div style=&quot;text-align: left;&quot;&gt;&lt;ul style=&quot;font-size: 12px;&quot;&gt;&lt;li&gt;(&lt;i&gt;None&lt;/i&gt;)&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" parent="1" vertex="1">
                     <mxGeometry x="1510" y="580" width="100" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="62" value="&lt;div style=&quot;text-align: left;&quot;&gt;&lt;ul style=&quot;font-size: 12px;&quot;&gt;&lt;li&gt;&lt;span style=&quot;font-size: 12px; background-color: initial;&quot;&gt;net dispatch of OSW + ES&amp;nbsp;&lt;br&gt;(generally should match bid)&lt;/span&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+                <mxCell id="62" value="&lt;div style=&quot;text-align: left;&quot;&gt;&lt;ul style=&quot;font-size: 12px;&quot;&gt;&lt;li&gt;&lt;span style=&quot;font-size: 12px; background-color: initial;&quot;&gt;net dispatch of OSW + ES&amp;nbsp;&lt;br&gt;(generally should match bid)&lt;/span&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" parent="1" vertex="1">
                     <mxGeometry x="840" y="870" width="210" height="70" as="geometry"/>
                 </mxCell>
-                <mxCell id="63" value="&lt;font size=&quot;1&quot;&gt;create_real_time_energy_bid()&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;" vertex="1" parent="1">
+                <mxCell id="63" value="&lt;font size=&quot;1&quot;&gt;create_real_time_energy_bid()&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;" parent="1" vertex="1">
                     <mxGeometry x="1130" y="930" width="150" height="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="64" value="&lt;font size=&quot;1&quot;&gt;May 1, 10:10am&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;fillColor=#0050ef;fontColor=#ffffff;strokeColor=#001DBC;" vertex="1" parent="1">
+                <mxCell id="64" value="&lt;font size=&quot;1&quot;&gt;May 1, 10:10am&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;fillColor=#0050ef;fontColor=#ffffff;strokeColor=#001DBC;" parent="1" vertex="1">
                     <mxGeometry x="1130" y="980" width="150" height="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="65" value="&lt;font size=&quot;1&quot;&gt;(formulate bid based on current conditions)&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;" vertex="1" parent="1">
+                <mxCell id="65" value="&lt;font size=&quot;1&quot;&gt;(formulate bid based on current conditions)&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;" parent="1" vertex="1">
                     <mxGeometry x="1130" y="780" width="150" height="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="66" value="" style="endArrow=classic;html=1;fontSize=14;exitX=0.25;exitY=0;exitDx=0;exitDy=0;entryX=0.25;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="63" target="65">
+                <mxCell id="66" value="" style="endArrow=classic;html=1;fontSize=14;exitX=0.25;exitY=0;exitDx=0;exitDy=0;entryX=0.25;entryY=1;entryDx=0;entryDy=0;" parent="1" source="63" target="65" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="1290" y="970" as="sourcePoint"/>
                         <mxPoint x="1340" y="920" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="67" value="" style="endArrow=classic;html=1;fontSize=14;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="65" target="63">
+                <mxCell id="67" value="" style="endArrow=classic;html=1;fontSize=14;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" parent="1" source="65" target="63" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="1170" y="940" as="sourcePoint"/>
                         <mxPoint x="1170" y="830" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="69" value="&lt;div style=&quot;text-align: left;&quot;&gt;&lt;ul style=&quot;font-size: 12px;&quot;&gt;&lt;li&gt;&lt;span style=&quot;font-size: 12px; background-color: initial;&quot;&gt;current_time,&lt;/span&gt;&lt;/li&gt;&lt;li&gt;wind_speed_current_period&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+                <mxCell id="69" value="&lt;div style=&quot;text-align: left;&quot;&gt;&lt;ul style=&quot;font-size: 12px;&quot;&gt;&lt;li&gt;&lt;span style=&quot;font-size: 12px; background-color: initial;&quot;&gt;current_time,&lt;/span&gt;&lt;/li&gt;&lt;li&gt;wind_speed_current_period&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" parent="1" vertex="1">
                     <mxGeometry x="960" y="800" width="210" height="80" as="geometry"/>
                 </mxCell>
-                <mxCell id="70" value="&lt;div style=&quot;text-align: left;&quot;&gt;&lt;ul style=&quot;font-size: 12px;&quot;&gt;&lt;li&gt;bid curve&amp;nbsp;[c2, c1, c0 Pmax, Pmin]&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+                <mxCell id="70" value="&lt;div style=&quot;text-align: left;&quot;&gt;&lt;ul style=&quot;font-size: 12px;&quot;&gt;&lt;li&gt;bid curve&amp;nbsp;[c2, c1, c0 Pmax, Pmin]&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" parent="1" vertex="1">
                     <mxGeometry x="1210" y="870" width="240" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="71" value="" style="curved=1;endArrow=none;html=1;fontSize=12;endFill=0;" edge="1" parent="1">
-                    <mxGeometry width="50" height="50" relative="1" as="geometry">
-                        <mxPoint x="1170" y="410" as="sourcePoint"/>
-                        <mxPoint x="1180" y="380" as="targetPoint"/>
-                        <Array as="points">
-                            <mxPoint x="1190" y="400"/>
-                            <mxPoint x="1160" y="390"/>
-                        </Array>
-                    </mxGeometry>
-                </mxCell>
-                <mxCell id="73" value="" style="curved=1;endArrow=none;html=1;fontSize=12;endFill=0;" edge="1" parent="1">
-                    <mxGeometry width="50" height="50" relative="1" as="geometry">
-                        <mxPoint x="1180" y="410" as="sourcePoint"/>
-                        <mxPoint x="1190" y="380" as="targetPoint"/>
-                        <Array as="points">
-                            <mxPoint x="1200" y="400"/>
-                            <mxPoint x="1170" y="390"/>
-                        </Array>
-                    </mxGeometry>
-                </mxCell>
-                <mxCell id="74" value="" style="curved=1;endArrow=none;html=1;fontSize=12;endFill=0;" edge="1" parent="1">
+                <mxCell id="74" value="" style="curved=1;endArrow=none;html=1;fontSize=12;endFill=0;" parent="1" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="1160" y="705" as="sourcePoint"/>
                         <mxPoint x="1170" y="675" as="targetPoint"/>
@@ -259,7 +212,7 @@
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="75" value="" style="curved=1;endArrow=none;html=1;fontSize=12;endFill=0;" edge="1" parent="1">
+                <mxCell id="75" value="" style="curved=1;endArrow=none;html=1;fontSize=12;endFill=0;" parent="1" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="1170" y="705" as="sourcePoint"/>
                         <mxPoint x="1180" y="675" as="targetPoint"/>
