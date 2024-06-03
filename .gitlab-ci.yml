@@ -3,6 +3,8 @@ variables:
   DEVOPS_USER: "devops"
   GIT_URL: "https://$ENV_GIT_USER:$ENV_GIT_TOKEN@devops.pnnl.gov/e-comp/thrust-3/copper.git"
   COPPER_DIR: "copper_$CI_JOB_ID"
+  REGISTRY_USER: "$ENV_REGISTRY_USER"
+  REGISTRY_PASS: "$ENV_REGISTRY_PASS"
 
 image: python:3.10
 
@@ -55,8 +57,8 @@ integration-test:
     - *setup_ssh
     - >
       $SSH_CMD '
-      echo '$ENV_REGISTRY_USER' > /tmp/user &&
-      echo '$ENV_REGISTRY_PASS' > /tmp/pass &&
+      echo '$REGISTRY_USER' > /tmp/user &&
+      echo '$REGISTRY_PASS' > /tmp/pass &&
       mkdir -p ~/integration && cd ~/integration &&
       git clone --depth 1 --branch '$CI_COMMIT_BRANCH' --single-branch '$GIT_URL' '$COPPER_DIR' &&
       cd '$COPPER_DIR'/scripts &&
