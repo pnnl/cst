@@ -1,10 +1,5 @@
 #!/bin/bash
 
-echo ${COPPER_ACCESS_TOKEN}
-echo $COPPER_ACCESS_TOKEN
-
-exit 0
-
 #
 # Error handling:
 # -e: script will exit on any command that returns a non-zero exit code
@@ -15,17 +10,15 @@ set -eo pipefail
 
 # Function to display usage
 usage() {
-  echo "Usage: $0 <DEVOPS_SERVER> [-b|--build]"
-  echo " -b, --build       Optional. Build images for jupyter, python, airflow by default"
+  echo "Usage: $0 <DEVOPS_SERVER>"
+  echo " <DEVOPS_SERVER>: e.g. ecomp-devops.pnl.gov"
 }
 
 # Parse arguments
-BUILD_IMAGES=false
 DEVOPS_SERVER=""
 
 while [[ "$#" -gt 0 ]]; do
     case $1 in
-        -b|--build) BUILD_IMAGES=true ;;
         *) if [[ -z "$DEVOPS_SERVER" ]]; then DEVOPS_SERVER="$1"; else echo "Unknown parameter passed: $1"; usage; exit 1; fi ;;
     esac
     shift
@@ -40,7 +33,8 @@ fi
 COPPER_HOME=$(realpath ..)
 COSIM_ENV=$COPPER_HOME/cosim.env
 
-echo "Starting integration tests on [$DEVOPS_SERVER] with build images flag [$BUILD_IMAGES]..."
+echo "Starting integration tests on [$DEVOPS_SERVER]..."
+
 
 #
 # Update environment
@@ -53,18 +47,6 @@ else
   SED_CMD=(-i 's/^export SIM_HOST=.*/export SIM_HOST='"$DEVOPS_SERVER"'/')
 fi
 sed "${SED_CMD[@]}" "$COSIM_ENV"
-
-#
-# Build new images for jupyter, airflow and python by default
-#
-if $BUILD_IMAGES; then
-    echo "Building CoSim Docker images..."
-    source $COSIM_ENV
-    cd $COPPER_HOME/scripts/docker
-    ./build-cosim-images.sh
-else
-    echo "Skipping building of CoSim Docker images."
-fi
 
 #
 # Start cosim stacks
