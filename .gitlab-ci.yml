@@ -54,9 +54,8 @@ integration-test:
 #      docker login devops-registry.pnnl.gov -u '$ENV_REGISTRY_USER' -p '$ENV_REGISTRY_PASS'
     - *setup_ssh
     - >
-      $SSH_CMD << 'EOF'
-      mkdir -p ~/integration && cd ~/integration 
-      git clone --depth 1 --branch '$CI_COMMIT_BRANCH' --single-branch '$GIT_URL' '$COPPER_DIR' 
-      cd '$COPPER_DIR'/scripts 
-      ./download_images.sh '$DEVOPS_SERVER' -b
-      EOF
+      $SSH_CMD '
+      mkdir -p ~/integration && cd ~/integration &&
+      git clone --depth 1 --branch '$CI_COMMIT_BRANCH' --single-branch '$GIT_URL' '$COPPER_DIR' &&
+      cd '$COPPER_DIR'/scripts &&
+      ./download_images.sh '$DEVOPS_SERVER' -b'
