@@ -26,7 +26,7 @@ COSIM_ENV=$COPPER_HOME/cosim.env
 echo "Building CoSim Docker images..."
 source $COSIM_ENV
 cd $COPPER_HOME/scripts/docker
-#./build-cosim-images.sh
+./build-cosim-images.sh
 
 # Function to increment version
 increment_version() {
