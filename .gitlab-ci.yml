@@ -19,8 +19,8 @@ image: python:3.10
 
 stages:
   - test
-  - integration-test
   - build-publish
+  - integration-test
 
 test:
   stage: test
@@ -46,6 +46,8 @@ build-publish:
   stage: build-publish
   tags:
     - ecomp-integration-test
+  variables:
+    GIT_STRATEGY: none
   only:
     - devops
     - dev
@@ -63,12 +65,12 @@ build-publish:
 
 integration-test:
   stage: integration-test
-  needs:
-    - build-publish
   tags:
     - ecomp-integration-test
   variables:
     GIT_STRATEGY: none
+  needs:
+    - build-publish
   only:
     - devops
     - dev
