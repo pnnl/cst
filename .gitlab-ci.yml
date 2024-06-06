@@ -51,6 +51,8 @@ build-publish:
   only:
     - devops
     - dev
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "null"'  # This condition will always be false
   script:
     - *setup_ssh
     - >
@@ -69,8 +71,6 @@ integration-test:
     - ecomp-integration-test
   variables:
     GIT_STRATEGY: none
-  needs:
-    - build-publish
   only:
     - devops
     - dev
