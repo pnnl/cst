@@ -40,11 +40,3 @@ ps
 echo "Running integration test validation... "
 cd $COPPER_HOME
 make venv integration-test
-
-#
-# Clean up
-#
-echo "Cleaning older federation tests..."
-DAYS_OLD=60
-INTEGRATION_DIR="/home/devops/integration"
-find "$INTEGRATION_DIR" -mindepth 1 -maxdepth 1 -type d -mtime +$DAYS_OLD -exec rm -rf {} \;

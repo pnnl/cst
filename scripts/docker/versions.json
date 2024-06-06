@@ -8,7 +8,6 @@
     "cosim-build": "1.0.0",
     "cosim-helics": "1.0.0",
     "cosim-python": "1.0.0",
-    "cosim-tespapi": "1.0.0",
     "cosim-julia": "1.0.0"
   }
 }
