@@ -42,8 +42,29 @@ test:
     - merge_requests
     - dev
 
+build-publish:
+  stage: build-publish
+  tags:
+    - ecomp-integration-test
+  only:
+    - devops
+    - dev
+  script:
+    - *setup_ssh
+    - >
+      $SSH_CMD '
+      docker login devops-registry.pnnl.gov -u '$ENV_REGISTRY_USER' -p '$ENV_REGISTRY_PASS' &&
+      mkdir -p ~/integration && cd ~/integration &&
+      git clone --depth 1 --branch '$CI_COMMIT_BRANCH' --single-branch '$GIT_URL' '$COPPER_DIR' &&
+      cd '$COPPER_DIR'/scripts &&
+      ./update_cosim_env.sh '$DEVOPS_SERVER' &&
+      ./build_publish_images.sh &&
+      ./clean_test.sh'
+
 integration-test:
   stage: integration-test
+  needs:
+    - build-publish
   tags:
     - ecomp-integration-test
   variables:
@@ -62,25 +83,4 @@ integration-test:
       ./update_cosim_env.sh '$DEVOPS_SERVER' &&
       ./download_images.sh &&
       ./integration_test.sh &&
-      ./clean_test.sh'
-
-build-publish:
-  stage: build-publish
-  needs:
-    - integration-test
-  tags:
-    - ecomp-integration-test
-  only:
-    - devops
-    - dev
-  script:
-    - *setup_ssh
-    - >
-      $SSH_CMD '
-      docker login devops-registry.pnnl.gov -u '$ENV_REGISTRY_USER' -p '$ENV_REGISTRY_PASS' &&
-      mkdir -p ~/integration && cd ~/integration &&
-      git clone --depth 1 --branch '$CI_COMMIT_BRANCH' --single-branch '$GIT_URL' '$COPPER_DIR' &&
-      cd '$COPPER_DIR'/scripts &&
-      ./update_cosim_env.sh '$DEVOPS_SERVER' &&
-      ./build_publish_images.sh &&
       ./clean_test.sh'
