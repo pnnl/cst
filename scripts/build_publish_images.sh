@@ -23,8 +23,14 @@ COSIM_ENV=$COPPER_HOME/cosim.env
 #
 # Build new images for jupyter, airflow and python by default
 #
-echo "Building CoSim Docker images..."
 source $COSIM_ENV
+
+echo "Stop existing running stack..."
+cd $COPPER_HOME/scripts/stack
+./stop_cu.sh
+docker network prune -f
+
+echo "Building Cosim Docker images..."
 cd $COPPER_HOME/scripts/docker
 ./build-cosim-images.sh
 
