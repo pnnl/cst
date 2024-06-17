@@ -39,7 +39,7 @@ class TestSimpleFederation(unittest.TestCase):
         df = self.logger_data.query_scenario_federate_times(
             start_time=START_TIME,
             duration=DURATION,
-            scenario_name="test_Scenario",
+            scenario_name="test_scenario",
             federate_name=federate_name,
             sim_name=sim_name,
             data_type=data_type,
@@ -56,7 +56,7 @@ class TestSimpleFederation(unittest.TestCase):
             df = self.logger_data.query_scenario_federate_times(
                 start_time=86400,
                 duration=0,
-                scenario_name="test_Scenario",
+                scenario_name="test_scenario",
                 federate_name="EVehicle",
                 sim_name="EVehicle/voltage5",
                 data_type="hdt_complex",
