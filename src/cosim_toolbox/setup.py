@@ -19,7 +19,7 @@ setup(
     install_requires=[
         'importlib_resources~=6.1.2',
         'h5py~=3.9.0',
-        'helics~=3.4.0',
+        'helics~=3.5.0',
         'pandas~=2.0.3',
         'numpy~=1.24.4',
         'scipy~=1.10.1',

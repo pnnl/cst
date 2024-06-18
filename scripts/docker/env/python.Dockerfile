@@ -21,6 +21,7 @@ ENV MONGO_PORT=$MONGO_PORT
 
 # Copy Files
 COPY . $COSIM_HOME/cosim_toolbox/cosim_toolbox/
+COPY --from=cosim-build:latest $COSIM_HOME/repo/pyhelics/ $COSIM_HOME/pyhelics/
 COPY --from=cosim-build:latest $COSIM_HOME/repo/AMES-V5.0/psst/ $COSIM_HOME/psst/psst/
 COPY --from=cosim-build:latest $COSIM_HOME/repo/AMES-V5.0/README.rst $COSIM_HOME/psst
 RUN chown -hR $COSIM_USER:$COSIM_USER $COSIM_HOME
@@ -39,11 +40,15 @@ RUN echo "===== Building CoSim Python =====" && \
   echo ". venv/bin/activate" >> .bashrc && \
   echo "Activate the python virtual environment" && \
   . venv/bin/activate && \
-  pip install --upgrade pip > "pypi.log" && \
+  pip install --upgrade pip > "$COSIM_HOME/pypi.log" && \
   echo "Install Python Libraries" && \
-  pip install --no-cache-dir helics >> "pypi.log" && \
-  pip install --no-cache-dir helics[cli] >> "pypi.log" && \
+  cd /home/worker/pyhelics || exit && \
+  pip install --no-cache-dir "." && \
+  rm -r /home/worker/pyhelics && \
+#  pip install --no-cache-dir helics[cli] >> "$COSIM_HOME/pypi.log" && \
   cd $COSIM_HOME/cosim_toolbox/cosim_toolbox || exit && \
-  pip install --no-cache-dir -e .  >> "$COSIM_HOME/pypi.log" && \
+  pip install --no-cache-dir "." && \
+  rm -r /home/worker/cosim_toolbox && \
   cd $COSIM_HOME/psst/psst || exit && \
-  pip install --no-cache-dir -e .  >> "$COSIM_HOME/pypi.log"
+  pip install --no-cache-dir "." && \
+  rm -r /home/worker/psst

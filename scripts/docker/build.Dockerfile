@@ -55,7 +55,6 @@ RUN echo "Cloning or download all relevant repositories..." && \
 #  ${BUILD_DIR}/patch.sh tesp tesp && \
   echo "++++++++++++++ PSST" && \
   git clone -b master https://github.com/ames-market/AMES-V5.0.git && \
-  echo "Applying the patch for AMES...... from ${BUILD_DIR}" && \
   ${BUILD_DIR}/patch.sh AMES-V5.0 AMES-V5.0 && \
   echo "++++++++++++++ FNCS" && \
   git clone -b feature/opendss https://github.com/FNCS/fncs.git && \
@@ -63,6 +62,9 @@ RUN echo "Cloning or download all relevant repositories..." && \
   echo "++++++++++++++ HELICS" && \
   git clone -b main https://github.com/GMLC-TDC/HELICS-src && \
   ${BUILD_DIR}/patch.sh HELICS-src HELICS-src && \
+  echo "++++++++++++++ pyHELICS" && \
+  git clone https://github.com/GMLC-TDC/pyhelics && \
+  ${BUILD_DIR}/patch.sh pyhelics pyhelics && \
   echo "++++++++++++++ GRIDLAB" && \
   git clone -b develop https://github.com/gridlab-d/gridlab-d.git && \
   ${BUILD_DIR}/patch.sh gridlab-d gridlab-d && \
