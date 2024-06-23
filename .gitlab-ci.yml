@@ -26,20 +26,13 @@ test:
   stage: test
   before_script:
     - apt-get update && apt-get install -y make wget ca-certificates
-# Julia install for future use.
-#    - update-ca-certificates
-#    - export JULIA_VERSION=1.6.7
-#    - wget --no-check-certificate https://julialang-s3.julialang.org/bin/linux/x64/1.6/julia-${JULIA_VERSION}-linux-x86_64.tar.gz
-#    - tar -xvzf julia-${JULIA_VERSION}-linux-x86_64.tar.gz -C /opt
-#    - ln -s /opt/julia-${JULIA_VERSION}/bin/julia /usr/local/bin/julia
-#    - rm julia-${JULIA_VERSION}-linux-x86_64.tar.gz
-#    - julia --version # Verify Julia installation
   script:
     - export HTTPS_PROXY=http://proxy01.pnl.gov:3128
     - export https_proxy=http://proxy01.pnl.gov:3128
     - make venv test
   only:
     - merge_requests
+    - devops
     - dev
 
 build-publish:
@@ -49,6 +42,7 @@ build-publish:
   variables:
     GIT_STRATEGY: none
   only:
+    - merge_requests
     - devops
     - dev
   script:
@@ -56,12 +50,15 @@ build-publish:
     - >
       $SSH_CMD '
       docker login devops-registry.pnnl.gov -u '$ENV_REGISTRY_USER' -p '$ENV_REGISTRY_PASS' &&
-      mkdir -p ~/integration && cd ~/integration &&
+      mkdir -p ~/pipeline && cd ~/pipeline &&
       git clone --depth 1 --branch '$CI_COMMIT_BRANCH' --single-branch '$GIT_URL' '$COPPER_DIR' &&
       cd '$COPPER_DIR'/scripts &&
       ./update_cosim_env.sh '$DEVOPS_SERVER' &&
-      ./cleanup.sh &&
+      ./cleanup_pipeline_folders.sh &&
+      ./cleanup_images.sh &&
       ./build_publish_images.sh'
+  needs:
+    - test
 
 integration-test:
   stage: integration-test
@@ -70,6 +67,7 @@ integration-test:
   variables:
     GIT_STRATEGY: none
   only:
+    - merge_requests
     - devops
     - dev
   script:
@@ -77,7 +75,7 @@ integration-test:
     - >
       $SSH_CMD '
       docker login devops-registry.pnnl.gov -u '$ENV_REGISTRY_USER' -p '$ENV_REGISTRY_PASS' &&
-      mkdir -p ~/integration && cd ~/integration &&
+      mkdir -p ~/pipeline && cd ~/pipeline &&
       git clone --depth 1 --branch '$CI_COMMIT_BRANCH' --single-branch '$GIT_URL' '$COPPER_DIR' &&
       cd '$COPPER_DIR'/scripts &&
       ./update_cosim_env.sh '$DEVOPS_SERVER' &&
