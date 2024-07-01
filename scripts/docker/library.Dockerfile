@@ -3,7 +3,6 @@ FROM cosim-ubuntu:latest AS cosim-library
 
 ARG SIM_UID
 ARG COSIM_USER
-ENV COSIM_HOME=/home/$COSIM_USER
 
 RUN echo "===== Building CoSim Library =====" && \
   export DEBIAN_FRONTEND=noninteractive && \
@@ -13,42 +12,17 @@ RUN echo "===== Building CoSim Library =====" && \
   apt-get dist-upgrade -y && \
   apt-get install -y \
   sudo \
-  wget \
   pkgconf \
-  git \
   build-essential \
   autoconf \
   libtool \
   libjsoncpp-dev \
   gfortran \
   cmake \
-  subversion \
-  unzip \
-  lsof \
-  # Java support
-  openjdk-11-jdk \
-  # HELICS and FNCS support
-  libzmq5-dev \
-  libczmq-dev \
-  libboost-dev \
-  # for GridLAB-D
-  libxerces-c-dev \
-  libhdf5-serial-dev \
-  libsuitesparse-dev \
-  # end users replace libsuitesparse-dev with libklu1, which is licensed LGPL
-  # for solvers Ipopt/cbc used by AMES/Agents
-  coinor-cbc \
-  coinor-libcbc-dev \
-  coinor-libipopt-dev \
-  liblapack-dev \
-  libmetis-dev \
-  # Python support
-  python3-pip \
-  python3-pil.imagetk && \
-  ln -s /usr/lib/jvm/java-11-openjdk-amd64 /usr/lib/jvm/default-java && \
+  subversion && \
   echo "root:${COSIM_USER}" | chpasswd && \
   echo "<<<< Adding the '${COSIM_USER}' user >>>>" && \
   useradd -m -s /bin/bash -u $SIM_UID ${COSIM_USER} && \
-  echo "<<<< Changing new user password >>>>" && \
+  echo "<<<< Changing ${COSIM_USER} password >>>>" && \
   echo "${COSIM_USER}:${COSIM_USER}" | chpasswd && \
   usermod -aG sudo ${COSIM_USER}

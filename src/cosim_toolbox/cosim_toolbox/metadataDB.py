@@ -5,29 +5,47 @@ Prototype metadata database API development
 @date 2023-11-30
 """
 import os
+import typing
 import pprint
 import logging
 import subprocess
+from typing import Any, Mapping
+
 import gridfs
 from pymongo import MongoClient
+import bson
+from pymongo.collection import Collection
 
-import cosim_toolbox.helics_config as hm
+import cosim_toolbox.helicsConfig as hC
 
 logger = logging.getLogger(__name__)
 pp = pprint.PrettyPrinter(indent=4, )
 
-sim_user = os.environ.get("SIM_USER", "worker")
-sim_host = os.environ.get("SIM_HOST", "localhost")
+sim_user: str = os.environ.get("SIM_USER", "worker")
+sim_host: str = os.environ.get("SIM_HOST", "localhost")
 
-cosim_mongo_host = os.environ.get("MONGO_HOST", "mongodb://localhost:27017")
-cosim_mongo_db = os.environ.get("COSIM_DB", "copper")
+wsl_host: str = os.environ.get("SIM_WSL_HOST")
+if wsl_host:
+    wsl_port: str = os.environ.get("SIM_WSL_PORT", "2222")
 
-cu_federations = "federations"
-cu_scenarios = "scenarios"
-cu_logger = "cu_logger"
+cosim_mg_host = os.environ.get("MONGO_HOST", "mongodb://localhost")
+cosim_mg_port = os.environ.get("MONGO_PORT", "27017")
+cosim_mongo_host = cosim_mg_host + ":" + cosim_mg_port
+cosim_mongo_db = os.environ.get("COSIM_MONGO_DB", "copper")
+
+cosim_pg_host = os.environ.get("POSTGRES_HOST", "localhost")
+cosim_pg_db = os.environ.get("COSIM_POSTGRES_DB", "copper")
+
+# Same credentials for both databases
+cosim_user = os.environ.get("COSIM_USER", "worker")
+cosim_password = os.environ.get("COSIM_PASSWORD", "worker")
+
+cu_federations: str = "federations"
+cu_scenarios: str = "scenarios"
+cu_logger: str = "cu_logger"
 
 
-def federation_database(clear: bool = False):
+def federation_database(clear: bool = False) -> None:
     db = MetaDB(cosim_mongo_host, cosim_mongo_db)
     logger.info("Before: ",  db.update_collection_names())
     if clear:
@@ -43,19 +61,14 @@ class MetaDB:
     """
     _cu_dict_name = 'cu_007'
 
-    def __init__(self, uri=None, db_name=None):
+    def __init__(self, uri: str = None, db_name: str = None) -> None:
         self.collections = None
-
-        self.client = self._connect_to_database(uri, db_name)
-
-        if db_name is not None:
-            self.db = self.client[db_name]
-        else:
-            self.db = self.client["meta_db"]
+        self.db_name, self.client = self._connect_to_database(uri, db_name)
+        self.db = self.client[self.db_name]
         self.fs = gridfs.GridFS(self.db)
 
     @staticmethod
-    def _open_file(file_path, mode='r'):
+    def _open_file(file_path: str, mode: str = 'r') -> typing.IO:
         """
         Utility function to open file with reasonable error handling.
         """
@@ -67,13 +80,10 @@ class MetaDB:
             return fh
 
     @staticmethod
-    def _connect_to_database(uri=None, db=None):
+    def _connect_to_database(uri: str = None, db: str = None):
         """
         Sets up connection to server port for mongodb
         """
-        cosim_user = os.environ.get("COSIM_USER", "worker")
-        cosim_password = os.environ.get("COSIM_PASSWORD", "worker")
-
         # Set up default uri_string to the server Trevor was using on the EIOC
         if uri is None:
             uri = cosim_mongo_host
@@ -89,9 +99,9 @@ class MetaDB:
         except Exception as e:
             logger.info(e)
 
-        return client
+        return db, client
 
-    def _check_unique_doc_name(self, collection_name, new_name):
+    def _check_unique_doc_name(self, collection_name: str, new_name: str) -> bool:
         """
         Checks to see if the provided document name is unique in the specified
         collection.
@@ -100,12 +110,13 @@ class MetaDB:
         method decide what to do with it.
         """
         ret_val = True
-        for doc in (self.db[collection_name].find({self._cu_dict_name: 1})):
-            if doc[self._cu_dict_name] == new_name:
-                ret_val = False
+        for doc in (self.db[collection_name].find({}, {"_id": 0, self._cu_dict_name: 1})):
+            if doc.__len__():
+                if doc[self._cu_dict_name] == new_name:
+                    ret_val = False
         return ret_val
 
-    def add_file(self, file, conflict='fail', name=None):
+    def add_file(self, file: str, conflict: str = 'fail', name: str = None) -> None:
         """
         Gets file from disk and adds it to the metadataDB for all federates
         to use.
@@ -118,7 +129,12 @@ class MetaDB:
         By default, this method will produce an error if the name of the
         file being added already exists in the file storage. This can
         behavior can be altered by specifying the "conflict" parameter
-        to a different value.
+        to a different value. Supported values are 
+            "fail" - Produces an error if the file name being added 
+                     already exists in the database
+            "overwrite" - New file overwrites the existing one
+            "add version" - New file is added as a version of 
+                            the existing one.
         """
         if not name:
             path, file = os.path.split(file)
@@ -139,21 +155,21 @@ class MetaDB:
                                 f"must be 'fail', 'overwrite' or 'add version' ")
         self.fs.put(fh, filename=name)
 
-    def get_file(self, name, disk_name=None, path=None):
+    def get_file(self, name: str, disk_name: str = None, path: str = None) -> gridfs.GridOut:
         """
-        Pulls a file from the metadataDB by name and optionally writes it to
+        Pulls a file from the metadataDB by "name" and optionally writes it to
         disk. This method only gets the latest version of the file (if
         multiple versions exist).
 
         If "disk_name" is specified, that name will be used when writing the
         file to disk; otherwise the file name as specified in the metadataDB
-        will be used. If path is not specified, the file is not written to
-        disk. If it is the file is written at the location specified by path
+        will be used. If "path" is not specified, the file is not written to
+        disk. If it is, the file is written at the location specified by "path"
         using the provided "disk_name".
         """
         db_file = self.fs.files.find({'filename': name})
         if not db_file:
-            raise NameError(f"File '{name}' does not exist.")
+            raise NameError(f"File '{name}' does not exist in metadataDB.")
         else:
             db_file = self.fs.get_last_version(filename=name)
             if path:
@@ -166,10 +182,21 @@ class MetaDB:
             else:
                 return db_file
 
-    def remove_collection(self, collection_name):
+    def remove_collection(self, collection_name: str):
+        """
+        Removes the collection from the metadataDB specified by 
+        "collection_name"
+        """
         self.db[collection_name].drop()
+        self.update_collection_names()
 
-    def remove_document(self, collection_name, object_id=None, dict_name=None):
+    def remove_document(self, collection_name: str,
+                        object_id: bson.objectid.ObjectId = None,
+                        dict_name: str = None) -> None:
+        """
+        Remove the document specified by "object_id" or "dict_name" from the
+        collection specified by "collection_name".
+        """
         if dict_name is None and object_id is None:
             raise AttributeError("Must provide the name or object ID of the dictionary to be retrieved.")
         elif dict_name is not None and object_id is not None:
@@ -181,7 +208,7 @@ class MetaDB:
             self.db[collection_name].delete_one({"_id": object_id})
         # TODO: Add check for success on delete.
 
-    def add_collection(self, name):
+    def add_collection(self, name: str):
         """
         Collections don't really exist in MongoDB until at least one document
         has been added to the collection. This method adds a small identifier
@@ -190,9 +217,10 @@ class MetaDB:
         id_dict = {"collection name": name}
         collection = self.db[name]
         collection.insert_one(id_dict)
+        self.update_collection_names()
         return collection
 
-    def update_collection_names(self):
+    def update_collection_names(self) -> list:
         """
         Updates the list of collection names in the db object from the database.
         As you can see in the code below, this is pure syntax sugar.
@@ -200,23 +228,32 @@ class MetaDB:
         self.collections = self.db.list_collection_names()
         return self.collections
 
-    def get_collection_document_names(self, collection):
+    def get_collection_document_names(self, collection_name: str) -> list:
         """
+        Provides list of document names in collection specified by 
+        "collection_name"
         """
         doc_names = []
-        for doc in (self.db[collection].find({"_id": 0, self._cu_dict_name: 1})):
+        for doc in (self.db[collection_name].find({}, {"_id": 0, self._cu_dict_name: 1})):
             if doc.__len__():
                 doc_names.append(doc[self._cu_dict_name])
         return doc_names
 
-    def get_dict_key_names(self, collection_name, doc_name):
+    def get_dict_key_names(self, collection_name: str, doc_name: str) -> list:
         """
+        Provides the list of keys for the document (dictionary) specified
+        by "doc_name" in the collection "collection_name".
         """
+        # TODO: Add input validation that the collection and document do exist
+        if collection_name not in self.collections:
+            raise NameError(f"Collection '{collection_name}' does not exist.")
+        if doc_name not in self.get_collection_document_names(collection_name):
+            raise NameError(f"Document '{doc_name}' does not exist in collection {collection_name}.")
         doc = self.db[collection_name].find({self._cu_dict_name: doc_name})
         return doc[0].keys()
 
-    def add_dict(self, collection_name, dict_name, dict_to_add):
-        """
+    def add_dict(self, collection_name: str, dict_name: str, dict_to_add: dict) -> str:
+        """ 
         Adds the Python dictionary to the specified MongoDB collection as a
         MongoDB document. Checks to make sure another document does not exist
         by that name; if it does, throw an error.
@@ -230,12 +267,13 @@ class MetaDB:
             dict_to_add[self._cu_dict_name] = dict_name
         else:
             raise NameError(f"{dict_name} is not unique in collection {collection_name} and cannot be added.")
-
         obj_id = self.db[collection_name].insert_one(dict_to_add).inserted_id
 
         return str(obj_id)
 
-    def get_dict(self, collection_name, object_id=None, dict_name=None):
+    def get_dict(self, collection_name: str, 
+                 object_id: bson.objectid.ObjectId = None,
+                 dict_name: str = None) -> dict:
         """
         Returns the dictionary in the database based on the user-provided
         object ID or name.
@@ -243,6 +281,7 @@ class MetaDB:
         User must enter either the dictionary name used or the object_ID that
         was created when the dictionary was added but not both.
         """
+        doc = None
         if dict_name is None and object_id is None:
             raise AttributeError("Must provide the name or object ID of the dictionary to be retrieved.")
         elif dict_name is not None and object_id is not None:
@@ -257,12 +296,15 @@ class MetaDB:
         # Pulling out the metaDB secret name field that was added when we put
         #   the dictionary into the database. Will not raise an error if
         #   somehow that key does not exist in the dictionary
-        doc.pop(self._cu_dict_name, None)
-        doc.pop("_id", None)
-
+        if doc:
+            doc.pop(self._cu_dict_name, None)
+            doc.pop("_id", None)
         return doc
 
-    def update_dict(self, collection_name, updated_dict, object_id=None, dict_name=None):
+    def update_dict(self, collection_name: str, 
+                    updated_dict: dict,
+                    object_id: bson.objectid.ObjectId = None,
+                    dict_name: str = None) -> object:
         """
         Updates the dictionary on the database (under the same object_ID/name)
         with the passed in updated dictionary.
@@ -270,25 +312,29 @@ class MetaDB:
         User must enter either the dictionary name used or the object_ID that
         was created when the dictionary was added but not both.
         """
+        result = None
         updated_dict[self._cu_dict_name] = dict_name
         if dict_name is None and object_id is None:
             raise AttributeError("Must provide the name or object ID of the dictionary to be modified.")
         elif dict_name is not None and object_id is not None:
             logger.warning("Using provided object ID (and not provided name) to update database.")
-            doc = self.db[collection_name].replace({"_id": object_id}, updated_dict)
+            result = self.db[collection_name].replace_one({"_id": object_id}, updated_dict)
         elif dict_name is not None:
             doc = self.db[collection_name].find_one({self._cu_dict_name: dict_name})
             if doc:
-                doc = self.db[collection_name].replace({self._cu_dict_name: dict_name}, updated_dict)
+                result = self.db[collection_name].replace_one({"_id":doc['_id']}, updated_dict)
             else:
                 raise NameError(f"{dict_name} does not exist in collection {collection_name} and cannot be updated.")
         elif object_id is not None:
-            doc = self.db[collection_name].replace({"_id": object_id}, updated_dict)
-
-        return str(doc["_id"])
+            result = self.db[collection_name].replace_one({"_id": object_id}, updated_dict)
+        return result
 
     @staticmethod
-    def scenario(schema_name: str, federation_name: str, start: str, stop: str, docker: bool = False):
+    def scenario(schema_name: str, federation_name: str, start: str, stop: str, docker: bool = False) -> dict:
+        """
+        Creates a properly formatted CoSim Toolbox scenario document 
+        (dictionary), using the provided inputs.
+        """
         return {
             "schema": schema_name,
             "federation": federation_name,
@@ -303,7 +349,7 @@ class Docker:
         pass
 
     @staticmethod
-    def _service(name, image, env, cnt, depends=None):
+    def _service(name: str, image: str, env: list, cnt: int, depends: str = None) -> str:
         _service = "  " + name + ":\n"
         _service += "    image: \"" + image + "\"\n"
         if env[0] != '':
@@ -324,7 +370,7 @@ class Docker:
         return _service
 
     @staticmethod
-    def _network():
+    def _network() -> str:
         _network = 'networks:\n'
         _network += '  cu_net:\n'
         _network += '    driver: bridge\n'
@@ -335,7 +381,7 @@ class Docker:
         return _network
 
     @staticmethod
-    def define_yaml(scenario_name):
+    def define_yaml(scenario_name: str) -> None:
         mdb = MetaDB(cosim_mongo_host, cosim_mongo_db)
 
         scenario_def = mdb.get_dict(cu_scenarios, None, scenario_name)
@@ -343,23 +389,30 @@ class Docker:
         schema_name = scenario_def["schema"]
         fed_def = mdb.get_dict(cu_federations, None, federation_name)["federation"]
 
-        yaml = 'version: "3.8"\n'
-        yaml += 'services:\n'
+        cosim_env = """      SIM_HOST: \"""" + sim_host + """\"
+      SIM_USER: \"""" + sim_user + """\"
+      POSTGRES_HOST: \"""" + cosim_pg_host + """\"
+      MONGO_HOST: \"""" + cosim_mg_host + """\"
+      MONGO_PORT: \"""" + cosim_mg_port + """\"
+"""
+        yaml = 'services:\n'
         # Add helics broker federate
         cnt = 2
         fed_cnt = str(fed_def.__len__() + 1)
-        env = ["", "exec helics_broker --ipv4 -f " + fed_cnt + " --loglevel=warning --name=broker"]
+        env = [cosim_env, "exec helics_broker --ipv4 -f " + fed_cnt + " --loglevel=warning --name=broker"]
         yaml += Docker._service("helics", "cosim-helics:latest", env, cnt, depends=None)
 
         for name in fed_def:
             cnt += 1
             image = fed_def[name]['image']
-            env = ["", fed_def[name]['command']]
+            env = [cosim_env, fed_def[name]['command']]
             yaml += Docker._service(name, image, env, cnt, depends=None)
 
         # Add data logger federate
         cnt += 1
-        env = ["", "source /home/worker/venv/bin/activate && exec python3 -c \\\"import cosim_toolbox.data_logger as datalog; datalog.main('DataLogger', '" +
+        env = [cosim_env,
+               "source /home/worker/venv/bin/activate && " +
+               "exec python3 -c \\\"import cosim_toolbox.federateLogger as datalog; datalog.main('FederateLogger', '" +
                schema_name + "', '" + scenario_name + "')\\\""]
         yaml += Docker._service(cu_logger, "cosim-python:latest", env, cnt, depends=None)
 
@@ -369,22 +422,25 @@ class Docker:
         op.close()
 
     @staticmethod
-    def run_yaml(scenario_name):
+    def run_yaml(scenario_name: str) -> None:
         logger.info('====  ' + scenario_name + ' Broker Start in\n        ' + os.getcwd())
-        docker_compose = "docker-compose -f " + scenario_name + ".yaml"
+        docker_compose = "docker compose -f " + scenario_name + ".yaml"
         subprocess.Popen(docker_compose + " up", shell=True).wait()
         subprocess.Popen(docker_compose + " down", shell=True).wait()
         logger.info('====  Broker Exit in\n        ' + os.getcwd())
 
     @staticmethod
-    def run_remote_yaml(scenario_name):
+    def run_remote_yaml(scenario_name: str, path: str = "/run/python/test_federation") -> None:
         cosim = os.environ.get("SIM_DIR", "/home/worker/copper")
         logger.info('====  ' + scenario_name + ' Broker Start in\n        ' + os.getcwd())
-        docker_compose = "docker-compose -f " + scenario_name + ".yaml"
-        cmd = ("sh -c 'cd " + cosim + "/run/python/test_federation && " +
-               docker_compose + " up && " + docker_compose + " down'")
-        subprocess.Popen("ssh -i  ~/copper-key-ecdsa " + sim_user + "@" + sim_host +
-                         " \"nohup " + cmd + " > /dev/null &\"", shell=True)
+        docker_compose = "docker compose -f " + scenario_name + ".yaml"
+        # in wsl_post and wsl_host
+        if not wsl_host:
+            ssh = "ssh -i ~/copper-key-ecdsa " + sim_user + "@" + sim_host
+        else:
+            ssh = "ssh -i ~/copper-key-ecdsa " + sim_user + "@" + wsl_host
+        cmd = ("sh -c 'cd " + cosim + path + " && " + docker_compose + " up && " + docker_compose + " down'")
+        subprocess.Popen(ssh + " \"nohup " + cmd + " > /dev/null &\"", shell=True)
         logger.info('====  Broker Exit in\n        ' + os.getcwd())
 
 
@@ -399,10 +455,10 @@ def mytest1():
     """
     db = MetaDB(cosim_mongo_host, cosim_mongo_db)
     logger.info(db.update_collection_names())
-    scenarios = db.add_collection(cu_scenarios)
-    federates = db.add_collection(cu_federations)
+    db.add_collection(cu_scenarios)
+    db.add_collection(cu_federations)
 
-    t1 = hm.HelicsMsg("Battery", 30)
+    t1 = hC.HelicsMsg("Battery", 30)
     t1.config("core_type", "zmq")
     t1.config("log_level", "warning")
     t1.config("period", 60)
@@ -451,7 +507,7 @@ def mytest2():
     db.add_collection(cu_scenarios)
     db.add_collection(cu_federations)
 
-    t1 = hm.HelicsMsg("Battery", 30)
+    t1 = hC.HelicsMsg("Battery", 30)
     t1.config("core_type", "zmq")
     t1.config("log_level", "warning")
     t1.config("period", 60)
@@ -467,7 +523,7 @@ def mytest2():
         "HELICS_config": t1.write_json()
     }
 
-    t2 = hm.HelicsMsg("EVehicle", 30)
+    t2 = hC.HelicsMsg("EVehicle", 30)
     t2.config("core_type", "zmq")
     t2.config("log_level", "warning")
     t2.config("period", 60)

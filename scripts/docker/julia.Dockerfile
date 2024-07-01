@@ -6,21 +6,12 @@ USER root
 ARG COSIM_USER
 ENV COSIM_HOME=/home/$COSIM_USER
 
-# Compile exports
-ENV INSTDIR=$COSIM_HOME/tenv
-
 # PATH
 ENV PATH=$COSIM_HOME/julia-1.9.4/bin:$PATH
 
-RUN echo "===== Building CoSim Julia =====" && \
-  export DEBIAN_FRONTEND=noninteractive && \
-  export DEBCONF_NONINTERACTIVE_SEEN=true && \
-  echo "===== Install Libraries =====" && \
-  apt-get update && \
-  apt-get dist-upgrade -y && \
-  apt-get install -y \
-  wget && \
-  chown -hR $COSIM_USER:$COSIM_USER $COSIM_HOME
+# Copy Binaries
+#COPY --from=cosim-build:latest $INSTDIR/ $INSTDIR/
+#RUN chown -hR $COSIM_USER:$COSIM_USER $COSIM_HOME
 
 # Set as user
 USER $COSIM_USER

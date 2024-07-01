@@ -18,12 +18,14 @@
           "uninterruptible": false,
           "terminate_on_error": true,
           "wait_for_current_time_update": true,
+          "tags": {"logger": "yes"},
           "publications": [
             {
               "global": true,
               "key": "Battery/EV1_current",
               "type": "double",
-              "unit": "A"
+              "unit": "A",
+              "tags": {"logger": "no"}
             }
           ],
           "subscriptions": [
@@ -49,12 +51,14 @@
           "uninterruptible": false,
           "terminate_on_error": true,
           "wait_for_current_time_update": true,
+          "tags": {"logger": "no" },
           "publications": [
             {
               "global": true,
               "key": "EVehicle/EV1_current",
               "type": "double",
-              "unit": "V"
+              "unit": "V",
+              "tags": {"logger": "yes" }
             }
           ],
           "subscriptions": [

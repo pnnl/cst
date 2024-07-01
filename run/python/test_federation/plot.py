@@ -26,20 +26,19 @@ def open_logger():
         return
 
 
-_federate_name = "DataLogger"   # TODO: fix the proper federated name
-_scenario_name = "test_MyTest"
-_schema_name = "test_MySchema2"
-_federation_name = "test_MyFederation"
+_federate_name = "Battery"
+_scenario_name = "test_Scenario"
+_schema_name = "test_Schema"
 
 names = ["Battery", "EVehicle"]
 items = ["current", "voltage"]
-_data_name = names[0] + "/" + items[0]
+_sim_name = names[0] + "/" + items[0]
 
-qry = f"SELECT time, data_value FROM {_schema_name}.HDT_DOUBLE WHERE " \
+qry = f"SELECT sim_time, sim_value FROM {_schema_name}.HDT_DOUBLE WHERE " \
       f"time > 30 AND " \
       f"scenario = '{_scenario_name}' AND " \
       f"federate = '{_federate_name}' AND " \
-      f"data_name = '{names[0]}/{items[0]}';"
+      f"sim_name = '{names[0]}/{items[0]}';"
 
 conn = open_logger()
 cur = conn.cursor()

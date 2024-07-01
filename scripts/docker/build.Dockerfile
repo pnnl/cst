@@ -11,7 +11,7 @@ WORKDIR $COSIM_HOME
 # CoSim exports
 ENV INSTDIR=$COSIM_HOME/tenv
 ENV BUILD_DIR=$COSIM_HOME/build
-ENV REPO_DIR=$COSIM_HOME/repository
+ENV REPO_DIR=$COSIM_HOME/repo
 
 # COMPILE exports
 ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
@@ -33,17 +33,17 @@ ENV PATH=$PATH:$INSTDIR/energyplus/PostProcess
 ENV PSST_SOLVER=cbc
 # 'PSST_SOLVER path' -- one of "cbc", "ipopt", "/ibm/cplex/bin/x86-64_linux/cplexamp"
 ENV PSST_WARNING=ignore
+# 'PSST_WARNING action' -- one of "error", "ignore", "always", "default", "module", or "once"
 
 RUN echo "===== Building CoSim Build =====" && \
-  echo "Configure name and email for" && \
+  echo "Configure name and email for git" && \
   git config --global user.name "${COSIM_USER}" && \
-  git config --global user.email "${COSIM_USER}@${COSIM_USER}.com" && \
-  echo "User .name=${COSIM_USER} and .email=${COSIM_USER}@${COSIM_EMAIL} have been set for git repositories!" && \
+  git config --global user.email "${COSIM_USER}@${COSIM_EMAIL}" && \
   git config --global credential.helper store && \
   echo "Directory structure for build" && \
   mkdir -p tenv && \
   mkdir -p build && \
-  mkdir -p repository
+  mkdir -p repo
 
 # Copy the build instructions
 COPY . ${BUILD_DIR}
@@ -104,8 +104,8 @@ RUN echo "Cloning or download all relevant repositories..." && \
   /bin/rm -r ${REPO_DIR}/Ipopt && \
   /bin/rm -r ${REPO_DIR}/ThirdParty-ASL && \
   /bin/rm -r ${REPO_DIR}/ThirdParty-Mumps && \
-  echo "Compiling and Installing TESP agents and converter..." && \
-  ./tesp_b.sh clean > EnergyPlus_j.log 2>&1 && \
+  echo "Compiling and Installing TESP EnergyPlus agents and TMY converter..." && \
+  ./tesp_b.sh clean > tesp.log 2>&1 && \
   /bin/rm -r ${REPO_DIR}/tesp && \
   echo "${COSIM_USER}" | sudo -S ldconfig && \
   cd ${BUILD_DIR} || exit && \

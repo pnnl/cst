@@ -16,6 +16,7 @@
     "stop_stime": "<ISO 8601 string: 2023-12-07T15:31:27−07:00>",
     "federation": "<string: BT1_EV1>",
     "schema": "<string: Tesp>",
+    "montior": {},
     "docker": "<boolean: true>"
   }
 ]

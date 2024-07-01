@@ -1,15 +1,87 @@
+variables:
+  DEVOPS_SERVER: "ecomp-devops.pnl.gov"
+  DEVOPS_USER: "devops"
+  GIT_URL: "https://$ENV_GIT_USER:$ENV_GIT_TOKEN@devops.pnnl.gov/e-comp/thrust-3/copper.git"
+  COPPER_DIR: "copper_$CI_JOB_ID"
+
+image: python:3.10
+
+.__setup_ssh: &setup_ssh |
+  mkdir -p ~/.ssh && chmod 0700 ~/.ssh
+  touch ~/.ssh/known_hosts && chmod 0700 ~/.ssh/known_hosts
+  if ! ssh-keyscan $DEVOPS_SERVER | tee --output-error=warn ~/.ssh/known_hosts; then
+    echo "Failed to reach DEVOPS_SERVER at $DEVOPS_SERVER"
+    exit 1
+  fi
+  echo "$ENV_SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+  chmod 0600 ~/.ssh/id_rsa
+  export SSH_CMD="ssh -i ~/.ssh/id_rsa -l $DEVOPS_USER $DEVOPS_SERVER"
+
 stages:
   - test
+  - build-publish
+  - integration-test
 
 test:
   stage: test
-  image: python:3.10
   before_script:
-    - apt-get update && apt-get install make
+    - apt-get update && apt-get install -y make wget ca-certificates
+# Julia install for future use.
+#    - update-ca-certificates
+#    - export JULIA_VERSION=1.6.7
+#    - wget --no-check-certificate https://julialang-s3.julialang.org/bin/linux/x64/1.6/julia-${JULIA_VERSION}-linux-x86_64.tar.gz
+#    - tar -xvzf julia-${JULIA_VERSION}-linux-x86_64.tar.gz -C /opt
+#    - ln -s /opt/julia-${JULIA_VERSION}/bin/julia /usr/local/bin/julia
+#    - rm julia-${JULIA_VERSION}-linux-x86_64.tar.gz
+#    - julia --version # Verify Julia installation
   script:
     - export HTTPS_PROXY=http://proxy01.pnl.gov:3128
     - export https_proxy=http://proxy01.pnl.gov:3128
-    - make venv test  
+    - make venv test
   only:
-  - merge_requests
-  
+    - merge_requests
+    - dev
+
+build-publish:
+  stage: build-publish
+  tags:
+    - ecomp-integration-test
+  variables:
+    GIT_STRATEGY: none
+  only:
+    - devops
+    - dev
+  script:
+    - *setup_ssh
+    - >
+      $SSH_CMD '
+      docker login devops-registry.pnnl.gov -u '$ENV_REGISTRY_USER' -p '$ENV_REGISTRY_PASS' &&
+      mkdir -p ~/integration && cd ~/integration &&
+      git clone --depth 1 --branch '$CI_COMMIT_BRANCH' --single-branch '$GIT_URL' '$COPPER_DIR' &&
+      cd '$COPPER_DIR'/scripts &&
+      ./update_cosim_env.sh '$DEVOPS_SERVER' &&
+      ./cleanup.sh &&
+      ./build_publish_images.sh'
+
+integration-test:
+  stage: integration-test
+  tags:
+    - ecomp-integration-test
+  variables:
+    GIT_STRATEGY: none
+  only:
+    - devops
+    - dev
+  script:
+    - *setup_ssh
+    - >
+      $SSH_CMD '
+      docker login devops-registry.pnnl.gov -u '$ENV_REGISTRY_USER' -p '$ENV_REGISTRY_PASS' &&
+      mkdir -p ~/integration && cd ~/integration &&
+      git clone --depth 1 --branch '$CI_COMMIT_BRANCH' --single-branch '$GIT_URL' '$COPPER_DIR' &&
+      cd '$COPPER_DIR'/scripts &&
+      ./update_cosim_env.sh '$DEVOPS_SERVER' &&
+      ./download_images.sh &&
+      ./integration_test.sh'
+  needs:
+    - build-publish

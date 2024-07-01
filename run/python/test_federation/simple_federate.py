@@ -7,7 +7,6 @@ Python-based logger federate in CoSimulation Toolbox.
 @author: Mitch Pelton, Fred Rutz
 """
 import sys
-import psycopg2
 
 from cosim_toolbox.federate import Federate
 

@@ -4,12 +4,11 @@ Created on 12/14/2023
 Data logger class that defines the basic operations of Python-based logger federate in
 Copper.
 
-@author: Mitch Pelton
+@author:
 mitch.pelton@pnnl.gov
 """
-
 import cosim_toolbox.metadataDB as mDB
-from cosim_toolbox.helics_config import HelicsMsg
+from cosim_toolbox.helicsConfig import HelicsMsg
 
 
 class Runner:

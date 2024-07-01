@@ -1,7 +1,10 @@
 # Test coverage
 .coverage
 coverage.xml
-resutls.xml
+results.xml
 htmlcov/
 **/.pytest_cache/
 venv/
+**/__pycache__/
+**/*.log
+.idea/

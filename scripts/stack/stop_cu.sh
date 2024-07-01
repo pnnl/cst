@@ -3,12 +3,8 @@
 # Shutdown and stop containers/volumes
 # to remove all images as well  '--rmi all' the docker compose
 # to remove all volumes as well  '--volumes' er compose
-docker-compose -f docker-compose.yaml down --volumes
-docker-compose -f postgres-docker-compose.yaml down --volumes
+docker compose down --volumes --remove-orphans
 
-# Remove network and volumes 
-# Comment out if you want it to persist
-# sleep 10
-# docker network rm cu_net
-# docker volume rm cu_vol_user
-# docker volume rm cu_vol_admin
+# to remove all volumes from stack
+docker volume rm stack_cu_mongo stack_cu_postgres -f
+docker volume prune -f

@@ -79,7 +79,7 @@ ssh-copy-id -i ~/copper-key-ecdsa d3j331@gage.pnl.gov
 
 
 ## Info about keygen
-
+================================
 Creating an SSH Key Pair for User Authentication
 The simplest way to generate a key pair is to run ssh-keygen without arguments. In this case, it will prompt for the file in which to store keys. Here's an example:
 
@@ -131,15 +131,34 @@ To use public key authentication, the public key must be copied to a server and 
 ssh-copy-id -i ~/.ssh/tatu-key-ecdsa user@host
 Once the public key has been configured on the server, the server will allow any connecting user that has the private key to log in. During the login process, the client proves possession of the private key by digitally signing the key exchange.
 
+WSL3 to change UID
+==================
+Open regedit, change the parameter
+\HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Lxss{cefb...cb50}\DefaultUid
+to newuid.
+
+from root
+replace uid with newuidpasswd
+   sudo nano /etc/passwd
+replace uid with newuid group
+   sudo nano /etc/group
+change the files in th home directory to the named 'user'
+   chown -R 'user':'user' /home/'user'
+
 
 Adding a directories where new modules will be deployed
+=======================================================
 https://stackoverflow.com/questions/67887138/how-to-install-packages-in-airflow-docker-compose
 don't know if the answer is too late, anyway, I've managed to workaround this problem by:
 
-Defining new volume in docker compose, pointing to a directory where new modules will be deployed. In my case, in Docker compose x-airflow-common: common section, in volumes subsection, I added: - ${AIRFLOW_PROJ_DIR:-.}/python:/python_extended
+Defining new volume in docker compose, pointing to a directory where new modules will be deployed.
+In my case, in Docker compose x-airflow-common: common section, in volumes subsection,
+I added: - ${AIRFLOW_PROJ_DIR:-.}/python:/python_extended
 Then, in ${AIRFLOW_PROJ_DIR:-.}/python, I can deploy new modules to be used as PYTHONPATH.
-Finally, it is possible to define a .env specific per task defined in Airflow in ${AIRFLOW_PROJ_DIR:-.}/python and load a per-task specific .env files in the dag.py of the task.
-So, my docker-compose.yml looks like:
+Finally, it is possible to define a .env specific per task defined in
+Airflow in ${AIRFLOW_PROJ_DIR:-.}/python and load a per-task specific .env files in the dag.py of the task.
+
+== So, my docker-compose.yml looks like:
 
 version: '3.8'
 x-airflow-common:
@@ -185,8 +204,10 @@ x-airflow-common:
       condition: service_healthy
     postgres:
       condition: service_healthy
-And my DAGs start with:
 
+
+
+== And my DAGs start with:
 import sys, os, logging
 sys.path.append(os.path.abspath("/python_extended"))
 logging.info(os.environ['PYTHONPATH'])
@@ -199,4 +220,5 @@ path = '/python_extended/whatever.env'
 print(f'> Using .env file: {path}')
 load_dotenv(path)
 
-This way, keeping the current docker deploy of the image, you can add new modules by just deploying them to your local path in ${AIRFLOW_PROJ_DIR:-.}/python.
+This way, keeping the current docker deploy of the image,
+you can add new modules by just deploying them to your local path in ${AIRFLOW_PROJ_DIR:-.}/python.

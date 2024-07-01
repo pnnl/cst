@@ -5,6 +5,8 @@ USER root
 
 ENV SIM_USER=$SIM_USER
 ENV SIM_HOST=$SIM_HOST
+ENV SIM_WSL_HOST=$SIM_WSL_HOST
+ENV SIM_WSL_PORT=$SIM_WSL_PORT
 ENV SIM_DIR=$SIM_DIR
 
 ENV COSIM_DB="$COSIM_DB"
@@ -15,31 +17,12 @@ ENV COSIM_HOME=$COSIM_HOME
 ENV POSTGRES_HOST="$SIM_HOST"
 ENV POSTGRES_PORT=$POSTGRES_PORT
 ENV MONGO_HOST="$MONGO_HOST"
-
-# PATH
-ENV PYHELICS_INSTALL=$COSIM_HOME/tenv
-
-RUN echo "===== Building CoSim Python =====" && \
-  export DEBIAN_FRONTEND=noninteractive && \
-  export DEBCONF_NONINTERACTIVE_SEEN=true && \
-  echo "===== Install Libraries =====" && \
-  apt-get update && \
-  apt-get dist-upgrade -y && \
-  apt-get install -y \
-# Ipopt cbc solver support libraries
-  coinor-cbc \
-  coinor-libcbc-dev \
-  coinor-libipopt-dev \
-  liblapack-dev \
-  libmetis-dev \
-# Python support
-  python3-pip \
-  python3-pil.imagetk
+ENV MONGO_PORT=$MONGO_PORT
 
 # Copy Files
 COPY . $COSIM_HOME/cosim_toolbox/cosim_toolbox/
-COPY --from=cosim-build:latest $COSIM_HOME/repository/AMES-V5.0/psst/ $COSIM_HOME/psst/psst/
-COPY --from=cosim-build:latest $COSIM_HOME/repository/AMES-V5.0/README.rst $COSIM_HOME/psst
+COPY --from=cosim-build:latest $COSIM_HOME/repo/AMES-V5.0/psst/ $COSIM_HOME/psst/psst/
+COPY --from=cosim-build:latest $COSIM_HOME/repo/AMES-V5.0/README.rst $COSIM_HOME/psst
 RUN chown -hR $COSIM_USER:$COSIM_USER $COSIM_HOME
 
 # Set as user
@@ -47,7 +30,8 @@ USER $COSIM_USER
 WORKDIR $COSIM_HOME
 
 # Add directories and files
-RUN echo "Directory structure for running" && \
+RUN echo "===== Building CoSim Python =====" && \
+  echo "Pip install for virtual environment" && \
   pip install --upgrade pip > "_pypi.log" && \
   pip install virtualenv >> "_pypi.log" && \
   ".local/bin/virtualenv" venv --prompt TESP && \
