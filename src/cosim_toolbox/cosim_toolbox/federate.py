@@ -78,8 +78,8 @@ class Federate:
         self.federate: dict = None
         self.federate_type: str = None
         self.federate_name: str = fed_name
-        self.start: float = None
-        self.stop: float = None
+        self.start: datetime.datetime = None
+        self.stop: datetime.datetime = None
         self.time_step = -1.0
         self.stop_time = -1.0
         self.granted_time = -1.0

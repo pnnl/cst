@@ -14,53 +14,51 @@ import datetime
 import json
 import logging
 
-import helics as h
-
 import cosim_toolbox.metadataDB as mDB
 
 # Assumes these libraries have classes that exist with the appropriate method
 # names
-import egret
+import EgretMarkets
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler())
 logger.setLevel(logging.ERROR)
 
-class EnergyMarket(federate):
+class OSWTSO(Federate):
     """
-    Implements three markets for use in the E-COMP off-shore wind use case:
+    TSO-like object used in E-COMP off-shore wind use case. This is way more
+    particular to that analysis than I'd like but in the name of expediency,
+    this is where I landed.
+
+    Implements three markets:
             - Day-ahead energy markets
             - Frequency regulation market (implement as a reserve market)
             - Real-time energy market.
 
     The market operations are handled by EGRET, the management of time
     and the HELICS integration is handled here by the Federate class from
-    which we are inheriting.
+    which we are inheriting. 
+
+    This code adds the instantiation of the market objects and the 
+    underlying state machine that defines when particular activity
+    takes place. A lot of that timing is defined in the market_timing
+    object (well, dictionary as I write it now; it should be an 
+    instance of a class, I think, but I'm running out of time). The
+    data there defines the progression of the market state machine and the
+    associated timing.
     
     This class assummes that the EGRET functionality is presented in a
     class- or library-oriented method such that the market operation 
     methods can be called as stand-alone operations. 
     """
 
-    def __init__(self, fed_name="", **kwargs):
+    def __init__(self, fed_name, market_timing, **kwargs):
         """
         Add a few extra things on top of the Federate class init
 
         For this to work using kwargs, the names of the parameter values have
         to match those expected by this class. Those parameter names are shown
         below and all are floats with the units of seconds.
-
-        da_market_interval - How often the DA market occurs in seconds
-        
-        da_market_first_time - When, relative to the first simulated time, 
-        the first DA market bids must be submitted. This is the same interval
-        used for the reserves market
-
-        rt_market_interval - How often the RT market occurs in seconds
-
-        rt_market_first_time - When, relative to the first simulated time, 
-        the first RT market bids must be submitted. This is the same interval
-        used for the reserves market
         
         """
         super.__init__(self, fed_name)
@@ -68,35 +66,34 @@ class EnergyMarket(federate):
         # This translates all the kwarg key-value pairs into class attributes
         self.__dict__.update(kwargs)
 
-        # Holds the market objects instantiated by EGRET
+        # Holds the market objects 
         self.markets = {}
 
-        self.markets["da_energy_market"] = egret.create_uc_market()
-        self.markets["reserves_market"] = egret.create_uc_market()
-        self.markets["rt_energy_market"] = egret.create_ed_market()
+        self.markets["da_energy_market"] = OSWDAMarket("da_energy_market", market_timing["da"])
+        self.markets["reserves_market"] = OSWReservesMarket("reserves_market", market_timing["reserves"])
+        self.markets["rt_energy_market"] = OSWRTMarket("rt_energy_market", market_timing["rt"])
 
         # I don't think we will ever use the "last_market_time" values 
         # but they will give us confidence that we're doing things correctly.
-        self.market_times = {
-            "DA": {
-                "last_market_time": 0,
-                "next_market_time": -1
-            },
-            "RT": {
-                "last_market_time": 0,
-                "next_market_time": -1
-            }
-        }
-        self.market_times = self.calculate_initial_market_times()
 
-    def calculate_initial_market_times(self):
-        """
-        Since the first time either the DA or RT energy markets need to run
-        depends on the starting simulation time, the "next_market_time" values
-        for the very first market are a special snowflake calculation.
-        """
-        return self.market_times
+        self.market_timing = market_timing
+        self.markets = self.calculate_initial_market_times(self.markets)
     
+
+    def calculate_initial_market_times(self, markets):
+        """
+        Calculates the initial .next_state_time for each of the markets in the
+        provided dictionary of market objects. (They're not really objects but
+        whatever.)
+        """
+        for market_name, market in markets.items():
+            last_state_time, next_state_time = market.calculate_next_state_times(market.market_timing,
+                                                                                market.current_state,
+                                                                                market.next_state_time)
+            markets[market_name].last_state_time = last_state_time
+            markets[market_name].next_state_time = next_state_time
+        return markets
+
     def enter_initialization(self):
         """
         Overload of Federate class method
@@ -131,24 +128,14 @@ class EnergyMarket(federate):
         """
         Overload of Federate class method
 
-        Based on the current granted time and the market intervals, the next 
-        requested time needs to be calculated. This method calculates the 
-        next time to be requested (self.next_requested_time, used by the 
-        Federate class) as well as indicate in self.market_times what 
-        market(s) will be run at that time.
-
-        This doesn't handle defining the simulation times when the markets 
-        will initally run; that is handled in the class init method.
+        When update_internal_model is run, it calls update_market on the
+        market object which calculates the next state time (next market
+        state). To calculate the next time request, we just need the 
+        minimum of these saved market states.
         """
-        if self.market_times["DA"]["next_market_time"] == self.granted_time:
-            self.market_times["DA"]["last_market_time"] = self.granted_time
-            self.market_times["DA"]["next_market_time"] = self.granted_time + self.da_market_interval
-        if self.market_times["RT"]["next_market_time"] == self.granted_time:
-            self.market_times["RT"]["last_market_time"] = self.granted_time
-            self.market_times["RT"]["next_market_time"] = self.granted_time + self.rt_market_interval
 
-        self.next_requested_time = min(self.market_times["DA"]["next_market_time"], 
-                                       self.market_times["RT"]["next_market_time"])
+        self.next_requested_time = min(self.markets["da_energy_market"].next_state_time, 
+                                       self.markets["rt_energy_market"].next_state_time)
         return self.next_requested_time
 
 
@@ -176,9 +163,9 @@ class EnergyMarket(federate):
         TDH hopes this will be straight-forward and may take the form of calls
         to methods of an EGRET object.
         """
-        # TODO: update this call with the actual method name and signature
         # TODO: may need to process results prior to returning them
-        return self.markets["da_energy_market"].run_market()
+        self.markets["da_energy_market"].update_market()
+        return self.markets["da_energy_market"].market_results
         
 
     def run_reserve_market(self):
@@ -190,9 +177,9 @@ class EnergyMarket(federate):
         to methods of an EGRET object.
         """
 
-        # TODO: update this call with the actual method name and signature
         # TODO: may need to process results prior to returning them
-        return self.markets["reserve_market"].run_market()
+        self.markets["reserve_market"].run_market()
+        return self.markets["reserve_market"].market_results
        
 
     def run_rt_ed_market(self):
@@ -204,9 +191,9 @@ class EnergyMarket(federate):
         to methods of an EGRET object.
         """
 
-        # TODO: update this call with the actual method name and signature
         # TODO: may need to process results prior to returning them
-        return self.markets["rt_energy_market"].run_market()
+        self.markets["rt_energy_market"].run_market()
+        return self.markets["rt_energy_market"].market_results
 
     def update_internal_model(self):
         """
@@ -229,7 +216,7 @@ class EnergyMarket(federate):
         """
         self.update_power_system_and_market_state()
 
-        if self.market_times["DA"]["next_market_time"] == self.granted_time:
+        if self.markets["da_energy_market"]["next_state_time"] == self.granted_time:
             self.generate_wind_forecasts()
             da_results = self.run_da_uc_market()
             reserve_results = self.run_reserve_market()
@@ -240,7 +227,63 @@ class EnergyMarket(federate):
             self.data_to_federation["publication"]["rt_clearing_result"] = da_results["prices"]["osw_node"]
         
 if __name__ == "__main__":
-    wecc_market_fed = EnergyMarket("WECC_market")
+    # TODO: we might need to make this an actual object rather than a dict.
+    # Even now, I see it starting to get messy.
+
+    # The "initial_offset" value is used to indicate to the object that the 
+    # market cycle is not beginning precisely at the beginning of "idle".
+    # Similarly, an "initial state" needs to be defined as well.
+    # This value is in the same units as the other values in the dictionary.
+
+    # 15-minute market with bidding beginning five minutes before the end of 
+    # the market interval and ending when clearing begins two minutes before 
+    # the end of the interval.
+    rt_market_timing = {
+            "states": {
+                "idle": {
+                    "start_time": 0,
+                    "duration": 600
+                },
+                "bidding": {
+                    "start_time": 600,
+                    "duration": 180
+                },
+                "clearing": {
+                    "start_time": 840,
+                    "duration": 120
+                }
+            },
+            "initial_offset": 0,
+            "initial_state": "idle",
+            "market_interval": 86400
+        }
+    # Daily market with bidding beginning nine minutes before the end of 
+    # the market interval and ending when clearing begins one minutee before 
+    # the end of the interval.
+    da_market_timing = {
+            "states": {
+                "idle": {
+                    "start_time": 0,
+                    "duration": 85500
+                },
+                "bidding": {
+                    "start_time": 85800,
+                    "duration": 540
+                },
+                "clearing": {
+                    "start_time": 86340,
+                    "duration": 60
+                },
+            },
+            "initial_offset": 0,
+            "initial_state": "idle",
+            "market_interval": 900
+        }
+    market_timing = {"da": da_market_timing, 
+                      "reserves": da_market_timing,
+                      "rt": rt_market_timing}
+
+    wecc_market_fed = OSWTSO("WECC_market", market_timing)
     wecc_market_fed.create_federate("wecc_market")
     wecc_market_fed.run_cosim_loop()
     wecc_market_fed.destroy_federate()
