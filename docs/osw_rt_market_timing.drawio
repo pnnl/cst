@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="3wqcLzqxSmU_hRkXba1D" name="Page-1">
-        <mxGraphModel dx="1766" dy="774" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="10000" pageHeight="10000" math="0" shadow="0">
+        <mxGraphModel dx="844" dy="774" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="10000" pageHeight="10000" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -73,7 +73,7 @@
                 <mxCell id="63" value="&lt;font size=&quot;1&quot;&gt;create_real_time_energy_bid()&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;" parent="1" vertex="1">
                     <mxGeometry x="1340" y="290" width="150" height="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="64" value="&lt;font size=&quot;1&quot;&gt;May 1, 10:17am&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;fillColor=#0050ef;fontColor=#ffffff;strokeColor=#001DBC;" parent="1" vertex="1">
+                <mxCell id="64" value="&lt;font size=&quot;1&quot;&gt;May 1, 10:10am&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;fillColor=#0050ef;fontColor=#ffffff;strokeColor=#001DBC;" parent="1" vertex="1">
                     <mxGeometry x="1340" y="340" width="150" height="30" as="geometry"/>
                 </mxCell>
                 <mxCell id="65" value="&lt;font size=&quot;1&quot;&gt;(formulate bid based on current conditions)&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;" parent="1" vertex="1">
