@@ -16,6 +16,11 @@ image: python:3.10
   echo "$ENV_SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
   chmod 0600 ~/.ssh/id_rsa
   export SSH_CMD="ssh -i ~/.ssh/id_rsa -l $DEVOPS_USER $DEVOPS_SERVER"
+  if [ -n "$CI_MERGE_REQUEST_TARGET_BRANCH_NAME" ]; then
+    export BRANCH_NAME=$CI_MERGE_REQUEST_TARGET_BRANCH_NAME
+  else
+    export BRANCH_NAME=$CI_COMMIT_BRANCH
+  fi
 
 stages:
   - test
@@ -51,7 +56,7 @@ build-publish:
       $SSH_CMD '
       docker login devops-registry.pnnl.gov -u '$ENV_REGISTRY_USER' -p '$ENV_REGISTRY_PASS' &&
       mkdir -p ~/pipeline && cd ~/pipeline &&
-      git clone --depth 1 --branch '$CI_COMMIT_BRANCH' --single-branch '$GIT_URL' '$COPPER_DIR' &&
+      git clone --depth 1 --branch '$BRANCH_NAME' --single-branch '$GIT_URL' '$COPPER_DIR' &&
       cd '$COPPER_DIR'/scripts &&
       ./update_cosim_env.sh '$DEVOPS_SERVER' &&
       ./cleanup_pipeline_folders.sh &&
@@ -76,7 +81,7 @@ integration-test:
       $SSH_CMD '
       docker login devops-registry.pnnl.gov -u '$ENV_REGISTRY_USER' -p '$ENV_REGISTRY_PASS' &&
       mkdir -p ~/pipeline && cd ~/pipeline &&
-      git clone --depth 1 --branch '$CI_COMMIT_BRANCH' --single-branch '$GIT_URL' '$COPPER_DIR' &&
+      git clone --depth 1 --branch '$BRANCH_NAME' --single-branch '$GIT_URL' '$COPPER_DIR' &&
       cd '$COPPER_DIR'/scripts &&
       ./update_cosim_env.sh '$DEVOPS_SERVER' &&
       ./download_images.sh &&

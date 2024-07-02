@@ -9,9 +9,11 @@ from cosim_toolbox.dataLogger import DataLogger
 logging.basicConfig(level=os.environ.get("LOG_LEVEL", "DEBUG").upper())
 logger = logging.getLogger(__name__)
 
+SIM_HOST = os.environ['SIM_HOST']
+
 ENVIRON = {
-    "MONGO_HOST": "mongodb://ecomp-devops.pnl.gov",
-    "POSTGRES_HOST": "ecomp-devops.pnl.gov",
+    "MONGO_HOST": f"mongodb://{SIM_HOST}",
+    "POSTGRES_HOST": SIM_HOST,
 }
 
 START_TIME = 500
