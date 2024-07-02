@@ -2,7 +2,6 @@ import collections
 collections.Callable = collections.abc.Callable
 
 import unittest
-from unittest.mock import MagicMock
 
 from cosim_toolbox.federateLogger import FederateLogger
 
