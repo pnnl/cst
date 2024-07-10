@@ -19,6 +19,9 @@ import cosim_toolbox.metadataDB as mDB
 # Assumes these libraries have classes that exist with the appropriate method
 # names
 import EgretMarkets
+import osw_da_market
+import osw_reserves_market
+import osw_rt_market
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler())
@@ -224,7 +227,7 @@ class OSWTSO(Federate):
             self.data_to_federation["publication"]["reserve_clearing_result"] = reserve_results["prices"]["osw_node"]
         if self.market_times["RT"]["next_market_time"] == self.granted_time:
             rt_results = self.run_rt_ed_market()
-            self.data_to_federation["publication"]["rt_clearing_result"] = da_results["prices"]["osw_node"]
+            self.data_to_federation["publication"]["rt_clearing_result"] = rt_results["prices"]["osw_node"]
         
 if __name__ == "__main__":
     # TODO: we might need to make this an actual object rather than a dict.
@@ -255,7 +258,7 @@ if __name__ == "__main__":
             },
             "initial_offset": 0,
             "initial_state": "idle",
-            "market_interval": 86400
+            "market_interval": 900
         }
     # Daily market with bidding beginning nine minutes before the end of 
     # the market interval and ending when clearing begins one minutee before 
@@ -277,7 +280,7 @@ if __name__ == "__main__":
             },
             "initial_offset": 0,
             "initial_state": "idle",
-            "market_interval": 900
+            "market_interval": 86400
         }
     market_timing = {"da": da_market_timing, 
                       "reserves": da_market_timing,

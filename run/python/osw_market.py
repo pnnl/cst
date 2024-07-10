@@ -70,6 +70,7 @@ class OSWMarket():
         self.last_state_time = 0
         self.next_state_time = None 
         self.market_results = {}
+        self.state_list = list(market_timing["states"].keys())
         self.state_machine = Machine(model=self, states=self.state_list, initial=self.current_state)
         self.state_machine.add_ordered_transitions(self.state_list)
         # Adding definitions for state transition callbacks
