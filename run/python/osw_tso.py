@@ -252,7 +252,7 @@ if __name__ == "__main__":
                     "duration": 180
                 },
                 "clearing": {
-                    "start_time": 840,
+                    "start_time": 780,
                     "duration": 120
                 }
             },
