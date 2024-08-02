@@ -1,0 +1,358 @@
+<mxfile host="65bd71144e">
+    <diagram id="5_6fcLbhgqzA1ueqYNM8" name="Page-1">
+        <mxGraphModel dx="1610" dy="1110" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="10000" pageHeight="10000" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="2" value="Modeler defining a co-simulation&lt;br&gt;using only existing&amp;nbsp;&lt;br&gt;CST Docker-ized tools" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+                    <mxGeometry x="110" y="30.000000000000004" width="200" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="3" value="Pull Docker images for the persistent services (&lt;i&gt;e.g.&lt;/i&gt;&amp;nbsp;MongoDB, Postgres, Grafana) if needed" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="120" y="360" width="920" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="4" value="" style="endArrow=classic;html=1;entryX=0.09;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="2" target="3">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="600" y="650" as="sourcePoint"/>
+                        <mxPoint x="650" y="600" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="5" value="Pull Docker images for use-case-specific simulation tools" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="120" y="460" width="600" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="6" value="" style="endArrow=classic;html=1;exitX=0.088;exitY=1.033;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.133;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="3" target="5">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="195" y="450" as="sourcePoint"/>
+                        <mxPoint x="204" y="490" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="7" value="Write federate.py - defines location of federate-specific files and launch command" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="120" y="560" width="920" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="8" value="" style="endArrow=classic;html=1;entryX=0.085;entryY=-0.067;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.133;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="5" target="7">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="210" y="550" as="sourcePoint"/>
+                        <mxPoint x="214" y="500" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="9" value="Write federation.py - defines which federates are in the federation and the connection between them&amp;nbsp;&lt;br&gt;Can be done using CST APIs or writing JSON directly" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="120" y="660" width="920" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="10" value="Do something which customizes the postgres-docker-compose.yaml&amp;nbsp; (same as docker-compose.yaml) for persistent services (may not be needed)" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="120" y="960" width="920" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="11" value="Run co-sim by using Runner class and calling Docker object to launch co-simulation." style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="120" y="1260" width="600" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="13" value="" style="endArrow=classic;html=1;entryX=0.083;entryY=-0.067;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.081;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="7" target="9">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="210" y="650" as="sourcePoint"/>
+                        <mxPoint x="219.79999999999995" y="600" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="14" value="" style="endArrow=classic;html=1;entryX=0.08;entryY=-0.05;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.071;exitY=0.983;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="31" target="10">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="190" y="860" as="sourcePoint"/>
+                        <mxPoint x="219.79999999999995" y="700" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="17" value="Monitor cosimulation by loading defined Grafana configuration" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="120" y="1360" width="920" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="18" value="" style="endArrow=classic;html=1;exitX=0.089;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.113;entryY=-0.033;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="10" target="49">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="220" y="920" as="sourcePoint"/>
+                        <mxPoint x="200" y="1070" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="19" value="" style="endArrow=classic;html=1;entryX=0.1;entryY=-0.033;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.15;exitY=0.983;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="11" target="17">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="224.77999999999997" y="1588.98" as="sourcePoint"/>
+                        <mxPoint x="224.77999999999997" y="1631.02" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="20" value="" style="endArrow=classic;html=1;entryX=0.439;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.896;exitY=1.033;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="22" target="21">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="1220" y="200" as="sourcePoint"/>
+                        <mxPoint x="810" y="970" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="21" value="Write and run post-processing using CST APIs to access databases" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="1080" y="1460" width="410" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="22" value="Create local CST environment - set-up virtual environment, clone in CST repo, clone in new simulator repo,..." style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="600" y="160" width="740" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="23" value="Analyst evaluting data by&lt;br&gt;creating post-processing scripts&amp;nbsp;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+                    <mxGeometry x="1170" y="30.000000000000004" width="200" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="24" value="" style="endArrow=classic;html=1;entryX=0.909;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="23" target="22">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="203.92000000000007" y="495.96000000000004" as="sourcePoint"/>
+                        <mxPoint x="204" y="533.98" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="25" value="Modeler developing a new&lt;br&gt;simulator for use in a&lt;br&gt;co-simulation alongside&amp;nbsp;&lt;br&gt;existing CST Docker-ized tools&lt;br&gt;&lt;br&gt;Testing in Docker environment" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+                    <mxGeometry x="570" y="30" width="190" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="26" value="" style="endArrow=classic;html=1;entryX=0.111;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="25" target="22">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="445.1384881708018" y="140" as="sourcePoint"/>
+                        <mxPoint x="1164.67" y="163.98" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="27" value="" style="endArrow=classic;html=1;entryX=0.609;entryY=0.017;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.105;exitY=1.033;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="22" target="3">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="459.95187499999975" y="85" as="sourcePoint"/>
+                        <mxPoint x="459.8899999999999" y="130" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="28" value="" style="endArrow=classic;html=1;exitX=0.305;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.467;entryY=-0.067;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="3" target="5">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="213.92000000000007" y="461.98" as="sourcePoint"/>
+                        <mxPoint x="214" y="500" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="29" value="" style="endArrow=classic;html=1;entryX=0.308;entryY=-0.017;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.472;exitY=1.017;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="5" target="7">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="220" y="560" as="sourcePoint"/>
+                        <mxPoint x="219.79999999999995" y="600" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="30" value="" style="endArrow=classic;html=1;entryX=0.303;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.301;exitY=0.983;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="7" target="9">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="453.32000000000016" y="561.02" as="sourcePoint"/>
+                        <mxPoint x="453.32000000000016" y="600" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="31" value="Write Grafana monitoring definintion" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="120" y="760" width="920" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="34" value="Write new simulator (in Python) in local environment" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="530" y="860" width="510" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="38" value="" style="endArrow=classic;html=1;entryX=0.609;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.608;exitY=1.033;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="9" target="31">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="443.31999999999994" y="653" as="sourcePoint"/>
+                        <mxPoint x="443.31999999999994" y="688.02" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="39" value="" style="endArrow=classic;html=1;entryX=0.294;entryY=-0.017;entryDx=0;entryDy=0;exitX=0.607;exitY=1.017;exitDx=0;exitDy=0;exitPerimeter=0;entryPerimeter=0;" edge="1" parent="1" source="31" target="34">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="441.6399999999999" y="748.98" as="sourcePoint"/>
+                        <mxPoint x="441.6399999999999" y="788.02" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="44" value="Modeler developing a new&lt;br&gt;simulator for use in a&lt;br&gt;co-simulation alongside&amp;nbsp;&lt;br&gt;existing CST tools&lt;br&gt;&lt;br&gt;Testing in local environment &lt;br&gt;(no Docker-ized simulators)" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+                    <mxGeometry x="845" y="24.999999999999996" width="170" height="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="45" value="" style="endArrow=classic;html=1;entryX=0.624;entryY=0.017;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.312;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="34" target="10">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="439.1199999999999" y="851.02" as="sourcePoint"/>
+                        <mxPoint x="440.0799999999999" y="890" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="46" value="" style="endArrow=classic;html=1;entryX=0.445;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="44" target="22">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="920" y="144" as="sourcePoint"/>
+                        <mxPoint x="920" y="190" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="48" value="Install simulation tools locally (no simulators in Docker)" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="770" y="460" width="270" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="49" value="Run runner.py to create&amp;nbsp; &amp;lt;scenario name&amp;gt;.yaml&amp;nbsp; (same as docker-compose.yaml) for analysis simulators" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="120" y="1060" width="600" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="50" value="Launch persistent services by calling start_cu.sh (calls postgres-docker-compose.yaml)" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="120" y="1160" width="920" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="51" value="" style="endArrow=classic;html=1;exitX=0.121;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.087;entryY=-0.033;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="49" target="50">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="186.51999999999998" y="1208.98" as="sourcePoint"/>
+                        <mxPoint x="184" y="1250" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="52" value="" style="endArrow=classic;html=1;exitX=0.09;exitY=1.033;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.144;entryY=0.017;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="50" target="11">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="181.1199999999999" y="1313" as="sourcePoint"/>
+                        <mxPoint x="180.4000000000001" y="1348.98" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="54" value="" style="endArrow=classic;html=1;exitX=0.864;exitY=1.05;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.53;entryY=-0.017;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="3" target="48">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="436.5999999999999" y="461.98" as="sourcePoint"/>
+                        <mxPoint x="440" y="491.02" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="55" value="Modeler has developed new&lt;br&gt;simulation tool and wants to&amp;nbsp;&lt;br&gt;use it in a production&lt;br&gt;CST co-simulation" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+                    <mxGeometry x="320" y="30" width="170" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="56" value="Build new Docker image with new simulation tool based on existing CST .dockerfile" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="260" y="260" width="310" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="57" value="" style="endArrow=classic;html=1;entryX=0.885;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.446;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="22" target="3">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="437.20000000000005" y="493.98" as="sourcePoint"/>
+                        <mxPoint x="677.8699999999999" y="295" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="58" value="" style="endArrow=classic;html=1;entryX=0.306;entryY=0.017;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.439;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="56" target="3">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="690" y="320" as="sourcePoint"/>
+                        <mxPoint x="697.8699999999999" y="271.02" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="60" value="" style="endArrow=classic;html=1;entryX=0.918;entryY=-0.017;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.598;exitY=1.05;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="3" target="5">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="447.20000000000005" y="460" as="sourcePoint"/>
+                        <mxPoint x="438.60000000000014" y="490" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="62" value="" style="endArrow=classic;html=1;entryX=0.468;entryY=-0.017;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="55" target="56">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="455.1384881708018" y="150" as="sourcePoint"/>
+                        <mxPoint x="449.8899999999999" y="203.98000000000002" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="63" value="" style="endArrow=classic;html=1;exitX=0.567;exitY=0.983;exitDx=0;exitDy=0;entryX=0.873;entryY=-0.033;entryDx=0;entryDy=0;entryPerimeter=0;exitPerimeter=0;" edge="1" parent="1" source="48" target="7">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="924.8800000000001" y="463" as="sourcePoint"/>
+                        <mxPoint x="923.0999999999999" y="488.98" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="64" value="" style="endArrow=classic;html=1;exitX=0.872;exitY=1;exitDx=0;exitDy=0;entryX=0.876;entryY=-0.033;entryDx=0;entryDy=0;entryPerimeter=0;exitPerimeter=0;" edge="1" parent="1" source="7" target="9">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="915" y="550" as="sourcePoint"/>
+                        <mxPoint x="918.7600000000002" y="590" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="66" value="" style="endArrow=classic;html=1;entryX=0.293;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.292;exitY=1.017;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="9" target="31">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="406.9200000000001" y="648.98" as="sourcePoint"/>
+                        <mxPoint x="408.76" y="690" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="67" value="" style="endArrow=classic;html=1;entryX=0.299;entryY=0.017;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.297;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="31" target="10">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="398.6399999999999" y="751.02" as="sourcePoint"/>
+                        <mxPoint x="399.55999999999995" y="790" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="68" value="" style="endArrow=classic;html=1;entryX=0.458;entryY=0.017;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.297;exitY=1.05;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="10" target="49">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="390" y="1200" as="sourcePoint"/>
+                        <mxPoint x="405.0799999999999" y="1151.02" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="69" value="" style="endArrow=classic;html=1;entryX=0.283;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.455;exitY=0.983;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="49" target="50">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="400" y="1210" as="sourcePoint"/>
+                        <mxPoint x="399.55999999999995" y="1248.98" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="70" value="" style="endArrow=classic;html=1;entryX=0.425;entryY=0.017;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.273;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="50" target="11">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="410" y="1220" as="sourcePoint"/>
+                        <mxPoint x="409.55999999999995" y="1258.98" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="71" value="" style="endArrow=classic;html=1;entryX=0.27;entryY=0.017;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.42;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="11" target="17">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="420" y="1330" as="sourcePoint"/>
+                        <mxPoint x="419.55999999999995" y="1368.98" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="72" value="" style="endArrow=classic;html=1;entryX=0.604;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.92;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="5" target="7">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="680.1599999999999" y="453" as="sourcePoint"/>
+                        <mxPoint x="680.8000000000002" y="488.98" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="73" value="" style="endArrow=classic;html=1;entryX=0.602;entryY=-0.033;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.605;exitY=0.983;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="7" target="9">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="682" y="550" as="sourcePoint"/>
+                        <mxPoint x="685.6799999999998" y="590" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="75" value="Run runner.sh to launch co-simulation" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="770" y="1260" width="260" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="76" value="" style="endArrow=classic;html=1;entryX=0.955;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.623;exitY=1.017;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="10" target="49">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="699.1199999999999" y="950" as="sourcePoint"/>
+                        <mxPoint x="704.0799999999999" y="991.02" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="77" value="" style="endArrow=classic;html=1;entryX=0.624;entryY=-0.083;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.953;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="49" target="50">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="703.1599999999999" y="1051.02" as="sourcePoint"/>
+                        <mxPoint x="705" y="1091.02" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="81" value="" style="endArrow=classic;html=1;exitX=0.877;exitY=1;exitDx=0;exitDy=0;entryX=0.873;entryY=-0.033;entryDx=0;entryDy=0;entryPerimeter=0;exitPerimeter=0;" edge="1" parent="1" source="9" target="31">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="932.2399999999998" y="650" as="sourcePoint"/>
+                        <mxPoint x="935.9200000000001" y="688.02" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="82" value="" style="endArrow=classic;html=1;exitX=0.879;exitY=1;exitDx=0;exitDy=0;entryX=0.786;entryY=0.017;entryDx=0;entryDy=0;entryPerimeter=0;exitPerimeter=0;" edge="1" parent="1" source="31" target="34">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="942.2399999999998" y="660" as="sourcePoint"/>
+                        <mxPoint x="945.9200000000001" y="698.02" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="83" value="" style="endArrow=classic;html=1;entryX=0.89;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.79;exitY=0.983;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="34" target="10">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="939" y="930" as="sourcePoint"/>
+                        <mxPoint x="955.9200000000001" y="708.02" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="85" value="" style="endArrow=classic;html=1;entryX=0.715;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.895;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="10" target="88">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="947.8800000000001" y="1048.98" as="sourcePoint"/>
+                        <mxPoint x="950.6399999999999" y="1088.98" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="86" value="" style="endArrow=classic;html=1;entryX=0.658;entryY=-0.05;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.892;exitY=1.017;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="50" target="75">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="957.8800000000001" y="1058.98" as="sourcePoint"/>
+                        <mxPoint x="960.6399999999999" y="1098.98" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="87" value="" style="endArrow=classic;html=1;entryX=0.883;entryY=-0.017;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.638;exitY=1.017;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="75" target="17">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="967.8800000000001" y="1068.98" as="sourcePoint"/>
+                        <mxPoint x="970.6399999999999" y="1108.98" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="88" value="Create runner.sh to define federation to launch" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="755" y="1060" width="260" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="89" value="" style="endArrow=classic;html=1;entryX=0.877;entryY=0.017;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.669;exitY=0.983;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="88" target="50">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="953.4000000000001" y="1050" as="sourcePoint"/>
+                        <mxPoint x="950.9000000000001" y="1090" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="90" value="" style="endArrow=classic;html=1;entryX=0.957;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.625;exitY=1.033;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="50" target="11">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="701.8000000000002" y="1150" as="sourcePoint"/>
+                        <mxPoint x="704.0799999999999" y="1185.02" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="91" value="" style="endArrow=classic;html=1;entryX=0.626;entryY=-0.083;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.957;exitY=1.017;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="11" target="17">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="704.0799999999999" y="1254.02" as="sourcePoint"/>
+                        <mxPoint x="704.1999999999998" y="1290" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="92" value="" style="endArrow=classic;html=1;entryX=0.076;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.075;exitY=1.033;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="9" target="31">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="204.51999999999998" y="630" as="sourcePoint"/>
+                        <mxPoint x="206.3599999999999" y="665.98" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
