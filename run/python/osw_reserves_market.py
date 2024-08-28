@@ -14,9 +14,7 @@ import datetime
 import json
 import logging
 from transitions import Machine
-
-
-
+from osw_market import OSWMarket
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler())

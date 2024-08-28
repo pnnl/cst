@@ -14,7 +14,7 @@ import datetime
 import json
 import logging
 from transitions import Machine
-
+from osw_market import OSWMarket
 
 
 
@@ -50,7 +50,7 @@ class OSWDAMarket(OSWMarket):
         that gets called when the market state machine enters the "clearing"
         state.
         """
-        super.__init__(market_name, market_timing, **kwargs)
+        super().__init__(market_name, market_timing, **kwargs)
 
         # This translates all the kwarg key-value pairs into class attributes
         self.__dict__.update(kwargs)

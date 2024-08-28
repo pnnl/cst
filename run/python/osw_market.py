@@ -100,7 +100,7 @@ class OSWMarket():
         """
         pass
 
-    def validate_market_timing(market_timing) -> None:
+    def validate_market_timing(self, market_timing) -> None:
         """
         Validate that the provided market timing is self-consistent.
         """

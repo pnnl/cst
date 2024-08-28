@@ -13,15 +13,24 @@ trevor.hardy@pnnl.gov
 import datetime
 import json
 import logging
+import os
+import sys
 
-import cosim_toolbox.metadataDB as mDB
+FILEDIR, tail = os.path.split(__file__)
+RUNDIR, tail = os.path.split(FILEDIR)
+CUDIR, tail = os.path.split(RUNDIR)
+cosim_toolbox_pth = os.path.join(CUDIR, "src", "cosim_toolbox")
+sys.path.append(cosim_toolbox_pth)
 
-# Assumes these libraries have classes that exist with the appropriate method
-# names
-import EgretMarkets
-import osw_da_market
-import osw_reserves_market
-import osw_rt_market
+# internal packages
+from egret.data.model_data import ModelData
+from egret.models.unit_commitment import solve_unit_commitment, SlackType
+import pyenergymarket as pyen
+
+from cosim_toolbox.federate import Federate
+from osw_da_market import OSWDAMarket
+from osw_rt_market import OSWRTMarket
+# from osw_reserves_market import OSWReservesMarket
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler())
@@ -64,7 +73,7 @@ class OSWTSO(Federate):
         below and all are floats with the units of seconds.
         
         """
-        super.__init__(self, fed_name)
+        super().__init__(fed_name)
 
         # This translates all the kwarg key-value pairs into class attributes
         self.__dict__.update(kwargs)
@@ -73,7 +82,7 @@ class OSWTSO(Federate):
         self.markets = {}
 
         self.markets["da_energy_market"] = OSWDAMarket("da_energy_market", market_timing["da"])
-        self.markets["reserves_market"] = OSWReservesMarket("reserves_market", market_timing["reserves"])
+        # self.markets["reserves_market"] = OSWReservesMarket("reserves_market", market_timing["reserves"])
         self.markets["rt_energy_market"] = OSWRTMarket("rt_energy_market", market_timing["rt"])
 
         # I don't think we will ever use the "last_market_time" values 
@@ -90,7 +99,7 @@ class OSWTSO(Federate):
         whatever.)
         """
         for market_name, market in markets.items():
-            last_state_time, next_state_time = market.calculate_next_state_times(market.market_timing,
+            last_state_time, next_state_time = self.markets[market_name].calculate_next_state_time(market.market_timing,
                                                                                 market.current_state,
                                                                                 market.next_state_time)
             markets[market_name].last_state_time = last_state_time
@@ -116,7 +125,7 @@ class OSWTSO(Federate):
 
         This should probably return something, even if its self.something
         """
-        pass
+        self.gv = pyen.GVParse(self.h5path, default=default, logger_options={"level": self.loglevel})
 
     def initialze_power_and_market_model(self):
         """
@@ -124,7 +133,9 @@ class OSWTSO(Federate):
 
         This should probably return something, even if its self.something
         """
-        pass
+        ## Create an Egret "ModelData" object, which is just a lightweight
+        ## wrapper around a python dictionary, from an Egret json test instance
+        self.md = ModelData(self.gv)
 
 
     def calculate_next_requested_time(self):
@@ -148,7 +159,10 @@ class OSWTSO(Federate):
         them appropriately to the power system model. May involve reading 
         "self.data_from_federation"
         """
-        pass
+        ## solve the unit commitment instance using solver (gurobi or cbc)
+        self.md_sol = solve_unit_commitment(self.md, self.solver, slack_type=SlackType.TRANSMISSION_LIMITS,
+                                    mipgap=0.01,
+                                    timelimit=300, solver_tee=True)
 
     def generate_wind_forecasts(self) -> list:
         """
@@ -285,8 +299,35 @@ if __name__ == "__main__":
     market_timing = {"da": da_market_timing, 
                       "reserves": da_market_timing,
                       "rt": rt_market_timing}
+    
+    h5filepath = "C:\\Users\\kell175\\pyenergymarket\\data_model_tests\\data_files\\WECC240_20240807.h5"
+    default = {
+        "time": {
+            "datefrom": "2032-02-01"
+        },
+        "simulation": {
+            "thermal_model": "cost", # this is the default
+        },
+        "elements": {
+            "branch":{
+                "rating_long_term": "A",
+                "rating_short_term": "A",
+                "rating_emergency": "B"
+            },
+            "generator": {
+                "generator_type_map":{
+                    "storage": [3, 10]
+                },
+                "renewable_type_override": {3: "Solar"},
+                "ignore_non_fuel_startup": False,
+                "scale_fuel_cost": 1.0
+            }
+        }
+    }
+    loglevel = "INFO"
+    solver = "cbc"
 
-    wecc_market_fed = OSWTSO("WECC_market", market_timing)
+    wecc_market_fed = OSWTSO("WECC_market", market_timing, h5file=h5filepath, default=default, loglevel=loglevel, solver=solver)
     wecc_market_fed.create_federate("wecc_market")
     wecc_market_fed.run_cosim_loop()
     wecc_market_fed.destroy_federate()
