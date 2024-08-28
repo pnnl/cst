@@ -8,14 +8,6 @@ source $COSIM_ENV
 source ./docker/config.sh
 
 #
-# Clean up old test directories
-#
-echo "Cleaning older federation test directories ..."
-DAYS_OLD=30
-INTEGRATION_DIR="/home/devops/integration"
-find "$INTEGRATION_DIR" -mindepth 1 -maxdepth 1 -type d -mtime +$DAYS_OLD -exec rm -rf {} \;
-
-#
 # Clean up old tagged images
 #
 cleanup_tagged_images() {
