@@ -64,7 +64,7 @@ class OSWTSO(Federate):
     methods can be called as stand-alone operations. 
     """
 
-    def __init__(self, fed_name, market_timing, **kwargs):
+    def __init__(self, fed_name, market_timing, markets:dict={}, **kwargs):
         """
         Add a few extra things on top of the Federate class init
 
@@ -79,18 +79,13 @@ class OSWTSO(Federate):
         self.__dict__.update(kwargs)
 
         # Holds the market objects 
-        self.markets = {}
-
-        self.markets["da_energy_market"] = OSWDAMarket("da_energy_market", market_timing["da"])
-        # self.markets["reserves_market"] = OSWReservesMarket("reserves_market", market_timing["reserves"])
-        self.markets["rt_energy_market"] = OSWRTMarket("rt_energy_market", market_timing["rt"])
+        self.markets = markets
 
         # I don't think we will ever use the "last_market_time" values 
         # but they will give us confidence that we're doing things correctly.
 
         self.market_timing = market_timing
         self.markets = self.calculate_initial_market_times(self.markets)
-    
 
     def calculate_initial_market_times(self, markets):
         """
@@ -125,7 +120,10 @@ class OSWTSO(Federate):
 
         This should probably return something, even if its self.something
         """
-        self.gv = pyen.GVParse(self.h5path, default=default, logger_options={"level": self.loglevel})
+        ## Create an Egret "ModelData" object, which is just a lightweight
+        ## wrapper around a python dictionary, from an Egret json test instance
+        pass # right now this is done outside the class.
+        
 
     def initialze_power_and_market_model(self):
         """
@@ -133,9 +131,8 @@ class OSWTSO(Federate):
 
         This should probably return something, even if its self.something
         """
-        ## Create an Egret "ModelData" object, which is just a lightweight
-        ## wrapper around a python dictionary, from an Egret json test instance
-        self.md = ModelData(self.gv)
+        # Should get an initial run of the DAM
+        self.em.run_model(pyenconfig["time"]["datefrom"])
 
 
     def calculate_next_requested_time(self):
@@ -160,9 +157,7 @@ class OSWTSO(Federate):
         "self.data_from_federation"
         """
         ## solve the unit commitment instance using solver (gurobi or cbc)
-        self.md_sol = solve_unit_commitment(self.md, self.solver, slack_type=SlackType.TRANSMISSION_LIMITS,
-                                    mipgap=0.01,
-                                    timelimit=300, solver_tee=True)
+        
 
     def generate_wind_forecasts(self) -> list:
         """
@@ -297,8 +292,11 @@ if __name__ == "__main__":
             "market_interval": 86400
         }
     market_timing = {"da": da_market_timing, 
-                      "reserves": da_market_timing,
+                      #"reserves": da_market_timing,
                       "rt": rt_market_timing}
+    
+    # I don't think we will ever use the "last_market_time" values 
+    # but they will give us confidence that we're doing things correctly.
     
     h5filepath = "C:\\Users\\kell175\\pyenergymarket\\data_model_tests\\data_files\\WECC240_20240807.h5"
     default = {
@@ -325,9 +323,30 @@ if __name__ == "__main__":
         }
     }
     loglevel = "INFO"
-    solver = "cbc"
+    solver = "cbc" # "gurobi" or "cbc"
+    gv = pyen.GVParse(h5filepath, default=default, logger_options={"level": loglevel})
 
-    wecc_market_fed = OSWTSO("WECC_market", market_timing, h5file=h5filepath, default=default, loglevel=loglevel, solver=solver)
+    pyenconfig = {
+        "time": {
+            "datefrom": "2032-01-01", # whole year
+            "dateto": "2032-1-01"
+        },
+        "solve_arguments": {
+            "kwargs":{
+                "solver_tee": True # change to False to remove some logging
+            }
+        }
+    }
+
+    # Initalize pyenergymarkets for day ahead and real time energy markets.
+    markets = {}
+    em = pyen.EnergyMarket(gv, pyenconfig)
+    markets["da_energy_market"] = OSWDAMarket("da_energy_market", market_timing["da"], market=em, min_freq = 60)
+    # Note that for now the reserves markets are operated when we run the day ahead energy market model, but I left the comment to remind us this may change.
+    # markets["reserves_market"] = OSWReservesMarket("reserves_market", market_timing["reserves"])
+    markets["rt_energy_market"] = OSWRTMarket("rt_energy_market", market_timing["rt"], market=em, min_freq = 15)
+
+    wecc_market_fed = OSWTSO("WECC_market", market_timing, markets, solver=solver)
     wecc_market_fed.create_federate("wecc_market")
     wecc_market_fed.run_cosim_loop()
     wecc_market_fed.destroy_federate()

@@ -40,9 +40,8 @@ class OSWDAMarket(OSWMarket):
 
 
     """
-    pass
 
-    def __init__(self, market_name, market_timing, **kwargs):
+    def __init__(self, market_name:str="da_energy_market", market_timing:dict=None, min_freq:int=60, window:int=24, **kwargs):
         """
         Class the specifically runs the OSW DA energy market
 
@@ -51,21 +50,41 @@ class OSWDAMarket(OSWMarket):
         state.
         """
         super().__init__(market_name, market_timing, **kwargs)
-
+        self.em.configuration["min_freq"] = min_freq
+        self.em.configuration["window"] = window
         # This translates all the kwarg key-value pairs into class attributes
         self.__dict__.update(kwargs)
+        # if market_timing isn't specified input default vaules.
+        if self.market_timing == None:
+            self.market_timing = {
+                "states": {
+                    "idle": {
+                        "start_time": 0,
+                        "duration": 85500
+                    },
+                    "bidding": {
+                        "start_time": 85800,
+                        "duration": 540
+                    },
+                    "clearing": {
+                        "start_time": 86340,
+                        "duration": 60
+                    },
+                },
+                "initial_offset": 0,
+                "initial_state": "idle",
+                "market_interval": 86400
+            }
 
 
-def clear_market(self):
-    """
-    Overloaded method of OSWMarket
+# def clear_market(self):
+#     """
+#     Overloaded method of OSWMarket
 
-    Grab all the bids and run the DA UC optimization and then return the results
+#     Grab all the bids and run the DA UC optimization and then return the results
     
-    market_results is an attribute of the OSWMarket class
-    """
-
-    self.market_results = {}
-
+#     market_results is an attribute of the OSWMarket class
+#     """
+#     pass
 
     

@@ -14,7 +14,7 @@ import datetime as dt
 import json
 import logging
 from transitions import Machine
-
+from pyenergymarket import EnergyMarket
 
 
 
@@ -50,7 +50,7 @@ class OSWMarket():
     """
     pass
 
-    def __init__(self, market_name, market_timing, **kwargs):
+    def __init__(self, market_name, market_timing, market:EnergyMarket=None, **kwargs):
         """
         Generic version of all the markets used in the E-COMP LDRD intiative.
         As such, this is fairly particular to those needs and is 
@@ -63,6 +63,7 @@ class OSWMarket():
         callback methods that are called when entering particular states.
         
         """
+        self.em = market
         self.market_name = market_name
         self.current_state = market_timing["initial_state"]
         self.last_state = None
@@ -98,7 +99,9 @@ class OSWMarket():
         This method must be overloaded in an instance of this class to
         implement the necessary operates to clear the market in question.
         """
-        pass
+        self.em.get_model(self.datefrom)
+        self.em.solve_model()
+        self.market_results = self.em.mdl_sol
 
     def validate_market_timing(self, market_timing) -> None:
         """
@@ -106,8 +109,7 @@ class OSWMarket():
         """
         pass
     
-    def move_to_next_state(self, 
-                           state_machine: Machine) -> str:
+    def move_to_next_state(self, state_machine: Machine) -> str:
         """
         Transitions to the next state in the state machine and updates
         appropriate object parameters.
@@ -130,12 +132,12 @@ class OSWMarket():
         last_state_time = next_state_time
         next_state_time = market_timing["states"][current_state]["duration"] \
                             + self.last_state_time \
-                            + market_timing["offset"]
+                            + market_timing["initial_offset"]
         
         # Rather than checking to see if its zero before setting it to zero,
         # just set it to zero (even if it already was.) The only time this 
         # needs to be non-zero is the first time we do the first transition
-        market_timing["offset"] = 0
+        market_timing["initial_offset"] = 0
         logger.info(f"{self.market_name}.next_state_time: {self.next_state_time}")
         return last_state_time, next_state_time
 
@@ -153,7 +155,6 @@ class OSWMarket():
         self.last_state_time, self.next_state_time = self.calculate_next_state_time(self.next_state_time, 
                                                                                     self.current_state,
                                                                                     self.market_timing)
-        
         return self.next_state_time
 
 
