@@ -43,7 +43,7 @@ class OSWRTMarket(OSWMarket):
 
     def __init__(self, market_name:str="rt_energy_market", market_timing:dict=None, min_freq:int=15, window:int=4, **kwargs):
         """
-        Class the specifically runs the OSW RT energy market
+        Class that specifically runs the OSW RT energy market
 
         The only specialization is the definition of the callback method
         that gets called when the market state machine enters the "clearing"
