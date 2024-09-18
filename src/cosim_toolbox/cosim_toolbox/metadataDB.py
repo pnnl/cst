@@ -46,6 +46,9 @@ cu_logger: str = "cu_logger"
 
 
 def federation_database(clear: bool = False) -> None:
+    """Removes existing default CST databases and
+    creates new ones. 
+    """
     db = MetaDB(cosim_mongo_host, cosim_mongo_db)
     logger.info("Before: ",  db.update_collection_names())
     if clear:
@@ -345,11 +348,26 @@ class MetaDB:
 
 
 class Docker:
+    """Collection of static methods used in building and running the docker-compose.yaml
+    for running a new service or simulator.
+    """
     def __init__(self):
         pass
 
     @staticmethod
     def _service(name: str, image: str, env: list, cnt: int, depends: str = None) -> str:
+        """Builds the "service" part of the docker-compose.yaml
+
+        Args:
+            name (str): Name of the service being defined
+            image (str): Name of the image on which the service runs
+            env (list): Environment in image the service utilizes
+            cnt (int): Index used to define the IP for the service in the Docker virtual network
+            depends (str, optional): Dependency for service being defined. Defaults to None.
+
+        Returns:
+            str: _description_
+        """
         _service = "  " + name + ":\n"
         _service += "    image: \"" + image + "\"\n"
         if env[0] != '':
@@ -371,6 +389,11 @@ class Docker:
 
     @staticmethod
     def _network() -> str:
+        """Creates a template of the Docker network for use in creating the docker-compose.yaml
+
+        Returns:
+            str: Docker network template as a string
+        """
         _network = 'networks:\n'
         _network += '  cu_net:\n'
         _network += '    driver: bridge\n'
@@ -382,6 +405,11 @@ class Docker:
 
     @staticmethod
     def define_yaml(scenario_name: str) -> None:
+        """Create the docker-compoose.yaml for the provided scenario
+
+        Args:
+            scenario_name (str): Name of the scenario run by this docker-compose.yaml
+        """
         mdb = MetaDB(cosim_mongo_host, cosim_mongo_db)
 
         scenario_def = mdb.get_dict(cu_scenarios, None, scenario_name)
@@ -423,6 +451,11 @@ class Docker:
 
     @staticmethod
     def run_yaml(scenario_name: str) -> None:
+        """Runs the provided scenario by calling the appropriate docker-compose.yaml
+
+        Args:
+            scenario_name (str): Name of the scenario run by this docker-compose.yaml
+        """
         logger.info('====  ' + scenario_name + ' Broker Start in\n        ' + os.getcwd())
         docker_compose = "docker compose -f " + scenario_name + ".yaml"
         subprocess.Popen(docker_compose + " up", shell=True).wait()
@@ -431,6 +464,12 @@ class Docker:
 
     @staticmethod
     def run_remote_yaml(scenario_name: str, path: str = "/run/python/test_federation") -> None:
+        """Runs the docker-compose.yaml on a remote compute node
+
+        Args:
+            scenario_name (str): Name of the scenario run by this docker-compose.yaml
+            path (str, optional): Path to docker-compose-yaml on remote hose. Defaults to "/run/python/test_federation".
+        """
         cosim = os.environ.get("SIM_DIR", "/home/worker/copper")
         logger.info('====  ' + scenario_name + ' Broker Start in\n        ' + os.getcwd())
         docker_compose = "docker compose -f " + scenario_name + ".yaml"
