@@ -1,4 +1,4 @@
-importlib-resources~=6.1.2
+importlib_resources~=6.1.2
 h5py~=3.9.0
 helics~=3.4.0
 pandas~=2.0.3

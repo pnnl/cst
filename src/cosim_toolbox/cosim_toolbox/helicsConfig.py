@@ -1,5 +1,11 @@
-
+from enum import Enum
 import json
+
+
+class Collect(Enum):
+    YES = 'yes'
+    NO = 'no'
+    MAYBE = 'maybe'
 
 
 class HelicsMsg(object):
@@ -29,24 +35,41 @@ class HelicsMsg(object):
         self._cnfg[_n] = _v
         return self._cnfg
 
-    def pubs(self, _g: bool, _k: str, _t: str, _o: str, _p: str) -> None:
+    def collect(self, collect: Collect) -> None:
+        self._cnfg["tags"] = {"logger": collect.value}
+
+    def pubs(self, _k: str, _t: str, _o: str, _p: str, _g: bool = True, _c: Collect = None) -> None:
         # for object and property is for internal code interface for GridLAB-D
-        self._pubs.append({"global": _g, "key": _k, "type": _t, "info": {"object": _o, "property": _p}})
+        diction = {"global": True, "key": _k, "type": _t, "info": {"object": _o, "property": _p}}
+        if type(_c) is Collect:
+            diction["tags"] = {"logger": _c.value}
+        self._pubs.append(diction)
 
-    def pubs_n(self, _g: bool, _k: str, _t: str) -> None:
-        self._pubs.append({"global": _g, "key": _k, "type": _t})
+    def pubs_n(self, _k: str, _t: str, _g: bool = True, _c: Collect = None) -> None:
+        diction = {"global": True, "key": _k, "type": _t}
+        if type(_c) is Collect:
+            diction["tags"] = {"logger": _c.value}
+        self._pubs.append(diction)
 
-    def pubs_e(self, _g: bool, _k: str, _t: str, _u: str) -> None:
+    def pubs_e(self, _k: str, _t: str, _u: str, _g: bool = None, _c: Collect = None) -> None:
         # for object and property is for internal code interface for EnergyPlus
-        self._pubs.append({"global": _g, "key": _k, "type": _t, "unit": _u})
+        diction = {"global": True, "key": _k, "type": _t, "unit": _u}
+        if type(_g) is bool:
+            diction["global"] = _g
+        if type(_c) is Collect:
+            diction["tags"] = {"logger": _c.value}
+        self._pubs.append(diction)
 
     def subs(self, _k: str, _t: str, _o: str, _p: str) -> None:
         # for object and property is for internal code interface for GridLAB-D
         self._subs.append({"key": _k, "type": _t, "info": {"object": _o, "property": _p}})
 
-    def subs_e(self, _r: bool, _k: str, _t: str, _i: str) -> None:
+    def subs_e(self, _k: str, _t: str, _i: str, _r: bool = None) -> None:
         # for object and property is for internal code interface for EnergyPlus
-        self._subs.append({"key": _k, "type": _t, "require": _r, "info": _i})
+        diction = {"key": _k, "type": _t, "require": True, "info": _i}
+        if type(_r) is bool:
+            diction["require"] = _r
+        self._subs.append(diction)
 
     def subs_n(self, _k, _t) -> None:
         self._subs.append({"key": _k, "type": _t})

@@ -1,2 +1,0 @@
-
-DROP SCHEMA IF EXISTS test_my_schema CASCADE;
