@@ -102,6 +102,9 @@ class OSWMarket():
         self.em.get_model(self.datefrom)
         self.em.solve_model()
         self.market_results = self.em.mdl_sol
+        # Update datefrom. This assumes self.em.configuration["time"]["lookahead"]
+        # is at least 1
+        self.datefrom = self.em.daterange[self.em.configuration["time"]["window"]]
 
     def validate_market_timing(self, market_timing) -> None:
         """

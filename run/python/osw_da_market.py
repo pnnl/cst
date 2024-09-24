@@ -41,7 +41,7 @@ class OSWDAMarket(OSWMarket):
 
     """
 
-    def __init__(self, market_name:str="da_energy_market", market_timing:dict=None, min_freq:int=60, window:int=24, **kwargs):
+    def __init__(self, market_name:str="da_energy_market", market_timing:dict=None, min_freq:int=60, window:int=24, lookahead:int=1, **kwargs):
         """
         Class the specifically runs the OSW DA energy market
 
@@ -50,8 +50,9 @@ class OSWDAMarket(OSWMarket):
         state.
         """
         super().__init__(market_name, market_timing, **kwargs)
-        self.em.configuration["min_freq"] = min_freq
-        self.em.configuration["window"] = window
+        self.em.configuration["time"]["min_freq"] = min_freq
+        self.em.configuration["time"]["window"] = window
+        self.em.configuration["time"]["lookahead"] = lookahead
         # This translates all the kwarg key-value pairs into class attributes
         self.__dict__.update(kwargs)
         # if market_timing isn't specified input default vaules.
@@ -75,7 +76,7 @@ class OSWDAMarket(OSWMarket):
                 "initial_state": "idle",
                 "market_interval": 86400
             }
-
+        
 
 # def clear_market(self):
 #     """

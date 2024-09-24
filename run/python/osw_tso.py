@@ -131,7 +131,8 @@ class OSWTSO(Federate):
 
         This should probably return something, even if its self.something
         """
-        # Should get an initial run of the DAM
+        # Should get an initial run of the DAM with a longer window and
+        # throw away the first couple days
         self.em.run_model(pyenconfig["time"]["datefrom"])
 
 
@@ -145,8 +146,8 @@ class OSWTSO(Federate):
         minimum of these saved market states.
         """
 
-        self.next_requested_time = min(self.markets["da_energy_market"].next_state_time, 
-                                       self.markets["rt_energy_market"].next_state_time)
+        self.next_requested_time = min(self.markets["da_energy_market"].calculate_next_state_time(), 
+                                       self.markets["rt_energy_market"].calculate_next_state_time())
         return self.next_requested_time
 
 
@@ -156,7 +157,8 @@ class OSWTSO(Federate):
         them appropriately to the power system model. May involve reading 
         "self.data_from_federation"
         """
-        ## solve the unit commitment instance using solver (gurobi or cbc)
+        pass
+        
         
 
     def generate_wind_forecasts(self) -> list:
@@ -182,6 +184,7 @@ class OSWTSO(Federate):
 
     def run_reserve_market(self):
         """
+        NOTE: Currently this is being run in the day ahead market.
         Using EGRET, clears the reserve market in the form of a unit
         committment optimization problem.
 
@@ -204,7 +207,7 @@ class OSWTSO(Federate):
         """
 
         # TODO: may need to process results prior to returning them
-        self.markets["rt_energy_market"].run_market()
+        self.markets["rt_energy_market"].clear_market()
         return self.markets["rt_energy_market"].market_results
 
     def update_internal_model(self):
@@ -231,9 +234,9 @@ class OSWTSO(Federate):
         if self.markets["da_energy_market"]["next_state_time"] == self.granted_time:
             self.generate_wind_forecasts()
             da_results = self.run_da_uc_market()
-            reserve_results = self.run_reserve_market()
+            #reserve_results = self.run_reserve_market()
             self.data_to_federation["publication"]["da_clearing_result"] = da_results["prices"]["osw_node"]
-            self.data_to_federation["publication"]["reserve_clearing_result"] = reserve_results["prices"]["osw_node"]
+            self.data_to_federation["publication"]["reserve_clearing_result"] = da_results["reserves_prices"]["osw_area"]
         if self.market_times["RT"]["next_market_time"] == self.granted_time:
             rt_results = self.run_rt_ed_market()
             self.data_to_federation["publication"]["rt_clearing_result"] = rt_results["prices"]["osw_node"]
