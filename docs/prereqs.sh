@@ -6,4 +6,5 @@ pip3 install sphinx-jsonschema
 pip3 install sphinx_rtd_theme
 pip3 install sphinxcontrib-bibtex
 pip3 install urllib3
+pip3 install myst-parser
 # make html

@@ -2,18 +2,22 @@
 Each heading is its own page
 
 ## Introduction to CST
+
 - Design Goals
   - Help users built HELICS-based co-simulation without having to learn HELICS APIs
   - Provide an easier way to install common tools used in co-simulations
   - Provide data management tools (config, simulation inputs and outputs)
-- Overview of implementation
+
+- Overview of implementation 
   - Use of Docker for ease of installation
   - Using existing technologies wherever we could
   - Summarize the functionalities in CST and how they are implemented (similar to the slide deck Trevor used a lot in FY24)
 
 
 ## CST Users
+
 Describe the various types of users/use-cases to help users understand how they think they'll be using CST
+
 - Developer (HELICS "Developer" user) - Making changes to CST itself
   - CST library is installed locally so it can be edited.
   - Persistent services available 
@@ -39,6 +43,7 @@ Describe the various types of users/use-cases to help users understand how they 
   - Needs the easiest, smoothest experience of all.  It needs to just work. Something with the level of effort of `pip install cst`
 
 ## Installing CST
+
 - Describe installation process for split- vs docker-based-running
 - Describe installed environment for split- vs docker-based-running
 - Provide installation instructions for each of the CST users above
@@ -47,16 +52,20 @@ Describe the various types of users/use-cases to help users understand how they 
 - 
 
 ## Configuring CST
+
 - Database URLs
 
 ## Workflows
+
 Provide example workflows by user type. May be very similar or redundant with examples?
 
 ## Editing docker-compose to Include a Custom Federate
 
 # Examples
+
 1. Do we have a separate Examples repo like HELICS? (Trevor votes "no".)
 2. Do we do like HELICS and have a docs page for each example in RTD OR have a README page in the folder for each example?
+
 - Describing built-in examples
   - Developer user example
   - Post-processing user example
@@ -68,9 +77,11 @@ Provide example workflows by user type. May be very similar or redundant with ex
 
 
 # Developer Guide
+
 What are the developer tasks?
 
 ## Developer workflow
+
 - Make changes
 - Run tests
 - Format code
@@ -80,10 +91,12 @@ What are the developer tasks?
 - If necessary, manually trigger image builds
 
 ## Making a CST Docker image
+
 TODO: Should this be in the User Guide since Pre-Production Users will need to be able to make a Docker image to support Production Users?
 
 
 ## Style Guide
+
 - PEP 8 with the following exceptions
   - (Copy and edit PEP 8 from here: https://github.com/python/peps/blob/main/peps/pep-0008.rst)
 - Use of formatter script before committing code
@@ -92,4 +105,5 @@ TODO: Should this be in the User Guide since Pre-Production Users will need to b
 # References
 
 ## API reference
+
 Auto-generated
