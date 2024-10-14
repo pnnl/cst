@@ -247,6 +247,7 @@ class OSWTSO(Federate):
         This method will run through a single market loop when HELICS isn't being used to advance time. 
         Used for testing or an easy way to generate LMPs without feedbacks.
         """
+        
         start_times = self.markets[market].start_times
         for t in start_times:
             #da_results = self.run_da_uc_market() # idle -> bid
