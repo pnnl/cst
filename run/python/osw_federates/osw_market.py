@@ -70,8 +70,6 @@ class OSWMarket():
         self.start_times = self.interpolate_market_start_times(start_date, end_date)
         self.timestep = 0
         self.current_start_time = self.start_times[self.timestep]
-        # initialize the model by clearing the market at the first time step
-        self.clear_market()
         self.last_state = None
         self.market_timing  = market_timing
         self.last_state_time = 0

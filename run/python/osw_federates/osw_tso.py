@@ -247,14 +247,14 @@ class OSWTSO(Federate):
         This method will run through a single market loop when HELICS isn't being used to advance time. 
         Used for testing or an easy way to generate LMPs without feedbacks.
         """
-        
+
         start_times = self.markets[market].start_times
         for t in start_times:
             #da_results = self.run_da_uc_market() # idle -> bid
             #da_results = self.run_da_uc_market() # bid -> clear
             #da_results = self.run_da_uc_market() # clear -> idle
             #write results to file
-            self.markets[market].clear_market
+            self.markets[market].clear_market()
             filename = file_name + str(t) + ".json"
             self.markets[market].em.save_model(filename)
             print("Saved file as " + filename)
