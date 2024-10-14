@@ -13,6 +13,7 @@ trevor.hardy@pnnl.gov
 import datetime
 import json
 import logging
+import pandas as pd
 from transitions import Machine
 from osw_market import OSWMarket
 
@@ -41,7 +42,7 @@ class OSWDAMarket(OSWMarket):
 
     """
 
-    def __init__(self, market_name:str="da_energy_market", market_timing:dict=None, min_freq:int=60, window:int=24, lookahead:int=1, **kwargs):
+    def __init__(self, start_date, end_date, market_name:str="da_energy_market", market_timing:dict=None, min_freq:int=60, window:int=24, lookahead:int=1, **kwargs):
         """
         Class the specifically runs the OSW DA energy market
 
@@ -49,7 +50,7 @@ class OSWDAMarket(OSWMarket):
         that gets called when the market state machine enters the "clearing"
         state.
         """
-        super().__init__(market_name, market_timing, **kwargs)
+        super().__init__(market_name, market_timing, start_date, end_date, **kwargs)
         self.em.configuration["time"]["min_freq"] = min_freq
         self.em.configuration["time"]["window"] = window
         self.em.configuration["time"]["lookahead"] = lookahead

@@ -13,6 +13,7 @@ trevor.hardy@pnnl.gov
 import datetime
 import json
 import logging
+import pandas as pd
 from transitions import Machine
 from osw_market import OSWMarket
 
@@ -41,7 +42,7 @@ class OSWRTMarket(OSWMarket):
 
     """
 
-    def __init__(self, market_name:str="rt_energy_market", market_timing:dict=None, min_freq:int=15, window:int=4, **kwargs):
+    def __init__(self, start_date, end_date, market_name:str="rt_energy_market", market_timing:dict=None, min_freq:int=15, window:int=4, **kwargs):
         """
         Class that specifically runs the OSW RT energy market
 
@@ -49,7 +50,7 @@ class OSWRTMarket(OSWMarket):
         that gets called when the market state machine enters the "clearing"
         state.
         """
-        super().__init__(market_name, market_timing, **kwargs)
+        super().__init__(market_name, market_timing, start_date, end_date, **kwargs)
         self.em.configuration["min_freq"] = min_freq
         self.em.configuration["window"] = window
         self.__dict__.update(kwargs)
@@ -73,6 +74,23 @@ class OSWRTMarket(OSWMarket):
                 "initial_state": "idle",
                 "market_interval": 900
             }
+            # starts at midnight
+        self.start_times = self.interpolate_market_start_times(start_date, end_date)
+
+        
+    def interpolate_market_start_times(self, start_date, end_date, freq='15min', start_time=' 00:00:00'):
+        """
+        Overloaded method of OSWMarket:
+        Interpolates 15 (dy default) minute data between two date strings.
+        """
+
+        # Convert strings to datetime objects
+        start_datetime = pd.to_datetime(start_date + start_time)
+        end_datetime = pd.to_datetime(end_date + start_time)
+
+        # Generate hourly datetime index
+        start_time_index = pd.date_range(start_datetime, end_datetime, freq=freq)
+        return start_time_index
 
 # def clear_market(self):
 #     """

@@ -13,6 +13,7 @@ trevor.hardy@pnnl.gov
 import datetime as dt
 import json
 import logging
+import pandas as pd
 from transitions import Machine
 from pyenergymarket import EnergyMarket
 
@@ -50,7 +51,7 @@ class OSWMarket():
     """
     pass
 
-    def __init__(self, market_name, market_timing, market:EnergyMarket=None, **kwargs):
+    def __init__(self, market_name, market_timing, start_date, end_date, market:EnergyMarket=None, **kwargs):
         """
         Generic version of all the markets used in the E-COMP LDRD intiative.
         As such, this is fairly particular to those needs and is 
@@ -66,6 +67,9 @@ class OSWMarket():
         self.em = market
         self.market_name = market_name
         self.current_state = market_timing["initial_state"]
+        self.start_times = self.interpolate_market_start_times(start_date, end_date)
+        self.timestep = 0
+        self.current_start_time = self.start_times[self.timestep]
         self.last_state = None
         self.market_timing  = market_timing
         self.last_state_time = 0
@@ -73,13 +77,14 @@ class OSWMarket():
         self.market_results = {}
         self.state_list = list(market_timing["states"].keys())
         self.state_machine = Machine(model=self, states=self.state_list, initial=self.current_state)
-        self.state_machine.add_ordered_transitions(self.state_list)
+        self.state_machine.add_ordered_transitions()
         # Adding definitions for state transition callbacks
         # "self.clear_market" is the name of the method called when entering
         # the "clearing" state
         # _e.g.:_ self.state_machine.on_enter_clearing("self.clear_market")
         self.state_machine.on_enter_clearing("clear_market")
         self.validate_market_timing(self.market_timing)
+        
 
         # Define callback_functions
         # self.state_machine.on_enter_clearing("calc_transition_times")
@@ -99,12 +104,11 @@ class OSWMarket():
         This method must be overloaded in an instance of this class to
         implement the necessary operates to clear the market in question.
         """
-        self.em.get_model(self.datefrom)
+        self.em.get_model(self.current_start_time)
         self.em.solve_model()
         self.market_results = self.em.mdl_sol
-        # Update datefrom. This assumes self.em.configuration["time"]["lookahead"]
-        # is at least 1
-        self.datefrom = self.em.daterange[self.em.configuration["time"]["window"]]
+        self.timestep += 1
+        self.current_start_time = self.start_times[self.timestep]
 
     def validate_market_timing(self, market_timing) -> None:
         """
@@ -112,7 +116,7 @@ class OSWMarket():
         """
         pass
     
-    def move_to_next_state(self, state_machine: Machine) -> str:
+    def move_to_next_state(self) -> str:
         """
         Transitions to the next state in the state machine and updates
         appropriate object parameters.
@@ -154,12 +158,21 @@ class OSWMarket():
         that check is done by the instantiating object and it is assumed
         when this method is called, it's time to move to the next state
         """
-        self.move_to_next_state(self.state_machine)
+        self.move_to_next_state() # moves state machine to next state based on helics time
         self.last_state_time, self.next_state_time = self.calculate_next_state_time(self.next_state_time, 
                                                                                     self.current_state,
                                                                                     self.market_timing)
         return self.next_state_time
 
+    def interpolate_market_start_times(self, start_date, end_date, freq='24h', start_time=' 00:00:00'):
+        """Interpolates 24 (dy default) hourly data between two date strings."""
 
+        # Convert strings to datetime objects
+        start_datetime = pd.to_datetime(start_date + start_time)
+        end_datetime = pd.to_datetime(end_date + start_time)
+
+        # Generate hourly datetime index
+        start_time_index = pd.date_range(start_datetime, end_datetime, freq=freq)
+        return start_time_index
 
     

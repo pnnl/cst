@@ -15,6 +15,7 @@ import json
 import logging
 import os
 import sys
+import pandas as pd
 
 FILEDIR, tail = os.path.split(__file__)
 RUNDIR, tail = os.path.split(FILEDIR)
@@ -193,7 +194,7 @@ class OSWTSO(Federate):
         """
 
         # TODO: may need to process results prior to returning them
-        self.markets["reserve_market"].run_market()
+        self.markets["reserve_market"].update_market()
         return self.markets["reserve_market"].market_results
        
 
@@ -240,6 +241,23 @@ class OSWTSO(Federate):
         if self.market_times["RT"]["next_market_time"] == self.granted_time:
             rt_results = self.run_rt_ed_market()
             self.data_to_federation["publication"]["rt_clearing_result"] = rt_results["prices"]["osw_node"]
+
+    def run_market_loop(self, market, file_name):
+        """ 
+        This method will run through a single market loop when HELICS isn't being used to advance time. 
+        Used for testing or an easy way to generate LMPs without feedbacks.
+        """
+        start_times = self.markets[market].start_times
+        for t in start_times:
+            #da_results = self.run_da_uc_market() # idle -> bid
+            #da_results = self.run_da_uc_market() # bid -> clear
+            #da_results = self.run_da_uc_market() # clear -> idle
+            #write results to file
+            self.markets[market].clear_market
+            filename = file_name + str(t) + ".json"
+            self.markets[market].em.save_model(filename)
+            print("Saved file as " + filename)
+
         
 if __name__ == "__main__":
     # TODO: we might need to make this an actual object rather than a dict.
@@ -329,10 +347,16 @@ if __name__ == "__main__":
     solver = "cbc" # "gurobi" or "cbc"
     gv = pyen.GVParse(h5filepath, default=default, logger_options={"level": loglevel})
 
+
+
+    # Initalize pyenergymarkets for day ahead and real time energy markets.
+    markets = {}
+    start = "2032-01-01"
+    end = "2032-1-02"
     pyenconfig = {
         "time": {
-            "datefrom": "2032-01-01", # whole year
-            "dateto": "2032-1-01"
+            "datefrom": start, # whole year
+            "dateto": end
         },
         "solve_arguments": {
             "kwargs":{
@@ -340,16 +364,15 @@ if __name__ == "__main__":
             }
         }
     }
-
-    # Initalize pyenergymarkets for day ahead and real time energy markets.
-    markets = {}
     em = pyen.EnergyMarket(gv, pyenconfig)
-    markets["da_energy_market"] = OSWDAMarket("da_energy_market", market_timing["da"], market=em, min_freq = 60)
+    markets["da_energy_market"] = OSWDAMarket(start, end, "da_energy_market", market_timing["da"], market=em)
     # Note that for now the reserves markets are operated when we run the day ahead energy market model, but I left the comment to remind us this may change.
     # markets["reserves_market"] = OSWReservesMarket("reserves_market", market_timing["reserves"])
-    markets["rt_energy_market"] = OSWRTMarket("rt_energy_market", market_timing["rt"], market=em, min_freq = 15)
+    markets["rt_energy_market"] = OSWRTMarket(start, end, "rt_energy_market", market_timing["rt"], min_freq=15, market=em)
 
-    wecc_market_fed = OSWTSO("WECC_market", market_timing, markets, solver=solver)
-    wecc_market_fed.create_federate("wecc_market")
-    wecc_market_fed.run_cosim_loop()
-    wecc_market_fed.destroy_federate()
+    osw = OSWTSO("WECC_market", market_timing, markets, solver=solver)
+    market = "da_energy_market"
+    osw.run_market_loop(market, "da_market_results_")
+    #wecc_market_fed.create_federate("wecc_market")
+    #wecc_market_fed.run_cosim_loop()
+    #wecc_market_fed.destroy_federate()
