@@ -16,7 +16,8 @@ import logging
 import pandas as pd
 from transitions import Machine
 from pyenergymarket import EnergyMarket
-
+# import pyenergymarket as pyen
+from pyenergymarket.utils.timeutils import count_gen_onoff_periods
 
 
 logger = logging.getLogger(__name__)
