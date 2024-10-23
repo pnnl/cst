@@ -256,7 +256,8 @@ class OSWTSO(Federate):
             #write results to file
             self.markets[market].clear_market()
             filename = file_name + str(t) + ".json"
-            self.markets[market].em.save_model(filename)
+            with open(filename, "w") as file:
+                file.write(self.markets[market].em.mdl_sol)
             print("Saved file as " + filename)
 
         
@@ -353,7 +354,7 @@ if __name__ == "__main__":
     # Initalize pyenergymarkets for day ahead and real time energy markets.
     markets = {}
     start = "2032-01-01"
-    end = "2032-1-02"
+    end = "2032-1-03"
     pyenconfig = {
         "time": {
             "datefrom": start, # whole year
@@ -373,7 +374,7 @@ if __name__ == "__main__":
 
     osw = OSWTSO("WECC_market", market_timing, markets, solver=solver)
     market = "da_energy_market"
-    osw.run_market_loop(market, "da_market_results_")
+    osw.run_market_loop(market, 'C:\\Users\\kell175\\copper\\run\\python\\results\\da_results_')
     #wecc_market_fed.create_federate("wecc_market")
     #wecc_market_fed.run_cosim_loop()
     #wecc_market_fed.destroy_federate()

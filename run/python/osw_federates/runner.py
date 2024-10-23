@@ -24,7 +24,7 @@ class Runner:
         self.db = mDB.MetaDB(mDB.cosim_mongo_host, mDB.cosim_mongo_db)
 
     def define_scenario(self):
-        prefix = "source /home/worker/venv/bin/activate && exec python3 "
+        prefix = "exec python3 "
         names = ["OSW_TSO", "OSW_Plant"]
         t1 = HelicsMsg(names[0], 30)
         if self.docker:
@@ -37,13 +37,13 @@ class Runner:
         #        t1.config("wait_for_current_time_update", True)
         t1.collect(Collect.YES)
 
-        t1.pubs_e(names[0] + "/current", "double", "V", True, Collect.YES)# collect into logger or not.
-        t1.subs_e(names[1] + "/voltage", "double", "V")
+        # t1.pubs_e(names[0] + "/current", "double", "V", True, Collect.YES)# collect into logger or not.
+        # t1.subs_e(names[1] + "/voltage", "double", "V")
 
         f1 = {
             "image": "cosim-python:latest",
-            "command": prefix + "osw_tso.py ",
-            "federate_type": "value",
+            "command": prefix + "osw_tso.py " + names[0] + " " + self.scenario_name,
+            "federate_type": "value", # if endpoints involved this needs to be different
             "time_step": 120,
             "HELICS_config": t1.write_json()
         }
@@ -76,11 +76,11 @@ class Runner:
         } # time_step is in seconds
         diction = {
             "federation": {
-                names[0]: f1,
-                names[1]: f2
+                names[0]: f1 #,
+                # names[1]: f2
             }
         }
-        # print(diction)
+        print(diction)
 
         self.db.remove_document(mDB.cu_federations, None, self.federation_name)
         self.db.add_dict(mDB.cu_federations, self.federation_name, diction)
@@ -100,7 +100,7 @@ class Runner:
 
 if __name__ == "__main__":
     remote = True
-    _scenario_name = "osw_test_scenario"
+    _scenario_name = "osw_lmp_test_scenario"
     _schema_name = "osw_test_schema"
     _federation_name = "osw_test_federation"
     r = Runner(_scenario_name, _schema_name, _federation_name, False)

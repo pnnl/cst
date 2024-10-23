@@ -42,7 +42,7 @@ class OSWDAMarket(OSWMarket):
 
     """
 
-    def __init__(self, start_date, end_date, market_name:str="da_energy_market", market_timing:dict=None, min_freq:int=60, window:int=24, lookahead:int=1, **kwargs):
+    def __init__(self, start_date, end_date, market_name:str="da_energy_market", market_timing:dict=None, min_freq:int=60, window:int=2, lookahead:int=1, **kwargs):
         """
         Class the specifically runs the OSW DA energy market
 
