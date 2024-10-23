@@ -16,8 +16,11 @@ import logging
 import pandas as pd
 from transitions import Machine
 from osw_market import OSWMarket
+from pyenergymarket.utils.timeutils import count_gen_onoff_periods
 
-
+# from typing import TYPE_CHECKING
+# if TYPE_CHECKING:
+from egret.data.model_data import ModelData
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler())
@@ -81,27 +84,60 @@ class OSWRTMarket(OSWMarket):
     def interpolate_market_start_times(self, start_date, end_date, freq='15min', start_time=' 00:00:00'):
         """
         Overloaded method of OSWMarket:
-        Interpolates 15 (dy default) minute data between two date strings.
+        Interpolates 15 (by default) minute data between two date strings.
         """
 
         # Convert strings to datetime objects
-        start_datetime = pd.to_datetime(start_date + start_time)
-        end_datetime = pd.to_datetime(end_date + start_time)
+        start_datetime = pd.to_datetime(start_date)# + start_time)
+        end_datetime = pd.to_datetime(end_date)# - pd.Timedelta(freq)# + start_time)
 
         # Generate hourly datetime index
         start_time_index = pd.date_range(start_datetime, end_datetime, freq=freq)
         return start_time_index
 
-# def clear_market(self):
-#     """
-#     Overloaded method of OSWMarket
+    # def clear_market(self):
+    #     """
+    #     Overloaded method of OSWMarket
 
-#     Grab all the bids and run the DA UC optimization and then return the results
-    
-#     market_results is an attribute of the OSWMarket class
-#     """
+    #     Grab all the bids and run the DA UC optimization and then return the results
+        
+    #     market_results is an attribute of the OSWMarket class
+    #     """
 
-#     self.market_results = {}
+    #     self.market_results = {}
+
+    def clear_market(self):
+        """
+        Callback method that runs EGRET and clears a market.
+
+        This method must be overloaded in an instance of this class to
+        implement the necessary operates to clear the market in question.
+        """
+        self.em.get_model(self.current_start_time)
+        if self.em.mdl_sol is not None:
+            self.update_model_from_previous(self.em.mdl_sol)
+        self.em.solve_model()
+        self.market_results = self.em.mdl_sol
+        self.timestep += 1
+        self.current_start_time = self.start_times[self.timestep]
+
+        # self.start_times = self.start_times.delete(0) # remove the first element
+        # if len(self.start_times) > 0:
+        #     self.current_start_time = self.start_times[0] # and then clock through to the next one
 
 
+    def update_model_from_previous(self,mdl_com:ModelData):
+        """
+        Pull last (not including lookahead) setpoint data from mdl_sol timeseries and
+        update the current self.mdl with generator values from solution.
+        """
+        time_window = self.em.configuration['time']['window']
+        if (self.em.mdl is not None) and (mdl_com is not None):
+            for g, g_dict in mdl_com.elements(element_type='generator'):
+                self.em.mdl.data['elements']['generator'][g]['initial_p_output'] = g_dict['pg']['values'][time_window - 1]
+                # we should also update the q/reactive power, but this first test will be dc only
+                # self.mdl.data['elements']['generator'][g]['initial_p_output'] = g_dict['qg']['values'][self.configuration['time']['window'] - 1]
+                self.em.mdl.data['elements']['generator'][g]['initial_status'] = count_gen_onoff_periods(g_dict['pg']['values'][:time_window])#*10
+        else:
+            raise ValueError("no model currently loaded.")
     
