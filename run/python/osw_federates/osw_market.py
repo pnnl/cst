@@ -74,7 +74,7 @@ class OSWMarket():
         self.last_state = None
         self.market_timing  = market_timing
         self.last_state_time = 0
-        self.next_state_time = None 
+        self.next_state_time = 0
         self.market_results = {}
         self.state_list = list(market_timing["states"].keys())
         self.state_machine = Machine(model=self, states=self.state_list, initial=self.current_state)
@@ -123,8 +123,8 @@ class OSWMarket():
         appropriate object parameters.
         """
         self.last_state = self.current_state
-        self.state_machine.next_state()
-        self.current_state = self.state_machine.state
+        self.next_state()
+        self.current_state = self.state
         logger.info(f"{self.market_name} moved from {self.last_state} to {self.current_state}")
         return self.current_state
         
@@ -160,9 +160,9 @@ class OSWMarket():
         when this method is called, it's time to move to the next state
         """
         self.move_to_next_state() # moves state machine to next state based on helics time
-        self.last_state_time, self.next_state_time = self.calculate_next_state_time(self.next_state_time, 
+        self.last_state_time, self.next_state_time = self.calculate_next_state_time(self.market_timing,
                                                                                     self.current_state,
-                                                                                    self.market_timing)
+                                                                                    self.next_state_time)
         return self.next_state_time
 
     def interpolate_market_start_times(self, start_date, end_date, freq='24h', start_time=' 00:00:00'):
