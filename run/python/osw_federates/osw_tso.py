@@ -17,6 +17,12 @@ import os
 import sys
 import pandas as pd
 
+# FILEDIR, tail = os.path.split(__file__)
+# RUNDIR, tail = os.path.split(FILEDIR)
+# CUDIR, tail = os.path.split(RUNDIR)
+# cosim_toolbox_pth = os.path.join(CUDIR, "src", "cosim_toolbox")
+# sys.path.append(cosim_toolbox_pth)
+
 # internal packages
 from egret.data.model_data import ModelData
 from egret.models.unit_commitment import solve_unit_commitment, SlackType
@@ -27,6 +33,7 @@ from cosim_toolbox.dataLogger import DataLogger
 from osw_da_market import OSWDAMarket
 from osw_rt_market import OSWRTMarket
 # from osw_reserves_market import OSWReservesMarket
+from cosim_toolbox.dataLogger import DataLogger
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler())
@@ -91,6 +98,15 @@ class OSWTSO(Federate):
         self.market_timing = market_timing
         self.markets = self.calculate_initial_market_times(self.markets)
 
+        # self.dl = DataLogger()
+        # self.dl.open_database_connections()
+        # self.dl.check_version()
+        # print(self.scenario)
+        # if self.dl.table_exist(self.scenario['osw_test_schema'], "htd_double"):
+        #     self.dl.create_schema(self.scenario['osw_test_schema'])
+        #     self.dl.make_logger_database(self.scenario['osw_test_schema'])
+        #     self.dl.data_db.commit()
+
     def calculate_initial_market_times(self, markets):
         """
         Calculates the initial .next_state_time for each of the markets in the
@@ -98,9 +114,7 @@ class OSWTSO(Federate):
         whatever.)
         """
         for market_name, market in markets.items():
-            last_state_time, next_state_time = self.markets[market_name].calculate_next_state_time(market.market_timing,
-                                                                                market.current_state,
-                                                                                market.next_state_time)
+            last_state_time, next_state_time = self.markets[market_name].calculate_next_state_time()
             markets[market_name].last_state_time = last_state_time
             markets[market_name].next_state_time = next_state_time
         return markets
@@ -137,22 +151,24 @@ class OSWTSO(Federate):
         """
         # Should get an initial run of the DAM with a longer window and
         # throw away the first couple days
-        self.em.run_model(pyenconfig["time"]["datefrom"])
+        # self.em.run_model(pyenconfig["time"]["datefrom"])
+        pass
 
 
     def calculate_next_requested_time(self):
         """
         Overload of Federate class method
-
+ 
         When update_internal_model is run, it calls update_market on the
         market object which calculates the next state time (next market
-        state). To calculate the next time request, we just need the 
+        state). To calculate the next time request, we just need the
         minimum of these saved market states.
         """
-
-        self.next_requested_time = min(self.markets["da_energy_market"].calculate_next_state_time(), 
-                                       self.markets["rt_energy_market"].calculate_next_state_time())
+        dam_lt, dam_nt = self.markets["da_energy_market"].calculate_next_state_time()
+        rtm_lt, rtm_nt = self.markets["rt_energy_market"].calculate_next_state_time()
+        self.next_requested_time = min(dam_nt, rtm_nt)
         return self.next_requested_time
+ 
 
 
     def update_power_system_and_market_state(self):
@@ -233,20 +249,18 @@ class OSWTSO(Federate):
         "calculate_next_time_step" has populated "self.market_times" to
         indicate which markets need to be run
         """
+        self.update_power_system_and_market_state()
 
-        self.run_market_loop("da_energy_market", 'C:\\Users\\kell175\\copper\\run\\python\\results\\da_results_')
-
-        # self.update_power_system_and_market_state()
-
-        # if self.markets["da_energy_market"]["next_state_time"] == self.granted_time:
-        #     self.generate_wind_forecasts()
-        #     da_results = self.run_da_uc_market()
-        #     #reserve_results = self.run_reserve_market()
-        #     self.data_to_federation["publication"]["da_clearing_result"] = da_results["prices"]["osw_node"]
-        #     #self.data_to_federation["publication"]["reserve_clearing_result"] = da_results["reserves_prices"]["osw_area"]
-        # if self.market_times["RT"]["next_market_time"] == self.granted_time:
-        #     #rt_results = self.run_rt_ed_market()
-        #     #self.data_to_federation["publication"]["rt_clearing_result"] = rt_results["prices"]["osw_node"]
+        if self.markets["da_energy_market"].next_state_time == self.granted_time:
+            self.generate_wind_forecasts()
+            da_results = self.run_da_uc_market()
+            print("da_results:",da_results)
+            #reserve_results = self.run_reserve_market()
+            self.data_to_federation["publication"]["da_clearing_result"] = da_results["prices"]["osw_node"]
+            self.data_to_federation["publication"]["reserve_clearing_result"] = da_results["reserves_prices"]["osw_area"]
+        if self.markets["rt_energy_market"].next_state_time == self.granted_time:
+            rt_results = self.run_rt_ed_market()
+            self.data_to_federation["publication"]["rt_clearing_result"] = rt_results["prices"]["osw_node"]
 
     def run_market_loop(self, market, file_name):
         """ 
@@ -259,16 +273,16 @@ class OSWTSO(Federate):
             da_results = self.run_da_uc_market() # idle -> bid
             da_results = self.run_da_uc_market() # bid -> clear
             da_results = self.run_da_uc_market() # clear -> idle
-
-            #self.markets[market].clear_market()
             #write results to file
+            # self.markets[market].clear_market()
             filename = file_name + str(t) + ".json"
-            with open(filename, "w") as file:
-                file.write(self.markets[market].em.mdl_sol)
+            self.markets[market].em.save_model(filename)
+            # with open(filename, "w") as file:
+            #     file.write(self.markets[market].em.mdl_sol)
             print("Saved file as " + filename)
 
-        
-if __name__ == "__main__":
+def run_osw_tso():        
+# if __name__ == "__main__":
     # TODO: we might need to make this an actual object rather than a dict.
     # Even now, I see it starting to get messy.
 
@@ -328,7 +342,7 @@ if __name__ == "__main__":
     # I don't think we will ever use the "last_market_time" values 
     # but they will give us confidence that we're doing things correctly.
     
-    h5filepath = "C:\\Users\\kell175\\pyenergymarket\\data_model_tests\\data_files\\WECC240_20240807.h5"
+    h5filepath = "/Users/lill771/Documents/Data/GridView/WECC240_20240807.h5"
     default = {
         "time": {
             "datefrom": "2032-02-01"
@@ -353,19 +367,22 @@ if __name__ == "__main__":
         }
     }
     loglevel = "INFO"
-    solver = "cbc" # "gurobi" or "cbc"
+    solver = "gurobi" # "gurobi" or "cbc"
     gv = pyen.GVParse(h5filepath, default=default, logger_options={"level": loglevel})
 
 
 
     # Initalize pyenergymarkets for day ahead and real time energy markets.
     markets = {}
-    start = "2032-01-01"
-    end = "2032-1-03"
+    start = "2032-01-01 00:00:00"
+    end = "2032-1-03 00:00:00"
     pyenconfig = {
         "time": {
             "datefrom": start, # whole year
-            "dateto": end
+            "dateto": end,
+            'min_freq': 15, #15 minutes
+            'window': 1,
+            'lookahead': 1
         },
         "solve_arguments": {
             "kwargs":{
@@ -378,11 +395,18 @@ if __name__ == "__main__":
     markets["da_energy_market"] = OSWDAMarket(start, end, "da_energy_market", market_timing["da"], market=em)
     # Note that for now the reserves markets are operated when we run the day ahead energy market model, but I left the comment to remind us this may change.
     # markets["reserves_market"] = OSWReservesMarket("reserves_market", market_timing["reserves"])
-    # markets["rt_energy_market"] = OSWRTMarket(start, end, "rt_energy_market", market_timing["rt"], min_freq=15, market=em)
+    markets["rt_energy_market"] = OSWRTMarket(start, end, "rt_energy_market", market_timing["rt"], min_freq=15, market=em)
+    return market_timing, markets, solver
+    # osw = OSWTSO("WECC_market", market_timing, markets, solver=solver)
+    # market = "da_energy_market"
+    # osw.run_market_loop(market, "da_market_results_")
+    # osw.run_market_loop(market, 'C:\\Users\\kell175\\copper\\run\\python\\results\\da_results_')
 
-    wecc_market_fed = OSWTSO("WECC_market", market_timing, markets, solver=solver)
-    market = "da_energy_market"
-    #wecc_market_fed.run_market_loop(market, 'C:\\Users\\kell175\\copper\\run\\python\\results\\da_results_')
-    wecc_market_fed.create_federate("OSW_TSO")
-    wecc_market_fed.run_cosim_loop()
-    wecc_market_fed.destroy_federate()
+
+if __name__ == "__main__":    
+    if sys.argv.__len__() > 2:
+        market_timing, markets, solver = run_osw_tso()
+        wecc_market_fed = OSWTSO(sys.argv[1], market_timing, markets, solver=solver)
+        wecc_market_fed.create_federate(sys.argv[2])
+        wecc_market_fed.run_cosim_loop()
+        wecc_market_fed.destroy_federate()

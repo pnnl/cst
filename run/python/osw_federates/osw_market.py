@@ -74,6 +74,7 @@ class OSWMarket():
         self.last_state = None
         self.market_timing  = market_timing
         self.last_state_time = 0
+        # self.next_state_time = None 
         self.next_state_time = 0
         self.market_results = {}
         self.state_list = list(market_timing["states"].keys())
@@ -107,9 +108,10 @@ class OSWMarket():
         """
         self.em.get_model(self.current_start_time)
         self.em.solve_model()
+        print("self.em.mdl_sol:", self.em.mdl_sol)
         self.market_results = self.em.mdl_sol
-        self.timestep += 1
         self.current_start_time = self.start_times[self.timestep]
+        self.timestep += 1
 
     def validate_market_timing(self, market_timing) -> None:
         """
@@ -124,30 +126,34 @@ class OSWMarket():
         """
         self.last_state = self.current_state
         self.next_state()
+        # self.current_state = self.state_machine.state
         self.current_state = self.state
+        print("Last state:", self.last_state)
+        print("Next state:", self.current_state)
         logger.info(f"{self.market_name} moved from {self.last_state} to {self.current_state}")
         return self.current_state
         
     def calculate_next_state_time(self,
-                               market_timing: dict,
-                               current_state: str,
-                               next_state_time: float,
+                            #    market_timing: dict,
+                            #    current_state: str,
+                            #    next_state_time: float,
                                ) -> tuple[float, float]:
         """
         Calculate the value of the next state in terms of simulation time
         based on the timing of the next state in the state machine.
         """
-        last_state_time = next_state_time
-        next_state_time = market_timing["states"][current_state]["duration"] \
-                            + self.last_state_time \
-                            + market_timing["initial_offset"]
-        
+        last_state_time = self.next_state_time
+        next_state_time = self.market_timing["states"][self.current_state]["duration"] \
+                            + last_state_time \
+                            + self.market_timing["initial_offset"]
+       
         # Rather than checking to see if its zero before setting it to zero,
-        # just set it to zero (even if it already was.) The only time this 
+        # just set it to zero (even if it already was.) The only time this
         # needs to be non-zero is the first time we do the first transition
-        market_timing["initial_offset"] = 0
+        self.market_timing["initial_offset"] = 0
         logger.info(f"{self.market_name}.next_state_time: {self.next_state_time}")
         return last_state_time, next_state_time
+ 
 
     def update_market(self):
         """
@@ -160,9 +166,10 @@ class OSWMarket():
         when this method is called, it's time to move to the next state
         """
         self.move_to_next_state() # moves state machine to next state based on helics time
-        self.last_state_time, self.next_state_time = self.calculate_next_state_time(self.market_timing,
-                                                                                    self.current_state,
-                                                                                    self.next_state_time)
+        # self.last_state_time, self.next_state_time = self.calculate_next_state_time(self.next_state_time, 
+        #                                                                             self.current_state,
+        #                                                                             self.market_timing)
+        self.last_state_time, self.next_state_time = self.calculate_next_state_time()
         return self.next_state_time
 
     def interpolate_market_start_times(self, start_date, end_date, freq='24h', start_time=' 00:00:00'):
