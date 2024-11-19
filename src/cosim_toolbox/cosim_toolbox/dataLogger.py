@@ -19,6 +19,11 @@ import cosim_toolbox.metadataDB as mDB
 
 logger = logging.getLogger(__name__)
 
+# TODO: The databases referenced in these APIs should be "metadata"
+# and "time_series" and should be updated across the codebase.
+
+# TODO: Does this HELICS stuff need to stay in here? If so, make it a 
+# comment (not a string) and add explanation for why it's here.
 """
     HELICS_DATA_TYPE_UNKNOWN = -1,
     /** a sequence of characters*/
@@ -51,6 +56,12 @@ logger = logging.getLogger(__name__)
 
 
 class DataLogger:
+    """Collects data from federates via HELICS and writes to the times-series
+    database.
+
+    Returns:
+        None
+    """
     hdt_type = {'HDT_STRING': 'text',
                 'HDT_DOUBLE': 'double precision',
                 'HDT_INTEGER': 'bigint',
@@ -71,8 +82,9 @@ class DataLogger:
         self.data_db = None
 
     def _connect_logger_database(self, connection: dict = None):
-        """This function defines the connection to the datalogger database
-        and opens a connection to the postgres database
+        """This method defines and then opens a connection to the datalogger 
+        database
+        
 
         Returns:
             psycopg2 connection object - connection object that provides
@@ -93,8 +105,8 @@ class DataLogger:
             return None
 
     def _connect_scenario_database(self, connection: dict = None):
-        """This function defines the connection to the meta database
-        and opens a connection to the mongo database
+        """This function defines and then opens a connection to the metadata
+        database
 
         Returns:
             metadataDB object - connection object that provides
@@ -117,6 +129,13 @@ class DataLogger:
             return None
 
     def close_database_connections(self, commit: bool = True) -> None:
+        """Closes connections to the the time-series and metadata databases
+
+        Args:
+            commit (bool, optional): Flag to indicate whether data should be
+            committed to the time-series DB prior to closing the connection.
+            Defaults to True.
+        """
         self.meta_db = None
         if self.data_db:
             if commit:
@@ -125,6 +144,17 @@ class DataLogger:
         self.data_db = None
 
     def open_database_connections(self, meta_connection: dict = None, data_connection: dict = None) -> bool:
+        """Opens connections to the time-series and metadata databases
+
+        Args:
+            meta_connection (dict, optional): Defines connection to metadata
+            database. Defaults to None.
+            data_connection (dict, optional): Defines connection to time-series
+            database. Defaults to None.
+
+        Returns:
+            bool: _description_
+        """
         self.meta_db = self._connect_scenario_database(meta_connection)
         self.data_db = self._connect_logger_database(data_connection)
         if self.meta_db is None or self.data_db is None:
@@ -133,6 +163,13 @@ class DataLogger:
             return True
 
     def check_version(self) -> None:
+        """Checks the version of the time-series database
+
+            TODO: This method name should make it clear it is
+            just checking the time-series database version and 
+            not the metadata DB version. Maybe rename to 
+            "check_tsdb_version"?
+        """
         with self.data_db.cursor() as cur:
             logger.info('PostgresSQL database version:')
             cur.execute('SELECT version()')
@@ -140,62 +177,121 @@ class DataLogger:
             logger.info(db_version)
 
     def create_schema(self, scheme_name: str) -> None:
+        """Creates a new scheme in the time-series database
+
+        TODO: "schema" should not be in the method name. In CSTs when using 
+        the Postgres database "schemes" are called "analysis". This
+        name needs to be updated. This also applies to other methods in 
+        this class.
+
+        Args:
+            scheme_name (str): _description_
+        """
         query = f"CREATE SCHEMA IF NOT EXISTS {scheme_name};"
         query += f" GRANT USAGE ON SCHEMA {scheme_name} TO reader;"
         with self.data_db.cursor() as cur:
             cur.execute(query)
 
     def drop_schema(self, scheme_name: str) -> None:
+        """Removes the scheme from the database.
+
+        Args:
+            scheme_name (str): _description_
+        """
         query = f"DROP SCHEMA IF EXISTS {scheme_name} CASCADE;"
         with self.data_db.cursor() as cur:
             cur.execute(query)
 
-    def remove_scenario(self, scheme_name: str, scenario_name: str) -> None:
+    def remove_scenario(self, analysis_name: str, scenario_name: str) -> None:
+        """Removes all data from the specified analysis_name with the specified
+        scenario_name
+
+        Args:
+            analysis_name (str): Analysis containing the data to be deleted
+            scenario_name (str): Scenario to be removed from the analysis
+        """
         query = ""
         for key in self.hdt_type:
-            query += f" DELETE FROM {scheme_name}.{key} WHERE scenario='{scenario_name}'; "
+            query += f" DELETE FROM {analysis_name}.{key} WHERE scenario='{scenario_name}'; "
         with self.data_db.cursor() as cur:
             cur.execute(query)
 
-    def table_exist(self, scheme_name: str, table_name: str) -> None:
+    def table_exist(self, analysis_name: str, table_name: str) -> None:
+        """Checks to see if the specified tables exist in the specified analysis
+
+        Args:
+            analysis_name (str): Name of analysis where table may exist
+            table_name (str): Table name whose existance is being checked
+
+        Returns:
+            _type_: _description_
+        """
         query = ("SELECT EXISTS ( SELECT FROM pg_tables WHERE "
-                 f"schemaname = '{scheme_name}' AND tablename = '{table_name}');")
+                 f"schemaname = '{analysis_name}' AND tablename = '{table_name}');")
         with self.data_db.cursor() as cur:
             cur.execute(query)
             result = cur.fetchone()
             return result[0]
 
-    def make_logger_database(self, scheme_name: str) -> None:
-        # scheme is a set of like scenario (like DSOT bau, battery, flex load)
+    def make_logger_database(self, analysis_name: str) -> None:
+        """_summary_
+
+        Args:
+            analysis_name (str): Name of analysis under which various
+            scenarios will be collected
+        """
+        
         query = ""
         for key in self.hdt_type:
             query += ("CREATE TABLE IF NOT EXISTS "
-                      f"{scheme_name}.{key} ("
+                      f"{analysis_name}.{key} ("
                       "real_time timestamp with time zone NOT NULL, "
                       "sim_time double precision NOT NULL, "
                       "scenario VARCHAR (255) NOT NULL, "
                       "federate VARCHAR (255) NOT NULL, "
                       "sim_name VARCHAR (255) NOT NULL, "
                       f"sim_value {self.hdt_type[key]} NOT NULL);")
-        query += f" GRANT SELECT ON ALL TABLES IN SCHEMA {scheme_name} TO reader;"
-        query += f" GRANT USAGE ON ALL SEQUENCES IN SCHEMA {scheme_name} TO reader;"
-        query += f" GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA {scheme_name} TO reader;"
-        query += f" ALTER ROLE reader SET search_path = {scheme_name};"
+        query += f" GRANT SELECT ON ALL TABLES IN SCHEMA {analysis_name} TO reader;"
+        query += f" GRANT USAGE ON ALL SEQUENCES IN SCHEMA {analysis_name} TO reader;"
+        query += f" GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA {analysis_name} TO reader;"
+        query += f" ALTER ROLE reader SET search_path = {analysis_name};"
         with self.data_db.cursor() as cur:
             cur.execute(query)
 
     def get_scenario_document(self, scenario_name: str) -> dict:
+        """Gets the metadata associated with the specified scenario from the
+        metadata database.
+
+        TODO: Rename "get_scenario_document" to "get_scenario_metadata"
+        Args:
+            scenario_name (str): Name of scenario for which the metadata
+            is to be retrieved
+
+        Returns:
+            dict: scenario metadata requested
+        """
         if self.scenario_name != scenario_name:
             self.scenario = self.meta_db.get_dict(mDB.cu_scenarios, None, scenario_name)
         return self.scenario
 
     def get_federation_document(self, federation_name: str) -> dict:
+        """Gets the metadata for the specified federation from the metadata
+        database.
+
+        TODO: Rename "get_federation_document" to "get_federation_metadata"
+        Args:
+            federation_name (str): Name of federation for which the metdata
+            is being collected
+
+        Returns:
+            dict: Requested metadata for federation
+        """
         if self.federation_name != federation_name:
             self.federation = self.meta_db.get_dict(mDB.cu_federations, None, federation_name)
         return self.federation
 
     def get_select_string(self, scheme_name: str, data_type: str) -> str:
-        """This function creates the SELECT portion of the query string
+        """This method creates the SELECT portion of the query string
 
         Args:
             scheme_name (string) - the name of the database to be queried
@@ -213,7 +309,7 @@ class DataLogger:
         return qry_string
 
     def get_time_select_string(self, start_time: int, duration: int) -> str:
-        """This function creates the time filter portion of the query string
+        """This method creates the time filter portion of the query string
 
         Args:
             start_time (int) - the lowest time step in seconds to start the filtering
@@ -244,7 +340,7 @@ class DataLogger:
                          federate_name: str, 
                          sim_name: str, 
                          data_type: str) -> str:
-        """This function creates the query string to pull time series data from the
+        """This method creates the query string to pull time series data from the
         logger database, and depends upon the keys identified by the user input arguments.
 
         Args:
@@ -309,7 +405,7 @@ class DataLogger:
                                       federate_name: str,
                                       sim_name: str, 
                                       data_type: str) -> pd.DataFrame:
-        """This function queries time series data from the logger database and
+        """This method queries time series data from the logger database and
         depends upon the keys identified by the user input arguments.
 
         Args:
@@ -348,7 +444,7 @@ class DataLogger:
             return dataframe
 
     def query_scenario_all_times(self, scenario_name: str, data_type: str) -> pd.DataFrame:
-        """This function queries data from the logger database filtered only by scenario_name and sim_name
+        """This method queries data from the logger database filtered only by scenario_name and sim_name
 
         Args:
             scenario_name (string) - the name of the scenario to filter the query results by
@@ -376,8 +472,10 @@ class DataLogger:
         pass
 
     def query_scheme_federate_all_times(self, scheme_name: str, federate_name: str, data_type) -> pd.DataFrame:
-        """This function queries data from the logger database filtered only by federate_name and sim_name
+        """This method queries data from the logger database filtered only by federate_name and sim_name
         and data_type
+
+        TODO: Rename "query_scheme_federate_all_times" to "query_
 
         Args:
             scheme_name (string) - the name of the schema to filter the query results by
@@ -556,6 +654,7 @@ if __name__ == "__main__":
     print(df)
     logger_data.close_database_connections()
 
+    # TODO: If we don't need this code any more we should delete it.
     # t_data = db.scenario()
     # print(db)
     # df = get_scenario_list("test_scenario", "hdt_boolean")
