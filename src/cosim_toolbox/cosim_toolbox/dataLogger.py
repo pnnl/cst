@@ -1,8 +1,13 @@
 """
 Created on 12/14/2023
 
-Data logger class that defines the basic operations of Python-based data logger in
-Co-Simulation Toolbox.
+Provides underlying methods for interacting with the time-series database
+
+TODO: Should we rename this to something like "cst_ts_postgres.py" and the 
+class to "CSTTimeSeriesPostgres" as all the methods are Postgres specific? 
+I can image a more abstract class used for interacting with databases that 
+codifies the terminology (_e.g._ "analysis", "scenario") and this class
+inherits from it and implements the methods in a Postgres-specific way.
 
 @authors:
 fred.rutz@pnnl.gov
@@ -56,8 +61,8 @@ logger = logging.getLogger(__name__)
 
 
 class DataLogger:
-    """Collects data from federates via HELICS and writes to the times-series
-    database.
+    """Methos for writing to and reading from the time-series database. This
+    class does not provide HELICS federate functionality.
 
     Returns:
         None
