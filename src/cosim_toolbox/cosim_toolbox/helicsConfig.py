@@ -1,3 +1,14 @@
+"""
+Created on 20 Dec 2023
+
+Defines the HelicsMsg class which is used to programmatically 
+define pubs and subs of a HELICS class and write it out to a
+HELICS federation configuration JSON.
+
+@author:
+mitch.pelton@pnnl.gov
+"""
+
 from enum import Enum
 import json
 
@@ -15,7 +26,7 @@ class HelicsMsg():
     TODO: Need to add support for endpoints.
 
     """
-    def __init__(self, name: str, period: float):
+    def __init__(self, name: str, peqriod: float):
         # change logging to debug, warning, error
         self._subs = []
         self._pubs = []
