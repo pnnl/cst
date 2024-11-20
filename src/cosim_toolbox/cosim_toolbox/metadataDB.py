@@ -1,8 +1,9 @@
 """
-Prototype metadata database API development
+Created 30 Nov 2023
+
+Metadata Database API impementation
 
 @author Trevor Hardy
-@date 2023-11-30
 """
 import os
 import typing
@@ -61,6 +62,14 @@ def federation_database(clear: bool = False) -> None:
 
 class MetaDB:
     """
+    Provides methods to read and write to the metadata database.
+
+    TODO: Update method names so they don't refer to "dictionaries" or
+    "documents" but are instead using the CST terminology. We might need to 
+    add some of these terms into the Mongo documents so that they can be 
+    queried with the same parameters as we use in the time-series database.
+    Mongo has databases, collections, and documents. Postgres has databases,
+    schemes, and tables. Should these line up one-to-one?
     """
     _cu_dict_name = 'cu_007'
 
@@ -72,8 +81,14 @@ class MetaDB:
 
     @staticmethod
     def _open_file(file_path: str, mode: str = 'r') -> typing.IO:
-        """
-        Utility function to open file with reasonable error handling.
+        """Utility function to open file with reasonable error handling.
+
+        Args:
+            file_path (str): Path to file to be opened
+            mode (str, optional): File opening style. Defaults to 'r'.
+
+        Returns:
+            typing.IO: File handle
         """
         try:
             fh = open(file_path, mode)
@@ -83,9 +98,18 @@ class MetaDB:
             return fh
 
     @staticmethod
-    def _connect_to_database(uri: str = None, db: str = None):
-        """
-        Sets up connection to server port for mongodb
+    def _connect_to_database(uri: str = None, db: str = None) -> tuple:
+        """Sets up connection to server port for mongodb
+
+        Args:
+            uri (str, optional): URI for MongoDB. Defaults to None.
+            db (str, optional): Name of database in MongoDB to use. 
+            Defaults to None.
+
+        Returns:
+
+        Returns:
+            tuple: name of database as string and MongoDB client object
         """
         # Set up default uri_string to the server Trevor was using on the EIOC
         if uri is None:
