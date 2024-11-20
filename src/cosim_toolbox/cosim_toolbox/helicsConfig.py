@@ -26,7 +26,7 @@ class HelicsMsg():
     TODO: Need to add support for endpoints.
 
     """
-    def __init__(self, name: str, peqriod: float):
+    def __init__(self, name: str, period: float):
         # change logging to debug, warning, error
         self._subs = []
         self._pubs = []
