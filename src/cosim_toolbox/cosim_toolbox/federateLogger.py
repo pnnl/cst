@@ -1,8 +1,11 @@
 """
 Created on 12/14/2023
 
-Data logger class that defines the basic operations of Python-based logger federate in
-Co-Simulation Toolbox.
+Data logger class that defines the basic operations of Python-based logger 
+federate in Cosim Toolbox. This is instantiated to create a federate that
+collects data from the federates sent via HELICS and pushes it into the 
+time-series database. All the HELICS functionality is contained in the 
+Federate class.
 
 @author:
 mitch.pelton@pnnl.gov
@@ -38,8 +41,17 @@ class FederateLogger(Federate):
         self.dl.make_logger_database(self.scheme_name)
 
     def connect_to_helics_config(self) -> None:
+        """Sets a few class attributes related to HELICS configuration.
+
+        Also determines which publications need to be pushed into the 
+        time-series database.
+        
+        Overload of Federate method
+        """
+
+        
         self.federate_type = "combo"
-        self.time_step = 30.0
+        self.time_step = 30.0 # TODO: This shouldn't be hard-coded, right?
         publications = []
         self.fed_pubs = {}
 
@@ -90,6 +102,9 @@ class FederateLogger(Federate):
         logger.debug(f"Subscribed pubs {publications}")
 
     def update_internal_model(self) -> None:
+        """Takes latest published values or sent messages (endpoints) and
+        pushes them back into the time-series database.
+        """
         query = ""
         for key in self.data_from_federation["inputs"]:
             qry = ""
