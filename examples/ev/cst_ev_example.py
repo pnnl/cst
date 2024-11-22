@@ -8,7 +8,6 @@ For use in the CST EV charging federation example.
 @author Trevor Hardy
 """
 
-import sys
 import logging
 import numpy as np
 import argparse
