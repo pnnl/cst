@@ -43,11 +43,30 @@ class CSTEV(Federate):
         self.socs = np.array([0,1])
         self.effective_R = np.array([8,150])
         self.__dict__.update(kwargs)
+        self.subscription = "charging_voltage"
+        self.publication = "charging_current"
+        self.hConfig = HelicsMsg(self.federate_name, self.time_step)
+        self.hConfig.config("core_type", "zmq")
+        self.hConfig.config("log_level", "warning")
+        self.hConfig.config("terminate_on_error", True)
+        self.hConfig.config("wait_for_current_time_update", True)
+        if self.scenario["docker"]:
+            self.hConfig.config("brokeraddress", "10.5.0.2")
+        self.config = self.hConfig.config("subscriptions", {
+            "global": True,
+            "key": self.subscription,
+            "type": "double"
+        })
+        self.config = self.hConfig.config("publications", {
+            "global": True,
+            "name": self.publication,
+            "type": "double"
+        })
 
 
     def update_internal_model(self):
         # Get inputs from federation
-        self.charging_voltage = self.data_from_federation["inputs"]["charging_voltage"]
+        self.charging_voltage = self.data_from_federation["inputs"][self.subscription]
 
         # Update model of EV battery 
         self.battery_R = np.interp(self.soc, self.socs, self.effective_R)
@@ -59,7 +78,7 @@ class CSTEV(Federate):
         self.soc = self.soc + added_energy_kWh
 
         # Send out new data to the federation
-        self.data_to_federation["publications"]["charging_current"] = self.charging_current
+        self.data_to_federation["publications"][self.publication] = self.charging_current
 
 class CSTCharger(Federate):
     """Simple model of an EV charging the regulates the charging current to 
@@ -80,6 +99,25 @@ class CSTCharger(Federate):
         self.min_charging_voltage = 120 # V
         self.max_charging_current = 50 # A
         self.__dict__.update(kwargs)
+        self.subscription = "charging_current"
+        self.publication = "charging_voltage"
+        self.hConfig = HelicsMsg(self.federate_name, self.time_step)
+        self.hConfig.config("core_type", "zmq")
+        self.hConfig.config("log_level", "warning")
+        self.hConfig.config("terminate_on_error", True)
+        self.hConfig.config("wait_for_current_time_update", False)
+        if self.scenario["docker"]:
+            self.hConfig.config("brokeraddress", "10.5.0.2")
+        self.config = self.hConfig.config("subscriptions", {
+            "global": True,
+            "key": self.subscription,
+            "type": "double"
+        })
+        self.config = self.hConfig.config("publications", {
+            "global": True,
+            "name": self.publication,
+            "type": "double"
+        })
 
     def update_internal_model(self):
         # Get inputs from federation
