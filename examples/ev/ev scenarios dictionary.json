@@ -1,0 +1,21 @@
+[
+    {
+      "cu_name": "scenario documents"
+    },
+    {
+      "cu_name": "ev low SOC",
+      "start_time": "2025-01-01T00:00:00",
+      "stop_stime": "2025-01-02T00:00:00",
+      "federation": "ev low SOC",
+      "schema": "TODO: what is this for?",
+      "docker": true
+    },
+    {
+        "cu_name": "ev high SOC",
+        "start_time": "2025-01-01T00:00:00",
+        "stop_stime": "2025-01-02T00:00:00",
+        "federation": "ev high SOC",
+        "schema": "TODO: what is this for?",
+        "docker": true
+      }
+  ]
