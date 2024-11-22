@@ -52,16 +52,16 @@ class CSTEV(Federate):
         self.hConfig.config("wait_for_current_time_update", True)
         if self.scenario["docker"]:
             self.hConfig.config("brokeraddress", "10.5.0.2")
-        self.config = self.hConfig.config("subscriptions", {
-            "global": True,
-            "key": self.subscription,
-            "type": "double"
-        })
-        self.config = self.hConfig.config("publications", {
-            "global": True,
-            "name": self.publication,
-            "type": "double"
-        })
+        self.hconfig = self.hConfig.subs(
+            self.subscription,
+            "double",
+        )
+        self.hconfig = self.hConfig.pubs(
+            self.publication,
+            "double",
+            True,
+            self.hConfig.Collect.YES
+        )
 
 
     def update_internal_model(self):
@@ -108,16 +108,16 @@ class CSTCharger(Federate):
         self.hConfig.config("wait_for_current_time_update", False)
         if self.scenario["docker"]:
             self.hConfig.config("brokeraddress", "10.5.0.2")
-        self.config = self.hConfig.config("subscriptions", {
-            "global": True,
-            "key": self.subscription,
-            "type": "double"
-        })
-        self.config = self.hConfig.config("publications", {
-            "global": True,
-            "name": self.publication,
-            "type": "double"
-        })
+        self.hconfig = self.hConfig.subs(
+            self.subscription,
+            "double",
+        )
+        self.hconfig = self.hConfig.pubs(
+            self.publication,
+            "double",
+            True,
+            self.hConfig.Collect.YES
+        )
 
     def update_internal_model(self):
         # Get inputs from federation
