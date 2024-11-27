@@ -16,8 +16,6 @@ import logging
 import pandas as pd
 from transitions import Machine
 from pyenergymarket import EnergyMarket
-# import pyenergymarket as pyen
-from pyenergymarket.utils.timeutils import count_gen_onoff_periods
 
 
 logger = logging.getLogger(__name__)
@@ -84,6 +82,7 @@ class OSWMarket():
         # "self.clear_market" is the name of the method called when entering
         # the "clearing" state
         # _e.g.:_ self.state_machine.on_enter_clearing("self.clear_market")
+        self.state_machine.on_enter_bidding("collect_bids")
         self.state_machine.on_enter_clearing("clear_market")
         self.validate_market_timing(self.market_timing)
         
@@ -98,6 +97,17 @@ class OSWMarket():
 
         # This translates all the kwarg key-value pairs into class attributes
         self.__dict__.update(kwargs)
+
+    def collect_bids(self):
+        """
+        Callback method that pulls in bids to grid data and moves to the next state.
+
+        This method must be overloaded in an instance of this class to
+        implement the necessary operatations to update the market in question.
+        """
+        #self.move_to_next_state()
+        pass
+
 
     def clear_market(self):
         """
@@ -151,7 +161,7 @@ class OSWMarket():
         # just set it to zero (even if it already was.) The only time this
         # needs to be non-zero is the first time we do the first transition
         self.market_timing["initial_offset"] = 0
-        logger.info(f"{self.market_name}.next_state_time: {self.next_state_time}")
+        logger.info(f"{self.market_name}.next_state_time: {next_state_time}")
         return last_state_time, next_state_time
  
 
@@ -165,7 +175,7 @@ class OSWMarket():
         that check is done by the instantiating object and it is assumed
         when this method is called, it's time to move to the next state
         """
-        self.move_to_next_state() # moves state machine to next state based on helics time
+        #self.move_to_next_state() # moves state machine to next state based on helics time
         # self.last_state_time, self.next_state_time = self.calculate_next_state_time(self.next_state_time, 
         #                                                                             self.current_state,
         #                                                                             self.market_timing)

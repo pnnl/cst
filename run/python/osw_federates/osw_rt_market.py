@@ -80,6 +80,15 @@ class OSWRTMarket(OSWMarket):
             # starts at midnight
         self.start_times = self.interpolate_market_start_times(start_date, end_date)
 
+    def collect_bids(self, gen_commitment):
+        """
+        Callback method that pulls in bids to grid data and moves to the next state.
+
+        This method must be overloaded in an instance of this class to
+        implement the necessary operatations to update the market in question.
+        """
+        self.move_to_next_state()
+
         
     def interpolate_market_start_times(self, start_date, end_date, freq='15min', start_time=' 00:00:00'):
         """
@@ -136,8 +145,8 @@ class OSWRTMarket(OSWMarket):
             for g, g_dict in mdl_com.elements(element_type='generator'):
                 self.em.mdl.data['elements']['generator'][g]['initial_p_output'] = g_dict['pg']['values'][time_window - 1]
                 # we should also update the q/reactive power, but this first test will be dc only
-                # self.mdl.data['elements']['generator'][g]['initial_p_output'] = g_dict['qg']['values'][self.configuration['time']['window'] - 1]
-                self.em.mdl.data['elements']['generator'][g]['initial_status'] = count_gen_onoff_periods(g_dict['pg']['values'][:time_window])#*10
+                # self.mdl.data['elements']['generator'][g]['initial_q_output'] = g_dict['qg']['values'][self.configuration['time']['window'] - 1]
+                self.em.mdl.data['elements']['generator'][g]['initial_status'] = count_gen_onoff_periods(g_dict['pg']['values'][:time_window])
         else:
             raise ValueError("no model currently loaded.")
     

@@ -313,7 +313,7 @@ rt_market_timing = {
 # Daily market with bidding beginning nine minutes before the end of 
 # the market interval and ending when clearing begins one minutee before 
 # the end of the interval.
-# da_market_timing = {
+da_market_timing = {
         "states": {
             "idle": {
                 "start_time": 0,
