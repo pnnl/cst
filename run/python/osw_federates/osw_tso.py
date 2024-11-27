@@ -255,10 +255,12 @@ class OSWTSO(Federate):
         if self.markets["da_energy_market"].next_state_time == self.granted_time:
             self.generate_wind_forecasts()
             da_results = self.run_da_uc_market()
-            print("da_results:", da_results)
             #reserve_results = self.run_reserve_market()
             #self.data_to_federation["publication"]["da_clearing_result"] = da_results["prices"]["osw_node"]
-            print(da_results)
+            if self.markets["da_energy_market"].state == "clearing":
+                print("da_results:", da_results.data["system"])
+            else:
+                print("da_next_time:", da_results)
             #self.data_to_federation["publication"]["reserve_clearing_result"] = da_results["reserves_prices"]["osw_area"]
         if self.markets["rt_energy_market"].next_state_time == self.granted_time:
             rt_results = self.run_rt_ed_market()
