@@ -37,8 +37,13 @@ class Runner:
         #        t1.config("wait_for_current_time_update", True)
         t1.collect(Collect.YES)
 
-        # t1.pubs_e(names[0] + "/current", "double", "V", True, Collect.YES)# collect into logger or not.
-        # t1.subs_e(names[1] + "/voltage", "double", "V")
+        t1.pubs_e(names[0] + "/rt_dispatch", "list", "MW")
+        #t1.subs_e(names[1] + "/rt_bids", "list", "V")
+        t1.pubs_e(names[0] + "/da_dispatch", "list", "MW")
+        #t1.subs_e(names[1] + "/da_bids", "list", "V")
+        t1.pubs_e(names[0] + "/res_dispatch", "list", "MW")
+        #t1.subs_e(names[1] + "/res_bids", "list", "V")
+        t1.pubs_e(names[0] + "/windforecast", "list", "mps", True, Collect.YES)# collect into logger or not.
 
         f1 = {
             "image": "cosim-python:latest",
@@ -48,7 +53,7 @@ class Runner:
             "HELICS_config": t1.write_json()
         }
 
-        t2 = HelicsMsg(names[1], 30)
+        t2 = HelicsMsg(names[1], 30) # 30 seconds == how frequently HELICS checks if there's any update from federate
         if self.docker:
             t2.config("brokeraddress", "10.5.0.2")
         t2.config("core_type", "zmq")
@@ -58,13 +63,13 @@ class Runner:
         t2.config("terminate_on_error", True)
 #        t2.config("wait_for_current_time_update", True)
 
-        t2.subs_e(names[0] + "/rt_dispatch", "list", "A")
-        t2.pubs_e(names[1] + "/rt_bids", "double", "V")
-        t2.subs_e(names[0] + "/da_dispatch", "double", "A")
-        t2.pubs_e(names[1] + "/da_bids", "double", "V")
-        t2.subs_e(names[0] + "/res_dispatch", "double", "A")
-        t2.pubs_e(names[1] + "/res_bids", "double", "V")
-        t2.subs_e(names[0] + "/wind_forecasts", "double", "A")
+        t2.subs_e(names[0] + "/rt_dispatch", "list", "MW")
+        t2.pubs_e(names[1] + "/rt_bids", "list", "MW")
+        t2.subs_e(names[0] + "/da_dispatch", "list", "MW")
+        t2.pubs_e(names[1] + "/da_bids", "list", "MW")
+        t2.subs_e(names[0] + "/res_dispatch", "list", "MW")
+        t2.pubs_e(names[1] + "/res_bids", "list", "MW")
+        t2.subs_e(names[0] + "/wind_forecasts", "list", "mps") # meters per second
 
         f2 = {
             "image": "cosim-python:latest",
@@ -89,8 +94,8 @@ class Runner:
 
         scenario = self.db.scenario(self.schema_name,
                                     self.federation_name,
-                                    "2023-12-07T15:31:27",
-                                    "2023-12-08T15:31:27",
+                                    "2032-01-01T00:00:00",
+                                    "2032-01-03T00:00:00",
                                     self.docker)
         self.db.remove_document(mDB.cu_scenarios, None, self.scenario_name)
         self.db.add_dict(mDB.cu_scenarios, self.scenario_name, scenario)
