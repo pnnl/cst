@@ -259,6 +259,13 @@ class OSWTSO(Federate):
             #self.data_to_federation["publication"]["da_clearing_result"] = da_results["prices"]["osw_node"]
             if self.markets["da_energy_market"].state == "clearing":
                 print("da_results:", da_results.data["system"])
+                area_keys = ['CALIFORN', 'MEXICO', 'NORTH', 'SOUTH']
+                price_keys = ['regulation_up_price', 'regulation_down_price', 'flexible_ramp_up_price', 'flexible_ramp_down_price']
+                price_dict = {}
+                for area in area_keys:
+                    for key in price_keys:
+                        price_dict[area+' '+key] = da_results.data["elements"]["area"][area][key]
+                print("price results:", price_dict)
             else:
                 print("da_next_time:", da_results)
             #self.data_to_federation["publication"]["reserve_clearing_result"] = da_results["reserves_prices"]["osw_area"]
@@ -350,7 +357,7 @@ def run_osw_tso():
     # I don't think we will ever use the "last_market_time" values 
     # but they will give us confidence that we're doing things correctly.
     
-    h5filepath = "C:\\Users\\kell175\\pyenergymarket\\data_model_tests\\data_files\\WECC240_20240807.h5"
+    h5filepath = "/Users/lill771/Documents/Data/GridView/WECC240_20240807.h5"
     default_dam = {
         "time": {
             "datefrom": start
