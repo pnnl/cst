@@ -73,7 +73,7 @@ class Runner:
 
         f2 = {
             "image": "cosim-python:latest",
-            "command": prefix + "osw.py " + names[1] + " " + self.scenario_name, #### TO-DO OSW plant file name -- make sure in the same directory!!
+            "command": prefix + "osw_plant.py " + names[1] + " " + self.scenario_name, #### TO-DO OSW plant file name -- make sure in the same directory!!
             "env": "",
             "federate_type": "value",
             "time_step": 120,
@@ -81,8 +81,8 @@ class Runner:
         } # time_step is in seconds
         diction = {
             "federation": {
-                names[0]: f1 #,
-                # names[1]: f2
+                names[0]: f1 ,
+                names[1]: f2
             }
         }
         print(diction)
