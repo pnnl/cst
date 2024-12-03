@@ -1,0 +1,3 @@
+CAISO_price  $/MW
+LMP - NP15 - LMP column: DA price; MCE column: RT price
+ASP - AS_NP26_SP_CLR_PRC column: reserve price; AS_NP26_EXP_RD_CLR_PRC column: down reserve price; AS_NP26_EXP_RU_CLR_PRC column: up reserve price
