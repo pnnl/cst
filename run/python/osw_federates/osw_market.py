@@ -98,14 +98,13 @@ class OSWMarket():
         # This translates all the kwarg key-value pairs into class attributes
         self.__dict__.update(kwargs)
 
-    def collect_bids(self):
+    def collect_bids(self, bids):
         """
-        Callback method that pulls in bids to grid data and moves to the next state.
+        Callback method that pulls in T2 bids to grid data.
 
         This method must be overloaded in an instance of this class to
         implement the necessary operatations to update the market in question.
         """
-        #self.move_to_next_state()
         pass
 
 
@@ -118,7 +117,7 @@ class OSWMarket():
         """
         self.em.get_model(self.current_start_time)
         self.em.solve_model()
-        print("self.em.mdl_sol:", self.em.mdl_sol)
+        print(self.market_name, "self.em.mdl_sol:", self.em.mdl_sol)
         self.market_results = self.em.mdl_sol
         self.current_start_time = self.start_times[self.timestep]
         self.timestep += 1
@@ -138,8 +137,9 @@ class OSWMarket():
         self.next_state()
         # self.current_state = self.state_machine.state
         self.current_state = self.state
-        print("Last state:", self.last_state)
-        print("Next state:", self.current_state)
+        print(self.market_name, "Last state:", self.last_state)
+        print(self.market_name, "Next state:", self.current_state)
+        # TODO Debug why logs don't make it to log but prints do
         logger.info(f"{self.market_name} moved from {self.last_state} to {self.current_state}")
         return self.current_state
         
@@ -152,7 +152,7 @@ class OSWMarket():
         Calculate the value of the next state in terms of simulation time
         based on the timing of the next state in the state machine.
         """
-        last_state_time = self.next_state_time
+        last_state_time = self.last_state_time
         next_state_time = self.market_timing["states"][self.current_state]["duration"] \
                             + last_state_time \
                             + self.market_timing["initial_offset"]
