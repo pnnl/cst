@@ -403,7 +403,8 @@ class Federate:
         # Publications
         for key, value in self.data_to_federation["publications"].items():
             pub = self.hfed.get_publication_by_name(key)
-            pub.publish(value)
+            if value is not None:
+                pub.publish(value)
             logger.debug(f" {self.federate_name} publication {key}, {value}")
 
         # Endpoints
