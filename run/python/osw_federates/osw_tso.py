@@ -157,7 +157,7 @@ class OSWTSO(Federate):
         """
         dam_lt, dam_nt = self.markets["da_energy_market"].calculate_next_state_time()
         rtm_lt, rtm_nt = self.markets["rt_energy_market"].calculate_next_state_time()
-        self.next_requested_time = min(dam_nt, rtm_nt)
+        self.next_requested_time = min(self.markets["da_energy_market"].next_state_time, self.markets["rt_energy_market"].next_state_time)
         print("DAM", dam_lt, "DAM_Nt: ", dam_nt)
         print("RTM", rtm_lt, "RTM_Nt: ", rtm_nt)
         print("Requested time: ", self.next_requested_time)
@@ -191,12 +191,12 @@ class OSWTSO(Federate):
         to methods of an EGRET object.
         """
         # TODO: may need to process results prior to returning them
+        current_state_time = self.markets["da_energy_market"].update_market()
         self.markets["da_energy_market"].move_to_next_state()
-        next_state_time = self.markets["da_energy_market"].update_market()
         if self.markets["da_energy_market"].state == "clearing":
             return self.markets["da_energy_market"].market_results
         else:
-            return next_state_time
+            return current_state_time
         
 
     def run_reserve_market(self):
@@ -224,15 +224,15 @@ class OSWTSO(Federate):
         """
         print("I MADE IT INTO RTM")
         # TODO: may need to process results prior to returning them
+        current_state_time = self.markets["rt_energy_market"].update_market()
         self.markets["rt_energy_market"].move_to_next_state()
-        next_state_time = self.markets["rt_energy_market"].update_market()
         if self.markets["rt_energy_market"].state == "clearing":
             return self.markets["rt_energy_market"].market_results
         elif self.markets["rt_energy_market"].state == "bidding":
             # TODO put commitment from dam into rtm
             pass
         else:
-            return next_state_time
+            return current_state_time
 
     def update_internal_model(self):
         """

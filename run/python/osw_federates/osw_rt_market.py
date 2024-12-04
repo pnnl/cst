@@ -80,14 +80,14 @@ class OSWRTMarket(OSWMarket):
             # starts at midnight
         self.start_times = self.interpolate_market_start_times(start_date, end_date)
 
-    def collect_bids(self, gen_commitment):
-        """
-        Callback method that pulls in bids to grid data and moves to the next state.
+    # def collect_bids(self, gen_commitment):
+    #     """
+    #     Callback method that pulls in bids to grid data and moves to the next state.
 
-        This method must be overloaded in an instance of this class to
-        implement the necessary operatations to update the market in question.
-        """
-        self.move_to_next_state()
+    #     This method must be overloaded in an instance of this class to
+    #     implement the necessary operatations to update the market in question.
+    #     """
+    #     self.move_to_next_state()
 
         
     def interpolate_market_start_times(self, start_date, end_date, freq='15min', start_time=' 00:00:00'):

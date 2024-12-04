@@ -224,6 +224,7 @@ class Federate:
         self.enter_initialization()
         self.enter_executing_mode()
         while self.granted_time < self.stop_time:
+            print(f"HELICS TIME {self.granted_time}")
             self.simulate_next_step()
 
     def enter_initialization(self) -> None:
@@ -258,6 +259,7 @@ class Federate:
         new data for the rest of the federation to use.
         """
         next_requested_time = self.calculate_next_requested_time()
+    
         self.request_time(next_requested_time)
         self.get_data_from_federation()
         self.update_internal_model()
@@ -403,7 +405,8 @@ class Federate:
         # Publications
         for key, value in self.data_to_federation["publications"].items():
             pub = self.hfed.get_publication_by_name(key)
-            pub.publish(value)
+            if value is not None:
+                pub.publish(value)
             logger.debug(f" {self.federate_name} publication {key}, {value}")
 
         # Endpoints

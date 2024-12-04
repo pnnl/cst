@@ -98,7 +98,7 @@ class OSWMarket():
         # This translates all the kwarg key-value pairs into class attributes
         self.__dict__.update(kwargs)
 
-    def collect_bids(self, bids):
+    def collect_bids(self):
         """
         Callback method that pulls in T2 bids to grid data.
 
@@ -153,7 +153,7 @@ class OSWMarket():
         based on the timing of the next state in the state machine.
         """
         last_state_time = self.last_state_time
-        next_state_time = self.market_timing["states"][self.current_state]["duration"] \
+        self.next_state_time = self.market_timing["states"][self.current_state]["duration"] \
                             + last_state_time \
                             + self.market_timing["initial_offset"]
        
@@ -161,8 +161,8 @@ class OSWMarket():
         # just set it to zero (even if it already was.) The only time this
         # needs to be non-zero is the first time we do the first transition
         self.market_timing["initial_offset"] = 0
-        logger.info(f"{self.market_name}.next_state_time: {next_state_time}")
-        return last_state_time, next_state_time
+        logger.info(f"{self.market_name}.next_state_time: {self.next_state_time}")
+        return last_state_time, self.next_state_time
  
 
     def update_market(self):
@@ -175,15 +175,11 @@ class OSWMarket():
         that check is done by the instantiating object and it is assumed
         when this method is called, it's time to move to the next state
         """
-        #self.move_to_next_state() # moves state machine to next state based on helics time
-        # self.last_state_time, self.next_state_time = self.calculate_next_state_time(self.next_state_time, 
-        #                                                                             self.current_state,
-        #                                                                             self.market_timing)
-        self.last_state_time, self.next_state_time = self.calculate_next_state_time()
-        return self.next_state_time
+        _, self.last_state_time = self.calculate_next_state_time()
+        return self.last_state_time # current time
 
     def interpolate_market_start_times(self, start_date, end_date, freq='24h', start_time=' 00:00:00'):
-        """Interpolates 24 (dy default) hourly data between two date strings."""
+        """Interpolates 24 (by default) hourly data between two date strings."""
 
         # Convert strings to datetime objects
         start_datetime = pd.to_datetime(start_date + start_time)
