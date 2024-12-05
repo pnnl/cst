@@ -82,21 +82,12 @@ class OSWTSO(Federate):
         # self.dl = DataLogger()
         # self.dl.open_database_connections()
         # self.dl.check_version()
-        # if self.dl.table_exist(self.scenario['osw_test_schema'], "htd_double"):
-        #     self.dl.create_schema(self.scenario['osw_test_schema'])
-        #     self.dl.make_logger_database(self.scenario['osw_test_schema']) 
+        # if self.dl.table_exist(self.scenario['osw_test_schema01'], "htd_double"):
+        #     self.dl.create_schema(self.scenario['osw_test_schema01'])
+        #     self.dl.make_logger_database(self.scenario['osw_test_schema01']) 
 
         self.market_timing = market_timing
         self.markets = self.calculate_initial_market_times(self.markets)
-
-        # self.dl = DataLogger()
-        # self.dl.open_database_connections()
-        # self.dl.check_version()
-        # print(self.scenario)
-        # if self.dl.table_exist(self.scenario['osw_test_schema'], "htd_double"):
-        #     self.dl.create_schema(self.scenario['osw_test_schema'])
-        #     self.dl.make_logger_database(self.scenario['osw_test_schema'])
-        #     self.dl.data_db.commit()
 
     def calculate_initial_market_times(self, markets):
         """
@@ -155,11 +146,11 @@ class OSWTSO(Federate):
         state). To calculate the next time request, we just need the
         minimum of these saved market states.
         """
-        dam_lt, dam_nt = self.markets["da_energy_market"].calculate_next_state_time()
-        rtm_lt, rtm_nt = self.markets["rt_energy_market"].calculate_next_state_time()
-        self.next_requested_time = min(self.markets["da_energy_market"].next_state_time, self.markets["rt_energy_market"].next_state_time)
-        print("DAM", dam_lt, "DAM_Nt: ", dam_nt)
-        print("RTM", rtm_lt, "RTM_Nt: ", rtm_nt)
+        next_state_times = []
+        for market_name, market in markets.items():
+            _, next_state_time = market.calculate_next_state_time()
+            next_state_times.append(next_state_time)
+        self.next_requested_time = min(next_state_times)
         print("Requested time: ", self.next_requested_time)
         return self.next_requested_time
  
@@ -254,33 +245,32 @@ class OSWTSO(Federate):
         indicate which markets need to be run
         """
         self.update_power_system_and_market_state()
-
-        if self.markets["da_energy_market"].next_state_time == round(self.granted_time):
-            if self.markets["da_energy_market"].state == "idle":
-                self.generate_wind_forecasts() # TODO Publish these for T2 (OSW_Plant) federate to subscribe to
-            da_results = self.run_da_uc_market()
-            
-            #reserve_results = self.run_reserve_market()
-            #self.data_to_federation["publication"]["da_clearing_result"] = da_results["prices"]["osw_node"]
-            if self.markets["da_energy_market"].state == "clearing":
-                print("da_results:", da_results.data["system"])
-                area_keys = ['CALIFORN', 'MEXICO', 'NORTH', 'SOUTH']
-                price_keys = ['regulation_up_price', 'regulation_down_price', 'flexible_ramp_up_price', 'flexible_ramp_down_price']
-                price_dict = {}
-                for bus, b_dict in da_results.elements(element_type="bus"):
-                    b_dict["lmp"]
-                for area, area_dict in da_results.elements(element_type="area"):
-                    for key in price_keys:
-                        price_dict[area+' '+key] = da_results.data["elements"]["area"][area][key]
-                print("price results:", price_dict)
-            else:
-                print("da_next_time:", da_results)
-            #self.data_to_federation["publication"]["reserve_clearing_result"] = da_results["reserves_prices"]["osw_area"]
-        if self.markets["rt_energy_market"].next_state_time == round(self.granted_time):
-            rt_results = self.run_rt_ed_market()
-            #self.data_to_federation["publication"]["rt_clearing_result"] = rt_results["prices"]["osw_node"]
-        else:
-            print(self.markets["rt_energy_market"].next_state_time, type(self.markets["rt_energy_market"].next_state_time), self.granted_time, type(self.granted_time))
+        if "da_energy_market" in self.markets.keys():
+            if self.markets["da_energy_market"].next_state_time == round(self.granted_time):
+                if self.markets["da_energy_market"].state == "idle":
+                    self.generate_wind_forecasts() # TODO Publish these for T2 (OSW_Plant) federate to subscribe to
+                da_results = self.run_da_uc_market()
+                
+                #reserve_results = self.run_reserve_market()
+                #self.data_to_federation["publication"]["da_clearing_result"] = da_results["prices"]["osw_node"]
+                if self.markets["da_energy_market"].state == "clearing":
+                    print("da_results:", da_results.data["system"])
+                    area_keys = ['CALIFORN', 'MEXICO', 'NORTH', 'SOUTH']
+                    price_keys = ['regulation_up_price', 'regulation_down_price', 'flexible_ramp_up_price', 'flexible_ramp_down_price']
+                    price_dict = {}
+                    for bus, b_dict in da_results.elements(element_type="bus"):
+                        b_dict["lmp"]
+                    for area, area_dict in da_results.elements(element_type="area"):
+                        for key in price_keys:
+                            price_dict[area+' '+key] = da_results.data["elements"]["area"][area][key]
+                    print("price results:", price_dict)
+                else:
+                    print("da_next_time:", da_results)
+                #self.data_to_federation["publication"]["reserve_clearing_result"] = da_results["reserves_prices"]["osw_area"]
+        if "rt_energy_market" in self.markets.keys():
+            if self.markets["rt_energy_market"].next_state_time == round(self.granted_time):
+                rt_results = self.run_rt_ed_market()
+                #self.data_to_federation["publication"]["rt_clearing_result"] = rt_results["prices"]["osw_node"]
 
     def run_market_loop(self, market, file_name):
         """ 
@@ -300,6 +290,7 @@ class OSWTSO(Federate):
             # with open(filename, "w") as file:
             #     file.write(self.markets[market].em.mdl_sol)
             print("Saved file as " + filename)
+
 
 def run_osw_tso(start: str="2032-01-01 00:00:00", end: str="2032-1-03 00:00:00"):        #h5filepath: str, 
 # if __name__ == "__main__":
@@ -357,9 +348,11 @@ def run_osw_tso(start: str="2032-01-01 00:00:00", end: str="2032-1-03 00:00:00")
             "initial_state": "idle",
             "market_interval": 86400
         }
-    market_timing = {"da": da_market_timing, 
-                      #"reserves": da_market_timing,
-                      "rt": rt_market_timing}
+    market_timing = {
+            "da": da_market_timing, 
+            #"reserves": da_market_timing,
+            "rt": rt_market_timing
+        }
     
     # I don't think we will ever use the "last_market_time" values 
     # but they will give us confidence that we're doing things correctly.
