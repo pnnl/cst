@@ -61,6 +61,22 @@ class OSWPLANT(Federate):
 
         # Set simulation start time
         self.sim_start_time = pd.Timestamp(datetime.datetime(2018, 1, 1, 0, 0, 0))
+
+
+        #State variables
+        # self.windspeed: float = None
+        # self.OSW_power_output: float = None
+        # self.energystorage_SOC: float = None
+        # self.energystorage_power_output: float = None
+        self.RTM_mostrecent_cleared_quantity: float = None
+        self.RTM_mostrecent_cleared_price: float = None
+        self.RTM_mostrecent_cleared_period: float = 0   #timestamp
+        self.DAM_mostrecent_cleared_quantity: float = None
+        self.DAM_mostrecent_cleared_price: float = None
+        self.reserve_mostrecent_cleared_quantity: float = None
+        self.reserve_mostrecent_cleared_price: float = None
+        # self.wind_forecast: float = None
+        self.DAM_mostrecent_cleared_period: float = None  #both energy and reserves, timestamp
     
     def generate_wind_forecasts(self) -> list:
         """
@@ -141,7 +157,11 @@ class OSWPLANT(Federate):
             self.rt_bid = WF.create_real_time_energy_bid(self.OneWindFarm, Time, self.wind_speed_current_period)
             print(Time, "RT Bid: ", self.rt_bid, "WindSpeed: ", self.wind_speed_current_period )
 
-        elif np.mod(Time.minute, 20) == 0:
+            # store last RTM cleared HELICS time (float)
+            self.RTM_mostrecent_cleared_period = self.granted_time
+
+        # # dispatch 5 mins after RT bidding
+        if (self.RTM_mostrecent_cleared_period > 0) & (self.granted_time == (self.RTM_mostrecent_cleared_period + 5*60)):
             WF.create_dispatch(self.OneWindFarm, Time, [0,self.rt_bid], self.wind_speed_current_period)
             # print("Dispatch: ", self.wind_speed_current_period )
             print(Time, ' Dispatched')
