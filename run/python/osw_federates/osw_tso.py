@@ -28,7 +28,7 @@ from osw_rt_market import OSWRTMarket
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler())
-logger.setLevel(logging.ERROR)
+logger.setLevel(logging.INFO)
 
 class OSWTSO(Federate):
     """
@@ -79,15 +79,16 @@ class OSWTSO(Federate):
         # but they will give us confidence that we're doing things correctly.
 
         # Set up the timeseries database
-        # self.dl = DataLogger()
-        # self.dl.open_database_connections()
-        # self.dl.check_version()
-        # if self.dl.table_exist(self.scenario['osw_test_schema01'], "htd_double"):
-        #     self.dl.create_schema(self.scenario['osw_test_schema01'])
-        #     self.dl.make_logger_database(self.scenario['osw_test_schema01']) 
+        self.dl = DataLogger()
+        self.dl.open_database_connections()
+        self.dl.check_version()
+        # if self.dl.table_exist(self.scenario['osw_test_schema'], "htd_double"):
+        #     self.dl.create_schema(self.scenario['osw_test_schema'])
+        #     self.dl.make_logger_database(self.scenario['osw_test_schema']) 
 
         self.market_timing = market_timing
         self.markets = self.calculate_initial_market_times(self.markets)
+        # print("tso init:", self.markets["rt_energy_market"].em.configuration["time"]["min_freq"])
 
     def calculate_initial_market_times(self, markets):
         """
@@ -99,7 +100,7 @@ class OSWTSO(Federate):
             last_state_time, next_state_time = self.markets[market_name].calculate_next_state_time()
             markets[market_name].last_state_time = last_state_time
             markets[market_name].next_state_time = next_state_time
-            print(market_name, last_state_time, next_state_time)
+            # print(market_name, last_state_time, next_state_time)
         return markets
 
     def enter_initialization(self):
@@ -258,8 +259,12 @@ class OSWTSO(Federate):
                     area_keys = ['CALIFORN', 'MEXICO', 'NORTH', 'SOUTH']
                     price_keys = ['regulation_up_price', 'regulation_down_price', 'flexible_ramp_up_price', 'flexible_ramp_down_price']
                     price_dict = {}
+                    count = 0
                     for bus, b_dict in da_results.elements(element_type="bus"):
-                        b_dict["lmp"]
+                        test = json.dumps(b_dict["lmp"])
+                        print(f"{self.federate_name}/da_price{count}")
+                        self.data_to_federation["publications"][f"{self.federate_name}/da_price{count}"] = test
+                        count += 1
                     for area, area_dict in da_results.elements(element_type="area"):
                         for key in price_keys:
                             price_dict[area+' '+key] = da_results.data["elements"]["area"][area][key]
@@ -268,6 +273,7 @@ class OSWTSO(Federate):
                     print("da_next_time:", da_results)
                 #self.data_to_federation["publication"]["reserve_clearing_result"] = da_results["reserves_prices"]["osw_area"]
         if "rt_energy_market" in self.markets.keys():
+            print("tso:", self.markets["rt_energy_market"].em.configuration["time"]["min_freq"])
             if self.markets["rt_energy_market"].next_state_time == round(self.granted_time):
                 rt_results = self.run_rt_ed_market()
                 #self.data_to_federation["publication"]["rt_clearing_result"] = rt_results["prices"]["osw_node"]
@@ -349,15 +355,15 @@ def run_osw_tso(start: str="2032-01-01 00:00:00", end: str="2032-1-03 00:00:00")
             "market_interval": 86400
         }
     market_timing = {
-            "da": da_market_timing, 
+            "da": da_market_timing#, 
             #"reserves": da_market_timing,
-            "rt": rt_market_timing
+            # "rt": rt_market_timing
         }
     
     # I don't think we will ever use the "last_market_time" values 
     # but they will give us confidence that we're doing things correctly.
     
-    h5filepath = "C:\\Users\\kell175\\pyenergymarket\\data_model_tests\\data_files\\WECC240_20240807.h5"
+    h5filepath = '/Users/lill771/Documents/Data/GridView/WECC240_20240807.h5'
     default_dam = {
         "time": {
             "datefrom": start
@@ -382,7 +388,7 @@ def run_osw_tso(start: str="2032-01-01 00:00:00", end: str="2032-1-03 00:00:00")
         }
     }
     loglevel = "INFO"
-    solver = "cbc" # "gurobi" or "cbc"
+    solver = "gurobi" # "gurobi" or "cbc"
     gv = pyen.GVParse(h5filepath, default=default_dam, logger_options={"level": loglevel})
 
     default_rtm = {
@@ -456,12 +462,12 @@ def run_osw_tso(start: str="2032-01-01 00:00:00", end: str="2032-1-03 00:00:00")
             }
         }
     }
-    em_rtm = pyen.EnergyMarket(gv, pyenconfig_rtm)
+    em_rtm = pyen.EnergyMarket(gv_rt, pyenconfig_rtm)
 
     markets["da_energy_market"] = OSWDAMarket(start, end, "da_energy_market", market_timing["da"], market=em_dam)
     # Note that for now the reserves markets are operated when we run the day ahead energy market model, but I left the comment to remind us this may change.
     # markets["reserves_market"] = OSWReservesMarket("reserves_market", market_timing["reserves"])
-    markets["rt_energy_market"] = OSWRTMarket(start, end, "rt_energy_market", market_timing["rt"], min_freq=15, market=em_rtm)
+    # markets["rt_energy_market"] = OSWRTMarket(start, end, "rt_energy_market", market_timing["rt"], min_freq=15, market=em_rtm)
     return market_timing, markets, solver
     # osw = OSWTSO("WECC_market", market_timing, markets, solver=solver)
     # market = "da_energy_market"
@@ -472,6 +478,7 @@ def run_osw_tso(start: str="2032-01-01 00:00:00", end: str="2032-1-03 00:00:00")
 if __name__ == "__main__":    
     if sys.argv.__len__() > 2:
         market_timing, markets, solver = run_osw_tso() #(sys.argv[3]) #, sys.argv[4], sys.argv[5])
+        # print("tso main:", markets["rt_energy_market"].em.configuration["time"]["min_freq"])
         wecc_market_fed = OSWTSO(sys.argv[1], market_timing, markets, solver=solver)
         wecc_market_fed.create_federate(sys.argv[2])
         wecc_market_fed.run_cosim_loop()
