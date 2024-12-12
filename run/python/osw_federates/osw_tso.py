@@ -16,6 +16,7 @@ import logging
 import os
 import sys
 import pandas as pd
+import copy
 
 # internal packages
 import pyenergymarket as pyen
@@ -109,22 +110,9 @@ class OSWTSO(Federate):
         Prior to entering the HELICS initialization mode, we need to read
         in the model and do some initialization on everything
         """
-
-        self.read_power_system_model()
         self.initialze_power_and_market_model()
 
         self.hfed.enter_initializing_mode() # HELICS API call
-
-    def read_power_system_model(self):
-        """
-        Reads in the power system model into the native EGRET format.
-
-        This should probably return something, even if its self.something
-        """
-        ## Create an Egret "ModelData" object, which is just a lightweight
-        ## wrapper around a python dictionary, from an Egret json test instance
-        pass # right now this is done outside the class.
-        
 
     def initialze_power_and_market_model(self):
         """
@@ -134,8 +122,7 @@ class OSWTSO(Federate):
         """
         # Should get an initial run of the DAM with a longer window and
         # throw away the first couple days
-        pass
-
+        self.markets["da_energy_market"].clear_market()
 
     def calculate_next_requested_time(self):
         """
@@ -153,8 +140,6 @@ class OSWTSO(Federate):
         self.next_requested_time = min(next_state_times)
         print("Requested time: ", self.next_requested_time)
         return self.next_requested_time
- 
-
 
     def update_power_system_and_market_state(self):
         """
@@ -163,7 +148,6 @@ class OSWTSO(Federate):
         "self.data_from_federation"
         """
         pass
-        
 
     def generate_wind_forecasts(self) -> list:
         """
@@ -189,7 +173,6 @@ class OSWTSO(Federate):
         else:
             return current_state_time
         
-
     def run_reserve_market(self):
         """
         NOTE: Currently this is being run in the day ahead market.
@@ -204,7 +187,6 @@ class OSWTSO(Federate):
         self.markets["reserve_market"].update_market()
         return self.markets["reserve_market"].market_results
        
-
     def run_rt_ed_market(self):
         """
         Using EGRET, clears the RT energy market in the form of an
@@ -292,7 +274,7 @@ class OSWTSO(Federate):
             print("Saved file as " + filename)
 
 
-def run_osw_tso(start: str="2032-01-01 00:00:00", end: str="2032-1-03 00:00:00"):        #h5filepath: str, 
+def run_osw_tso(h5filepath: str, start: str="2032-01-01 00:00:00", end: str="2032-1-03 00:00:00"):        #h5filepath: str, 
 # if __name__ == "__main__":
     # TODO: we might need to make this an actual object rather than a dict.
     # Even now, I see it starting to get messy.
@@ -305,7 +287,6 @@ def run_osw_tso(start: str="2032-01-01 00:00:00", end: str="2032-1-03 00:00:00")
     # 15-minute market with bidding beginning five minutes before the end of 
     # the market interval and ending when clearing begins two minutes before 
     # the end of the interval.
-
 
     rt_market_timing = {
             "states": {
@@ -351,13 +332,13 @@ def run_osw_tso(start: str="2032-01-01 00:00:00", end: str="2032-1-03 00:00:00")
     market_timing = {
             "da": da_market_timing, 
             #"reserves": da_market_timing,
-            "rt": rt_market_timing
+            # "rt": rt_market_timing
         }
     
     # I don't think we will ever use the "last_market_time" values 
     # but they will give us confidence that we're doing things correctly.
     
-    h5filepath = "C:\\Users\\kell175\\pyenergymarket\\data_model_tests\\data_files\\WECC240_20240807.h5"
+    #h5filepath = "C:\\Users\\kell175\\pyenergymarket\\data_model_tests\\data_files\\WECC240_20240807.h5"
     default_dam = {
         "time": {
             "datefrom": start
@@ -433,7 +414,7 @@ def run_osw_tso(start: str="2032-01-01 00:00:00", end: str="2032-1-03 00:00:00")
     }
 
     em_dam = pyen.EnergyMarket(gv, pyenconfig_dam)
-
+    #em_dam.configuration = copy.deepcopy(em_dam.configuration)
     pyenconfig_rtm = {
         "time": {
             "datefrom": start, 
@@ -456,12 +437,11 @@ def run_osw_tso(start: str="2032-01-01 00:00:00", end: str="2032-1-03 00:00:00")
             }
         }
     }
-    em_rtm = pyen.EnergyMarket(gv, pyenconfig_rtm)
-
+    em_rtm = pyen.EnergyMarket(gv_rt, pyenconfig_rtm)
     markets["da_energy_market"] = OSWDAMarket(start, end, "da_energy_market", market_timing["da"], market=em_dam)
     # Note that for now the reserves markets are operated when we run the day ahead energy market model, but I left the comment to remind us this may change.
     # markets["reserves_market"] = OSWReservesMarket("reserves_market", market_timing["reserves"])
-    markets["rt_energy_market"] = OSWRTMarket(start, end, "rt_energy_market", market_timing["rt"], min_freq=15, market=em_rtm)
+    # markets["rt_energy_market"] = OSWRTMarket("rt_energy_market", market_timing["rt"], start, end, market=em_rtm, min_freq=15)
     return market_timing, markets, solver
     # osw = OSWTSO("WECC_market", market_timing, markets, solver=solver)
     # market = "da_energy_market"
@@ -471,7 +451,7 @@ def run_osw_tso(start: str="2032-01-01 00:00:00", end: str="2032-1-03 00:00:00")
 
 if __name__ == "__main__":    
     if sys.argv.__len__() > 2:
-        market_timing, markets, solver = run_osw_tso() #(sys.argv[3]) #, sys.argv[4], sys.argv[5])
+        market_timing, markets, solver = run_osw_tso(sys.argv[3], sys.argv[4], sys.argv[5])
         wecc_market_fed = OSWTSO(sys.argv[1], market_timing, markets, solver=solver)
         wecc_market_fed.create_federate(sys.argv[2])
         wecc_market_fed.run_cosim_loop()
