@@ -67,6 +67,7 @@ class OSWMarket():
         self.market_name = market_name
         self.current_state = market_timing["initial_state"]
         self.start_times = self.interpolate_market_start_times(start_date, end_date)
+        print("osw_market", self.market_name, "start_times: ", self.start_times)
         self.timestep = 0
         self.current_start_time = self.start_times[self.timestep]
         self.last_state = None
@@ -119,8 +120,9 @@ class OSWMarket():
         self.em.solve_model()
         print(self.market_name, "self.em.mdl_sol:", self.em.mdl_sol)
         self.market_results = self.em.mdl_sol
-        self.current_start_time = self.start_times[self.timestep]
         self.timestep += 1
+        self.current_start_time = self.start_times[self.timestep]
+        print("OSW ", self.market_name, "next start time: ", self.current_start_time)
 
     def validate_market_timing(self, market_timing) -> None:
         """
