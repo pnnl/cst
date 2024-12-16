@@ -8,8 +8,9 @@ software interfaces for a controller for the ECOMP Offshore Wind (OSW) Usecase
 shat.pratoomratana@pnnl.gov
 """
 
+import sys
 from cosim_toolbox.federate import Federate
-
+import json
 
 class DummyControllerFederate(Federate):
     
@@ -66,7 +67,7 @@ class DummyControllerFederate(Federate):
         Pmin = 0
         Pmax = 0
         
-        bid = self.populate_bid(self, c0, c1, c2, Pmin, Pmax)
+        bid = self.populate_bid(c0, c1, c2, Pmin, Pmax)
         
         return bid
 
@@ -220,9 +221,9 @@ class DummyControllerFederate(Federate):
         #   15 minutes. We can discuss more when you get a chance to look 
         #   at this again.
         #get market clearing info from the market federate via HELICS
-        DAM_clearing_info = self.data_from_federation["inputs"][DAM_sub_key]
-        freq_clearing_info = self.data_from_federation["inputs"][freq_sub_key]
-        realtime_clearing_info = self.data_from_federation["inputs"][realtime_sub_key]
+        DAM_clearing_info = json.loads(self.data_from_federation["inputs"][DAM_sub_key])
+        freq_clearing_info = json.loads(self.data_from_federation["inputs"][freq_sub_key])
+        realtime_clearing_info = json.loads(self.data_from_federation["inputs"][realtime_sub_key])
         wind_forecast = self.get_wind_forecast(self.granted_time, 24)
         DAM_bid = self.create_day_ahead_energy_bid(self.granted_time, wind_forecast, market_info)
         frequency_bid = self.create_frequency_bid(self.granted_time, wind_forecast, market_info)
@@ -234,15 +235,12 @@ class DummyControllerFederate(Federate):
         # TDH: See above comment on when the bids need to be created. Similarly,
         #   the results only need to be published on a simliar schedule.
         #use market clearing information to create bids then send them out via HELICS
-        self.data_to_federation["publication"][DAM_pub_key] = DAM_bid
-        self.data_to_federation["publication"][freq_pub_key] = frequency_bid
-        self.data_to_federation["publication"][realtime_pub_key] = RTM_bid
+        self.data_to_federation["publications"][DAM_pub_key] = json.dumps(DAM_bid)
+        self.data_to_federation["publications"][freq_pub_key] = json.dumps(frequency_bid)
+        self.data_to_federation["publications"][realtime_pub_key] = json.dumps(RTM_bid)
 
-    
-    
-        
+
 if __name__ == "__main__":
-    test_fed = DummyControllerFederate("Controller")    
-    test_fed.create_federate("dummy_controller_federate")
-    test_fed.run_cosim_loop()
-    test_fed.destroy_federate()    
+    if sys.argv.__len__() > 2:
+        test_fed = DummyControllerFederate(sys.argv[1])
+        test_fed.run(sys.argv[2])

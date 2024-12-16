@@ -1,0 +1,108 @@
+{
+  "coreInit": "--federates=1",
+  "name": "gld",
+  "coreName": "gld",
+  "log_level": "debug",
+  "coreType": "zmq",
+  "only_transmit_on_change": false,
+  "period": 1,
+  "logfile": "output/gld_output.log",
+  "publications": [
+    {
+      "key": "node_3_A",
+      "type": "complex",
+      "unit": "V",
+      "info": {
+        "object": "node_3",
+        "property": "voltage_A"
+      },
+      "global": true
+    },
+    {
+      "key": "node_5_A",
+      "type": "complex",
+      "unit": "V",
+      "info": {
+        "object": "node_5",
+        "property": "voltage_A"
+      },
+      "global": true
+    },
+    {
+      "key": "switch_2_3",
+      "type": "complex",
+      "unit": "VA",
+      "info": {
+        "object": "switch_2_3",
+        "property": "power_in"
+      },
+      "global": true
+    },
+    {
+      "key": "switch_4_5",
+      "type": "complex",
+      "unit": "VA",
+      "info": {
+        "object": "switch_4_5",
+        "property": "power_in"
+      },
+      "global": true
+    }
+  ],
+  "subscriptions": [
+    {
+      "key": "node_3_load_A",
+      "type": "complex",
+      "unit": "VA",
+      "info": {
+        "object": "node_3_load",
+        "property": "constant_power_AN"
+      }
+    },
+    {
+      "key": "node_3_load_B",
+      "type": "complex",
+      "unit": "VA",
+      "info": {
+        "object": "node_3_load",
+        "property": "constant_power_BN"
+      }
+    },
+    {
+      "key": "node_3_load_C",
+      "type": "complex",
+      "unit": "VA",
+      "info": {
+        "object": "node_3_load",
+        "property": "constant_power_CN"
+      }
+    },
+    {
+      "key": "node_5_load_A",
+      "type": "complex",
+      "unit": "VA",
+      "info": {
+        "object": "node_5_load",
+        "property": "constant_power_AN"
+      }
+    },
+    {
+      "key": "node_5_load_B",
+      "type": "complex",
+      "unit": "VA",
+      "info": {
+        "object": "node_5_load",
+        "property": "constant_power_BN"
+      }
+    },
+    {
+      "key": "node_5_load_C",
+      "type": "complex",
+      "unit": "VA",
+      "info": {
+        "object": "node_5_load",
+        "property": "constant_power_CN"
+      }
+    }
+  ]
+}

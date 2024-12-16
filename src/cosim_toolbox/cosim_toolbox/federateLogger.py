@@ -14,7 +14,7 @@ import sys
 import logging
 
 from cosim_toolbox.federate import Federate
-from cosim_toolbox.dataLogger import DataLogger
+from cosim_toolbox.dbResults import DBResults as DataLogger
 from cosim_toolbox.helicsConfig import HelicsMsg
 
 logger = logging.getLogger(__name__)

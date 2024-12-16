@@ -19,7 +19,6 @@ from unittest.mock import patch
 import unittest
 from cosim_toolbox.federate import Federate
 
-
 class MockHelicsInput:
     def __init__(self):
         self.name = "_input_testName"
@@ -59,7 +58,7 @@ class MockHelicsFederate:
         return MockHelicsInput()
 
 
-class MockMetadataDB:
+class MockDBConfigs:
     cosim_mongo_host = None
     cosim_mongo_db = None
     cu_federations = "federations"
@@ -122,13 +121,13 @@ class MockMetadataDB:
 @patch('helics.helicsCreateCombinationFederateFromConfig')
 @patch('helics.helicsCreateMessageFederateFromConfig')
 @patch('helics.helicsCreateValueFederateFromConfig')
-@patch("cosim_toolbox.federate.mDB.MetaDB")
-@patch("cosim_toolbox.metadataDB", MockMetadataDB)
-class TestCreateFederate(unittest.TestCase):
+@patch("cosim_toolbox.federate.mDB.DBConfigs")
+@patch("cosim_toolbox.dbConfigs", MockDBConfigs)
+class TestCreateFederate2(unittest.TestCase):
 
     def setUp(self):
         self.test_fed = Federate(fed_name="Battery")
-        self.mock_meta_db_instance = MockMetadataDB("fake_uri", "fake_db_name")
+        self.mock_meta_db_instance = MockDBConfigs("fake_uri", "fake_db_name")
 
     def test_create_federate(self,
                              mock_meta_db_class,

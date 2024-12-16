@@ -3,31 +3,31 @@ Created on 12/14/2023
 
 Provides underlying methods for interacting with the time-series database
 
-TODO: Should we rename this to something like "cst_ts_postgres.py" and the 
-class to "CSTTimeSeriesPostgres" as all the methods are Postgres specific? 
-I can image a more abstract class used for interacting with databases that 
+TODO: Should we rename this to something like "cst_ts_postgres.py" and the
+class to "CSTTimeSeriesPostgres" as all the methods are Postgres specific?
+I can image a more abstract class used for interacting with databases that
 codifies the terminology (_e.g._ "analysis", "scenario") and this class
 inherits from it and implements the methods in a Postgres-specific way.
 
 @authors:
 fred.rutz@pnnl.gov
 mitch.pelton@pnnl.gov
-
+nathan.gray@pnnl.gov
 """
 from os import environ
 import logging
 import pandas as pd
 import datetime as dt
 import psycopg2 as pg
-
-import cosim_toolbox.metadataDB as mDB
+from cosim_toolbox import cu_scenarios, cu_federations
+from cosim_toolbox.readConfig import ReadConfig
 
 logger = logging.getLogger(__name__)
 
 # TODO: The databases referenced in these APIs should be "metadata"
 # and "time_series" and should be updated across the codebase.
 
-# TODO: Does this HELICS stuff need to stay in here? If so, make it a 
+# TODO: Does this HELICS stuff need to stay in here? If so, make it a
 # comment (not a string) and add explanation for why it's here.
 """
     HELICS_DATA_TYPE_UNKNOWN = -1,
@@ -60,7 +60,7 @@ logger = logging.getLogger(__name__)
 """
 
 
-class DataLogger:
+class DBResults:
     """Methos for writing to and reading from the time-series database. This
     class does not provide HELICS federate functionality.
 
@@ -70,7 +70,7 @@ class DataLogger:
     hdt_type = {'HDT_STRING': 'text',
                 'HDT_DOUBLE': 'double precision',
                 'HDT_INTEGER': 'bigint',
-                'HDT_COMPLEX': 'VARCHAR (30)',
+                'HDT_COMPLEX': 'VARCHAR (255)',
                 'HDT_VECTOR': 'text',
                 'HDT_COMPLEX_VECTOR': 'text',
                 'HDT_NAMED_POINT': 'VARCHAR (255)',
@@ -79,17 +79,13 @@ class DataLogger:
                 'HDT_JSON': 'text'}
 
     def __init__(self):
-        self.federation: dict = None
-        self.federation_name: str = None
-        self.scenario: dict = None
-        self.scenario_name: str = None
-        self.meta_db: mDB.MetaDB = None
+        self.scenario = None
+        self.scenario_name = None
         self.data_db = None
 
     def _connect_logger_database(self, connection: dict = None):
-        """This method defines and then opens a connection to the datalogger 
+        """This method defines and then opens a connection to the datalogger
         database
-        
 
         Returns:
             psycopg2 connection object - connection object that provides
@@ -109,32 +105,32 @@ class DataLogger:
         except:
             return None
 
-    def _connect_scenario_database(self, connection: dict = None):
-        """This function defines and then opens a connection to the metadata
-        database
-
-        Returns:
-            metadataDB object - connection object that provides
-            access to the mongo database
-        """
-        if connection is None:
-            connection = {
-                "host": environ.get("MONGO_HOST", "mongo://localhost"),
-                "port": environ.get("MONGO_POST", 27017),
-                "dbname": environ.get("COSIM_DB", "copper"),
-                "user": environ.get("COSIM_USER", "worker"),
-                "password": environ.get("COSIM_PASSWORD", "worker")
-            }
-        logger.info(connection)
-        try:
-            uri = f"{connection['host']}:{connection['port']}"
-            return mDB.MetaDB(uri=uri, db_name=connection["dbname"])
-        except Exception:
-            logger.exception("Failed to create MetaDB instance.")
-            return None
+    # def _connect_scenario_database(self, connection: dict = None):
+    #     """This function defines and then opens a connection to the configs
+    #     database
+    #
+    #     Returns:
+    #         DBConfigs object - connection object that provides
+    #         access to the mongo database
+    #     """
+    #     if connection is None:
+    #         connection = {
+    #             "host": environ.get("MONGO_HOST", "mongo://localhost"),
+    #             "port": environ.get("MONGO_POST", 27017),
+    #             "dbname": environ.get("COSIM_DB", "copper"),
+    #             "user": environ.get("COSIM_USER", "worker"),
+    #             "password": environ.get("COSIM_PASSWORD", "worker")
+    #         }
+    #     logger.info(connection)
+    #     try:
+    #         uri = f"{connection['host']}:{connection['port']}"
+    #         return mDB.DBConfigs(uri=mDB.cosim_mg_host, db_name=mDB.cosim_mongo_db)
+    #     except Exception:
+    #         logger.exception("Failed to create DBConfigs instance.")
+    #         return None
 
     def close_database_connections(self, commit: bool = True) -> None:
-        """Closes connections to the the time-series and metadata databases
+        """Closes connections to the time-series and metadata databases
 
         Args:
             commit (bool, optional): Flag to indicate whether data should be
@@ -160,9 +156,9 @@ class DataLogger:
         Returns:
             bool: _description_
         """
-        self.meta_db = self._connect_scenario_database(meta_connection)
+        # self.meta_db = self._connect_scenario_database(meta_connection)
         self.data_db = self._connect_logger_database(data_connection)
-        if self.meta_db is None or self.data_db is None:
+        if self.data_db is None:
             return False
         else:
             return True
@@ -171,8 +167,8 @@ class DataLogger:
         """Checks the version of the time-series database
 
             TODO: This method name should make it clear it is
-            just checking the time-series database version and 
-            not the metadata DB version. Maybe rename to 
+            just checking the time-series database version and
+            not the metadata DB version. Maybe rename to
             "check_tsdb_version"?
         """
         with self.data_db.cursor() as cur:
@@ -184,9 +180,9 @@ class DataLogger:
     def create_schema(self, scheme_name: str) -> None:
         """Creates a new scheme in the time-series database
 
-        TODO: "schema" should not be in the method name. In CSTs when using 
+        TODO: "schema" should not be in the method name. In CSTs when using
         the Postgres database "schemes" are called "analysis". This
-        name needs to be updated. This also applies to other methods in 
+        name needs to be updated. This also applies to other methods in
         this class.
 
         Args:
@@ -245,7 +241,7 @@ class DataLogger:
             analysis_name (str): Name of analysis under which various
             scenarios will be collected
         """
-        
+
         query = ""
         for key in self.hdt_type:
             query += ("CREATE TABLE IF NOT EXISTS "
@@ -276,7 +272,7 @@ class DataLogger:
             dict: scenario metadata requested
         """
         if self.scenario_name != scenario_name:
-            self.scenario = self.meta_db.get_dict(mDB.cu_scenarios, None, scenario_name)
+            self.scenario = self.meta_db.get_dict(cu_scenarios, None, scenario_name)
         return self.scenario
 
     def get_federation_document(self, federation_name: str) -> dict:
@@ -292,7 +288,7 @@ class DataLogger:
             dict: Requested metadata for federation
         """
         if self.federation_name != federation_name:
-            self.federation = self.meta_db.get_dict(mDB.cu_federations, None, federation_name)
+            self.federation = self.meta_db.get_dict(cu_federations, None, federation_name)
         return self.federation
 
     def get_select_string(self, scheme_name: str, data_type: str) -> str:
@@ -339,11 +335,17 @@ class DataLogger:
             end_time = start_time + duration
         return "sim_time>=" + str(start_time) + " AND sim_time<=" + str(end_time)
 
-    def get_query_string(self, start_time: int, 
-                         duration: int, 
-                         scenario_name: str, 
-                         federate_name: str, 
-                         sim_name: str, 
+    def get_scenario(self, scenario_name: str) -> ReadConfig:
+        if self.scenario is None or self.scenario_name != scenario_name:
+            self.scenario = ReadConfig(scenario_name)
+            self.scenario_name = self.scenario.name
+        return self.scenario
+
+    def get_query_string(self, start_time: int,
+                         duration: int,
+                         scenario_name: str,
+                         federate_name: str,
+                         sim_name: str,
                          data_type: str) -> str:
         """This method creates the query string to pull time series data from the
         logger database, and depends upon the keys identified by the user input arguments.
@@ -351,12 +353,12 @@ class DataLogger:
         Args:
             start_time (integer) - the starting time step to query data for
             duration (integer) - the duration in seconds to filter time data by
-            If start_time and duration are entered as None then the query will return every 
-            time step that is available for the entered scenario, federate, pub_key, 
+            If start_time and duration are entered as None then the query will return every
+            time step that is available for the entered scenario, federate, pub_key,
             data_type combination.
             If start_time is None and a duration has been entered then all time steps that are
             less than the duration value will be returned
-            If a start_time is entered and duration is None, the query will return all time steps 
+            If a start_time is entered and duration is None, the query will return all time steps
             greater than the starting time step
             If a value is entered for the start_time and the duration, the query will return all time steps
             that fall into the range of start_time to start_time + duration
@@ -375,8 +377,8 @@ class DataLogger:
             qry_string (string) - string representing the query to be used in pulling time series
             data from logger database
         """
-        scheme = self.get_scenario_document(scenario_name)
-        scheme_name = scheme["schema"]
+        self.scenario = self.get_scenario(scenario_name)
+        scheme_name = self.scenario.schema_name
         qry_string = self.get_select_string(scheme_name, data_type)
         time_string = self.get_time_select_string(start_time, duration)
         scenario_string = f"scenario='{scenario_name}'" if scenario_name is not None and scenario_name != "" else ""
@@ -405,10 +407,10 @@ class DataLogger:
         return qry_string
 
     def query_scenario_federate_times(self, start_time: int,
-                                      duration: int, 
+                                      duration: int,
                                       scenario_name: str,
                                       federate_name: str,
-                                      sim_name: str, 
+                                      sim_name: str,
                                       data_type: str) -> pd.DataFrame:
         """This method queries time series data from the logger database and
         depends upon the keys identified by the user input arguments.
@@ -416,12 +418,12 @@ class DataLogger:
         Args:
             start_time (integer) - the starting time step to query data for
             duration (integer) - the duration in seconds to filter time data by
-            If start_time and duration are entered as None then the query will return every 
-            time step that is available for the entered scenario, federate, pub_key, 
+            If start_time and duration are entered as None then the query will return every
+            time step that is available for the entered scenario, federate, pub_key,
             data_type combination.
             If start_time is None and a duration has been entered then all time steps that are
             less than the duration value will be returned
-            If a start_time is entered and duration is None, the query will return all time steps 
+            If a start_time is entered and duration is None, the query will return all time steps
             greater than the starting time step
             If a value is entered for the start_time and the duration, the query will return all time steps
             that fall into the range of start_time to start_time + duration
@@ -463,9 +465,11 @@ class DataLogger:
             return None
         if type(data_type) is not str:
             return None
-        scheme = self.get_scenario_document(scenario_name)
-        scheme_name = scheme["schema"]
-        qry_string = f"SELECT * FROM {scheme_name}.{data_type} WHERE scenario='{scenario_name}'"
+        self.scenario = self.get_scenario(scenario_name)
+        # scheme = self.get_scenario_document(scenario_name)
+        # scheme_name = scheme["schema"]
+        
+        qry_string = f"SELECT * FROM {self.scenario.schema_name}.{data_type} WHERE scenario='{scenario_name}';"
         with self.data_db.cursor() as cur:
             cur.execute(qry_string)
             column_names = [desc[0] for desc in cur.description]
@@ -498,7 +502,7 @@ class DataLogger:
         if type(data_type) is not str:
             return None
         # Todo: check against meta_db to see if schema name exist?
-        qry_string = f"SELECT * FROM {scheme_name}.{data_type} WHERE federate='{federate_name}'";
+        qry_string = f"SELECT * FROM {scheme_name}.{data_type} WHERE federate='{federate_name}'"
         with self.data_db.cursor() as cur:
             cur.execute(qry_string)
             column_names = [desc[0] for desc in cur.description]
@@ -516,7 +520,7 @@ class DataLogger:
 
         Args:
             scheme_name (string) - the name of the schema to filter the query results by
-            data_type (string) - the id of the database table that will be queried. 
+            data_type (string) - the id of the database table that will be queried.
 
         Returns:
             dataframe (pandas dataframe object) - dataframe that contains the result records
@@ -542,7 +546,7 @@ class DataLogger:
 
         Args:
             scheme_name (string) - the name of the schema to filter the query results by
-            data_type (string) - the id of the database table that will be queried. 
+            data_type (string) - the id of the database table that will be queried.
 
         Returns:
             dataframe (pandas dataframe object) - dataframe that contains the result records
@@ -650,7 +654,7 @@ class DataLogger:
 
 if __name__ == "__main__":
     d_time = dt.datetime.now()
-    logger_data = DataLogger()
+    logger_data = DBResults()
     logger_data.open_database_connections()
     t_mongo_data = logger_data.meta_db
     print(t_mongo_data)

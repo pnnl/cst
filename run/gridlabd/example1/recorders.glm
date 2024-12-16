@@ -1,0 +1,140 @@
+
+//==Group Recorders
+//--Nodes [Volt Mag]
+object group_recorder {
+	flags DELTAMODE;
+
+	name "gpr_nodes_volts_A_mag";
+	group "class=node";
+	property voltage_A;
+	complex_part MAG;
+	file "output/nodes_volts_A_mag.csv";
+	interval 1;
+	limit 10000000;
+}
+
+object group_recorder {
+	flags DELTAMODE;
+	name "grp_nodes_volts_B_mag";
+	group "class=node";
+	property voltage_B;
+	complex_part MAG;
+	file "output/nodes_volts_B_mag.csv";
+	interval 1;
+	limit 10000000;
+}
+
+object group_recorder {
+	flags DELTAMODE;
+	name "gpr_nodes_volts_C_mag";
+	group "class=node";
+	property voltage_C;
+	complex_part MAG;
+	file "output/nodes_volts_C_mag.csv";
+	interval 1;
+	limit 10000000;
+}
+
+//--Nodes [Volt Angle]
+object group_recorder {
+	flags DELTAMODE;
+	name "gpr_nodes_volts_A_angle";
+	group "class=node";
+	property voltage_A;
+	complex_part ANG_DEG;
+	file "output/nodes_volts_A_angle.csv";
+	interval 1;
+	limit 10000000;
+}
+
+object group_recorder {
+	flags DELTAMODE;
+	name "gpr_nodes_volts_B_angle";
+	group "class=node";
+	property voltage_B;
+	complex_part ANG_DEG;
+	file "output/nodes_volts_B_angle.csv";
+	interval 1;
+	limit 10000000;
+}
+
+object group_recorder {
+	flags DELTAMODE;
+	name "gpr_nodes_volts_C_angle";
+	group "class=node";
+	property voltage_C;
+	complex_part ANG_DEG;
+	file "output/nodes_volts_C_angle.csv";
+	interval 1;
+	limit 10000000;
+}
+
+//--Loads [Volt Mag]
+object group_recorder {
+	flags DELTAMODE;
+	name "gpr_loads_volts_A_mag";
+	group "class=load";
+	property voltage_A;
+	complex_part MAG;
+	file "output/loads_volts_A_mag.csv";
+	interval 1;
+	limit 10000000;
+}
+
+object group_recorder {
+	flags DELTAMODE;
+	name "gpr_loads_volts_B_mag";
+	group "class=load";
+	property voltage_B;
+	complex_part MAG;
+	file "output/loads_volts_B_mag.csv";
+	interval 1;
+	limit 10000000;
+}
+
+object group_recorder {
+	flags DELTAMODE;
+	name "gpr_loads_volts_C_mag";
+	group "class=load";
+	property voltage_C;
+	complex_part MAG;
+	file "output/loads_volts_C_mag.csv";
+	interval 1;
+	limit 10000000;
+}
+
+//--Switches [status]
+object group_recorder {
+	flags DELTAMODE;
+
+	name "gpr_SWT_status";
+	group "class=switch";
+	property status;
+	file "output/gpr_SWT_status.csv";
+	interval 1;
+	limit 10000000;
+}
+
+object group_recorder {
+	flags DELTAMODE;
+
+	name "gpr_SWT_Pout";
+	group "class=switch";
+	property power_out;
+	complex_part REAL;
+	file "output/gpr_SWT_Pout.csv";
+	interval 1;
+	limit 10000000;
+}
+
+object group_recorder {
+	flags DELTAMODE;
+
+	name "gpr_SWT_Qout";
+	group "class=switch";
+	property power_out;
+	complex_part IMAG;
+	file "output/gpr_SWT_Qout.csv";
+	interval 1;
+	limit 10000000;
+}
