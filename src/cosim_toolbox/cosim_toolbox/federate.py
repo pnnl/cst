@@ -13,7 +13,8 @@ import logging
 
 import helics as h
 
-import cosim_toolbox.metadataDB as mDB
+import cosim_toolbox.dbConfigs as mDB
+from cosim_toolbox import cosim_mongo_host, cosim_mongo_db, cu_scenarios, cu_federations
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler())
@@ -69,7 +70,7 @@ class Federate:
 
     def __init__(self, fed_name="", **kwargs):
         self.hfed: h.HelicsFederate = None
-        self.mddb: mDB.MetaDB = None
+        self.mddb: mDB.DBConfigs = None
         self.config: dict = None
         self.scenario: dict = None
         self.scenario_name: str = None
@@ -97,9 +98,9 @@ class Federate:
         self.__dict__.update(kwargs)
 
     def connect_to_metadataDB(self, uri: str, db_name: str) -> None:
-        """Connects to the Copper metadataDB
+        """Connects to the Copper dbConfigs
 
-        The metadata database (metadataDB) contains the HELICS configuration
+        The metadata database (dbConfigs) contains the HELICS configuration
         JSON along with other pieces of useful configuration or federation
         management data. This method connects to that database and makes it
         available for other methods in this class.
@@ -108,13 +109,13 @@ class Federate:
             uri (str): URI for Mongo database
             db_name (str): Name for Mongo database
         """
-        self.mddb = mDB.MetaDB(uri, db_name)
-        self.scenario = self.mddb.get_dict(mDB.cu_scenarios, None, self.scenario_name)
+        self.mddb = mDB.DBConfigs(uri, db_name)
+        self.scenario = self.mddb.get_dict(cu_scenarios, None, self.scenario_name)
         self.federation_name = self.scenario["federation"]
         self.start = self.scenario["start_time"]
         self.stop = self.scenario["stop_time"]
 
-        self.federation = self.mddb.get_dict(mDB.cu_federations, None, self.federation_name)
+        self.federation = self.mddb.get_dict(cu_federations, None, self.federation_name)
         self.federation = self.federation["federation"]
 
         # setting max in seconds
@@ -127,9 +128,9 @@ class Federate:
         self.stop_time = int((e_idx - s_idx))
 
     def connect_to_helics_config(self) -> None:
-        """Sets instance attributes to enable HELICS config query of metadataDB
+        """Sets instance attributes to enable HELICS config query of dbConfigs
 
-        HELICS configuration information is generally stored in the metadataDB
+        HELICS configuration information is generally stored in the dbConfigs
         and is copied into the `self.federation` attribute. This method pulls
         out a few keys configuration parameters from that attribute to make
         them more easily accessible.
@@ -153,7 +154,7 @@ class Federate:
 
         Args:
             scenario_name (str): Name of scenario used to store configuration
-                information in the metadataDB
+                information in the dbConfigs
 
         Raises:
             NameError: Scenario name is undefined (`None`)
@@ -161,18 +162,20 @@ class Federate:
         if scenario_name is None:
             raise NameError("scenario_name is None")
         self.scenario_name = scenario_name
-        self.connect_to_metadataDB(mDB.cosim_mongo_host, mDB.cosim_mongo_db)
+        self.connect_to_metadataDB(cosim_mongo_host, cosim_mongo_db)
         self.connect_to_helics_config()
 
         # Provide internal copies of the HELICS interfaces for convenience during debugging.
         if "publications" in self.config.keys():
             for pub in self.config["publications"]:
-                self.pubs[pub["key"]] = pub
-                self.data_to_federation["publications"][pub['key']] = None
+                name = pub.get("name", pub.get("key"))
+                self.pubs[name] = pub
+                self.data_to_federation["publications"][name] = None
         if "subscriptions" in self.config.keys():
             for sub in self.config["subscriptions"]:
-                self.inputs[sub["key"]] = sub
-                self.data_from_federation["inputs"][sub['key']] = None
+                target = sub.get("target", sub.get("key"))
+                self.inputs[target] = sub
+                self.data_from_federation["inputs"][target] = None
         if "inputs" in self.config.keys():
             for put in self.config["inputs"]:
                 self.inputs[put["name"]] = put
@@ -190,7 +193,7 @@ class Federate:
     def create_helics_fed(self) -> None:
         """Creates the HELICS federate object
 
-        Using the HELICS configuration document from the metadataDB, this
+        Using the HELICS configuration document from the dbConfigs, this
         method creates the HELICS federate. HELICS has distinct APIs for the
         creation of a federate based on its type and thus, the type of federate
         needs to be defined as an instance attribute to enable the correct API
@@ -209,6 +212,15 @@ class Federate:
             raise ValueError(f"Federate type \'{self.federate_type}\'"
                              f" not allowed; must be 'value', 'message', or 'combo'.")
 
+    def on_start(self):
+        pass
+
+    def on_enter_initialization_mode(self):
+        pass
+
+    def on_enter_executing_mode(self):
+        pass
+
     def run_cosim_loop(self) -> None:
         """Runs the generic HELICS co-sim loop
 
@@ -221,8 +233,11 @@ class Federate:
         if self.hfed is None:
             raise ValueError("Helics Federate object has not been created")
         self.granted_time = 0
+        self.on_start()
         self.enter_initialization()
+        self.on_enter_initialization_mode()
         self.enter_executing_mode()
+        self.on_enter_executing_mode()
         while self.granted_time < self.stop_time:
             self.simulate_next_step()
 
@@ -402,6 +417,8 @@ class Federate:
 
         # Publications
         for key, value in self.data_to_federation["publications"].items():
+            if value is None:
+                continue
             pub = self.hfed.get_publication_by_name(key)
             if value is not None:
                 pub.publish(value)
@@ -409,6 +426,8 @@ class Federate:
 
         # Endpoints
         for key, value in self.data_to_federation["endpoints"].items():
+            if value is None:
+                continue
             ep = self.hfed.get_endpoint_by_name(key)
             if value["destination"] == "":
                 ep.send_data(value["payload"])
@@ -438,9 +457,19 @@ class Federate:
         # h.helicsCloseLibrary()
         logger.debug(f'Federate {h.helicsFederateGetName(self.hfed)} finalized')
 
+    @property
+    def current_time(self):
+        if self.hfed is not None:
+            return self.hfed.current_time
+        raise RuntimeError("Federate not yet created. Cannot get current time.")
+     
+
+    def run(self, scenario_name: str) -> None:
+        self.create_federate(scenario_name)
+        self.run_cosim_loop()
+        self.destroy_federate()
+
 
 if __name__ == "__main__":
     test_fed = Federate("Battery")
-    test_fed.create_federate("TE30")
-    test_fed.run_cosim_loop()
-    test_fed.destroy_federate()
+    test_fed.run("TE30")

@@ -1,0 +1,55 @@
+{
+  "coreInit": "--federates=1",
+  "broker_address": "10.5.0.2",
+  "name": "ctr",
+  "coreName": "ctr",
+  "log_level": "debug",
+  "coreType": "zmq",
+  "period": 1,
+  "timeDelta": 1,
+  "logfile": "output/ctr_output.log",
+  "publications": [
+    {
+      "key": "node_3_load_A",
+      "type": "complex"
+    },
+    {
+      "key": "node_3_load_B",
+      "type": "complex"
+    },
+    {
+      "key": "node_3_load_C",
+      "type": "complex"
+    },
+    {
+      "key": "node_5_load_A",
+      "type": "complex"
+    },
+    {
+      "key": "node_5_load_B",
+      "type": "complex"
+    },
+    {
+      "key": "node_5_load_C",
+      "type": "complex"
+    }
+  ],
+  "subscriptions": [
+    {
+      "target": "gld/node_3_A",
+      "type": "complex"
+    },
+    {
+      "target": "gld/node_5_A",
+      "type": "complex"
+    },
+    {
+      "target": "gld/switch_2_3",
+      "type": "complex"
+    },
+    {
+      "target": "gld/switch_4_5",
+      "type": "complex"
+    }
+  ]
+}

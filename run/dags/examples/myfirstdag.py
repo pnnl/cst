@@ -8,7 +8,7 @@ from airflow.contrib.hooks.ssh_hook import SSHHook
 # To initiate the DAG Object
 from airflow import DAG
 # Import cosim toolbox
-import cosim_toolbox.metadataDB as mDB
+from cosim_toolbox.dockerRunner import DockerRunner
 
 # Add new code
 sys.path.insert(0, '/python_extended/test_federation')
@@ -26,7 +26,7 @@ def prepare_case():
 def prepare_yaml():
     _scenario_name = "test_Scenario"
     os.chdir("/python_extended/test_federation")
-    mDB.Docker.define_yaml(_scenario_name)
+    DockerRunner.define_yaml(_scenario_name)
 
 
 def run_yaml():

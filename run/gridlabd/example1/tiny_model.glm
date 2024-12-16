@@ -1,0 +1,83 @@
+//       line_1_2                line_3_4
+//  (1)------------(2)__/ __(3)------------(4)__/ __(5)
+//                           ↓                       ↓
+object node {
+	name "node_1";
+	phases ABC;
+	nominal_voltage 7199.557856794634;
+	bustype SWING;
+}
+
+object overhead_line {
+	name "line_1_2";
+	from "node_1";
+	to "node_2";
+	phases ABCN;
+	length 10;
+	configuration lc_ohl_ABCN;
+}
+
+object node {
+	name "node_2";
+	phases ABC;
+	nominal_voltage 7199.557856794634;
+}
+object switch {
+	name "switch_2_3";
+	from "node_2";
+	to "node_3";
+	phases ABC;
+	status CLOSED;
+}
+
+object node {
+	name "node_3";
+	phases ABC;
+	nominal_voltage 7199.557856794634;
+}
+object load {
+	name "node_3_load";
+	parent "node_3";
+	phases ABC;
+	nominal_voltage 7199.557856794634;
+	constant_power_AN 400000.0+20000.0j;
+	constant_power_BN 400000.0+20000.0j;
+	constant_power_CN 400000.0+20000.0j;
+}
+
+object overhead_line {
+	name "line_3_4";
+	from "node_3";
+	to "node_4";
+	phases ABCN;
+	length 10;
+	configuration lc_ohl_ABCN;
+}
+
+object node {
+	name "node_4";
+	phases ABC;
+	nominal_voltage 7199.557856794634;
+}
+object switch {
+	name "switch_4_5";
+	from "node_4";
+	to "node_5";
+	phases ABC;
+	status CLOSED;
+}
+
+object node {
+	name "node_5";
+	phases ABC;
+	nominal_voltage 7199.557856794634;
+}
+object load {
+	name "node_5_load";
+	parent "node_5";
+	phases ABC;
+	nominal_voltage 7199.557856794634;
+	constant_power_AN 250000.0+10000.0j;
+	constant_power_BN 250000.0+10000.0j;
+	constant_power_CN 250000.0+10000.0j;
+}

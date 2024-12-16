@@ -1,0 +1,23 @@
+
+
+services:
+  grafana:
+    image: grafana/grafana:10.2.4-ubuntu
+    container_name: ${CONTAINER_NAME:-grafana}
+    # container_name: grafana
+    restart: unless-stopped
+    environment:
+      - GF_LOG_LEVEL=info
+      - SIM_HOST=${SIM_HOST}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+    ports:
+      - '3000:3000'
+    networks:
+      - sim_net
+    volumes:
+      - ${STACK_DIR}/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ${STACK_DIR}/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ${STACK_DIR}/grafana/dashboards:/etc/grafana/dashboards
+
+networks:
+  sim_net: null

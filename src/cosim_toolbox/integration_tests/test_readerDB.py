@@ -6,9 +6,10 @@ import subprocess
 from os import environ
 import unittest
 
-import cosim_toolbox.dataLogger as dL
-import cosim_toolbox.metadataDB as mDB
+import cosim_toolbox.dbResults as dL
+import cosim_toolbox.dbConfigs as DBConfigs
 from cosim_toolbox.helicsConfig import HelicsMsg, Collect
+import cosim_toolbox as cst
 
 
 _data_db = {
@@ -41,7 +42,7 @@ class Singleton(object):
                             cls, *args, **kwargs)
             # PUT YOUR SETUP ONCE CODE HERE!
             uri = f"{_meta_db['host']}:{_meta_db['port']}"
-            db = mDB.MetaDB(uri, _meta_db['dbname'])
+            db = DBConfigs(uri, _meta_db['dbname'])
 
             prefix = "source /home/worker/venv/bin/activate && exec python3 "
             names = ["Battery", "EVehicle"]
@@ -112,15 +113,15 @@ class Singleton(object):
                 }
             }
 
-            db.remove_document(mDB.cu_federations, None, cls.federation_name)
-            db.add_dict(mDB.cu_federations, cls.federation_name, diction)
+            db.remove_document(cst.cu_federations, None, cls.federation_name)
+            db.add_dict(cst.cu_federations, cls.federation_name, diction)
             scenario = db.scenario(cls.schema_name,
                                    cls.federation_name,
                                    "2023-12-07T15:31:27",
                                    "2023-12-08T15:31:27",
                                    cls.docker)
-            db.remove_document(mDB.cu_scenarios, None, cls.scenario_name)
-            db.add_dict(mDB.cu_scenarios, cls.scenario_name, scenario)
+            db.remove_document(cst.cu_scenarios, None, cls.scenario_name)
+            db.add_dict(cst.cu_scenarios, cls.scenario_name, scenario)
 
             # command string for psql to load database
             cmd = ('docker exec -i $(docker container ls --all --quiet --filter "name=database") '
@@ -145,7 +146,7 @@ class TestLoggerApi(unittest.TestCase):
 
     def setUp(self):
         Singleton()
-        self.test_DL = dL.DataLogger()
+        self.test_DL = dL.ResultsDB()
         self.test_DL.open_database_connections(data_connection=_data_db, meta_connection=_meta_db)
 
     def test_00_open_databases(self):

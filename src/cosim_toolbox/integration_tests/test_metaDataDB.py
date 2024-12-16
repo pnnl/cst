@@ -3,8 +3,10 @@ import json
 import os
 import unittest
 
-from cosim_toolbox.metadataDB import MetaDB
+from cosim_toolbox.dbConfigs import DBConfigs
 
+import collections
+collections.Callable = collections.abc.Callable
 SIM_HOST = os.environ['SIM_HOST']
 
 
@@ -36,7 +38,7 @@ class TestMetadataDBApi(unittest.TestCase):
     ]
 
     def setUp(self):
-        self.metadb = MetaDB(uri=f'mongodb://{SIM_HOST}:27017')
+        self.metadb = DBConfigs(uri=f'mongodb://{SIM_HOST}:27017')
         pass
 
     def test_01__open_file(self):

@@ -1,3 +1,5 @@
+import collections
+collections.Callable = collections.abc.Callable
 import json
 import os
 import unittest

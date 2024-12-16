@@ -4,8 +4,10 @@ import time
 import unittest
 from unittest.mock import patch
 
-from cosim_toolbox.dataLogger import DataLogger
+from cosim_toolbox.dbResults import DBResults
 
+import collections
+collections.Callable = collections.abc.Callable
 logging.basicConfig(level=os.environ.get("LOG_LEVEL", "DEBUG").upper())
 logger = logging.getLogger(__name__)
 
@@ -24,7 +26,7 @@ END_TIME = START_TIME + DURATION
 class TestSimpleFederation(unittest.TestCase):
 
     def setUp(self):
-        self.logger_data = DataLogger()
+        self.logger_data = DBResults()
 
     @patch.dict("os.environ", ENVIRON)
     def test_simple_federation_result(self):
