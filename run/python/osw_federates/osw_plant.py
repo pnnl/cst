@@ -57,7 +57,7 @@ class OSWPLANT(Federate):
         self.OneWindFarm = TC.initialize_WindFarm()
         
         # load yearlong wind information
-        source = 1 ## while testing, select source of wind data
+        source = 6 ## while testing, select source of wind data
         self.fullWS = TC.get_wind_data(source)
 
         # Set simulation start time
