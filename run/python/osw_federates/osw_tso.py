@@ -16,6 +16,8 @@ import logging
 import os
 import sys
 import pandas as pd
+import copy
+import json
 
 # internal packages
 import pyenergymarket as pyen
@@ -111,20 +113,20 @@ class OSWTSO(Federate):
         in the model and do some initialization on everything
         """
 
-        self.read_power_system_model()
+        # self.read_power_system_model()
         self.initialze_power_and_market_model()
 
         self.hfed.enter_initializing_mode() # HELICS API call
 
-    def read_power_system_model(self):
-        """
-        Reads in the power system model into the native EGRET format.
+    # def read_power_system_model(self):
+    #     """
+    #     Reads in the power system model into the native EGRET format.
 
-        This should probably return something, even if its self.something
-        """
-        ## Create an Egret "ModelData" object, which is just a lightweight
-        ## wrapper around a python dictionary, from an Egret json test instance
-        pass # right now this is done outside the class.
+    #     This should probably return something, even if its self.something
+    #     """
+    #     ## Create an Egret "ModelData" object, which is just a lightweight
+    #     ## wrapper around a python dictionary, from an Egret json test instance
+    #     pass # right now this is done outside the class.
         
 
     def initialze_power_and_market_model(self):
@@ -135,7 +137,8 @@ class OSWTSO(Federate):
         """
         # Should get an initial run of the DAM with a longer window and
         # throw away the first couple days
-        pass
+        self.markets["da_energy_market"].clear_market()
+        # pass
 
 
     def calculate_next_requested_time(self):
@@ -248,6 +251,7 @@ class OSWTSO(Federate):
         self.update_power_system_and_market_state()
         if "da_energy_market" in self.markets.keys():
             if self.markets["da_energy_market"].next_state_time == round(self.granted_time):
+            # if self.markets["da_energy_market"].next_state_time == round(self.granted_time) and ((self.stop_time - self.granted_time) > 600):
                 if self.markets["da_energy_market"].state == "idle":
                     self.generate_wind_forecasts() # TODO Publish these for T2 (OSW_Plant) federate to subscribe to
                 da_results = self.run_da_uc_market()
@@ -255,15 +259,17 @@ class OSWTSO(Federate):
                 #reserve_results = self.run_reserve_market()
                 #self.data_to_federation["publication"]["da_clearing_result"] = da_results["prices"]["osw_node"]
                 if self.markets["da_energy_market"].state == "clearing":
-                    print("da_results:", da_results.data["system"])
-                    area_keys = ['CALIFORN', 'MEXICO', 'NORTH', 'SOUTH']
+                    # area_keys = ['CALIFORN', 'MEXICO', 'NORTH', 'SOUTH']
                     price_keys = ['regulation_up_price', 'regulation_down_price', 'flexible_ramp_up_price', 'flexible_ramp_down_price']
                     price_dict = {}
                     count = 0
                     for bus, b_dict in da_results.elements(element_type="bus"):
-                        test = json.dumps(b_dict["lmp"])
-                        print(f"{self.federate_name}/da_price{count}")
-                        self.data_to_federation["publications"][f"{self.federate_name}/da_price{count}"] = test
+                        new_dict = f"{b_dict['lmp']}"
+                        new_dict = new_dict.replace("'",'"')
+                        # with open('new_dict.json', 'w') as json_file:
+                        #     json.dump(new_dict, json_file)
+                        # print("Helics time:",self.granted_time)
+                        self.data_to_federation["publications"][f"da_price_{bus[0:4]}"] = new_dict
                         count += 1
                     for area, area_dict in da_results.elements(element_type="area"):
                         for key in price_keys:
@@ -298,7 +304,8 @@ class OSWTSO(Federate):
             print("Saved file as " + filename)
 
 
-def run_osw_tso(start: str="2032-01-01 00:00:00", end: str="2032-1-03 00:00:00"):        #h5filepath: str, 
+def run_osw_tso(h5filepath: str, start: str="2032-01-01 00:00:00", end: str="2032-1-03 00:00:00"):
+# def run_osw_tso(start: str="2032-01-01 00:00:00", end: str="2032-1-03 00:00:00"):        #h5filepath: str, 
 # if __name__ == "__main__":
     # TODO: we might need to make this an actual object rather than a dict.
     # Even now, I see it starting to get messy.
@@ -363,7 +370,7 @@ def run_osw_tso(start: str="2032-01-01 00:00:00", end: str="2032-1-03 00:00:00")
     # I don't think we will ever use the "last_market_time" values 
     # but they will give us confidence that we're doing things correctly.
     
-    h5filepath = '/Users/lill771/Documents/Data/GridView/WECC240_20240807.h5'
+    # h5filepath = '/Users/lill771/Documents/Data/GridView/WECC240_20240807.h5'
     default_dam = {
         "time": {
             "datefrom": start
@@ -477,7 +484,8 @@ def run_osw_tso(start: str="2032-01-01 00:00:00", end: str="2032-1-03 00:00:00")
 
 if __name__ == "__main__":    
     if sys.argv.__len__() > 2:
-        market_timing, markets, solver = run_osw_tso() #(sys.argv[3]) #, sys.argv[4], sys.argv[5])
+        # market_timing, markets, solver = run_osw_tso() #(sys.argv[3]) #, sys.argv[4], sys.argv[5])
+        market_timing, markets, solver = run_osw_tso(sys.argv[3], sys.argv[4], sys.argv[5])
         # print("tso main:", markets["rt_energy_market"].em.configuration["time"]["min_freq"])
         wecc_market_fed = OSWTSO(sys.argv[1], market_timing, markets, solver=solver)
         wecc_market_fed.create_federate(sys.argv[2])

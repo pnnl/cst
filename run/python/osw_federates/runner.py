@@ -12,6 +12,12 @@ mollyrose.kelly-gorham@pnnl.gov
 import cosim_toolbox.metadataDB as mDB
 from cosim_toolbox.helicsConfig import HelicsMsg, Collect
 
+import pandas as pd
+from pnnlpcm import h5fun
+ 
+h5filepath = '/Users/lill771/Documents/Data/GridView/WECC240_20240807.h5'
+h5 = h5fun.H5(h5filepath)
+buses = h5("/mdb/Bus")
 
 class Runner:
 
@@ -37,13 +43,17 @@ class Runner:
         #        t1.config("wait_for_current_time_update", True)
         t1.collect(Collect.YES)
 
-        t1.pubs_e(names[0] + "/rt_dispatch", "list", "MW")
+        t1.pubs_e(names[0] + "/rt_dispatch", "string", "MW")
         #t1.subs_e(names[1] + "/rt_bids", "list", "V")
-        t1.pubs_e(names[0] + "/da_dispatch", "list", "MW")
+        t1.pubs_e(names[0] + "/da_dispatch", "string", "MW")
         #t1.subs_e(names[1] + "/da_bids", "list", "V")
-        t1.pubs_e(names[0] + "/res_dispatch", "list", "MW")
+        t1.pubs_e(names[0] + "/res_dispatch", "string", "MW")
         #t1.subs_e(names[1] + "/res_bids", "list", "V")
-        t1.pubs_e(names[0] + "/windforecast", "list", "mps", True, Collect.YES)# collect into logger or not.
+        t1.pubs_e(names[0] + "/windforecast", "string", "mps", True, Collect.YES)# collect into logger or not.
+        for b in buses["BusID"]:
+            t1.pubs_e(f"{names[0]}/da_price_{b}", "string", "$")
+            t1.pubs_e(f"{names[0]}/rt_price_{b}", "string", "$")
+        
 
         f1 = {
             "image": "cosim-python:latest",
