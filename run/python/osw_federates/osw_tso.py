@@ -157,8 +157,6 @@ class OSWTSO(Federate):
         self.next_requested_time = min(next_state_times)
         print("Requested time: ", self.next_requested_time)
         return self.next_requested_time
- 
-
 
     def update_power_system_and_market_state(self):
         """
@@ -167,7 +165,6 @@ class OSWTSO(Federate):
         "self.data_from_federation"
         """
         pass
-        
 
     def generate_wind_forecasts(self) -> list:
         """
@@ -193,7 +190,6 @@ class OSWTSO(Federate):
         else:
             return current_state_time
         
-
     def run_reserve_market(self):
         """
         NOTE: Currently this is being run in the day ahead market.
@@ -208,7 +204,6 @@ class OSWTSO(Federate):
         self.markets["reserve_market"].update_market()
         return self.markets["reserve_market"].market_results
        
-
     def run_rt_ed_market(self):
         """
         Using EGRET, clears the RT energy market in the form of an
@@ -304,8 +299,7 @@ class OSWTSO(Federate):
             print("Saved file as " + filename)
 
 
-def run_osw_tso(h5filepath: str, start: str="2032-01-01 00:00:00", end: str="2032-1-03 00:00:00"):
-# def run_osw_tso(start: str="2032-01-01 00:00:00", end: str="2032-1-03 00:00:00"):        #h5filepath: str, 
+def run_osw_tso(h5filepath: str, start: str="2032-01-01 00:00:00", end: str="2032-1-03 00:00:00"):        #h5filepath: str, 
 # if __name__ == "__main__":
     # TODO: we might need to make this an actual object rather than a dict.
     # Even now, I see it starting to get messy.
@@ -318,7 +312,6 @@ def run_osw_tso(h5filepath: str, start: str="2032-01-01 00:00:00", end: str="203
     # 15-minute market with bidding beginning five minutes before the end of 
     # the market interval and ending when clearing begins two minutes before 
     # the end of the interval.
-
 
     rt_market_timing = {
             "states": {
@@ -446,7 +439,7 @@ def run_osw_tso(h5filepath: str, start: str="2032-01-01 00:00:00", end: str="203
     }
 
     em_dam = pyen.EnergyMarket(gv, pyenconfig_dam)
-
+    #em_dam.configuration = copy.deepcopy(em_dam.configuration)
     pyenconfig_rtm = {
         "time": {
             "datefrom": start, 
@@ -484,9 +477,7 @@ def run_osw_tso(h5filepath: str, start: str="2032-01-01 00:00:00", end: str="203
 
 if __name__ == "__main__":    
     if sys.argv.__len__() > 2:
-        # market_timing, markets, solver = run_osw_tso() #(sys.argv[3]) #, sys.argv[4], sys.argv[5])
         market_timing, markets, solver = run_osw_tso(sys.argv[3], sys.argv[4], sys.argv[5])
-        # print("tso main:", markets["rt_energy_market"].em.configuration["time"]["min_freq"])
         wecc_market_fed = OSWTSO(sys.argv[1], market_timing, markets, solver=solver)
         wecc_market_fed.create_federate(sys.argv[2])
         wecc_market_fed.run_cosim_loop()
