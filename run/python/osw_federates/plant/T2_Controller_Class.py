@@ -107,6 +107,24 @@ class T2_Controller:
                 [12.7999, 12.7845, 12.9517, 12.8531, 12.8652, 12.9444, 12.8876, 12.9018, 12.8707, 12.8556],
                 [11.2709, 11.2696, 11.1437, 11.3696, 11.3335, 11.2868, 11.2705, 11.2384, 11.2221, 11.2543]
             ]).T
-            
-
+        elif source == 3:
+            WS = pd.read_csv(os.path.join(file_path, "plant", "data", "2022", "COTTONWOOD_CA_42.33_-124.61_2022.csv"), header = 1)
+            WS = WS['wind speed at 140m (m/s)']
+            fullWS = np.reshape(WS,[24, int(len(WS)/24)], order = 'F')
+        elif source == 4:
+            WS = pd.read_csv(os.path.join(file_path, "plant", "data", "2022", "JOHNDAY_OR_42.33_-124.58_2022.csv"), header = 1)
+            WS = WS['wind speed at 140m (m/s)']
+            fullWS = np.reshape(WS,[24, int(len(WS)/24)], order = 'F')
+        elif source == 5:
+            WS = pd.read_csv(os.path.join(file_path, "plant", "data", "2022", "MOSSLAND_CA_42.33_-124.51_2022.csv"), header = 1)
+            WS = WS['wind speed at 140m (m/s)']
+            fullWS = np.reshape(WS,[24, int(len(WS)/24)], order = 'F')
+        elif source == 6:
+            WS = pd.read_csv(os.path.join(file_path, "plant", "data", "2022", "TESLA_CA_42.33_-124.56_2022.csv"), header = 1)
+            WS = WS['wind speed at 140m (m/s)']
+            fullWS = np.reshape(WS,[24, int(len(WS)/24)], order = 'F') 
+        elif source == 7:
+            WS = pd.read_csv(os.path.join(file_path, "plant", "data", "2022", "WCASCADE_WA_42.33_-124.68_2022.csv"), header = 1)
+            WS = WS['wind speed at 140m (m/s)']
+            fullWS = np.reshape(WS,[24, int(len(WS)/24)], order = 'F') 
         return fullWS
