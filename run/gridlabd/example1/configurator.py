@@ -1,14 +1,15 @@
-import cosim_toolbox.dbConfigs as mDB
-from cosim_toolbox.dockerRunner import DockerRunner
-from cosim_toolbox import cu_federations, cu_scenarios, cosim_mongo_host, cosim_mongo_db
 import json
 import logging
 logger = logging.getLogger(__name__)
 
+from cosim_toolbox.dbConfigs import DBConfigs
+from cosim_toolbox.dockerRunner import DockerRunner
+from cosim_toolbox import cu_federations, cu_scenarios, cosim_mongo, cosim_mongo_db
+
 PYTHON_CMD_PREFIX = "source /home/worker/venv/bin/activate && exec python3 "
 GRIDLABD_CMD_PREFIX = "source /home/worker/venv/bin/activate && exec gridlabd "
 
-class Configurator(mDB.DBConfigs):
+class Configurator(DBConfigs):
 
     def __init__(self, 
                  scenario_name: str, 
@@ -16,12 +17,13 @@ class Configurator(mDB.DBConfigs):
                  federation_name: str, 
                  docker: bool = False, 
                  remote: bool = False):
+        super().__init__(fed_name, **kwargs)
         self.scenario_name = scenario_name
         self.schema_name = schema_name
         self.federation_name = federation_name
         self.docker = docker
         self.remote = remote
-        self.db = mDB.DBConfigs(cosim_mongo_host, cosim_mongo_db)
+        self.db = DBConfigs(cosim_mongo, cosim_mongo_db)
         self.federation_config = {"federation": {}}
 
     def _get_federate_type(self, config: dict) -> str:

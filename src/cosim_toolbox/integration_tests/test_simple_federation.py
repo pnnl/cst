@@ -34,18 +34,18 @@ class TestSimpleFederation(unittest.TestCase):
 
         # Check federation complet
         self._check_complete(interval=10, timeout=10 * 60)
-        self._verify_query(federate_name="Battery", sim_name="Battery/current3", data_type="hdt_boolean")
-        self._verify_query(federate_name="Battery", sim_name="Battery/current", data_type="hdt_double")
-        self._verify_query(federate_name="EVehicle", sim_name="EVehicle/voltage4", data_type="hdt_string")
+        self._verify_query(federate_name="Battery", data_name="Battery/current3", data_type="hdt_boolean")
+        self._verify_query(federate_name="Battery", data_name="Battery/current", data_type="hdt_double")
+        self._verify_query(federate_name="EVehicle", data_name="EVehicle/voltage4", data_type="hdt_string")
         self.logger_data.close_database_connections()
 
-    def _verify_query(self, federate_name: str, sim_name: str, data_type: str):
+    def _verify_query(self, federate_name: str, data_name: str, data_type: str):
         df = self.logger_data.query_scenario_federate_times(
             start_time=START_TIME,
             duration=DURATION,
             scenario_name="test_scenario",
             federate_name=federate_name,
-            sim_name=sim_name,
+            data_name=data_name,
             data_type=data_type,
         )
 
@@ -62,7 +62,7 @@ class TestSimpleFederation(unittest.TestCase):
                 duration=0,
                 scenario_name="test_scenario",
                 federate_name="EVehicle",
-                sim_name="EVehicle/voltage5",
+                data_name="EVehicle/voltage5",
                 data_type="hdt_complex",
             )
             if not df.empty:

@@ -1,42 +1,35 @@
 """
 Created 30 Nov 2023
 
-Metadata Database API impementation
+Metadata Database API implementation
 
 @author Trevor Hardy
 """
 import os
 import typing
-import pprint
 import logging
 import subprocess
-from typing import Any, Mapping
 
-import gridfs
 from pymongo import MongoClient
+import gridfs
 import bson
-from pymongo.collection import Collection
 
 import cosim_toolbox as cst
-from cosim_toolbox import cosim_mongo_host, cosim_mongo_db, cu_federations, cu_scenarios
-
-import cosim_toolbox.helicsConfig as hC
+from cosim_toolbox.helicsConfig import HelicsMsg
 
 logger = logging.getLogger(__name__)
-pp = pprint.PrettyPrinter(indent=4, )
 
 
 def federation_database(clear: bool = False) -> None:
-    """Removes existing default CST databases and
-    creates new ones.
+    """Removes existing default CST databases and creates new ones.
     """
-    db = DBConfigs(cosim_mongo_host, cosim_mongo_db)
-    logger.info("Before: ",  db.update_collection_names())
+    db = DBConfigs(cst.cosim_mongo, cst.cosim_mongo_db)
+    logger.info("Before: ", db.update_collection_names())
     if clear:
-        db.db[cu_federations].drop()
-        db.db[cu_scenarios].drop()
-    db.add_collection(cu_scenarios)
-    db.add_collection(cu_federations)
+        db.db[cst.cu_federations].drop()
+        db.db[cst.cu_scenarios].drop()
+    db.add_collection(cst.cu_scenarios)
+    db.add_collection(cst.cu_federations)
     logger.info("After clear: ", db.update_collection_names())
 
 
@@ -93,7 +86,7 @@ class DBConfigs:
         """
         # Set up default uri_string to the server Trevor was using on the EIOC
         if uri is None:
-            uri = cst.cosim_mongo_host
+            uri = cst.cosim_mongo
         if db is None:
             db = cst.cosim_mongo_db
         # Set up connection
@@ -103,8 +96,8 @@ class DBConfigs:
         try:
             client.admin.command('ping')
             logger.info("Pinged your deployment. You successfully connected to MongoDB!")
-        except Exception as e:
-            logger.info(e)
+        except Exception as ex:
+            logger.info(ex)
 
         return db, client
 
@@ -191,8 +184,7 @@ class DBConfigs:
 
     def remove_collection(self, collection_name: str):
         """
-        Removes the collection from the dbConfigs specified by
-        "collection_name"
+        Removes the collection from the dbConfigs specified by "collection_name"
         """
         self.db[collection_name].drop()
         self.update_collection_names()
@@ -215,9 +207,8 @@ class DBConfigs:
             self.db[collection_name].delete_one({"_id": object_id})
         # TODO: Add check for success on delete.
 
-
     def remove_dict(self, collection_name: str,
-                        dict_name: str) -> None:
+                    dict_name: str) -> None:
         """
         Remove the dictionary specified by "dict_name" from the
         collection specified by "collection_name".
@@ -405,10 +396,18 @@ class DBConfigs:
         pass
 
 
+class TimeSeriesDB:
+    """Provides methods used to write time-series data to a
+    time-series database on MongoDB.
+    """
+    pass
+
+
 class Docker:
     """Collection of static methods used in building and running the docker-compose.yaml
     for running a new service or simulator.
     """
+
     def __init__(self):
         pass
 
@@ -463,17 +462,17 @@ class Docker:
 
     @staticmethod
     def define_yaml(scenario_name: str) -> None:
-        """Create the docker-compoose.yaml for the provided scenario
+        """Create the docker-compose.yaml for the provided scenario
 
         Args:
             scenario_name (str): Name of the scenario run by this docker-compose.yaml
         """
-        mdb = DBConfigs(cosim_mongo_host, cosim_mongo_db)
+        db = DBConfigs(cst.cosim_mongo, cst.cosim_mongo_db)
 
-        scenario_def = mdb.get_dict(cst.cu_scenarios, None, scenario_name)
+        scenario_def = db.get_dict(cst.cu_scenarios, None, scenario_name)
         federation_name = scenario_def["federation"]
         schema_name = scenario_def["schema"]
-        fed_def = mdb.get_dict(cst.cu_federations, None, federation_name)["federation"]
+        fed_def = db.get_dict(cst.cu_federations, None, federation_name)["federation"]
 
         cosim_env = """      SIM_HOST: \"""" + cst.sim_host + """\"
       SIM_USER: \"""" + cst.sim_user + """\"
@@ -550,19 +549,19 @@ def mytest1():
     docker run --name mongodb -d -p 27017:27017 mongodb/mongodb-community-server:$MONGODB_VERSION
     If no version number is important the tag MONGODB_VERSION=latest can be used
     """
-    db = DBConfigs(cst.cosim_mongo_host, cst.cosim_mongo_db)
+    db = DBConfigs(cst.cosim_mongo, cst.cosim_mongo_db)
     logger.info(db.update_collection_names())
     db.add_collection(cst.cu_scenarios)
     db.add_collection(cst.cu_federations)
 
-    t1 = hC.HelicsMsg("Battery", 30)
+    t1 = HelicsMsg("Battery", 30)
     t1.config("core_type", "zmq")
     t1.config("log_level", "warning")
     t1.config("period", 60)
     t1.config("uninterruptible", False)
     t1.config("terminate_on_error", True)
     t1.config("wait_for_current_time_update", True)
-    t1.pubs_e(True, "Battery/EV1_current", "double", "A")
+    t1.pubs_e("Battery/EV1_current", "double", "A", True)
     t1 = {
         "image": "python/3.11.7-slim-bullseye",
         "federate_type": "value",
@@ -599,20 +598,20 @@ def mytest2():
     docker run --name mongodb -d -p 27017:27017 mongodb/mongodb-community-server:$MONGODB_VERSION
     If no version number is important the tag MONGODB_VERSION=latest can be used
     """
-    db = DBConfigs(cst.cosim_mongo_host, cst.cosim_mongo_db)
+    db = DBConfigs(cst.cosim_mongo, cst.cosim_mongo_db)
     logger.info(db.update_collection_names())
     db.add_collection(cst.cu_scenarios)
     db.add_collection(cst.cu_federations)
 
-    t1 = hC.HelicsMsg("Battery", 30)
+    t1 = HelicsMsg("Battery", 30)
     t1.config("core_type", "zmq")
     t1.config("log_level", "warning")
     t1.config("period", 60)
     t1.config("uninterruptible", False)
     t1.config("terminate_on_error", True)
     t1.config("wait_for_current_time_update", True)
-    t1.pubs_e(True, "Battery/EV1_current", "double", "A")
-    t1.subs_e(True, "EVehicle/EV1_voltage", "double", "V")
+    t1.pubs_e("Battery/EV1_current", "double", "A", True)
+    t1.subs_e("EVehicle/EV1_voltage", "double", "V", True)
     t1 = {
         "image": "python/3.11.7-slim-bullseye",
         "federate_type": "value",
@@ -620,15 +619,15 @@ def mytest2():
         "HELICS_config": t1.write_json()
     }
 
-    t2 = hC.HelicsMsg("EVehicle", 30)
+    t2 = HelicsMsg("EVehicle", 30)
     t2.config("core_type", "zmq")
     t2.config("log_level", "warning")
     t2.config("period", 60)
     t2.config("uninterruptible", False)
     t2.config("terminate_on_error", True)
     t2.config("wait_for_current_time_update", True)
-    t2.subs_e(True, "Battery/EV1_current", "double", "A")
-    t2.pubs_e(True, "EVehicle/EV1_voltage", "double", "V")
+    t2.subs_e("Battery/EV1_current", "double", "A", True)
+    t2.pubs_e("EVehicle/EV1_voltage", "double", "V", True)
     t2 = {
         "image": "python/3.11.7-slim-bullseye",
         "federate_type": "value",

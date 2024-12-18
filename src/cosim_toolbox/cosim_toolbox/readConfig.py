@@ -1,5 +1,10 @@
+import logging
+
 from cosim_toolbox.dbConfigs import DBConfigs
 from cosim_toolbox import cosim_mg_host, cosim_mongo_db, cu_scenarios, cu_federations
+
+logger = logging.getLogger(__name__)
+
 
 class ReadConfig:
     def __init__(self, scenario_name: str):

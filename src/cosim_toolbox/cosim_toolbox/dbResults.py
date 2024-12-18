@@ -14,12 +14,14 @@ fred.rutz@pnnl.gov
 mitch.pelton@pnnl.gov
 nathan.gray@pnnl.gov
 """
-from os import environ
+
 import logging
+from os import environ
+
 import pandas as pd
 import datetime as dt
 import psycopg2 as pg
-from cosim_toolbox import cu_scenarios, cu_federations
+
 from cosim_toolbox.readConfig import ReadConfig
 
 logger = logging.getLogger(__name__)
@@ -61,7 +63,7 @@ logger = logging.getLogger(__name__)
 
 
 class DBResults:
-    """Methos for writing to and reading from the time-series database. This
+    """Methods for writing to and reading from the time-series database. This
     class does not provide HELICS federate functionality.
 
     Returns:
@@ -76,16 +78,18 @@ class DBResults:
                 'HDT_NAMED_POINT': 'VARCHAR (255)',
                 'HDT_BOOLEAN': 'boolean',
                 'HDT_TIME': 'TIMESTAMP',
-                'HDT_JSON': 'text'}
+                'HDT_JSON': 'text',
+                'HDT_ENDPOINT': 'text'}
 
     def __init__(self):
         self.scenario = None
         self.scenario_name = None
         self.data_db = None
+        self.use_timescale = False
 
     def _connect_logger_database(self, connection: dict = None):
-        """This method defines and then opens a connection to the datalogger
-        database
+        """This function defines the connection to the data database
+        and opens a connection to the postgres database
 
         Returns:
             psycopg2 connection object - connection object that provides
@@ -102,32 +106,9 @@ class DBResults:
         logger.info(connection)
         try:
             return pg.connect(**connection)
-        except:
+        except Exception as ex:
+            logger.exception(f"{ex}\nFailed to create PostgresDB instance.")
             return None
-
-    # def _connect_scenario_database(self, connection: dict = None):
-    #     """This function defines and then opens a connection to the configs
-    #     database
-    #
-    #     Returns:
-    #         DBConfigs object - connection object that provides
-    #         access to the mongo database
-    #     """
-    #     if connection is None:
-    #         connection = {
-    #             "host": environ.get("MONGO_HOST", "mongo://localhost"),
-    #             "port": environ.get("MONGO_POST", 27017),
-    #             "dbname": environ.get("COSIM_DB", "copper"),
-    #             "user": environ.get("COSIM_USER", "worker"),
-    #             "password": environ.get("COSIM_PASSWORD", "worker")
-    #         }
-    #     logger.info(connection)
-    #     try:
-    #         uri = f"{connection['host']}:{connection['port']}"
-    #         return mDB.DBConfigs(uri=mDB.cosim_mg_host, db_name=mDB.cosim_mongo_db)
-    #     except Exception:
-    #         logger.exception("Failed to create DBConfigs instance.")
-    #         return None
 
     def close_database_connections(self, commit: bool = True) -> None:
         """Closes connections to the time-series and metadata databases
@@ -137,7 +118,6 @@ class DBResults:
             committed to the time-series DB prior to closing the connection.
             Defaults to True.
         """
-        self.meta_db = None
         if self.data_db:
             if commit:
                 self.data_db.commit()
@@ -188,10 +168,11 @@ class DBResults:
         Args:
             scheme_name (str): _description_
         """
-        query = f"CREATE SCHEMA IF NOT EXISTS {scheme_name};"
-        query += f" GRANT USAGE ON SCHEMA {scheme_name} TO reader;"
+        query = f"CREATE SCHEMA IF NOT EXISTS {scheme_name}; "
+        query += f"GRANT USAGE ON SCHEMA {scheme_name} TO reader;"
         with self.data_db.cursor() as cur:
             cur.execute(query)
+            self.data_db.commit()
 
     def drop_schema(self, scheme_name: str) -> None:
         """Removes the scheme from the database.
@@ -202,6 +183,7 @@ class DBResults:
         query = f"DROP SCHEMA IF EXISTS {scheme_name} CASCADE;"
         with self.data_db.cursor() as cur:
             cur.execute(query)
+            self.data_db.commit()
 
     def remove_scenario(self, analysis_name: str, scenario_name: str) -> None:
         """Removes all data from the specified analysis_name with the specified
@@ -216,23 +198,30 @@ class DBResults:
             query += f" DELETE FROM {analysis_name}.{key} WHERE scenario='{scenario_name}'; "
         with self.data_db.cursor() as cur:
             cur.execute(query)
+            self.data_db.commit()
+
+    def schema_exist(self, scheme_name: str) -> None:
+        with self.data_db.cursor() as cur:
+            cur.execute("select * from information_schema.tables "
+                        "where table_schema=%s",
+                        (scheme_name,))
+            if bool(cur.rowcount):  return
 
     def table_exist(self, analysis_name: str, table_name: str) -> None:
         """Checks to see if the specified tables exist in the specified analysis
 
         Args:
             analysis_name (str): Name of analysis where table may exist
-            table_name (str): Table name whose existance is being checked
+            table_name (str): Table name whose existence is being checked
 
         Returns:
             _type_: _description_
         """
-        query = ("SELECT EXISTS ( SELECT FROM pg_tables WHERE "
-                 f"schemaname = '{analysis_name}' AND tablename = '{table_name}');")
         with self.data_db.cursor() as cur:
-            cur.execute(query)
-            result = cur.fetchone()
-            return result[0]
+            cur.execute("select * from information_schema.tables "
+                        "where table_schema=%s and table_name=%s",
+                        (analysis_name,table_name))
+            if bool(cur.rowcount):  return
 
     def make_logger_database(self, analysis_name: str) -> None:
         """_summary_
@@ -250,20 +239,23 @@ class DBResults:
                       "sim_time double precision NOT NULL, "
                       "scenario VARCHAR (255) NOT NULL, "
                       "federate VARCHAR (255) NOT NULL, "
-                      "sim_name VARCHAR (255) NOT NULL, "
-                      f"sim_value {self.hdt_type[key]} NOT NULL);")
+                      "data_name VARCHAR (255) NOT NULL, "
+                      f"data_value {self.hdt_type[key]} NOT NULL);")
+            if self.use_timescale:
+                query += f" SELECT create_hypertable('{analysis_name}.{key}', 'real_time');"
+                # query += f" CREATE INDEX ix_{scheme_name}_{key} ON {scheme_name}.{key} (scenario, real_time DESC);"
         query += f" GRANT SELECT ON ALL TABLES IN SCHEMA {analysis_name} TO reader;"
         query += f" GRANT USAGE ON ALL SEQUENCES IN SCHEMA {analysis_name} TO reader;"
         query += f" GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA {analysis_name} TO reader;"
         query += f" ALTER ROLE reader SET search_path = {analysis_name};"
         with self.data_db.cursor() as cur:
             cur.execute(query)
+            self.data_db.commit()
 
-    def get_scenario_document(self, scenario_name: str) -> dict:
+    def get_scenario(self, scenario_name: str) -> ReadConfig:
         """Gets the metadata associated with the specified scenario from the
         metadata database.
 
-        TODO: Rename "get_scenario_document" to "get_scenario_metadata"
         Args:
             scenario_name (str): Name of scenario for which the metadata
             is to be retrieved
@@ -272,26 +264,12 @@ class DBResults:
             dict: scenario metadata requested
         """
         if self.scenario_name != scenario_name:
-            self.scenario = self.meta_db.get_dict(cu_scenarios, None, scenario_name)
+            self.scenario = ReadConfig(scenario_name)
+            self.scenario_name = scenario_name
         return self.scenario
 
-    def get_federation_document(self, federation_name: str) -> dict:
-        """Gets the metadata for the specified federation from the metadata
-        database.
-
-        TODO: Rename "get_federation_document" to "get_federation_metadata"
-        Args:
-            federation_name (str): Name of federation for which the metdata
-            is being collected
-
-        Returns:
-            dict: Requested metadata for federation
-        """
-        if self.federation_name != federation_name:
-            self.federation = self.meta_db.get_dict(cu_federations, None, federation_name)
-        return self.federation
-
-    def get_select_string(self, scheme_name: str, data_type: str) -> str:
+    @staticmethod
+    def get_select_string(scheme_name: str, data_type: str) -> str:
         """This method creates the SELECT portion of the query string
 
         Args:
@@ -309,7 +287,8 @@ class DBResults:
         qry_string = "SELECT * FROM " + scheme_name + "." + data_type + " WHERE "
         return qry_string
 
-    def get_time_select_string(self, start_time: int, duration: int) -> str:
+    @staticmethod
+    def get_time_select_string(start_time: int, duration: int) -> str:
         """This method creates the time filter portion of the query string
 
         Args:
@@ -335,17 +314,11 @@ class DBResults:
             end_time = start_time + duration
         return "sim_time>=" + str(start_time) + " AND sim_time<=" + str(end_time)
 
-    def get_scenario(self, scenario_name: str) -> ReadConfig:
-        if self.scenario is None or self.scenario_name != scenario_name:
-            self.scenario = ReadConfig(scenario_name)
-            self.scenario_name = self.scenario.name
-        return self.scenario
-
     def get_query_string(self, start_time: int,
                          duration: int,
                          scenario_name: str,
                          federate_name: str,
-                         sim_name: str,
+                         data_name: str,
                          data_type: str) -> str:
         """This method creates the query string to pull time series data from the
         logger database, and depends upon the keys identified by the user input arguments.
@@ -366,8 +339,8 @@ class DBResults:
             None is entered for the scenario_name the query will not use scenario_name as a filter
             federate_name (string) - the name of the Federate to filter the query results by. If
             None is entered for the federate_name the query will not use federate_name as a filter
-            sim_name (string) - the name of the data to filter the query results by. If
-            None is entered for the sim_name the query will not use sim_name as a filter
+            data_name (string) - the name of the data to filter the query results by. If
+            None is entered for the data_name the query will not use data_name as a filter
             data_type (string) - the id of the database table that will be queried. Must be
             one of the following options:
                 [ hdt_boolean, hdt_complex, hdt_complex_vector, hdt_double, hdt_integer
@@ -377,13 +350,13 @@ class DBResults:
             qry_string (string) - string representing the query to be used in pulling time series
             data from logger database
         """
-        self.scenario = self.get_scenario(scenario_name)
-        scheme_name = self.scenario.schema_name
+        scenario = self.get_scenario(scenario_name)
+        scheme_name = scenario.schema_name
         qry_string = self.get_select_string(scheme_name, data_type)
         time_string = self.get_time_select_string(start_time, duration)
         scenario_string = f"scenario='{scenario_name}'" if scenario_name is not None and scenario_name != "" else ""
         federate_string = f"federate='{federate_name}'" if federate_name is not None and federate_name != "" else ""
-        data_string = f"sim_name='{sim_name}'" if sim_name is not None and sim_name != "" else ""
+        data_string = f"data_name='{data_name}'" if data_name is not None and data_name != "" else ""
         if time_string == "" and scenario_string == "" and federate_string == "" and data_string == "":
             qry_string = qry_string.replace(" WHERE ", "")
             return qry_string
@@ -410,7 +383,7 @@ class DBResults:
                                       duration: int,
                                       scenario_name: str,
                                       federate_name: str,
-                                      sim_name: str,
+                                      data_name: str,
                                       data_type: str) -> pd.DataFrame:
         """This method queries time series data from the logger database and
         depends upon the keys identified by the user input arguments.
@@ -431,8 +404,8 @@ class DBResults:
             None is entered for the scenario_name the query will not use scenario_name as a filter
             federate_name (string) - the name of the Federate to filter the query results by. If
             None is entered for the federate_name the query will not use federate_name as a filter
-            sim_name (string) - the name of the data to filter the query results by. If
-            None is entered for the sim_name the query will not use sim_name as a filter
+            data_name (string) - the name of the data to filter the query results by. If
+            None is entered for the data_name the query will not use data_name as a filter
             data_type (string) - the id of the database table that will be queried. Must be
             one of the following options:
                 [ hdt_boolean, hdt_complex, hdt_complex_vector, hdt_double, hdt_int
@@ -442,7 +415,7 @@ class DBResults:
             dataframe (pandas dataframe object) - dataframe that contains the result records
             returned from the query of the database
         """
-        qry_string = self.get_query_string(start_time, duration, scenario_name, federate_name, sim_name, data_type)
+        qry_string = self.get_query_string(start_time, duration, scenario_name, federate_name, data_name, data_type)
         with self.data_db.cursor() as cur:
             cur.execute(qry_string)
             column_names = [desc[0] for desc in cur.description]
@@ -451,7 +424,7 @@ class DBResults:
             return dataframe
 
     def query_scenario_all_times(self, scenario_name: str, data_type: str) -> pd.DataFrame:
-        """This method queries data from the logger database filtered only by scenario_name and sim_name
+        """This function queries data from the logger database filtered only by scenario_name and data_name
 
         Args:
             scenario_name (string) - the name of the scenario to filter the query results by
@@ -465,11 +438,10 @@ class DBResults:
             return None
         if type(data_type) is not str:
             return None
-        self.scenario = self.get_scenario(scenario_name)
-        # scheme = self.get_scenario_document(scenario_name)
-        # scheme_name = scheme["schema"]
-        
-        qry_string = f"SELECT * FROM {self.scenario.schema_name}.{data_type} WHERE scenario='{scenario_name}';"
+        scenario = self.get_scenario(scenario_name)
+        scheme_name = scenario.schema_name
+
+        qry_string = f"SELECT * FROM {scheme_name}.{data_type} WHERE scenario='{scenario_name}';"
         with self.data_db.cursor() as cur:
             cur.execute(qry_string)
             column_names = [desc[0] for desc in cur.description]
@@ -478,10 +450,10 @@ class DBResults:
             return dataframe
 
     def query_scheme_all_times(self, scheme_name: str, data_type: str) -> None:
-        pass
+        raise NotImplementedError("method query_scheme_all_times is not implemented yet")
 
     def query_scheme_federate_all_times(self, scheme_name: str, federate_name: str, data_type) -> pd.DataFrame:
-        """This method queries data from the logger database filtered only by federate_name and sim_name
+        """This function queries data from the logger database filtered only by federate_name and data_name
         and data_type
 
         TODO: Rename "query_scheme_federate_all_times" to "query_
@@ -512,7 +484,7 @@ class DBResults:
 
     def get_schema_list(self) -> None:
         # Todo: get schema from scenario documents
-        pass
+        raise NotImplementedError(f"method get_schema_list is not implemented yet")
 
     def get_scenario_list(self, scheme_name: str, data_type: str) -> pd.DataFrame:
         """This function queries the distinct list of scenario names from the database table
@@ -565,7 +537,7 @@ class DBResults:
             dataframe = pd.DataFrame(data, columns=column_names)
             return dataframe
 
-    def get_sim_name_list(self, scheme_name: str, data_type: str) -> pd.DataFrame:
+    def get_data_name_list(self, scheme_name: str, data_type: str) -> pd.DataFrame:
         """This function queries the distinct list of data names from the database table
         defined by scheme_name and data_type
 
@@ -582,10 +554,10 @@ class DBResults:
         if type(data_type) is not str:
             return None
         # Todo: check against meta_db to see if schema name exist?
-        qry_string = f"SELECT DISTINCT sim_name FROM {scheme_name}.{data_type};"
+        qry_string = f"SELECT DISTINCT data_name FROM {scheme_name}.{data_type};"
         with self.data_db.cursor() as cur:
             cur.execute(qry_string)
-            column_names = ["sim_name"]
+            column_names = ["data_name"]
             data = cur.fetchall()
             dataframe = pd.DataFrame(data, columns=column_names)
             return dataframe
@@ -656,8 +628,7 @@ if __name__ == "__main__":
     d_time = dt.datetime.now()
     logger_data = DBResults()
     logger_data.open_database_connections()
-    t_mongo_data = logger_data.meta_db
-    print(t_mongo_data)
+    scenario = logger_data.get_scenario("test_scenario")
     df = logger_data.query_scenario_federate_times(500, 1000, "test_scenario", "Battery",
                                                    "Battery/current3", "hdt_boolean")
     print(df)
@@ -670,7 +641,7 @@ if __name__ == "__main__":
     # print(df)
     # df = get_federate_list("test_scenario", "hdt_boolean")
     # print(df)
-    # df = get_sim_name_list("test_scenario", "hdt_boolean")
+    # df = get_data_name_list("test_scenario", "hdt_boolean")
     # print(df)
     # df = get_table_data(conn, "hdt_string")
     # df = query_time_series(780, 250, "test_scenario", "FederateLogger", "EVehicle/voltage4", "hdt_string")

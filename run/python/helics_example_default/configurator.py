@@ -1,14 +1,15 @@
-import cosim_toolbox.dbConfigs as mDB
-from cosim_toolbox.dockerRunner import DockerRunner
-from cosim_toolbox import cu_federations, cu_scenarios, cosim_mongo_host, cosim_mongo_db
 import json
 import logging
 logger = logging.getLogger(__name__)
 
+import cosim_toolbox as cst
+from cosim_toolbox.dbConfigs import DBConfigs
+from cosim_toolbox.dockerRunner import DockerRunner
+
 PYTHON_CMD_PREFIX = "source /home/worker/venv/bin/activate && exec python3 "
 GRIDLABD_CMD_PREFIX = "source /home/worker/venv/bin/activate && exec gridlabd "
 
-class Configurator(mDB.DBConfigs):
+class Configurator(DBConfigs):
 
     def __init__(self, 
                  scenario_name: str, 
@@ -21,7 +22,7 @@ class Configurator(mDB.DBConfigs):
         self.federation_name = federation_name
         self.docker = docker
         self.remote = remote
-        self.db = mDB.DBConfigs(cosim_mongo_host, cosim_mongo_db)
+        self.db = DBConfigs(cst.cosim_mongo, cst.cosim_mongo_db)
         self.federation_config = {"federation": {}}
 
     def _get_federate_type(self, config: dict) -> str:
@@ -108,33 +109,33 @@ class Configurator(mDB.DBConfigs):
             stop,
             docker)
         
-        self.db.remove_document(cu_scenarios, None, scenario_name)
-        self.db.add_dict(cu_scenarios, scenario_name, scenario)
+        self.db.remove_document(cst.cu_scenarios, None, scenario_name)
+        self.db.add_dict(cst.cu_scenarios, scenario_name, scenario)
 
     def store_federation_config(self, name=None) -> None:
         if name is None:
             name = self.federation_name
-        self.db.remove_document(cu_federations, None, name)
-        self.db.add_dict(cu_federations, name, self.federation_config)
+        self.db.remove_document(cst.cu_federations, None, name)
+        self.db.add_dict(cst.cu_federations, name, self.federation_config)
 
     def get_scenario(self, name=None) -> dict:
         if name is None:
             name = self.scenario_name
         if name not in self.list_scenarios():
             logger.error(f"{name} not found in {self.list_scenarios()}.")
-        return self.db.get_dict(cu_scenarios, None, name)
+        return self.db.get_dict(cst.cu_scenarios, None, name)
     
     def get_federation_config(self, name=None) -> dict:
         if name is None:
             name = self.federation_name
         if name not in self.list_federations():
             logger.error(f"{name} not found in {self.list_federations()}.")
-        return self.db.get_dict(cu_federations, None, name)
+        return self.db.get_dict(cst.cu_federations, None, name)
     
     def list_scenarios(self) -> list:
-        return self.db.get_collection_document_names(cu_scenarios)
+        return self.db.get_collection_document_names(cst.cu_scenarios)
     
     def list_federations(self) -> list:
-        return self.db.get_collection_document_names(cu_federations)
+        return self.db.get_collection_document_names(cst.cu_federations)
 
     

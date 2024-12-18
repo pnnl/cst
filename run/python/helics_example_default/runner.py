@@ -55,13 +55,13 @@ if __name__ == "__main__":
     configurator.add_python_federate_from_config("ChargerConfig.json", "charger.py", broker_address=broker_address)
     configurator.store_federation_config(_federation_name)
     configurator.store_scenario(
-        scenario_name=_scenario_name, 
-        schema_name=_schema_name, 
-        federation_name = _federation_name, 
-        start = "2023-12-07T15:31:27",
-        stop = "2023-12-08T15:31:27",
-        docker = with_docker
-        )
+        scenario_name=_scenario_name,
+        schema_name=_schema_name,
+        federation_name=_federation_name,
+        start="2023-12-07T15:31:27",
+        stop="2023-12-08T15:31:27",
+        docker=with_docker
+    )
     print(json.dumps(ReadConfig(_scenario_name).federation, indent=2))
     if with_docker:
         DockerRunner.define_yaml(_scenario_name)

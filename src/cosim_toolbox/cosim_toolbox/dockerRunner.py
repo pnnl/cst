@@ -68,7 +68,7 @@ class DockerRunner:
         Args:
             scenario_name (str): Name of the scenario run by this docker-compose.yaml
         """
-        mdb = DBConfigs(cst.cosim_mongo_host, cst.cosim_mongo_db)
+        mdb = DBConfigs(cst.cosim_mongo, cst.cosim_mongo_db)
 
         scenario_def = mdb.get_dict(cst.cu_scenarios, None, scenario_name)
         federation_name = scenario_def["federation"]
