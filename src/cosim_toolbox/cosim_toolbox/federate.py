@@ -13,8 +13,9 @@ import logging
 
 import helics as h
 
-import cosim_toolbox.dbConfigs as mDB
-from cosim_toolbox import cosim_mongo_host, cosim_mongo_db, cu_scenarios, cu_federations
+import cosim_toolbox as cst
+from cosim_toolbox.dbConfigs import DBConfigs
+from cosim_toolbox.dbResults import DBResults
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler())
@@ -61,16 +62,16 @@ class Federate:
         federate_type (str): The federate type. Must be "value", "message", or "combo"
         config: Valid HELICS config JSON string
         granted_time: The last time granted to this federate
-        time_step: The size of the simulated time step takes when requesting the next time
+        period: The size of the simulated time step takes when requesting the next time
         scenario_name (str): The scenario name
         scenario (dict): Dictionary with all scenario configuration information
         federation_name (str): The federation name
         federation (dict): Dictionary with all federate configuration information
     """
 
-    def __init__(self, fed_name="", **kwargs):
+    def __init__(self, fed_name="", use_mdb=True, use_pdb=True, **kwargs):
         self.hfed: h.HelicsFederate = None
-        self.mddb: mDB.DBConfigs = None
+        self.mddb: DBConfigs = None
         self.config: dict = None
         self.scenario: dict = None
         self.scenario_name: str = None
@@ -79,9 +80,11 @@ class Federate:
         self.federate: dict = None
         self.federate_type: str = None
         self.federate_name: str = fed_name
-        self.start: float = None
-        self.stop: float = None
-        self.time_step = -1.0
+        self.scheme_name: str = None
+        self.start: str = None
+        self.stop: str = None
+        self.no_t_start = None
+        self.period = -1.0
         self.stop_time = -1.0
         self.granted_time = -1.0
         self.next_requested_time = -1.0
@@ -89,6 +92,21 @@ class Federate:
         self.inputs = {}
         self.endpoints = {}
         self.debug = True
+        self.use_mdb = use_mdb
+        self._use_timescale = False
+
+        # following for datalogger
+        self.dl: DBResults = None
+        self._s = None
+        self._ep = None
+        self._count = 0
+        self._commit_cnt = 0
+        self._commit_qry = ""
+        self.interval = 100000
+        self.fed_collect = "maybe"
+        self.path_csv = ""
+        self.output_csv = None
+        self.use_pdb = use_pdb
 
         # Initialize the structure of the interface dictionaries
         self.data_from_federation = {"inputs": {}, "endpoints": {}}
@@ -96,6 +114,16 @@ class Federate:
 
         # if not wanting to debug, add debug=False as an argument
         self.__dict__.update(kwargs)
+
+    @property
+    def use_timescale(self):
+        self._use_timescale = self.dl.use_timescale
+        return self._use_timescale
+
+    @use_timescale.setter
+    def use_timescale(self, value: bool):
+        self.dl.use_timescale = value
+        self._use_timescale = self.dl.use_timescale
 
     def connect_to_metadataDB(self, uri: str, db_name: str) -> None:
         """Connects to the Copper dbConfigs
@@ -109,15 +137,87 @@ class Federate:
             uri (str): URI for Mongo database
             db_name (str): Name for Mongo database
         """
-        self.mddb = mDB.DBConfigs(uri, db_name)
-        self.scenario = self.mddb.get_dict(cu_scenarios, None, self.scenario_name)
+        self.mddb = DBConfigs(uri, db_name)
+        self.scenario = self.mddb.get_dict(cst.cu_scenarios, None, self.scenario_name)
         self.federation_name = self.scenario["federation"]
-        self.start = self.scenario["start_time"]
-        self.stop = self.scenario["stop_time"]
 
-        self.federation = self.mddb.get_dict(cu_federations, None, self.federation_name)
+        self.federation = self.mddb.get_dict(cst.cu_federations, None, self.federation_name)
         self.federation = self.federation["federation"]
 
+    def connect_to_metadataJSON(self) -> None:
+        """Connects to the Copper json file
+
+        The Copper json file contains the HELICS configuration
+        JSON along with other pieces of useful configuration or federation
+        management data. This method connects to that database and makes it
+        available for other methods in this class.
+
+        """
+        with open(self.scenario_name + ".json", "r") as scenario:
+            self.scenario = json.load(scenario)
+        self.federation_name = self.scenario["federation"]
+
+        with open(self.federation_name + ".json", "r") as federation:
+            self.federation = json.load(federation)
+
+    def connect_to_dataDB(self):
+        # self._s = datetime.datetime.strptime(self.start, '%Y-%m-%dT%H:%M:%S')
+        self.dl = DBResults()
+        self.dl.open_database_connections()
+        # self.dl.check_version()
+
+        if not self.dl.schema_exist(self.scheme_name):
+            try:
+                self.dl.create_schema(self.scheme_name)
+            except Exception as ex:
+                self.dl.data_db.rollback()
+                logger.exception(f"Rolling back: create schema!")
+                return
+            if not self.dl.table_exist(self.scheme_name, 'hdt_double'):
+                try:
+                    self.dl.make_logger_database(self.scheme_name)
+                    self.dl.remove_scenario(self.scheme_name, self.scenario_name)
+                except Exception as ex:
+                    self.dl.data_db.rollback()
+                    logger.exception(f"Rolling back: make tables for schema!")
+
+    def connect_to_dataCSV(self):
+        # self._s = datetime.datetime.strptime(self.start, '%Y-%m-%dT%H:%M:%S')
+        if self.output_csv is None:
+            out_path = f"{self.path_csv}{self.federate_name}_outputs.csv"
+            try:
+                self.output_csv = open(out_path, "w")
+            except Exception as ex:
+                logger.exception(f"{ex}\nUnable to open output file: {out_path}")
+
+    def close_metadata(self):
+        if self.use_mdb:
+            logger.debug(f"Closing mongo database connection")
+            del self.mddb
+
+    def close_data(self):
+        if self.use_pdb:
+            logger.debug(f"Closing postgres database connection")
+            self.commit_to_logger()
+            self.dl.close_database_connections(True)
+            logger.debug(f"Commit count: {self._commit_cnt}")
+            del self.dl
+        else:
+            if self.output_csv is not None:
+                self.output_csv.close()
+
+    def set_metadata(self) -> None:
+        """Sets instance attributes to enable HELICS config query of metadataDB
+
+        HELICS configuration information is generally stored in the metadataDB
+        and is copied into the `self.federation` attribute. This method pulls
+        out a few keys configuration parameters from that attribute to make
+        them more easily accessible.
+        """
+
+        # setting start and stop time
+        self.start = self.scenario["start_time"]
+        self.stop = self.scenario["stop_time"]
         # setting max in seconds
         ep = datetime.datetime(1970, 1, 1)
         # %:z in version  python 3.12, for now, no time offsets (zones)
@@ -126,6 +226,13 @@ class Federate:
         s_idx = (s - ep).total_seconds()
         e_idx = (e - ep).total_seconds()
         self.stop_time = int((e_idx - s_idx))
+        self.no_t_start = self.start.replace('T',' ')
+        self._s = datetime.datetime.strptime(self.start, '%Y-%m-%dT%H:%M:%S')
+
+        # setting up data logging
+        self.scheme_name = self.scenario["schema"]
+        if self.federation.get("tags"):
+            self.fed_collect = self.federation["tags"].get("logger", self.fed_collect)
 
     def connect_to_helics_config(self) -> None:
         """Sets instance attributes to enable HELICS config query of dbConfigs
@@ -138,7 +245,7 @@ class Federate:
         self.federate = self.federation[self.federate_name]
         self.federate_type = self.federate["federate_type"]
         # self.time_step = self.federate["time_step"]
-        self.time_step = self.federate["HELICS_config"]["period"]
+        self.period = self.federate["HELICS_config"]["period"]
         self.config = self.federate["HELICS_config"]
         # self.image = self.federate["image"]
 
@@ -162,7 +269,11 @@ class Federate:
         if scenario_name is None:
             raise NameError("scenario_name is None")
         self.scenario_name = scenario_name
-        self.connect_to_metadataDB(cosim_mongo_host, cosim_mongo_db)
+        if self.use_mdb:
+            self.connect_to_metadataDB(cst.cosim_mongo, cst.cosim_mongo_db)
+        else:
+            self.connect_to_metadataJSON()
+        self.set_metadata()
         self.connect_to_helics_config()
 
         # Provide internal copies of the HELICS interfaces for convenience during debugging.
@@ -183,10 +294,16 @@ class Federate:
         if "endpoints" in self.config.keys():
             for ep in self.config["endpoints"]:
                 self.endpoints[ep["name"]] = ep
-                if 'key' in self.config['endpoints'][ep]:
-                    self.data_to_federation['endpoints'][ep['key']] = None
-                if 'destination' in self.config['endpoints'][ep]:
-                    self.data_from_federation['endpoints'][ep['key']] = None
+                self.data_to_federation["endpoints"][ep['name']] = None
+                if "destination" in ep:
+                    self.data_from_federation["endpoints"][ep['destination']] = None
+                else:
+                    self.data_from_federation["endpoints"][ep['name']] = None
+
+        if self.use_pdb:
+            self.connect_to_dataDB()
+        else:
+            self.connect_to_dataCSV()
 
         self.create_helics_fed()
 
@@ -289,7 +406,7 @@ class Federate:
         Returns:
             self.next_requested_time: Calculated time for the next HELICS time request
         """
-        self.next_requested_time = self.granted_time + self.time_step
+        self.next_requested_time = self.granted_time + self.period
         return self.next_requested_time
 
     def request_time(self, requested_time: float) -> float:
@@ -321,15 +438,20 @@ class Federate:
         here is vanilla and is expected to be sufficient for many use cases.
         """
         # Subscriptions and inputs
+
+        # Delete out old inputs list to avoid confusion
+        for key in self.data_from_federation["inputs"]:
+            self.data_from_federation["inputs"][key] = []
+
         for idx in range(0, self.hfed.n_inputs):
             put = self.hfed.get_subscription_by_index(idx)
             if put.name[0:7] == "_input_":
                 key = put.target
                 # The name is auto-generated by HELICS and is a subscription
-                logger.debug(f"Auto input idx {idx} key {key} put {put}")
+                logger.debug(f"Auto input idx: {idx} key: {key} put: {put}")
             else:
                 key = put.name
-                logger.debug(f"Input idx {idx} key {key} put {put}")
+                logger.debug(f"Input idx: {idx} key: {key} put: {put}")
 
             d_type = self.inputs[key]['type'].lower()
             if d_type == "double":
@@ -347,17 +469,22 @@ class Federate:
             elif d_type == "boolean":
                 self.data_from_federation["inputs"][key] = put.boolean
             else:
-                logger.debug(f"Key {key} unknown type -> {d_type} object {put}")
+                logger.debug(f"Key: {key} unknown type: {d_type} object: {put}")
 
         # Endpoints
+        # Delete out old message list to avoid confusion
+        for name in self.data_from_federation["endpoints"]:
+            self.data_from_federation["endpoints"][name] = []
+
         for idx in range(0, self.hfed.n_endpoints):
-            ep = self.hfed.get_endpoint_by_index
-            # Delete out old message list to avoid confusion about when the message came in
-            self.data_from_federation[ep.name] = []
+            ep = self.hfed.get_endpoint_by_index(idx)
             for message in range(0, ep.n_pending_messages):
-                if ep.name not in self.data_to_federation["endpoints"]:
-                    self.data_from_federation["endpoints"][ep.name] = []
-                self.data_from_federation["endpoints"][ep.name].append(ep.get_message().data)
+                data = ep.get_message()
+                if ep.default_destination in self.data_from_federation["endpoints"]:
+                    self.data_from_federation["endpoints"][ep.default_destination].append(data)
+                else:
+                    self.data_from_federation["endpoints"][ep.name].append(data)
+                logger.info(f"Message: {idx} endpoint: {ep}, data: {data}")
 
     def update_internal_model(self) -> None:
         """Perform federate specific calculations to bring model up to date
@@ -417,22 +544,87 @@ class Federate:
 
         # Publications
         for key, value in self.data_to_federation["publications"].items():
-            if value is None:
-                continue
-            pub = self.hfed.get_publication_by_name(key)
             if value is not None:
+                pub = self.hfed.get_publication_by_name(key)
                 pub.publish(value)
-            logger.debug(f" {self.federate_name} publication {key}, {value}")
+                logger.debug(f" {self.federate_name} publication: {key}, value: {value}")
+
+                # data logger
+                _pub = self.pubs[key]
+                table = f"hdt_{_pub['type'].lower()}"
+                item_collect = "maybe"
+                if _pub.get("tags"):
+                    item_collect = _pub["tags"].get("logger", item_collect)
+                if self.fed_collect == "no":
+                    if item_collect == "yes":
+                        self.write_to_logger(table, self.federate_name, key, value)
+                else:  # self.fed_collect == "yes" or "maybe"
+                    if item_collect == "yes" or item_collect == "maybe":
+                        self.write_to_logger(table, self.federate_name, key, value)
 
         # Endpoints
-        for key, value in self.data_to_federation["endpoints"].items():
-            if value is None:
-                continue
-            ep = self.hfed.get_endpoint_by_name(key)
-            if value["destination"] == "":
-                ep.send_data(value["payload"])
+        for key, messages in self.data_to_federation["endpoints"].items():
+            if messages is not None:
+                ep = self.hfed.get_endpoint_by_name(key)
+                for msg in messages:
+                    ep.send_data(msg, ep.default_destination)
+
+                    # data logger
+                    _endpts = self.endpoints[key]
+                    item_collect = "maybe"
+                    if _endpts.get("tags"):
+                        item_collect = _endpts["tags"].get("logger", item_collect)
+                    if self.fed_collect == "no":
+                        if item_collect == "yes":
+                            self.write_to_logger("hdt_endpoint", key, ep.default_destination, msg)
+                    else:  # self.fed_collect == "yes" or "maybe"
+                        if item_collect == "yes" or item_collect == "maybe":
+                            self.write_to_logger("hdt_endpoint", key, ep.default_destination, msg)
+
+                logger.debug(f" {self.federate_name} endpoint: {key}, default destination: {ep.default_destination}, messages: {messages}")
+
+    def commit_to_logger(self):
+        if self._commit_qry != "":
+            try:
+                with self.dl.data_db.cursor() as cur:
+                    cur.execute(self._commit_qry)
+                self.dl.data_db.commit()
+                self._count = 0
+                self._commit_cnt += 1
+                self._commit_qry = ""
+            except Exception as ex:
+                logger.error(f"Bad query\n {ex}")
+
+    def query_to_logger(self, query):
+        if query != "":
+            self._count += len(query)
+            self._commit_qry += query
+            # simple implementation of to commit every self.interval bytes or so
+            if self._count > self.interval:
+                self.commit_to_logger()
+
+    def write_to_logger(self, table, name, key, value):
+        # print(f"{table} : {name} : {key} : {value}", flush=True)
+        t = self.granted_time
+        d = datetime.timedelta(seconds=int(self.granted_time))
+        if self.use_pdb:
+            query = (f"INSERT INTO {self.scheme_name}.{table} "
+                   "(real_time, sim_time, scenario, federate, data_name, data_value)"
+                   f" VALUES( to_timestamp('{self.no_t_start}','YYYY-MM-DD HH24:MI:SS') + interval '1s' * "
+                   f"{self.granted_time}, {self.granted_time}, "
+                   f"'{self.scenario_name}', '{name}', '{key}', ")
+            if (type(value) is str) or (type(value) is complex) or (type(value) is list):
+                query += f"'{value}'); "
             else:
-                ep.send_data(value["payload"], value["destination"])
+                query += f"{value}); "
+            # add to logger database
+            self.query_to_logger(query)
+        else:
+            real_time = datetime.datetime.strftime(self._s + d, '%Y-%m-%dT%H:%M:%S')
+            val_string = (f"{real_time}, {t}, "
+                          f"{self.scenario_name}, {name}, {key}, {value}\n")
+            # add to logger output csv
+            self.output_csv.write(val_string)
 
     def destroy_federate(self) -> None:
         """Removes HELICS federate from federation
@@ -447,12 +639,15 @@ class Federate:
 
         logger.debug(f'{h.helicsFederateGetName(self.hfed)} being destroyed, '
                      f'max time = {h.HELICS_TIME_MAXTIME}')
-        requested_time = int(h.HELICS_TIME_MAXTIME)
+        self.close_data()
+        self.close_metadata()
         h.helicsFederateClearMessages(self.hfed)
-        granted_time = h.helicsFederateRequestTime(self.hfed, requested_time)
-        logger.info(f'{h.helicsFederateGetName(self.hfed)} granted time {granted_time}')
+        # TODO: there is a bug for h.helicsFederateRequestTime
+        # requested_time = int(h.helicsFederateRequestTime)
+        # granted_time = h.helicsFederateRequestTime(self.hfed, requested_time)
+        # logger.info(f'{h.helicsFederateGetName(self.hfed)} granted time {granted_time}')
+
         h.helicsFederateDisconnect(self.hfed)
-        h.helicsFederateFree(self.hfed)
         h.helicsFederateFree(self.hfed)
         # h.helicsCloseLibrary()
         logger.debug(f'Federate {h.helicsFederateGetName(self.hfed)} finalized')
@@ -462,7 +657,7 @@ class Federate:
         if self.hfed is not None:
             return self.hfed.current_time
         raise RuntimeError("Federate not yet created. Cannot get current time.")
-     
+
 
     def run(self, scenario_name: str) -> None:
         self.create_federate(scenario_name)

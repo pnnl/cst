@@ -8,9 +8,9 @@ Copper.
 mitch.pelton@pnnl.gov
 """
 import cosim_toolbox as cst
-from cosim_toolbox.dockerRunner import DockerRunner
-import cosim_toolbox.dbConfigs as mDB
+from cosim_toolbox.dbConfigs import DBConfigs
 from cosim_toolbox.helicsConfig import HelicsMsg
+from cosim_toolbox.dockerRunner import DockerRunner
 
 
 class Runner:
@@ -20,7 +20,7 @@ class Runner:
         self.schema_name = schema_name
         self.federation_name = federation_name
         self.docker = docker
-        self.db = mDB.DBConfigs(cst.cosim_mongo_host, cst.cosim_mongo_db)
+        self.db = DBConfigs(cst.cosim_mongo, cst.cosim_mongo_db)
 
     def define_scenario(self):
         names = ["Battery", "EVehicle"]

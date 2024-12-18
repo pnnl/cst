@@ -165,15 +165,15 @@ class TestLoggerApi(unittest.TestCase):
 
     def test_03_get_query_string(self):
         qry_string = self.test_DL.get_query_string(500, 1000, self.scenario_name, "Battery", "Battery/current3", "hdt_boolean")
-        self.assertEqual(qry_string, f"SELECT * FROM {self.schema_name}.hdt_boolean WHERE sim_time>=500 AND sim_time<=1500 AND scenario='{self.scenario_name}' AND federate='Battery' AND sim_name='Battery/current3'")
+        self.assertEqual(qry_string, f"SELECT * FROM {self.schema_name}.hdt_boolean WHERE sim_time>=500 AND sim_time<=1500 AND scenario='{self.scenario_name}' AND federate='Battery' AND data_name='Battery/current3'")
         qry_string2 = self.test_DL.get_query_string(None, 1000, self.scenario_name, "Battery", "Battery/current3", "hdt_boolean")
-        self.assertEqual(qry_string2, f"SELECT * FROM {self.schema_name}.hdt_boolean WHERE sim_time<=1000 AND scenario='{self.scenario_name}' AND federate='Battery' AND sim_name='Battery/current3'")
+        self.assertEqual(qry_string2, f"SELECT * FROM {self.schema_name}.hdt_boolean WHERE sim_time<=1000 AND scenario='{self.scenario_name}' AND federate='Battery' AND data_name='Battery/current3'")
         qry_string3 = self.test_DL.get_query_string(500, None, self.scenario_name, "Battery", "Battery/current3", "hdt_boolean")
-        self.assertEqual(qry_string3, f"SELECT * FROM {self.schema_name}.hdt_boolean WHERE sim_time>=500 AND scenario='{self.scenario_name}' AND federate='Battery' AND sim_name='Battery/current3'")
+        self.assertEqual(qry_string3, f"SELECT * FROM {self.schema_name}.hdt_boolean WHERE sim_time>=500 AND scenario='{self.scenario_name}' AND federate='Battery' AND data_name='Battery/current3'")
         qry_string4 = self.test_DL.get_query_string(500, 1000, None, "Battery", "Battery/current3", "hdt_boolean")
-        self.assertEqual(qry_string4, f"SELECT * FROM {self.schema_name}.hdt_boolean WHERE sim_time>=500 AND sim_time<=1500 AND federate='Battery' AND sim_name='Battery/current3'")
+        self.assertEqual(qry_string4, f"SELECT * FROM {self.schema_name}.hdt_boolean WHERE sim_time>=500 AND sim_time<=1500 AND federate='Battery' AND data_name='Battery/current3'")
         qry_string5 = self.test_DL.get_query_string(500, 1000, self.scenario_name, None, "Battery/current3", "hdt_boolean")
-        self.assertEqual(qry_string5, f"SELECT * FROM {self.schema_name}.hdt_boolean WHERE sim_time>=500 AND sim_time<=1500 AND scenario='{self.scenario_name}' AND sim_name='Battery/current3'")
+        self.assertEqual(qry_string5, f"SELECT * FROM {self.schema_name}.hdt_boolean WHERE sim_time>=500 AND sim_time<=1500 AND scenario='{self.scenario_name}' AND data_name='Battery/current3'")
         qry_string6 = self.test_DL.get_query_string(500, 1000, self.scenario_name, "Battery", None, "hdt_boolean")
         self.assertEqual(qry_string6, f"SELECT * FROM {self.schema_name}.hdt_boolean WHERE sim_time>=500 AND sim_time<=1500 AND scenario='{self.scenario_name}' AND federate='Battery'")
         qry_string7 = self.test_DL.get_query_string(None, None, None, None, None, "hdt_boolean")
@@ -222,9 +222,9 @@ class TestLoggerApi(unittest.TestCase):
         self.assertTrue(df.values[0][0] == "Battery")
         # self.assertTrue(df.values[1][0] == "EVehicle")
 
-    def test_09_get_sim_name_list(self):
-        df = self.test_DL.get_sim_name_list(self.schema_name, "hdt_boolean")
-        df = df.sort_values(by=['sim_name'])
+    def test_09_get_data_name_list(self):
+        df = self.test_DL.get_data_name_list(self.schema_name, "hdt_boolean")
+        df = df.sort_values(by=['data_name'])
         self.assertTrue(len(df) == 1)
         self.assertTrue(df.values[0][0] == "Battery/current3")
         # self.assertTrue(df.values[1][0] == "EVehicle/voltage3")

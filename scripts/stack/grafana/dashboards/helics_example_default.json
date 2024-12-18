@@ -129,7 +129,7 @@
             "editorMode": "code",
             "format": "table",
             "rawQuery": true,
-            "rawSql": "SELECT * FROM helicsexampledefaultschema.hdt_double WHERE federate='Battery' and sim_name='Battery/EV1_current'",
+            "rawSql": "SELECT * FROM helicsexampledefaultschema.hdt_double WHERE federate='Battery' and data_name='Battery/EV1_current'",
             "refId": "A",
             "sql": {
               "columns": [
@@ -260,7 +260,7 @@
             "editorMode": "code",
             "format": "table",
             "rawQuery": true,
-            "rawSql": "SELECT * FROM helicsexampledefaultschema.hdt_double WHERE federate='Charger' and sim_name='Charger/EV1_voltage'",
+            "rawSql": "SELECT * FROM helicsexampledefaultschema.hdt_double WHERE federate='Charger' and data_name='Charger/EV1_voltage'",
             "refId": "A",
             "sql": {
               "columns": [
@@ -390,7 +390,7 @@
             "editorMode": "code",
             "format": "table",
             "rawQuery": true,
-            "rawSql": "SELECT * FROM helicsexampledefaultschema.hdt_double WHERE federate='Battery' and sim_name='Battery/EV2_current'",
+            "rawSql": "SELECT * FROM helicsexampledefaultschema.hdt_double WHERE federate='Battery' and data_name='Battery/EV2_current'",
             "refId": "A",
             "sql": {
               "columns": [
@@ -521,7 +521,7 @@
             "editorMode": "code",
             "format": "table",
             "rawQuery": true,
-            "rawSql": "SELECT * FROM helicsexampledefaultschema.hdt_double WHERE federate='Charger' and sim_name='Charger/EV2_voltage'",
+            "rawSql": "SELECT * FROM helicsexampledefaultschema.hdt_double WHERE federate='Charger' and data_name='Charger/EV2_voltage'",
             "refId": "A",
             "sql": {
               "columns": [
@@ -651,7 +651,7 @@
             "editorMode": "code",
             "format": "table",
             "rawQuery": true,
-            "rawSql": "SELECT * FROM helicsexampledefaultschema.hdt_double WHERE federate='Battery' and sim_name='Battery/EV3_current'",
+            "rawSql": "SELECT * FROM helicsexampledefaultschema.hdt_double WHERE federate='Battery' and data_name='Battery/EV3_current'",
             "refId": "A",
             "sql": {
               "columns": [
@@ -782,7 +782,7 @@
             "editorMode": "code",
             "format": "table",
             "rawQuery": true,
-            "rawSql": "SELECT * FROM helicsexampledefaultschema.hdt_double WHERE federate='Charger' and sim_name='Charger/EV3_voltage'",
+            "rawSql": "SELECT * FROM helicsexampledefaultschema.hdt_double WHERE federate='Charger' and data_name='Charger/EV3_voltage'",
             "refId": "A",
             "sql": {
               "columns": [
@@ -912,7 +912,7 @@
             "editorMode": "code",
             "format": "table",
             "rawQuery": true,
-            "rawSql": "SELECT * FROM helicsexampledefaultschema.hdt_double WHERE federate='Battery' and sim_name='Battery/EV4_current'",
+            "rawSql": "SELECT * FROM helicsexampledefaultschema.hdt_double WHERE federate='Battery' and data_name='Battery/EV4_current'",
             "refId": "A",
             "sql": {
               "columns": [
@@ -1043,7 +1043,7 @@
             "editorMode": "code",
             "format": "table",
             "rawQuery": true,
-            "rawSql": "SELECT * FROM helicsexampledefaultschema.hdt_double WHERE federate='Charger' and sim_name='Charger/EV4_voltage'",
+            "rawSql": "SELECT * FROM helicsexampledefaultschema.hdt_double WHERE federate='Charger' and data_name='Charger/EV4_voltage'",
             "refId": "A",
             "sql": {
               "columns": [
@@ -1173,7 +1173,7 @@
             "editorMode": "code",
             "format": "table",
             "rawQuery": true,
-            "rawSql": "SELECT * FROM helicsexampledefaultschema.hdt_double WHERE federate='Battery' and sim_name='Battery/EV5_current'",
+            "rawSql": "SELECT * FROM helicsexampledefaultschema.hdt_double WHERE federate='Battery' and data_name='Battery/EV5_current'",
             "refId": "A",
             "sql": {
               "columns": [
@@ -1304,7 +1304,7 @@
             "editorMode": "code",
             "format": "table",
             "rawQuery": true,
-            "rawSql": "SELECT * FROM helicsexampledefaultschema.hdt_double WHERE federate='Charger' and sim_name='Charger/EV5_voltage'",
+            "rawSql": "SELECT * FROM helicsexampledefaultschema.hdt_double WHERE federate='Charger' and data_name='Charger/EV5_voltage'",
             "refId": "A",
             "sql": {
               "columns": [

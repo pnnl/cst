@@ -6,11 +6,13 @@ if [[ -z ${INSTDIR} ]]; then
   exit
 fi
 
-ver="22.04.1"
-cosim_ver="1.0.0"
+cd "$DOCKER_DIR" || exit
+cosim_ver=$(cat ../cosim_version)
+grid_ver=$(cat ../grid_version)
 
 echo
-echo "Stamping grid applications software $ver, if you want to change the version, edit this file."
+echo "Stamping Co-Simulation Toolbox ${tesp_ver} and grid applications ${grid_ver}."
+echo "If you want to change the version, edit 'scripts/tesp_version' or 'scripts/grid_version' file."
 echo "You should also update any documentation CHANGELOG.TXT or README.rst before stamping."
 echo "The command below can show the branch and merge history to help you update documentation."
 echo
@@ -18,7 +20,7 @@ echo "    git log --pretty=format:"%h %s" --graph"
 echo
 
 while true; do
-    read -p "Are you ready to stamp Grid $ver? " yn
+    read -p "Are you ready to stamp Grid $grid_ver? " yn
     case $yn in
         [Yy]* ) stamp="yes" break;;
         [Nn]* ) stamp="no"; break;;
@@ -58,28 +60,26 @@ if [ -d "$dir" ]; then
   cd "${REPO_DIR}" || exit
 fi
 
-echo "Creating grid_binaries_$ver.zip for installed binaries for grid applications software"
+echo "Creating grid_binaries_$grid_ver.zip for installed binaries for grid applications software"
 cd "${INSTDIR}" || exit
-zip -r -9 "${BUILD_DIR}/grid_binaries_$ver.zip" . &> "${BUILD_DIR}/grid_binaries.log" &
+zip -r -9 "${BUILD_DIR}/grid_binaries_$grid_ver.zip" . &> "${BUILD_DIR}/grid_binaries.log" &
 
 pip list > "${BUILD_DIR}/tesp_pypi.id"
 
-echo "Stamping grid applications software $ver for install"
+echo "Stamping CoSimulation Toolbox $cosim_ver for install"
 cd "${SIM_DIR}" || exit
-echo "$ver" > "scripts/grid_version"
 echo "$cosim_ver" > "src/cosim_toolbox/version"
 
 # un-comment for final version
 # git tag "v$cosim_ver"
 
-# for sampling cosim
 echo "Creating CoSimulation Toolbox distribution package for pypi"
 cd "${SIM_DIR}/src/cosim_toolbox" || exit
 python3 -m build . > "${BUILD_DIR}/package.log"
 echo "Checking CoSimulation Toolbox distribution package for pypi"
 twine check dist/*
 echo
-echo "To upload the new CoSimulation Toolbox $ver pypi,"
+echo "To upload the new CoSimulation Toolbox $cosim_ver pypi,"
 echo "change directory to ${SIM_DIR}/src/cosim_toolbox"
 echo "and run the command 'twine upload dist/*'"
 echo

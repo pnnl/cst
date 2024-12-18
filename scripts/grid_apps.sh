@@ -60,7 +60,6 @@ else
 fi
 
 echo "Binaries setting: $binaries; username: $1; email: $2"
-# exit 0
 
 if [[ $binaries == "develop" ]]; then
 # add build tools OS

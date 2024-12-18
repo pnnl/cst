@@ -1,7 +1,9 @@
 import logging
+
 from cosim_toolbox.dbResults import DBResults
 from cosim_toolbox.readConfig import ReadConfig
 from enum import Enum
+
 logger = logging.getLogger(__name__)
 
 
@@ -18,11 +20,11 @@ class ValueType(Enum):
     JSON = 'HDT_JSON'
 
 
-
 class ReadResults(DBResults):
     """
     alternative to ResultsDB
     """
+
     def __init__(self, scenario_name):
         super().__init__()
         self.is_connected = self.open_database_connections()
@@ -56,21 +58,21 @@ class ReadResults(DBResults):
             start_time=None,
             duration=None,
             federate_name=None,
-            sim_name=None,
+            data_name=None,
             data_type: ValueType | str = ValueType.DOUBLE
     ):
         if isinstance(data_type, ValueType):
             data_type = data_type.value
-        sim_name_list = self.get_sim_name_list(self.scenario.schema_name, data_type=data_type).to_numpy()
+        data_name_list = self.get_data_name_list(self.scenario.schema_name, data_type=data_type).to_numpy()
         federate_list = self.get_federate_list(self.scenario.schema_name, data_type=data_type).to_numpy()
-        if sim_name is not None and sim_name not in sim_name_list:
-            logger.warning(f"sim_name, {sim_name}, not in {sim_name_list}")
+        if data_name is not None and data_name not in data_name_list:
+            logger.warning(f"data_name, {data_name}, not in {data_name_list}")
         if federate_name is not None and federate_name not in federate_list:
             logger.warning(f"federate_name, {federate_name} not in {federate_list}")
         if data_type not in self.hdt_type.keys():
             logger.warning(f"data_type, {data_type} not in {list(self.hdt_type.keys())}")
         return self.query_scenario_federate_times(start_time, duration, self.scenario_name, federate_name,
-                                      sim_name, data_type)
+                                                  data_name, data_type)
 
     @property
     def string_df(self):
@@ -111,7 +113,6 @@ class ReadResults(DBResults):
     @property
     def json_df(self):
         return self.get_results(data_type=ValueType.JSON)
-
 
     def close(self):
         self.close_database_connections()
