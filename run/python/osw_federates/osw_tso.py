@@ -362,8 +362,8 @@ def run_osw_tso(h5filepath: str, start: str="2032-01-01 00:00:00", end: str="203
     
     # I don't think we will ever use the "last_market_time" values 
     # but they will give us confidence that we're doing things correctly.
-    
-    # h5filepath = '/Users/lill771/Documents/Data/GridView/WECC240_20240807.h5'
+
+    # h5filepath = "/Users/corn677/Projects/EComp/Thrust3/pyenergymarket/data_model_tests/data_files/WECC240_20240807.h5"
     default_dam = {
         "time": {
             "datefrom": start
@@ -473,7 +473,6 @@ def run_osw_tso(h5filepath: str, start: str="2032-01-01 00:00:00", end: str="203
     # market = "da_energy_market"
     # osw.run_market_loop(market, "da_market_results_")
     # osw.run_market_loop(market, 'C:\\Users\\kell175\\copper\\run\\python\\results\\da_results_')
-
 
 if __name__ == "__main__":    
     if sys.argv.__len__() > 2:

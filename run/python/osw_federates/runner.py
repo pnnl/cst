@@ -97,17 +97,21 @@ class Runner:
         }
         print(diction)
 
+        print("Here1")
         self.db.remove_document(mDB.cu_federations, None, self.federation_name)
+        print("Here2")
         self.db.add_dict(mDB.cu_federations, self.federation_name, diction)
         # print(mDB.cu_federations, self.db.get_collection_document_names(mDB.cu_federations))
         # print(self.federation_name, self.db.get_dict(mDB.cu_federations, None, self.federation_name))
-
+        print("Here3")
         scenario = self.db.scenario(self.schema_name,
                                     self.federation_name,
                                     "2032-01-01T00:00:00",
                                     "2032-01-03T00:00:00",
                                     self.docker)
+        print("Here4")
         self.db.remove_document(mDB.cu_scenarios, None, self.scenario_name)
+        print("Here5")
         self.db.add_dict(mDB.cu_scenarios, self.scenario_name, scenario)
         # print(mDB.cu_scenarios, self.db.get_collection_document_names(mDB.cu_scenarios))
         # print(self.scenario_name, self.db.get_dict(mDB.cu_scenarios, None, self.scenario_name))
@@ -122,6 +126,7 @@ if __name__ == "__main__":
     r.define_scenario()
     # print(r.db.get_collection_document_names(mDB.cu_scenarios))
     # print(r.db.get_collection_document_names(mDB.cu_federations))
+    print("Running mongo DB code")
     mDB.Docker.define_yaml(r.scenario_name)
     # if remote:
     #     mDB.Docker.run_remote_yaml(_scenario_name)
