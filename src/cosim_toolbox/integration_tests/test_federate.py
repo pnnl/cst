@@ -1,14 +1,15 @@
 # setup and definitions
 import threading
 import helics as h
-
+import collections
+collections.Callable = collections.abc.Callable
 from cosim_toolbox.federate import Federate
-from cosim_toolbox.metadataDB import MetaDB
+from cosim_toolbox.dbConfigs import DBConfigs
 
 # create a db for a simple federation
 local_default_uri = 'mongodb://localhost:27017'
 collection_name = "main"
-metadb = MetaDB(local_default_uri, collection_name)
+metadb = DBConfigs(local_default_uri, collection_name)
 MAX_TIME = 5
 
 # store all dictionaries for the collection

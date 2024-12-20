@@ -21,8 +21,8 @@ ENV MONGO_PORT=$MONGO_PORT
 
 # Copy Files
 COPY . $COSIM_HOME/cosim_toolbox/cosim_toolbox/
-COPY --from=cosim-build:latest $COSIM_HOME/repo/AMES-V5.0/psst/ $COSIM_HOME/psst/psst/
-COPY --from=cosim-build:latest $COSIM_HOME/repo/AMES-V5.0/README.rst $COSIM_HOME/psst
+COPY --from=cosim-build:latest $COSIM_HOME/repo/psst/ $COSIM_HOME/psst/psst/
+COPY --from=cosim-build:latest $COSIM_HOME/repo/README.rst $COSIM_HOME/psst
 RUN chown -hR $COSIM_USER:$COSIM_USER $COSIM_HOME
 
 # Set as user

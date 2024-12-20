@@ -101,10 +101,19 @@ class SimpleFederate(Federate):
             elif d_type == "boolean":
                 self.data_to_federation["publications"][key] = increment_boolean(dummy)
 
+        for key in self.data_to_federation["endpoints"]:
+            self.data_to_federation["endpoints"][key] = []
+            inkey = key.replace("current", "voltage").replace("Battery", "EVehicle")
+            if self.data_from_federation["endpoints"][inkey] is not None:
+                dummy = 1.0
+                for msg in self.data_from_federation["endpoints"][inkey]:
+                    dummy = float(msg.data)
+                self.data_to_federation["endpoints"][key].append(str(increment_double(dummy)))
+            else:
+                self.data_to_federation["endpoints"][key].append("1.0")
+
 
 if __name__ == "__main__":
     if sys.argv.__len__() > 2:
         test_fed = SimpleFederate(sys.argv[1])
-        test_fed.create_federate(sys.argv[2])
-        test_fed.run_cosim_loop()
-        test_fed.destroy_federate()
+        test_fed.run(sys.argv[2])

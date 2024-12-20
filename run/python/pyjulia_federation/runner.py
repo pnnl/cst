@@ -1,7 +1,7 @@
 import helics as h
 import multiprocessing as mp
 
-from cosim_toolbox.metadataDB import MetaDB
+from cosim_toolbox.dbConfigs import DBConfigs
 from pyjulia_federates import Python_Fed, PyJulia_Fed
 
 """
@@ -11,7 +11,7 @@ The Federate subclasses can be found in pyjulia_federates, and the julia functio
 
 # create a db for a simple federation
 local_default_uri = 'mongodb://localhost:27017'
-metadb = MetaDB(uri=local_default_uri)
+metadb = DBConfigs(uri=local_default_uri)
 MAX_TIME = 5
 
 # store all dictionaries for the collection

@@ -8,7 +8,7 @@ from airflow.contrib.hooks.ssh_hook import SSHHook
 # To initiate the DAG Object
 from airflow import DAG
 # Import cosim toolbox
-import cosim_toolbox.metadataDB as mDB
+from cosim_toolbox.dockerRunner import DockerRunner
 
 # Add new code
 sys.path.insert(0, '/python_extended/test_federation')
@@ -16,22 +16,22 @@ import runner as myr
 
 
 def prepare_case():
-    _scenario_name = "test_Scenario"
-    _schema_name = "test_Schema"
-    _federation_name = "test_Federation"
+    _scenario_name = "dag_Scenario"
+    _schema_name = "dag_Schema"
+    _federation_name = "dag_Federation"
     r = myr.Runner(_scenario_name, _schema_name, _federation_name, True)
     r.define_scenario()
 
 
 def prepare_yaml():
-    _scenario_name = "test_Scenario"
+    _scenario_name = "dag_Scenario"
     os.chdir("/python_extended/test_federation")
-    mDB.Docker.define_yaml(_scenario_name)
+    DockerRunner.define_yaml(_scenario_name)
 
 
 def run_yaml():
     cosim = os.environ.get("SIM_DIR", "/home/worker/copper")
-    _scenario_name = "test_Scenario"
+    _scenario_name = "dag_Scenario"
     ssh = SSHHook(ssh_conn_id='myssh')
     ssh_client = None
     try:

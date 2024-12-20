@@ -3,8 +3,10 @@ import json
 import os
 import unittest
 
-from cosim_toolbox.metadataDB import MetaDB
+from cosim_toolbox.dbConfigs import DBConfigs
 
+import collections
+collections.Callable = collections.abc.Callable
 SIM_HOST = os.environ['SIM_HOST']
 
 
@@ -36,8 +38,7 @@ class TestMetadataDBApi(unittest.TestCase):
     ]
 
     def setUp(self):
-        self.metadb = MetaDB(uri=f'mongodb://{SIM_HOST}:27017')
-        pass
+        self.metadb = DBConfigs(uri=f'mongodb://{SIM_HOST}:27017')
 
     def test_01__open_file(self):
         file_path = os.path.join(os.path.dirname(__file__), "data", "psc_ex.json")
@@ -54,6 +55,7 @@ class TestMetadataDBApi(unittest.TestCase):
             self.assertTrue(False, "Error loading JSON file")
         named_file_dict = {"psc": file_dict}
         self.assertEqual(len(named_file_dict), 1, "Unable to correctly load file_dict")
+        file.close()
         pass
 
     def test_02_add_collection(self):
@@ -189,11 +191,11 @@ class TestMetadataDBApi(unittest.TestCase):
         obj_id = self.metadb.add_dict(collection_name, dict_name, copy_dict)
         dict_obj = self.metadb.get_dict(collection_name=collection_name, dict_name=dict_name)
         dict_obj["EVehicle"]["time_step"] -= 60
-        print(self.metadb.get_collection_document_names(collection_name), flush=True)
+        # print(self.metadb.get_collection_document_names(collection_name), flush=True)
         test_result = self.metadb.update_dict(collection_name=collection_name, updated_dict=dict_obj,
                                               dict_name=dict_name)
         new_dict_obj = self.metadb.get_dict(collection_name=collection_name, dict_name=dict_name)
-        print(self.metadb.get_collection_document_names(collection_name), flush=True)
+        # print(self.metadb.get_collection_document_names(collection_name), flush=True)
         self.assertNotEqual(new_dict_obj, dict_obj)
         self.assertEqual(copy_dict["EVehicle"]["time_step"] - 60, new_dict_obj["EVehicle"]["time_step"])
 

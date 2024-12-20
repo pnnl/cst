@@ -2,6 +2,8 @@
 FROM cosim-ubuntu:latest AS cosim-helics
 
 # User name and work directory
+ARG SIM_GID=9002
+ARG SIM_GRP=runner
 ARG SIM_UID
 ARG COSIM_USER
 ENV COSIM_HOME=/home/$COSIM_USER
@@ -33,10 +35,11 @@ RUN echo "===== Building CoSim HELICS =====" && \
 # protect images by changing root password
   echo "root:${COSIM_USER}" | chpasswd && \
   echo "<<<< Adding the '${COSIM_USER}' user >>>>" && \
+  addgroup --gid ${SIM_GID} ${SIM_GRP} && \
   useradd -m -s /bin/bash -u $SIM_UID ${COSIM_USER} && \
   echo "<<<< Changing new user password >>>>" && \
   echo "${COSIM_USER}:${COSIM_USER}" | chpasswd && \
-  usermod -aG sudo ${COSIM_USER}
+  usermod -aG sudo,${SIM_GRP} ${COSIM_USER}
 
 #Add cplex
 #COPY $COSIM_HOME/cplex_studio129.linux-x86-64.bin

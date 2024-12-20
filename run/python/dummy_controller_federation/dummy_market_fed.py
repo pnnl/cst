@@ -7,9 +7,9 @@ will send dummy data to the federation, to test the dummy controller.
 @author: Shat Pratoomratana
 shat.pratoomratana@pnnl.gov
 """
-
+import sys
 from cosim_toolbox.federate import Federate
-
+import json
 
 def DAM_clearing_info():
     market_info = {
@@ -68,22 +68,21 @@ class DummyMarketFederate(Federate):
        
     
         #get bid information from the controller federate via HELICS
-        DAM_bid_info = self.data_from_federation["inputs"][DAM_sub_key]
-        freq_bid_info = self.data_from_federation["inputs"][freq_sub_key]
-        realtime_bid_info = self.data_from_federation["inputs"][realtime_sub_key]
-
+        DAM_bid_info = json.loads(self.data_from_federation["inputs"][DAM_sub_key])
+        freq_bid_info = json.loads(self.data_from_federation["inputs"][freq_sub_key])
+        realtime_bid_info = json.loads(self.data_from_federation["inputs"][realtime_sub_key])
+        print(DAM_bid_info)
 
         #Create market clearing information then send them out via HELICS
-        self.data_to_federation["publication"][DAM_pub_key] = DAM_clearing_info()
-        self.data_to_federation["publication"][freq_pub_key] = frequency_clearing_info()
-        self.data_to_federation["publication"][realtime_pub_key] = realtime_clearing_info()
+        self.data_to_federation["publications"][DAM_pub_key] = json.dumps(DAM_clearing_info())
+        self.data_to_federation["publications"][freq_pub_key] = json.dumps(frequency_clearing_info())
+        self.data_to_federation["publications"][realtime_pub_key] = json.dumps(realtime_clearing_info())
 
-        return super().update_internal_model()   
+        # return super().update_internal_model()
     
         
 if __name__ == "__main__":
-    test_fed = DummyMarketFederate("MMM")    
-    test_fed.create_federate("dummy_market_federate")
-    # test_fed.run_cosim_loop()
-    # test_fed.destroy_federate()    
+    if sys.argv.__len__() > 2:
+        test_fed = DummyMarketFederate(sys.argv[1])
+        test_fed.run(sys.argv[2])
     
