@@ -84,7 +84,7 @@ class Runner:
         print(cst.cu_scenarios, self.db.get_collection_document_names(cst.cu_scenarios))
 
 
-if __name__ == "__main__":
+def main():
     _scenario_name = "MyScenario"
     _schema_name = "MySchema"
     _federation_name = "MyFederation"
@@ -98,3 +98,6 @@ if __name__ == "__main__":
             DockerRunner.run_remote_yaml(_scenario_name)
         else:
             DockerRunner.run_yaml(_scenario_name)
+
+if __name__ == "__main__":
+    main()

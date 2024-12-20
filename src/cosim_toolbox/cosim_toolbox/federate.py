@@ -161,7 +161,6 @@ class Federate:
             self.federation = json.load(federation)
 
     def connect_to_dataDB(self):
-        # self._s = datetime.datetime.strptime(self.start, '%Y-%m-%dT%H:%M:%S')
         self.dl = DBResults()
         self.dl.open_database_connections()
         # self.dl.check_version()
@@ -182,7 +181,6 @@ class Federate:
                     logger.exception(f"Rolling back: make tables for schema!")
 
     def connect_to_dataCSV(self):
-        # self._s = datetime.datetime.strptime(self.start, '%Y-%m-%dT%H:%M:%S')
         if self.output_csv is None:
             out_path = f"{self.path_csv}{self.federate_name}_outputs.csv"
             try:
@@ -244,7 +242,6 @@ class Federate:
         """
         self.federate = self.federation[self.federate_name]
         self.federate_type = self.federate["federate_type"]
-        # self.time_step = self.federate["time_step"]
         self.period = self.federate["HELICS_config"]["period"]
         self.config = self.federate["HELICS_config"]
         # self.image = self.federate["image"]
@@ -663,8 +660,3 @@ class Federate:
         self.create_federate(scenario_name)
         self.run_cosim_loop()
         self.destroy_federate()
-
-
-if __name__ == "__main__":
-    test_fed = Federate("Battery")
-    test_fed.run("TE30")

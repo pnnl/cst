@@ -2,15 +2,17 @@
 
 """
 import json
-from cosim_toolbox.dockerRunner import DockerRunner
-from cosim_toolbox.readConfig import ReadConfig
+import subprocess
+from multiprocessing import Process
+
+import helics as h
+
+import cosim_toolbox.federateLogger as datalog
 from battery import Battery
 from charger import Charger
-from multiprocessing import Process
-import helics as h
-import cosim_toolbox.federateLogger as datalog
-import subprocess
 from configurator import Configurator
+from cosim_toolbox.dockerRunner import DockerRunner
+from cosim_toolbox.readConfig import ReadConfig
 
 
 def run(scenario_name):

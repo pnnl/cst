@@ -18,7 +18,7 @@ CONFIG_BUILDS=(
   "airflow" "${SIM_DIR}/src/cosim_toolbox/" $BUILD
   "library" "./" $SKIP
   "build" "${SIM_DIR}/scripts/build/" $SKIP
-  "helics" "./" $SKIP
+  "helics" "./" $BUILD
   "python" "${SIM_DIR}/src/cosim_toolbox/" $BUILD
 #  "tespapi" "./" $SKIP
 #  "julia" "./" $SKIP
