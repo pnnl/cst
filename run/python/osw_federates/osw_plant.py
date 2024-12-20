@@ -22,7 +22,6 @@ import os
 
 # internal packages
 from cosim_toolbox.federate import Federate
-from cosim_toolbox.dataLogger import DataLogger
 
 file_path = os.getcwd()
 sys.path.append(os.path.join(file_path, "plant"))
