@@ -1,12 +1,11 @@
 import os
-import pprint
 import logging
 import subprocess
+
 import cosim_toolbox as cst
 from cosim_toolbox.dbConfigs import DBConfigs
 
 logger = logging.getLogger(__name__)
-pp = pprint.PrettyPrinter(indent=4, )
 
 class DockerRunner:
     """Collection of static methods used in building and running the docker-compose.yaml
@@ -63,17 +62,17 @@ class DockerRunner:
 
     @staticmethod
     def define_yaml(scenario_name: str) -> None:
-        """Create the docker-compoose.yaml for the provided scenario
+        """Create the docker-compose.yaml for the provided scenario
 
         Args:
             scenario_name (str): Name of the scenario run by this docker-compose.yaml
         """
-        mdb = DBConfigs(cst.cosim_mongo, cst.cosim_mongo_db)
+        db = DBConfigs(cst.cosim_mongo, cst.cosim_mongo_db)
 
-        scenario_def = mdb.get_dict(cst.cu_scenarios, None, scenario_name)
+        scenario_def = db.get_dict(cst.cu_scenarios, None, scenario_name)
         federation_name = scenario_def["federation"]
         schema_name = scenario_def["schema"]
-        fed_def = mdb.get_dict(cst.cu_federations, None, federation_name)["federation"]
+        fed_def = db.get_dict(cst.cu_federations, None, federation_name)["federation"]
 
         cosim_env = """      SIM_HOST: \"""" + cst.sim_host + """\"
       SIM_USER: \"""" + cst.sim_user + """\"
@@ -84,7 +83,7 @@ class DockerRunner:
         yaml = 'services:\n'
         # Add helics broker federate
         cnt = 2
-        fed_cnt = str(fed_def.__len__() + 1)
+        fed_cnt = str(fed_def.__len__())
         env = [cosim_env, "exec helics_broker --ipv4 -f " + fed_cnt + " --loglevel=warning --name=broker"]
         yaml += DockerRunner._service("helics", "cosim-helics:latest", env, cnt, depends=None)
 
@@ -95,12 +94,12 @@ class DockerRunner:
             yaml += DockerRunner._service(name, image, env, cnt, depends=None)
 
         # Add data logger federate
-        cnt += 1
-        env = [cosim_env,
-               "source /home/worker/venv/bin/activate && " +
-               "exec python3 -c \\\"import cosim_toolbox.federateLogger as datalog; datalog.main('FederateLogger', '" +
-               schema_name + "', '" + scenario_name + "')\\\""]
-        yaml += DockerRunner._service(cst.cu_logger, "cosim-python:latest", env, cnt, depends=None)
+        # cnt += 1
+        # env = [cosim_env,
+        #        "source /home/worker/venv/bin/activate && " +
+        #        "exec python3 -c \\\"import cosim_toolbox.federateLogger as datalog; datalog.main('FederateLogger', '" +
+        #        schema_name + "', '" + scenario_name + "')\\\""]
+        # yaml += DockerRunner._service(cst.cu_logger, "cosim-python:latest", env, cnt, depends=None)
 
         yaml += DockerRunner._network()
         op = open(scenario_name + ".yaml", 'w')

@@ -36,7 +36,7 @@ setup(
     package_data={
         # 'tesp_support': ['api/datafiles/*.json']
     },
-    python_requires='>=3.8',
+    python_requires='>=3.10',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Console',
@@ -47,7 +47,7 @@ setup(
         'Natural Language :: English',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.10',
         'Topic :: Scientific/Engineering'
     ],
     zip_safe=False,

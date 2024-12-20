@@ -9,8 +9,8 @@ shat.pratoomratana@pnnl.gov
 
 import cosim_toolbox as cst
 from cosim_toolbox.dbConfigs import DBConfigs
-from cosim_toolbox.helicsConfig import HelicsMsg
 from cosim_toolbox.dockerRunner import DockerRunner
+from cosim_toolbox.helicsConfig import HelicsMsg
 
 
 class Runner:
@@ -25,8 +25,8 @@ class Runner:
     def define_scenario(self):
         prefix = "source /home/worker/venv/bin/activate && exec python3 "
         names = ["Controller", "Market"]
-        
-        #Controller federate 
+
+        # Controller federate
         t1 = HelicsMsg(names[0], 30)
         if self.docker:
             t1.config("brokeraddress", "10.5.0.2")
@@ -35,17 +35,15 @@ class Runner:
         t1.config("period", 30)
         t1.config("uninterruptible", False)
         t1.config("terminate_on_error", True)
-        
 
         t1.pubs_n(names[0] + "/DAM_bid", "string")
         t1.subs_n(names[1] + "/DAM_clearing_info", "string")
-        
+
         t1.pubs_n(names[0] + "/frequency_bid", "string")
         t1.subs_n(names[1] + "/frequency_clearing_info", "string")
-        
+
         t1.pubs_n(names[0] + "/realtime_bid", "string")
         t1.subs_n(names[1] + "/realtime_clearing_info", "string")
-        
 
         f1 = {
             "image": "cosim-python:latest",
@@ -55,7 +53,7 @@ class Runner:
             "HELICS_config": t1.write_json()
         }
 
-        #Market federate
+        # Market federate
         t2 = HelicsMsg(names[1], 30)
         if self.docker:
             t2.config("brokeraddress", "10.5.0.2")
@@ -64,7 +62,7 @@ class Runner:
         t2.config("period", 60)
         t2.config("uninterruptible", False)
         t2.config("terminate_on_error", True)
-#        t2.config("wait_for_current_time_update", True)
+        #        t2.config("wait_for_current_time_update", True)
 
         t2.subs_e(names[0] + "/DAM_bid", "string", None)
         t2.pubs_e(names[1] + "/DAM_clearing_info", "string", None)
@@ -74,7 +72,6 @@ class Runner:
 
         t2.subs_e(names[0] + "/realtime_bid", "string", None)
         t2.pubs_e(names[1] + "/realtime_clearing_info", "string", None)
-
 
         f2 = {
             "image": "cosim-python:latest",
@@ -93,7 +90,7 @@ class Runner:
 
         self.db.remove_document(cst.cu_federations, None, self.federation_name)
         self.db.add_dict(cst.cu_federations, self.federation_name, diction)
-        # print(mDB.cu_federations, self.db.get_collection_document_names(mDB.cu_federations))
+        # print(cst.cu_federations, self.db.get_collection_document_names(cst.cu_federations))
 
         scenario = self.db.scenario(self.schema_name,
                                     self.federation_name,
@@ -102,7 +99,7 @@ class Runner:
                                     self.docker)
         self.db.remove_document(cst.cu_scenarios, None, self.scenario_name)
         self.db.add_dict(cst.cu_scenarios, self.scenario_name, scenario)
-        # print(mDB.cu_scenarios, self.db.get_collection_document_names(mDB.cu_scenarios))
+        # print(cst.cu_scenarios, self.db.get_collection_document_names(cst.cu_scenarios))
 
 
 if __name__ == "__main__":

@@ -22,7 +22,7 @@ echo
 while true; do
     read -p "Are you ready to stamp Grid $grid_ver? " yn
     case $yn in
-        [Yy]* ) stamp="yes" break;;
+        [Yy]* ) stamp="yes"; break;;
         [Nn]* ) stamp="no"; break;;
         * ) echo "Please answer [y]es or [n]o.";;
     esac

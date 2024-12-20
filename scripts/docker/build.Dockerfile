@@ -9,25 +9,27 @@ USER $COSIM_USER
 WORKDIR $COSIM_HOME
 
 # CoSim exports
+ENV TESPDIR=$COSIM_HOME/tesp
 ENV INSTDIR=$COSIM_HOME/tenv
-ENV BUILD_DIR=$COSIM_HOME/build
 ENV REPO_DIR=$COSIM_HOME/repo
+ENV BUILD_DIR=$COSIM_HOME/build
 
 # COMPILE exports
 ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
 ENV PYHELICS_INSTALL=$INSTDIR
 ENV GLPATH=$INSTDIR/lib/gridlabd:$INSTDIR/share/gridlabd
-ENV CPLUS_INCLUDE_PATH=/usr/include/hdf5/serial
+ENV CPLUS_INCLUDE_PATH=/usr/include/hdf5/serial:$INSTDIR/include
 ENV FNCS_INCLUDE_DIR=$INSTDIR/include
 ENV FNCS_LIBRARY=$INSTDIR/lib
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$INSTDIR/lib
 ENV LD_RUN_PATH=$INSTDIR/lib
 
 # PATH
-ENV PATH=$JAVA_HOME:$INSTDIR/bin:$PATH
+ENV PATH=$JAVA_HOME:$INSTDIR/bin:$COSIM_HOME/.local/bin:$PATH
 ENV PATH=$PATH:$INSTDIR/energyplus
 ENV PATH=$PATH:$INSTDIR/energyplus/PreProcess
 ENV PATH=$PATH:$INSTDIR/energyplus/PostProcess
+ENV PATH=$PATH:$TESPDIR/scripts/helpers
 
 # PSST exports
 ENV PSST_SOLVER=cbc
@@ -49,14 +51,16 @@ RUN echo "===== Building CoSim Build =====" && \
 COPY . ${BUILD_DIR}
 
 RUN echo "Cloning or download all relevant repositories..." && \
-  cd "${REPO_DIR}" || exit && \
-  echo ++++++++++++++ TESP && \
-  git clone -b main https://github.com/pnnl/tesp.git && \
+  cd ${REPO_DIR} || exit && \
+  echo "++++++++++++++ TESP" && \
+  git clone -b develop https://github.com/pnnl/tesp.git && \
 #  ${BUILD_DIR}/patch.sh tesp tesp && \
   echo "++++++++++++++ PSST" && \
   git clone -b master https://github.com/ames-market/AMES-V5.0.git && \
-  echo "Applying the patch for AMES...... from ${BUILD_DIR}" && \
   ${BUILD_DIR}/patch.sh AMES-V5.0 AMES-V5.0 && \
+  mv AMES-V5.0/README.rst . && \
+  mv AMES-V5.0/psst . && \
+  rm -rf AMES-V5.0 && \
   echo "++++++++++++++ FNCS" && \
   git clone -b feature/opendss https://github.com/FNCS/fncs.git && \
   ${BUILD_DIR}/patch.sh fncs fncs && \
@@ -105,8 +109,12 @@ RUN echo "Cloning or download all relevant repositories..." && \
   /bin/rm -r ${REPO_DIR}/ThirdParty-ASL && \
   /bin/rm -r ${REPO_DIR}/ThirdParty-Mumps && \
   echo "Compiling and Installing TESP EnergyPlus agents and TMY converter..." && \
+  cp -r ${REPO_DIR}/tesp/src ${TESPDIR} && \
+  cp -r ${REPO_DIR}/tesp/data ${TESPDIR} && \
+  cp ${REPO_DIR}/tesp/README.md ${TESPDIR} && \
+  cp ${REPO_DIR}/tesp/LICENSE ${TESPDIR} && \
+  cp ${REPO_DIR}/tesp/requirements.txt ${TESPDIR} && \
   ./tesp_b.sh clean > tesp.log 2>&1 && \
   /bin/rm -r ${REPO_DIR}/tesp && \
   echo "${COSIM_USER}" | sudo -S ldconfig && \
-  cd ${BUILD_DIR} || exit && \
   ./versions.sh

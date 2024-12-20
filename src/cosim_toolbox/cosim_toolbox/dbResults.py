@@ -29,45 +29,10 @@ logger = logging.getLogger(__name__)
 # TODO: The databases referenced in these APIs should be "metadata"
 # and "time_series" and should be updated across the codebase.
 
-# TODO: Does this HELICS stuff need to stay in here? If so, make it a
-# comment (not a string) and add explanation for why it's here.
-"""
-    HELICS_DATA_TYPE_UNKNOWN = -1,
-    /** a sequence of characters*/
-    HELICS_DATA_TYPE_STRING = 0,
-    /** a double precision floating point number*/
-    HELICS_DATA_TYPE_DOUBLE = 1,
-    /** a 64 bit integer*/
-    HELICS_DATA_TYPE_INT = 2,
-    /** a pair of doubles representing a complex number*/
-    HELICS_DATA_TYPE_COMPLEX = 3,
-    /** an array of doubles*/
-    HELICS_DATA_TYPE_VECTOR = 4,
-    /** a complex vector object*/
-    HELICS_DATA_TYPE_COMPLEX_VECTOR = 5,
-    /** a named point consisting of a string and a double*/
-    HELICS_DATA_TYPE_NAMED_POINT = 6,
-    /** a boolean data type*/
-    HELICS_DATA_TYPE_BOOLEAN = 7,
-    /** time data type*/
-    HELICS_DATA_TYPE_TIME = 8,
-    /** raw data type*/
-    HELICS_DATA_TYPE_RAW = 25,
-    /** type converts to a valid json string*/
-    HELICS_DATA_TYPE_JSON = 30,
-    /** the data type can change*/
-    HELICS_DATA_TYPE_MULTI = 33,
-    /** open type that can be anything*/
-    HELICS_DATA_TYPE_ANY = 25262
-"""
-
-
 class DBResults:
     """Methods for writing to and reading from the time-series database. This
     class does not provide HELICS federate functionality.
 
-    Returns:
-        None
     """
     hdt_type = {'HDT_STRING': 'text',
                 'HDT_DOUBLE': 'double precision',
@@ -87,7 +52,8 @@ class DBResults:
         self.data_db = None
         self.use_timescale = False
 
-    def _connect_logger_database(self, connection: dict = None):
+    @staticmethod
+    def _connect_logger_database(connection: dict = None):
         """This function defines the connection to the data database
         and opens a connection to the postgres database
 
@@ -263,6 +229,8 @@ class DBResults:
         Returns:
             dict: scenario metadata requested
         """
+        if scenario_name is None or scenario_name == "":
+            return None
         if self.scenario_name != scenario_name:
             self.scenario = ReadConfig(scenario_name)
             self.scenario_name = scenario_name
@@ -351,6 +319,8 @@ class DBResults:
             data from logger database
         """
         scenario = self.get_scenario(scenario_name)
+        if scenario is None:
+            return None
         scheme_name = scenario.schema_name
         qry_string = self.get_select_string(scheme_name, data_type)
         time_string = self.get_time_select_string(start_time, duration)
@@ -416,12 +386,14 @@ class DBResults:
             returned from the query of the database
         """
         qry_string = self.get_query_string(start_time, duration, scenario_name, federate_name, data_name, data_type)
-        with self.data_db.cursor() as cur:
-            cur.execute(qry_string)
-            column_names = [desc[0] for desc in cur.description]
-            data = cur.fetchall()
-            dataframe = pd.DataFrame(data, columns=column_names)
-            return dataframe
+        if qry_string:
+            with self.data_db.cursor() as cur:
+                cur.execute(qry_string)
+                column_names = [desc[0] for desc in cur.description]
+                data = cur.fetchall()
+                dataframe = pd.DataFrame(data, columns=column_names)
+                return dataframe
+        return None
 
     def query_scenario_all_times(self, scenario_name: str, data_type: str) -> pd.DataFrame:
         """This function queries data from the logger database filtered only by scenario_name and data_name
@@ -622,49 +594,3 @@ class DBResults:
         dataframe['time_stamp'] = time_list
         ts = dataframe.set_index('time_stamp')
         return ts
-
-
-if __name__ == "__main__":
-    d_time = dt.datetime.now()
-    logger_data = DBResults()
-    logger_data.open_database_connections()
-    scenario = logger_data.get_scenario("test_scenario")
-    df = logger_data.query_scenario_federate_times(500, 1000, "test_scenario", "Battery",
-                                                   "Battery/current3", "hdt_boolean")
-    print(df)
-    logger_data.close_database_connections()
-
-    # TODO: If we don't need this code any more we should delete it.
-    # t_data = db.scenario()
-    # print(db)
-    # df = get_scenario_list("test_scenario", "hdt_boolean")
-    # print(df)
-    # df = get_federate_list("test_scenario", "hdt_boolean")
-    # print(df)
-    # df = get_data_name_list("test_scenario", "hdt_boolean")
-    # print(df)
-    # df = get_table_data(conn, "hdt_string")
-    # df = query_time_series(780, 250, "test_scenario", "FederateLogger", "EVehicle/voltage4", "hdt_string")
-    # df = query_time_series(None, 1000, "test_scenario", "FederateLogger", "EVehicle/voltage4", "hdt_boolean")
-    # print(df)
-    # df = query_time_series(None, 1000, "test_scenario", "FederateLogger", "EVehicle/voltage4", "hdt_int")
-    # print(df)
-    # df = query_time_series(None, 1000, "test_scenario", "FederateLogger", "EVehicle/voltage4", "hdt_double")
-    # print(df)
-    # df = query_time_series(None, 1000, "test_scenario", "FederateLogger", "EVehicle/voltage4", "hdt_complex")
-    # print(df)
-    # df = query_time_series(None, 1000, "test_scenario", "FederateLogger", "EVehicle/voltage4", "hdt_complex_vector")
-    # print(df)
-    # df = query_time_series(None, 1000, "test_scenario", "FederateLogger", "EVehicle/voltage4", "hdt_string")
-    # print(df)
-    # df = query_time_series(None, 1000, "test_scenario", "FederateLogger", "EVehicle/voltage4", "hdt_json")
-    # print(df)
-    # df = query_time_series(None, 1000, "test_scenario", "FederateLogger", "EVehicle/voltage4", "hdt_vector")
-    # print(df)
-    # df = query_time_series(None, 1000, "test_scenario", "FederateLogger", "EVehicle/voltage4", "hdt_time")
-    # print(df)
-    # df = query_time_series(None, 1000, "test_scenario", "FederateLogger", "EVehicle/voltage4", "hdt_named_point")
-    # print(df)
-    # df = query_time_series(25000, None, "test_scenario", "FederateLogger", "EVehicle/voltage4", "hdt_boolean")
-    # df = query_time_series(None, 1020, "test_scenario", "FederateLogger", "EVehicle/voltage4", "hdt_string")
-    # print(df)

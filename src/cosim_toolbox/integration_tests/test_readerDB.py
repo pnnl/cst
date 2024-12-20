@@ -6,10 +6,10 @@ import subprocess
 from os import environ
 import unittest
 
-import cosim_toolbox.dbResults as dL
-import cosim_toolbox.dbConfigs as DBConfigs
-from cosim_toolbox.helicsConfig import HelicsMsg, Collect
 import cosim_toolbox as cst
+from cosim_toolbox.dbResults import DBResults
+from cosim_toolbox.dbConfigs import DBConfigs
+from cosim_toolbox.helicsConfig import HelicsMsg, Collect
 
 
 _data_db = {
@@ -146,12 +146,13 @@ class TestLoggerApi(unittest.TestCase):
 
     def setUp(self):
         Singleton()
-        self.test_DL = dL.ResultsDB()
+        self.test_DL = DBResults()
         self.test_DL.open_database_connections(data_connection=_data_db, meta_connection=_meta_db)
 
     def test_00_open_databases(self):
         self.assertIsNotNone(self.test_DL.data_db)
-        self.assertIsNotNone(self.test_DL.meta_db)
+        self.assertIsNone(self.test_DL.scenario)
+        self.assertIsNone(self.test_DL.scenario_name)
 
     def test_01_get_select_string(self):
         qry_string = self.test_DL.get_select_string(self.schema_name, "hdt_double")
@@ -171,13 +172,13 @@ class TestLoggerApi(unittest.TestCase):
         qry_string3 = self.test_DL.get_query_string(500, None, self.scenario_name, "Battery", "Battery/current3", "hdt_boolean")
         self.assertEqual(qry_string3, f"SELECT * FROM {self.schema_name}.hdt_boolean WHERE sim_time>=500 AND scenario='{self.scenario_name}' AND federate='Battery' AND data_name='Battery/current3'")
         qry_string4 = self.test_DL.get_query_string(500, 1000, None, "Battery", "Battery/current3", "hdt_boolean")
-        self.assertEqual(qry_string4, f"SELECT * FROM {self.schema_name}.hdt_boolean WHERE sim_time>=500 AND sim_time<=1500 AND federate='Battery' AND data_name='Battery/current3'")
+        self.assertEqual(qry_string4, None)
         qry_string5 = self.test_DL.get_query_string(500, 1000, self.scenario_name, None, "Battery/current3", "hdt_boolean")
         self.assertEqual(qry_string5, f"SELECT * FROM {self.schema_name}.hdt_boolean WHERE sim_time>=500 AND sim_time<=1500 AND scenario='{self.scenario_name}' AND data_name='Battery/current3'")
         qry_string6 = self.test_DL.get_query_string(500, 1000, self.scenario_name, "Battery", None, "hdt_boolean")
         self.assertEqual(qry_string6, f"SELECT * FROM {self.schema_name}.hdt_boolean WHERE sim_time>=500 AND sim_time<=1500 AND scenario='{self.scenario_name}' AND federate='Battery'")
         qry_string7 = self.test_DL.get_query_string(None, None, None, None, None, "hdt_boolean")
-        self.assertEqual(qry_string7, f"SELECT * FROM {self.schema_name}.hdt_boolean")
+        self.assertEqual(qry_string7, None)
 
     def test_04_query_scenario_federate_times(self):
         df = self.test_DL.query_scenario_federate_times(500, 1000, self.scenario_name,
@@ -191,7 +192,7 @@ class TestLoggerApi(unittest.TestCase):
         self.assertTrue(len(df) == 2864)
         df = self.test_DL.query_scenario_federate_times(500, 1000, None,
                                                     "Battery", "Battery/current3", "hdt_boolean")
-        self.assertTrue(len(df) == 34)
+        self.assertEqual(df, None)
         df = self.test_DL.query_scenario_federate_times(500, 1000, self.scenario_name,
                                                     None, "Battery/current3", "hdt_boolean")
         self.assertTrue(len(df) == 34)
@@ -200,7 +201,7 @@ class TestLoggerApi(unittest.TestCase):
         self.assertTrue(len(df) == 34)
         df = self.test_DL.query_scenario_federate_times(None, None, None,
                                                     None, None, "hdt_boolean")
-        self.assertTrue(len(df) == 2880)
+        self.assertEqual(df, None)
 
     def test_05_query_scenario_all_times(self):
         df = self.test_DL.query_scenario_all_times(self.scenario_name, "hdt_boolean")
@@ -249,7 +250,6 @@ class TestLoggerApi(unittest.TestCase):
     def test_20_close_databases(self):
         self.test_DL.close_database_connections()
         self.assertIsNone(self.test_DL.data_db)
-        self.assertIsNone(self.test_DL.meta_db)
 
     def tearDown(self):
         pass

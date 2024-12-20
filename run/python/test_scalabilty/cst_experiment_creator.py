@@ -15,20 +15,20 @@ import shutil
 import stat
 import sys
 
-from cosim_toolbox.dbConfigs import DBConfigs as mDB
+import cosim_toolbox as cst
+from cosim_toolbox.dbConfigs import DBConfigs
 from cosim_toolbox.helicsConfig import HelicsMsg, Collect
-from cosim_toolbox import cosim_mongo, cosim_mongo_db, cu_federations, cu_scenarios
 
 class Runner:
 
     def __init__(self, scalability_name, docker=False):
         self.cu_scalability = scalability_name
         self.docker = docker
-        print(cosim_mongo)
-        self.db = mDB(cosim_mongo, cosim_mongo_db)
+        print(cst.cosim_mongo)
+        self.db = DBConfigs(cst.cosim_mongo, cst.cosim_mongo_db)
 
         # Uncomment the next three lines for debug
-        # mDB.federation_database(True)
+        # DBConfigs.federation_database(True)
         # self.db.db[self.cu_scalability].drop()
         # self.db.add_collection(self.cu_scalability)
 
@@ -179,7 +179,7 @@ docker run \\
             self.db.remove_document(cu_federations, None, federation_name)
             self.db.add_dict(cu_federations, federation_name, federation)
             # Uncomment for debug
-            # print(mDB.cu_federations, self.db.get_collection_document_names(mDB.cu_federations))
+            # print(cst.cu_federations, self.db.get_collection_document_names(cst.cu_federations))
 
         scenario = self.db.scenario(schema_name,
                                     federation_name,
@@ -193,8 +193,8 @@ docker run \\
             self.db.remove_document(cu_scenarios, None, scenario_name)
             self.db.add_dict(cu_scenarios, scenario_name, scenario)
             # Uncomment the next two lines for debug
-            # print(mDB.cu_scenarios, self.db.get_collection_document_names(mDB.cu_scenarios))
-            # print(scenario_name, self.db.get_dict(mDB.cu_scenarios, None, scenario_name))
+            # print(cst.cu_scenarios, self.db.get_collection_document_names(cst.cu_scenarios))
+            # print(scenario_name, self.db.get_dict(cst.cu_scenarios, None, scenario_name))
 
         scalability = {
             "number of feds": federate_size,
@@ -216,7 +216,7 @@ docker run \\
 
         self.define_shell(scenario_name, scenario, scalability, federation)
 #        self.define_runner()
-#        mDB.Docker.define_yaml(scenario_name)
+#        DockerRunner.define_yaml(scenario_name)
 
     def define_scenarios(self):
         federates = [5, 50, 500]
@@ -257,6 +257,6 @@ if __name__ == "__main__":
     else:
         r = Runner("cst_scale_z1", False)
     r.define_scenarios()
-    print(r.db.get_collection_document_names(cu_scenarios))
+    print(r.db.get_collection_document_names(cst.cu_scenarios))
     print(r.db.get_collection_document_names(r.cu_scalability))
-    print(r.db.get_collection_document_names(cu_federations))
+    print(r.db.get_collection_document_names(cst.cu_federations))

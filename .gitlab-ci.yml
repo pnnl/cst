@@ -16,8 +16,8 @@ image: python:3.10
   echo "$ENV_SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
   chmod 0600 ~/.ssh/id_rsa
   export SSH_CMD="ssh -i ~/.ssh/id_rsa -l $DEVOPS_USER $DEVOPS_SERVER"
-  if [ -n "$CI_MERGE_REQUEST_TARGET_BRANCH_NAME" ]; then
-    export BRANCH_NAME=$CI_MERGE_REQUEST_TARGET_BRANCH_NAME
+  if [ -n "$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME" ]; then
+    export BRANCH_NAME=$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME
   else
     export BRANCH_NAME=$CI_COMMIT_BRANCH
   fi

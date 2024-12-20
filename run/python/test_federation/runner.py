@@ -20,7 +20,6 @@ class Runner:
         self.schema_name = schema_name
         self.federation_name = federation_name
         self.docker = docker
-        print(cst.cosim_mongo)
         self.db = DBConfigs(cst.cosim_mongo, cst.cosim_mongo_db)
 
     def define_scenario(self):
@@ -117,7 +116,7 @@ class Runner:
         # print(self.scenario_name, self.db.get_dict(cst.cu_scenarios, None, self.scenario_name))
 
 
-if __name__ == "__main__":
+def main():
     remote = False
     with_docker = False
     _scenario_name = "test_scenario"
@@ -130,6 +129,9 @@ if __name__ == "__main__":
     if with_docker:
         DockerRunner.define_yaml(r.scenario_name)
         if remote:
-            DockerRunner.run_remote_yaml(_scenario_name)
+            DockerRunner.run_remote_yaml(r.scenario_name)
         else:
-            DockerRunner.run_yaml(_scenario_name)
+            DockerRunner.run_yaml(r.scenario_name)
+
+if __name__ == "__main__":
+    main()
