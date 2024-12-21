@@ -1,6 +1,8 @@
 # Build runtime image
 FROM cosim-ubuntu:latest AS cosim-library
 
+ARG SIM_GID=9002
+ARG SIM_GRP=runner
 ARG SIM_UID
 ARG COSIM_USER
 
@@ -22,7 +24,8 @@ RUN echo "===== Building CoSim Library =====" && \
   subversion && \
   echo "root:${COSIM_USER}" | chpasswd && \
   echo "<<<< Adding the '${COSIM_USER}' user >>>>" && \
+  addgroup --gid ${SIM_GID} ${SIM_GRP} && \
   useradd -m -s /bin/bash -u $SIM_UID ${COSIM_USER} && \
   echo "<<<< Changing ${COSIM_USER} password >>>>" && \
   echo "${COSIM_USER}:${COSIM_USER}" | chpasswd && \
-  usermod -aG sudo ${COSIM_USER}
+  usermod -aG sudo,${SIM_GRP} ${COSIM_USER}

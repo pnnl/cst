@@ -182,7 +182,12 @@ Additionally, cst_experiment_creator needs to create an entry in the "cst scalab
 cst_experiment_creator needs only one execution parameter: the path to the "cst_scalability_experiment" folder on disk. The filenames it needs to load will follow the naming convention and folder structure as defined above and the location in the metadata database each needs to be loaded into is pre-defined by CST.
 
 ### cst_scalability_fed.py
-This is the generic federate used to stress test CST and it literally does nothing except send and receive data via HELICS. Specifically, it will receive data from the federate behind it in the ring on its subscriptions and endpoint (if applicable for the given scenario). It will also  use its defined publication(s) and endpoint (if applicable for the given scenario) to send the current timestep value to the federate next in the ring.  In the CST-enable case these published values are logged by the time-series database via logger.py; in the CST-disabled case, the published federate will write out its published values at each timestep to a file.
+This is the generic federate used to stress test CST and it literally does nothing except send and receive data via HELICS. Specifically, it will receive data from the federate behind it in the ring on its subscriptions and endpoint (if applicable for the given scenario). It will also use its defined publication(s) and endpoint (if applicable for the given scenario) to send the current timestep value to the federate next in the ring.  In the CST-enable case these published values are logged by the time-series database via logger.py; in the CST-disabled case, each federate will will log the values it receives to an output CSV in the "outputs" folder of the previously defined file structure. The CSV will be of the following format:
+
+```
+sim time, real time, pub 1, pub 2, pub 3, ...., pub n
+1, <<datetime string>>, 0, 0, 0, ...., 0
+```
 
 To increase the efficiency of HELICS when using endpoints, each endpoint should target the endpoint in front of it. This targeting is specified as part of the JSON configuration of the endpoint:
 
@@ -209,10 +214,10 @@ read_input_parameters() # argparse library; Trevor has lots of examples
 configure_federation(use_cst_flag)
 while requested_time < num_timesteps:
     request_next_time()
-    get_subscribed_values() # and do nothing with them
-    publish_new_values()
+    get_subscribed_values()
     if not use_cst_flag:
-        write_publish_values_to_file()
+        write_received_values_to_file()
+    publish_new_values()
 destroy_federate()
 ```
 
@@ -230,7 +235,7 @@ This runner script is also responsible for recording the execution time informat
 If later more details profiling information is added, the object structure will be expanded.
 
 ### cst_results_validator.py
-Though the data exchanged in the co-simulation is just created for test purposes, we do need to validate that the data exchanges took place as expected. To do this, the outputs generated in each scenario need to be checked for completeness. That is, at every time step, for every publication and endpoint, for every federate, the data written to the database or output file needs to be checked. Due to the design of the federation and the data payloads, the time the data was sent will be the same as the data itself. 
+Though the data exchanged in the co-simulation is just created for test purposes, we do need to validate that the data exchanges took place as expected. To do this, the outputs generated in each scenario need to be checked for completeness. That is, at every time step, for every publication and endpoint, for every federate, the data written to the database or output file needs to be checked. Due to the design of the federation and the data payloads, the time the data was sent will be one integer greater than the data itself. 
 
 The folder structure itself will indicate which scenario cst_results_validator needs to validate and the specific scenario defintion can be pulled from the metadata database (_e.g._ number of federates, number of publications). Once the validation is completed, the "validated" boolean can be set in the "results" object for this scenario in the metadata database as shown below:
 

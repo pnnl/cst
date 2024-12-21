@@ -1,0 +1,64 @@
+
+//== Time
+clock {
+	//timezone EST+5EDT;
+	starttime '2021-01-01 0:00:00';
+	stoptime '2021-01-01 0:00:10';
+};
+
+//== Settings
+#set relax_naming_rules=1
+#set profiler=1
+#set verbose=FALSE
+
+//== DERs & Deltamode
+//#set deltamode_forced_always=true
+//
+//#set deltamode_timestep=10 ms
+//#set deltamode_maximumtime=60000000000	//1 minute
+//#set deltamode_iteration_limit=10		//Iteration limit
+
+//== Modules
+module tape;
+module reliability {
+	report_event_log false;
+//	enable_subsecond_models true;
+}
+module powerflow {
+	solver_method NR;
+	line_capacitance FALSE;
+//	enable_subsecond_models true;
+//	deltamode_timestep 10 ms;
+//	all_powerflow_delta true;
+};
+module generators{
+//	enable_subsecond_models true;
+//	deltamode_timestep 10 ms;
+};
+module residential;
+module connection{
+//	enable_subsecond_models true;
+};
+//== Connect to HELICS
+object helics_msg {
+    name gld;
+    configure gld_config.json;
+}
+
+//==Fault Check
+object fault_check {
+	name base_fault_check_object;
+	check_mode ONCHANGE;
+	strictly_radial false;
+//	grid_association true; //flag to ensure non-monolithic islands
+}
+
+
+//== Distribution Feeders
+//-- Feeder Equipments
+#include "equipment.glm"
+
+//-- Main model file
+#include "tiny_model.glm"
+
+#include "recorders.glm"

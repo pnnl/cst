@@ -4,9 +4,13 @@ import time
 import unittest
 from unittest.mock import patch
 
-from cosim_toolbox.dataLogger import DataLogger
+import cosim_toolbox as cst
+from cosim_toolbox.dbConfigs import DBConfigs
+from cosim_toolbox.dbResults import DBResults
 
-logging.basicConfig(level=os.environ.get("LOG_LEVEL", "DEBUG").upper())
+import collections
+collections.Callable = collections.abc.Callable
+logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO").upper())
 logger = logging.getLogger(__name__)
 
 SIM_HOST = os.environ['SIM_HOST']
@@ -24,26 +28,35 @@ END_TIME = START_TIME + DURATION
 class TestSimpleFederation(unittest.TestCase):
 
     def setUp(self):
-        self.logger_data = DataLogger()
+        self.logger_data = DBResults()
+        self.db = DBConfigs()
+        scenario = self.db.scenario('test_schema',
+                                    'test_federation',
+                                    "2023-12-07T15:31:27",
+                                    "2023-12-08T15:31:27",
+                                    False)
+        self.db.remove_document(cst.cu_scenarios, None, 'test_scenario')
+        self.db.add_dict(cst.cu_scenarios, 'test_scenario', scenario)
+
 
     @patch.dict("os.environ", ENVIRON)
     def test_simple_federation_result(self):
         self.logger_data.open_database_connections()
 
-        # Check federation complet
+        # Check federation complete
         self._check_complete(interval=10, timeout=10 * 60)
-        self._verify_query(federate_name="Battery", sim_name="Battery/current3", data_type="hdt_boolean")
-        self._verify_query(federate_name="Battery", sim_name="Battery/current", data_type="hdt_double")
-        self._verify_query(federate_name="EVehicle", sim_name="EVehicle/voltage4", data_type="hdt_string")
+        self._verify_query(federate_name="Battery", data_name="Battery/current3", data_type="hdt_boolean")
+        self._verify_query(federate_name="Battery", data_name="Battery/current", data_type="hdt_double")
+        self._verify_query(federate_name="EVehicle", data_name="EVehicle/voltage4", data_type="hdt_string")
         self.logger_data.close_database_connections()
 
-    def _verify_query(self, federate_name: str, sim_name: str, data_type: str):
+    def _verify_query(self, federate_name: str, data_name: str, data_type: str):
         df = self.logger_data.query_scenario_federate_times(
             start_time=START_TIME,
             duration=DURATION,
             scenario_name="test_scenario",
             federate_name=federate_name,
-            sim_name=sim_name,
+            data_name=data_name,
             data_type=data_type,
         )
 
@@ -60,7 +73,7 @@ class TestSimpleFederation(unittest.TestCase):
                 duration=0,
                 scenario_name="test_scenario",
                 federate_name="EVehicle",
-                sim_name="EVehicle/voltage5",
+                data_name="EVehicle/voltage5",
                 data_type="hdt_complex",
             )
             if not df.empty:
@@ -70,3 +83,7 @@ class TestSimpleFederation(unittest.TestCase):
                 raise ValueError(f"Polling timed out in {timeout} without receiving non-empty DataFrame.")
             logging.info(f"Test federation is still in progress. Waiting to retry in {interval}")
             time.sleep(interval)
+
+    def tearDown(self):
+        self.logger_data = None
+        self.db = None

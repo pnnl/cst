@@ -1,6 +1,6 @@
 [
   {
-    "cu_name": "federation documents"
+    "cu_name": "federation"
   },
   {
     "cu_name": "BT1_EV1",
@@ -26,6 +26,16 @@
               "type": "double",
               "unit": "A",
               "tags": {"logger": "no"}
+            }
+          ],
+          "endpoints": [
+            {
+              "global": true,
+              "key": "Battery/EV1_current",
+              "destination": "EVehicle/EV1_voltage",
+              "type": "double",
+              "unit": "V",
+              "tags": {"logger": "yes" }
             }
           ],
           "subscriptions": [
@@ -55,7 +65,17 @@
           "publications": [
             {
               "global": true,
-              "key": "EVehicle/EV1_current",
+              "key": "EVehicle/EV1_voltage",
+              "type": "double",
+              "unit": "V",
+              "tags": {"logger": "yes" }
+            }
+          ],
+          "endpoints": [
+            {
+              "global": true,
+              "key": "EVehicle/EV1_voltage",
+              "destination": "Battery/EV1_current",
               "type": "double",
               "unit": "V",
               "tags": {"logger": "yes" }
@@ -64,7 +84,7 @@
           "subscriptions": [
             {
               "global": true,
-              "key": "Battery/EV1_voltage",
+              "key": "Battery/EV1_current",
               "type": "double",
               "unit": "A"
             }

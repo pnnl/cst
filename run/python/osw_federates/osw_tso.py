@@ -23,7 +23,7 @@ import json
 import pyenergymarket as pyen
 
 from cosim_toolbox.federate import Federate
-from cosim_toolbox.dataLogger import DataLogger
+from cosim_toolbox.dbResults import DBResults
 from osw_da_market import OSWDAMarket
 from osw_rt_market import OSWRTMarket
 # from osw_reserves_market import OSWReservesMarket
@@ -81,7 +81,7 @@ class OSWTSO(Federate):
         # but they will give us confidence that we're doing things correctly.
 
         # Set up the timeseries database
-        self.dl = DataLogger()
+        self.dl = DBResults()
         self.dl.open_database_connections()
         self.dl.check_version()
         # if self.dl.table_exist(self.scenario['osw_test_schema'], "htd_double"):

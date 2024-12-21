@@ -9,7 +9,10 @@ mitch.pelton@pnnl.gov
 adapted by Molly 8/29/24
 mollyrose.kelly-gorham@pnnl.gov
 """
-import cosim_toolbox.metadataDB as mDB
+
+import cosim_toolbox as cst
+from cosim_toolbox.dbConfigs import DBConfigs
+from cosim_toolbox.dockerRunner import DockerRunner
 from cosim_toolbox.helicsConfig import HelicsMsg, Collect
 
 import pandas as pd
@@ -26,8 +29,7 @@ class Runner:
         self.schema_name = schema_name
         self.federation_name = federation_name
         self.docker = docker
-        print(mDB.cosim_mongo_host)
-        self.db = mDB.MetaDB(mDB.cosim_mongo_host, mDB.cosim_mongo_db)
+        self.db = DBConfigs(cst.cosim_mongo_host, cst.cosim_mongo_db)
 
     def define_scenario(self):
         prefix = "exec python3 "
@@ -97,38 +99,36 @@ class Runner:
         }
         print(diction)
 
-        print("Here1")
-        self.db.remove_document(mDB.cu_federations, None, self.federation_name)
-        print("Here2")
-        self.db.add_dict(mDB.cu_federations, self.federation_name, diction)
-        # print(mDB.cu_federations, self.db.get_collection_document_names(mDB.cu_federations))
-        # print(self.federation_name, self.db.get_dict(mDB.cu_federations, None, self.federation_name))
-        print("Here3")
+        self.db.remove_document(cst.cu_federations, None, self.federation_name)
+        self.db.add_dict(cst.cu_federations, self.federation_name, diction)
+        # print(cst.cu_federations, self.db.get_collection_document_names(cst.cu_federations))
+        # print(self.federation_name, self.db.get_dict(cst.cu_federations, None, self.federation_name))
+
         scenario = self.db.scenario(self.schema_name,
                                     self.federation_name,
                                     "2032-01-01T00:00:00",
                                     "2032-01-03T00:00:00",
                                     self.docker)
-        print("Here4")
-        self.db.remove_document(mDB.cu_scenarios, None, self.scenario_name)
-        print("Here5")
-        self.db.add_dict(mDB.cu_scenarios, self.scenario_name, scenario)
-        # print(mDB.cu_scenarios, self.db.get_collection_document_names(mDB.cu_scenarios))
-        # print(self.scenario_name, self.db.get_dict(mDB.cu_scenarios, None, self.scenario_name))
+        self.db.remove_document(cst.cu_scenarios, None, self.scenario_name)
+        self.db.add_dict(cst.cu_scenarios, self.scenario_name, scenario)
+        # print(cst.cu_scenarios, self.db.get_collection_document_names(cst.cu_scenarios))
+        # print(self.scenario_name, self.db.get_dict(cst.cu_scenarios, None, self.scenario_name))
 
 
-if __name__ == "__main__":
+def main():
     remote = True
     _scenario_name = "osw_lmp_test_scenario"
     _schema_name = "osw_test_schema"
     _federation_name = "osw_test_federation"
     r = Runner(_scenario_name, _schema_name, _federation_name, False)
     r.define_scenario()
-    # print(r.db.get_collection_document_names(mDB.cu_scenarios))
-    # print(r.db.get_collection_document_names(mDB.cu_federations))
-    print("Running mongo DB code")
-    mDB.Docker.define_yaml(r.scenario_name)
+    # print(r.db.get_collection_document_names(cst.cu_scenarios))
+    # print(r.db.get_collection_document_names(cst.cu_federations))
+    DockerRunner.define_yaml(r.scenario_name)
     # if remote:
-    #     mDB.Docker.run_remote_yaml(_scenario_name)
+    #     DockerRunner.run_remote_yaml(_scenario_name)
     # else:
-    #     mDB.Docker.run_yaml(_scenario_name)
+    #     DockerRunner.run_yaml(_scenario_name)
+
+if __name__ == "__main__":
+    main()
