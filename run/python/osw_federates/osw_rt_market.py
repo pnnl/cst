@@ -104,7 +104,7 @@ class OSWRTMarket(OSWMarket):
         start_time_index = pd.date_range(start_datetime, end_datetime, freq=freq, inclusive='left')
         return start_time_index
 
-    def clear_market(self, local_save=True):
+    def clear_market(self, local_save=False):
         """
         Callback method that runs EGRET and clears a market.
 

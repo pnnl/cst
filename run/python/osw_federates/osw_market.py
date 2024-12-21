@@ -178,7 +178,7 @@ class OSWMarket():
                     self.commitment_hist[etype][unit]['commitment']['timestamps'] = commit_times_hist
                     self.commitment_hist[etype][unit]['commitment']['values'] = commit_values_hist
 
-    def clear_market(self, hold_time=False, local_save=True):
+    def clear_market(self, hold_time=False, local_save=False):
         """
         Callback method that runs EGRET and clears a market.
 
@@ -197,7 +197,7 @@ class OSWMarket():
             with open(f'{self.market_name}_results_{self.timestep}.json', 'w') as f:
                 json.dump(self.em.mdl_sol.data, f)
         self.market_results = self.em.mdl_sol
-        self.update_commitment_hist()
+        # self.update_commitment_hist()
         self.timestep += 1
         if self.timestep >= len(self.start_times):
             pass
