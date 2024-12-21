@@ -32,7 +32,7 @@ class OSWRTMarket(OSWMarket):
 
     For the off-shore-wind use case, we only need three market states so
     those will be hard-coded as below. The way this market works, all of 
-    the activity of the market takes place at the transisitions. I'm 
+    the activity of the market takes place at the transitions. I'm
     (TDH) using the "transitions" library which allows the definition
     of callback functions when entering (and exiting) any given state
     and this is the primary method by which the activity will in the
@@ -101,21 +101,10 @@ class OSWRTMarket(OSWMarket):
         end_datetime = pd.to_datetime(end_date)# - pd.Timedelta(freq)# + start_time)
 
         # Generate hourly datetime index
-        start_time_index = pd.date_range(start_datetime, end_datetime, freq=freq)
+        start_time_index = pd.date_range(start_datetime, end_datetime, freq=freq, inclusive='left')
         return start_time_index
 
-    # def clear_market(self):
-    #     """
-    #     Overloaded method of OSWMarket
-
-    #     Grab all the bids and run the DA UC optimization and then return the results
-        
-    #     market_results is an attribute of the OSWMarket class
-    #     """
-
-    #     self.market_results = {}
-
-    def clear_market(self):
+    def clear_market(self, local_save=True):
         """
         Callback method that runs EGRET and clears a market.
 
@@ -127,12 +116,30 @@ class OSWRTMarket(OSWMarket):
             self.update_model_from_previous(self.em.mdl_sol)
         self.em.solve_model()
         self.market_results = self.em.mdl_sol
+
+        if local_save:
+            with open(f'{self.market_name}_results_{self.timestep}.json', 'w') as f:
+                json.dump(self.market_results.data, f)
+
         self.timestep += 1
         self.current_start_time = self.start_times[self.timestep]
 
         # self.start_times = self.start_times.delete(0) # remove the first element
         # if len(self.start_times) > 0:
         #     self.current_start_time = self.start_times[0] # and then clock through to the next one
+
+    def interpolate_da_commitment(self, da_commitment):
+        """
+        Takes the day-ahead commitment schedule and interpolates onto the real-time intervals
+        Commitment values are kept constant for each hour
+        Default behavior is to NOT overwrite any existing values. This is intended to be run after each
+        day-ahead market clearing to add the coming day's commitment values
+        """
+        min_freq = self.em.configuration["min_freq"]
+        for etype, edict in da_commitment.items():
+            for unit, udict in edict.items():
+                da_times = udict["timestamp"]
+                # TODO: Resume here...
 
 
     def update_model_from_previous(self,mdl_com:ModelData):

@@ -42,7 +42,7 @@ class OSWDAMarket(OSWMarket):
 
     """
 
-    def __init__(self, start_date, end_date, market_name:str="da_energy_market", market_timing:dict=None, min_freq:int=60, window:int=2, lookahead:int=1, **kwargs):
+    def __init__(self, start_date, end_date, market_name:str="da_energy_market", market_timing:dict=None, min_freq:int=60, window:int=24, lookahead:int=0, **kwargs):
         """
         Class the specifically runs the OSW DA energy market
 
@@ -51,6 +51,7 @@ class OSWDAMarket(OSWMarket):
         state.
         """
         super().__init__(market_name, market_timing, start_date, end_date, **kwargs)
+        # Do we need to be setting these here or are they passed as part of the EnergyMarket object?
         self.em.configuration["time"]["min_freq"] = min_freq
         self.em.configuration["time"]["window"] = window
         self.em.configuration["time"]["lookahead"] = lookahead
@@ -62,7 +63,7 @@ class OSWDAMarket(OSWMarket):
                 "states": {
                     "idle": {
                         "start_time": 0,
-                        "duration": 85500
+                        "duration": 85800
                     },
                     "bidding": {
                         "start_time": 85800,

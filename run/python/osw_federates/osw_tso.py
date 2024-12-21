@@ -115,7 +115,6 @@ class OSWTSO(Federate):
 
         # self.read_power_system_model()
         self.initialze_power_and_market_model()
-
         self.hfed.enter_initializing_mode() # HELICS API call
 
     # def read_power_system_model(self):
@@ -137,8 +136,9 @@ class OSWTSO(Federate):
         """
         # Should get an initial run of the DAM with a longer window and
         # throw away the first couple days
-        self.markets["da_energy_market"].clear_market()
-        # pass
+        logger.info("Clearing an initial day-ahead market")
+        self.markets["da_energy_market"].clear_market(hold_time=True)
+        pass
 
 
     def calculate_next_requested_time(self):
@@ -194,7 +194,7 @@ class OSWTSO(Federate):
         """
         NOTE: Currently this is being run in the day ahead market.
         Using EGRET, clears the reserve market in the form of a unit
-        committment optimization problem.
+        commitment optimization problem.
 
         TDH hopes this will be straight-forward and may take the form of calls
         to methods of an EGRET object.
@@ -212,7 +212,7 @@ class OSWTSO(Federate):
         TDH hopes this will be straight-forward and may take the form of calls
         to methods of an EGRET object.
         """
-        print("I MADE IT INTO RTM")
+        print(f"I MADE IT INTO RTM with state {self.markets['rt_energy_market'].state}")
         # TODO: may need to process results prior to returning them
         current_state_time = self.markets["rt_energy_market"].update_market()
         self.markets["rt_energy_market"].move_to_next_state()
@@ -244,6 +244,7 @@ class OSWTSO(Federate):
         indicate which markets need to be run
         """
         self.update_power_system_and_market_state()
+        print("Granted time:", self.granted_time)
         if "da_energy_market" in self.markets.keys():
             if self.markets["da_energy_market"].next_state_time == round(self.granted_time):
             # if self.markets["da_energy_market"].next_state_time == round(self.granted_time) and ((self.stop_time - self.granted_time) > 600):
@@ -254,6 +255,7 @@ class OSWTSO(Federate):
                 #reserve_results = self.run_reserve_market()
                 #self.data_to_federation["publication"]["da_clearing_result"] = da_results["prices"]["osw_node"]
                 if self.markets["da_energy_market"].state == "clearing":
+                    print("Ran DAM clearing")
                     # area_keys = ['CALIFORN', 'MEXICO', 'NORTH', 'SOUTH']
                     price_keys = ['regulation_up_price', 'regulation_down_price', 'flexible_ramp_up_price', 'flexible_ramp_down_price']
                     price_dict = {}
@@ -339,7 +341,7 @@ def run_osw_tso(h5filepath: str, start: str="2032-01-01 00:00:00", end: str="203
             "states": {
                 "idle": {
                     "start_time": 0,
-                    "duration": 85500
+                    "duration": 85800
                 },
                 "bidding": {
                     "start_time": 85800,
@@ -355,9 +357,9 @@ def run_osw_tso(h5filepath: str, start: str="2032-01-01 00:00:00", end: str="203
             "market_interval": 86400
         }
     market_timing = {
-            "da": da_market_timing#, 
+            "da": da_market_timing,
             #"reserves": da_market_timing,
-            # "rt": rt_market_timing
+            "rt": rt_market_timing
         }
     
     # I don't think we will ever use the "last_market_time" values 
@@ -428,7 +430,7 @@ def run_osw_tso(h5filepath: str, start: str="2032-01-01 00:00:00", end: str="203
             "datefrom": start, # whole year
             "dateto": end,
             'min_freq': 60, #15 minutes
-            'window': 2,
+            'window': 24,
             'lookahead': 0
         },
         "solve_arguments": {
@@ -449,7 +451,7 @@ def run_osw_tso(h5filepath: str, start: str="2032-01-01 00:00:00", end: str="203
             'lookahead':1
         },
         "solve_arguments": {
-            "solver": "cbc",
+            "solver": solver,
             "solver_tee": False, # change to False to remove some logging
             "OutputFlag": 0,  # Gurobi-specific option to suppress output
             "solver_options": {
@@ -464,10 +466,16 @@ def run_osw_tso(h5filepath: str, start: str="2032-01-01 00:00:00", end: str="203
     }
     em_rtm = pyen.EnergyMarket(gv_rt, pyenconfig_rtm)
 
-    markets["da_energy_market"] = OSWDAMarket(start, end, "da_energy_market", market_timing["da"], market=em_dam)
+    
+    markets["da_energy_market"] = OSWDAMarket(start, end, "da_energy_market", market_timing["da"], market=em_dam,
+                                              window=pyenconfig_dam["time"]["window"],
+                                              min_freq=pyenconfig_dam["time"]["min_freq"],
+                                              lookahead=pyenconfig_dam["time"]["lookahead"])
     # Note that for now the reserves markets are operated when we run the day ahead energy market model, but I left the comment to remind us this may change.
     # markets["reserves_market"] = OSWReservesMarket("reserves_market", market_timing["reserves"])
-    # markets["rt_energy_market"] = OSWRTMarket(start, end, "rt_energy_market", market_timing["rt"], min_freq=15, market=em_rtm)
+    markets["rt_energy_market"] = OSWRTMarket(start, end, "rt_energy_market", market_timing["rt"], min_freq=15,
+                                              window=pyenconfig_rtm["time"]['window'],
+                                              market=em_rtm)
     return market_timing, markets, solver
     # osw = OSWTSO("WECC_market", market_timing, markets, solver=solver)
     # market = "da_energy_market"

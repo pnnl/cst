@@ -108,18 +108,96 @@ class OSWMarket():
         """
         pass
 
+    # def init_commitment_hist(self, init_default=1):
+    #     """
+    #     Creates dictionaries for commitment and initial status of generators (and storage).
+    #     These are empty to start and will be appended as markets are cleared
+    #     Args:
+    #         init_default (Union[float, int]): starting status. Negative # = off  Defaults to 1
+    #                                                            Positive # = on
+    #     """
+    #     if self.em is None:
+    #         raise ValueError("Cannot set commitment/status dictionaries without a market model")
+    #     else:
+    #         # (Empty) history of commitments for all model elements with a commitment variable.
+    #         # Using the same structure as Egret and looking at the data within the Egret model
+    #         self.commitment_hist = {}
+    #         for etype, e_dict in self.em.mdl.data['elements'].items():
+    #             # etype is 'generator', 'renewable', 'load', etc. - Egret types. e_dict holds each unit's info
+    #             # Check that this element could be committed (optional - slight speedup but risk of missing new types
+    #             if etype in ['generator', 'storage']:
+    #                 for unit, u_dict in e_dict.items():
+    #                     self.commitment_hist[etype] = {unit: {'commitment':
+    #                                                               {'data_type':'time_series',
+    #                                                                'timestamps':[],
+    #                                                                'values':[]}}}
 
-    def clear_market(self):
+    def update_commitment_hist(self, keep='new'):
+        """
+        Updates the commitment and initial status of generators (and storage) based on the
+        model solution from a cleared market.
+        Args:
+            keep (string): In the case of duplicate timestamps whether to keep 'new' or 'old' values. Defaults to new.
+        """
+        assert keep in ['new', 'old'], "keep must be either 'new' or 'old'"
+        # Loop through all of the generators
+        if not hasattr(self, 'commitment_hist'):
+            self.commitment_hist = {}
+        for etype, e_dict in self.em.mdl.data['elements'].items():
+            # etype is 'generator', 'renewable', 'load', etc. - Egret types. e_dict holds each unit's info
+            # Check that this element could be committed (optional - slight speedup but risk of missing new types
+            if etype in ['generator', 'storage']:
+                for unit, u_dict in e_dict.items():
+                    # Add empty key if it doesn't already exist. Structure matches Egret (with timestamps added)
+                    if etype not in self.commitment_hist.keys():
+                        self.commitment_hist[etype] = {unit: {'commitment':
+                                                              {'data_type': 'time_series',
+                                                               'timestamps': [],
+                                                               'values': []}}}
+                    # Get current commitment_hist, then check for duplicate timestamps in the incoming solution
+                    # This is expected for RT and for DA if using a lookahead window.
+                    # We will use the new value (from the model) as the latest
+                    # [Optional] Could clean this up with np.intersect1d or something
+                    commit_times_hist = self.commitment_hist[etype][unit]['commitment']['timestamps']
+                    commit_values_hist = self.commitment_hist[etype][unit]['commitment']['values']
+                    commit_times_new = self.em.mdl['system']['time_keys']
+                    commit_values_new = u_dict['commitment']['values']
+                    for i, timestamp in enumerate(commit_times_new):
+                        if timestamp in commit_times_hist:
+                            if keep == 'new':
+                                # Find the index of the previous value and overwrite it with the new value
+                                hidx = commit_times_hist.index(timestamp)
+                                commit_values_hist[hidx] = commit_values_new[i]
+                        else:
+                            commit_times_hist.append(timestamp)
+                            commit_values_hist.append(commit_values_new[i])
+                    # May be unnecessary, but ensuring that times are strictly ascending
+                    sorted_inds = np.argsort(commit_times_hist)
+                    commit_times_hist = list(np.array(commit_times_hist)[sorted_inds])
+                    commit_values_hist = list(np.array(commit_values_hist)[sorted_inds])
+                    self.commitment_hist[etype][unit]['commitment']['timestamps'] = commit_times_hist
+                    self.commitment_hist[etype][unit]['commitment']['values'] = commit_values_hist
+
+    def clear_market(self, hold_time=False, local_save=True):
         """
         Callback method that runs EGRET and clears a market.
 
         This method must be overloaded in an instance of this class to
         implement the necessary operates to clear the market in question.
+
+        Args:
+            hold_time (bool, optional): if True, the market will not advance the timestep
+                                        This is intended for an initial market clearing only.
+            local_save (bool, optional): if True, will save a JSON with the results at each timestep
         """
         self.em.get_model(self.current_start_time)
         self.em.solve_model()
         print(self.market_name, "self.em.mdl_sol:", self.em.mdl_sol)
+        if local_save:
+            with open(f'{self.market_name}_results_{self.timestep}.json', 'w') as f:
+                json.dump(self.em.mdl_sol.data, f)
         self.market_results = self.em.mdl_sol
+        self.update_commitment_hist()
         self.timestep += 1
         if self.timestep >= len(self.start_times):
             pass
@@ -191,7 +269,7 @@ class OSWMarket():
         end_datetime = pd.to_datetime(end_date + start_time)
 
         # Generate hourly datetime index
-        start_time_index = pd.date_range(start_datetime, end_datetime, freq=freq)
+        start_time_index = pd.date_range(start_datetime, end_datetime, freq=freq, inclusive='left')
         return start_time_index
 
     
