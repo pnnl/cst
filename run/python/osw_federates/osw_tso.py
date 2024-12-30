@@ -114,7 +114,7 @@ class OSWTSO(Federate):
         """
 
         # self.read_power_system_model()
-        self.initialze_power_and_market_model()
+        self.initialize_power_and_market_model()
         self.hfed.enter_initializing_mode() # HELICS API call
 
     # def read_power_system_model(self):
@@ -128,7 +128,7 @@ class OSWTSO(Federate):
     #     pass # right now this is done outside the class.
         
 
-    def initialze_power_and_market_model(self):
+    def initialize_power_and_market_model(self):
         """
         Initializes the power system and market models
 
@@ -136,10 +136,16 @@ class OSWTSO(Federate):
         """
         # Should get an initial run of the DAM with a longer window and
         # throw away the first couple days
-        logger.info("Clearing an initial day-ahead market")
-        self.markets["da_energy_market"].clear_market(hold_time=True)
-        pass
 
+        # Run the first DA market, so the RT market has commitment
+        logger.info("Clearing an initial day-ahead market")
+        self.markets["da_energy_market"].clear_market()
+        # Add commitment variables to real-time market
+        if "rt_energy_market" in self.markets.keys():
+            da_commitment = self.markets["da_energy_market"].commitment_hist
+            self.markets["rt_energy_market"].join_da_commitment(da_commitment)
+            # Also saving day-ahead solutions to RT for 1st RT initialization
+            self.markets["rt_energy_market"].da_mdl_sol = self.markets["da_energy_market"].em.mdl_sol
 
     def calculate_next_requested_time(self):
         """
@@ -244,7 +250,6 @@ class OSWTSO(Federate):
         indicate which markets need to be run
         """
         self.update_power_system_and_market_state()
-        print("Granted time:", self.granted_time)
         if "da_energy_market" in self.markets.keys():
             if self.markets["da_energy_market"].next_state_time == round(self.granted_time):
             # if self.markets["da_energy_market"].next_state_time == round(self.granted_time) and ((self.stop_time - self.granted_time) > 600):
@@ -255,7 +260,6 @@ class OSWTSO(Federate):
                 #reserve_results = self.run_reserve_market()
                 #self.data_to_federation["publication"]["da_clearing_result"] = da_results["prices"]["osw_node"]
                 if self.markets["da_energy_market"].state == "clearing":
-                    print("Ran DAM clearing")
                     # area_keys = ['CALIFORN', 'MEXICO', 'NORTH', 'SOUTH']
                     price_keys = ['regulation_up_price', 'regulation_down_price', 'flexible_ramp_up_price', 'flexible_ramp_down_price']
                     price_dict = {}
@@ -271,7 +275,11 @@ class OSWTSO(Federate):
                     for area, area_dict in da_results.elements(element_type="area"):
                         for key in price_keys:
                             price_dict[area+' '+key] = da_results.data["elements"]["area"][area][key]
-                    print("price results:", price_dict)
+                    # Pass info on to real-time market, if it is present
+                    print("Cleared DA Market", "rt_energy_market" in self.markets.keys())
+                    if "rt_energy_market" in self.markets.keys():
+                        da_commitment = self.markets["da_energy_market"].commitment_hist
+                        self.markets["rt_energy_market"].join_da_commitment(da_commitment)
                 else:
                     print("da_next_time:", da_results)
                 #self.data_to_federation["publication"]["reserve_clearing_result"] = da_results["reserves_prices"]["osw_area"]
@@ -423,7 +431,7 @@ def run_osw_tso(h5filepath: str, start: str="2032-01-01 00:00:00", end: str="203
     gv_rt = pyen.GVParse(h5filepath, default=default_rtm, logger_options={"level": loglevel})
 
 
-    # Initalize pyenergymarkets for day ahead and real time energy markets.
+    # Initialize pyenergymarkets for day ahead and real time energy markets.
     markets = {}
     pyenconfig_dam = {
         "time": {

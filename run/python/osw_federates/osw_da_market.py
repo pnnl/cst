@@ -83,9 +83,9 @@ class OSWDAMarket(OSWMarket):
 # def clear_market(self):
 #     """
 #     Overloaded method of OSWMarket
-
+#
 #     Grab all the bids and run the DA UC optimization and then return the results
-    
+#
 #     market_results is an attribute of the OSWMarket class
 #     """
 #     pass

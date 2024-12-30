@@ -14,8 +14,11 @@ import datetime as dt
 import json
 import logging
 import pandas as pd
+import numpy as np
+import copy
 from transitions import Machine
 from pyenergymarket import EnergyMarket
+from pyenergymarket.utils.timeutils import mk_daterange
 
 
 logger = logging.getLogger(__name__)
@@ -86,6 +89,7 @@ class OSWMarket():
         self.state_machine.on_enter_bidding("collect_bids")
         self.state_machine.on_enter_clearing("clear_market")
         self.validate_market_timing(self.market_timing)
+        self.commitment_hist = None
         
 
         # Define callback_functions
@@ -132,53 +136,101 @@ class OSWMarket():
     #                                                                'timestamps':[],
     #                                                                'values':[]}}}
 
-    def update_commitment_hist(self, keep='new'):
+    def update_commitment_hist(self, keep='new', merge_dict=None, back_fill_init=False):
         """
         Updates the commitment and initial status of generators (and storage) based on the
-        model solution from a cleared market.
+        model solution from a cleared market. Stored in the self.commitment_hist dictionary
+
         Args:
             keep (string): In the case of duplicate timestamps whether to keep 'new' or 'old' values. Defaults to new.
+            merge_dict (dict): Option to merge a commitment history (typically merging DA into RT). Defaults to None.
+                               Note, if merge_dict is specified, Egret model will be ignored. Keep='new' will use
+                               the merge_dict values in case of duplicate timestamps.
+            back_fill_init (bool): Option to prepend history with an existing initial_status. To be used only
+                                   when loading the initial day-ahead market (ensures min up/down time is met).
         """
         assert keep in ['new', 'old'], "keep must be either 'new' or 'old'"
-        # Loop through all of the generators
-        if not hasattr(self, 'commitment_hist'):
-            self.commitment_hist = {}
-        for etype, e_dict in self.em.mdl.data['elements'].items():
+        # Create dict if needed with the timestamps as a top level key (shared by all generators/elements)
+        if self.commitment_hist is None:
+            self.commitment_hist = {'timestamps':[]}
+        # Keep a copy of the old and the new timestamps
+        commit_times_hist = self.commitment_hist['timestamps']
+        if merge_dict is None:
+            # print(dir(self.em.mdl))
+            commit_times_new = pd.to_datetime(self.em.mdl_sol.data['system']['time_keys'])
+            if back_fill_init:
+                # Fill in one day backward at given frequency and append to commit_times_new
+                end = commit_times_new[0]
+                start = end - dt.timedelta(days=1)
+                if 'min_freq' in self.em.configuration.keys():
+                    min_freq = self.em.configuration["min_freq"]
+                else:
+                    min_freq = 60
+                commit_times_backfill = mk_daterange(start, end, min_freq=min_freq, inclusive='left')
+                commit_times_new = pd.to_datetime(commit_times_backfill).append(commit_times_new)
+        else:
+            commit_times_new = merge_dict['timestamps']
+        # Check whether to loop over stored PyEnergyMarket Model or an input model dictionary
+        if merge_dict is None:
+            loop_dict = self.em.mdl_sol.data['elements']
+        else:
+            loop_dict = merge_dict
+        for etype, e_dict in loop_dict.items():
             # etype is 'generator', 'renewable', 'load', etc. - Egret types. e_dict holds each unit's info
-            # Check that this element could be committed (optional - slight speedup but risk of missing new types
-            if etype in ['generator', 'storage']:
+            # Restrict to committable elements (optional - slight speedup but risk of missing new types
+            if etype in ['generator']:
                 for unit, u_dict in e_dict.items():
                     # Add empty key if it doesn't already exist. Structure matches Egret (with timestamps added)
                     if etype not in self.commitment_hist.keys():
                         self.commitment_hist[etype] = {unit: {'commitment':
                                                               {'data_type': 'time_series',
-                                                               'timestamps': [],
                                                                'values': []}}}
+                    if unit not in self.commitment_hist[etype].keys():
+                        self.commitment_hist[etype][unit] = {'commitment':
+                                                            {'data_type': 'time_series',
+                                                             'values': []}}
                     # Get current commitment_hist, then check for duplicate timestamps in the incoming solution
                     # This is expected for RT and for DA if using a lookahead window.
                     # We will use the new value (from the model) as the latest
                     # [Optional] Could clean this up with np.intersect1d or something
-                    commit_times_hist = self.commitment_hist[etype][unit]['commitment']['timestamps']
                     commit_values_hist = self.commitment_hist[etype][unit]['commitment']['values']
-                    commit_times_new = self.em.mdl['system']['time_keys']
-                    commit_values_new = u_dict['commitment']['values']
+                    if merge_dict is None:
+                        if 'commitment' in u_dict.keys():
+                            commit_values_new = u_dict['commitment']['values']
+                            # Using initial_status fill back with 1 (for positive) or 0 (for negative)
+                            if back_fill_init:
+                                initial_status = u_dict['initial_status']
+                                if initial_status is None:
+                                    commit_values_backfill = [None] * commit_times_backfill.size
+                                elif initial_status > 0:
+                                    commit_values_backfill = [1] * commit_times_backfill.size
+                                else:
+                                    commit_values_backfill = [0] * commit_times_backfill.size
+                                # Join lists
+                                commit_values_new = commit_values_backfill + commit_values_new
+
+                        else: # If missing, Egret accepts the None input for unfixed
+                            commit_values_new = [None] * len(commit_times_new)
+                    else:
+                        commit_values_new = merge_dict[etype][unit]['commitment']['values']
+                    _commit_times_hist = copy.copy(commit_times_hist)
                     for i, timestamp in enumerate(commit_times_new):
-                        if timestamp in commit_times_hist:
+                        if timestamp in _commit_times_hist:
                             if keep == 'new':
                                 # Find the index of the previous value and overwrite it with the new value
-                                hidx = commit_times_hist.index(timestamp)
+                                hidx = _commit_times_hist.index(timestamp)
                                 commit_values_hist[hidx] = commit_values_new[i]
                         else:
-                            commit_times_hist.append(timestamp)
+                            _commit_times_hist.append(timestamp)
                             commit_values_hist.append(commit_values_new[i])
                     # May be unnecessary, but ensuring that times are strictly ascending
-                    sorted_inds = np.argsort(commit_times_hist)
-                    commit_times_hist = list(np.array(commit_times_hist)[sorted_inds])
+                    sorted_inds = np.argsort(_commit_times_hist)
+                    _commit_times_hist = list(np.array(_commit_times_hist)[sorted_inds])
                     commit_values_hist = list(np.array(commit_values_hist)[sorted_inds])
-                    self.commitment_hist[etype][unit]['commitment']['timestamps'] = commit_times_hist
                     self.commitment_hist[etype][unit]['commitment']['values'] = commit_values_hist
+        self.commitment_hist['timestamps'] = _commit_times_hist
 
-    def clear_market(self, hold_time=False, local_save=False):
+    def clear_market(self, local_save=True):
         """
         Callback method that runs EGRET and clears a market.
 
@@ -192,12 +244,15 @@ class OSWMarket():
         """
         self.em.get_model(self.current_start_time)
         self.em.solve_model()
-        print(self.market_name, "self.em.mdl_sol:", self.em.mdl_sol)
         if local_save:
             with open(f'{self.market_name}_results_{self.timestep}.json', 'w') as f:
                 json.dump(self.em.mdl_sol.data, f)
         self.market_results = self.em.mdl_sol
-        # self.update_commitment_hist()
+        if self.commitment_hist is None:
+            back_fill_init = True
+        else:
+            back_fill_init = False
+        self.update_commitment_hist(back_fill_init=back_fill_init)
         self.timestep += 1
         if self.timestep >= len(self.start_times):
             pass
