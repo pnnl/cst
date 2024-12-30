@@ -27,17 +27,6 @@ logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler())
 logger.setLevel(logging.WARNING)
 
-class NpEncoder(json.JSONEncoder):
-    # TODO: Delete this (and import numpy as np) once done debugging
-    def default(self, obj):
-        if isinstance(obj, np.integer):
-            return int(obj)
-        if isinstance(obj, np.floating):
-            return float(obj)
-        if isinstance(obj, np.ndarray):
-            return obj.tolist()
-        return json.JSONEncoder.default(self, obj)
-
 class OSWRTMarket(OSWMarket):
     """
     TODO: describe this class
@@ -118,7 +107,7 @@ class OSWRTMarket(OSWMarket):
         start_time_index = pd.date_range(start_datetime, end_datetime, freq=freq, inclusive='left')
         return start_time_index
 
-    def clear_market(self, local_save=True):
+    def clear_market(self, local_save=False):
         """
         Callback method that runs EGRET and clears a market.
 
@@ -128,27 +117,21 @@ class OSWRTMarket(OSWMarket):
         self.em.get_model(self.current_start_time)
         if self.em.mdl_sol is not None:
             self.update_model_from_previous(self.em.mdl_sol)
-            if local_save:
-                # TODO: Replace save with Eran's self.em.save_model() method
-                with open(f'{self.market_name}_model_{self.timestep}.json', 'w') as f:
-                    json.dump(self.em.mdl.data, f, indent=4, cls=NpEncoder)
         # If no solution (first pass) check for an initial day-ahead solution
         elif self.da_mdl_sol is not None:
             self.update_model_from_previous(self.da_mdl_sol, day_ahead_input=True)
-            if local_save:
-                # TODO: Replace save with Eran's self.em.save_model() method
-                with open(f'{self.market_name}_model_{self.timestep}.json', 'w') as f:
-                    json.dump(self.em.mdl.data, f, indent=4, cls=NpEncoder)
         self.em.solve_model()
         self.market_results = self.em.mdl_sol
         # For now the following won't do anything, but if we allow outages/fast starts this will matter
         self.update_commitment_hist()
         if local_save:
-            with open(f'{self.market_name}_results_{self.timestep}.json', 'w') as f:
-                json.dump(self.market_results.data, f, indent=4, cls=NpEncoder)
+            self.em.save_model(f'{self.market_name}_results_{self.timestep}.json')
 
         self.timestep += 1
-        self.current_start_time = self.start_times[self.timestep]
+        if self.timestep >= len(self.start_times):
+            pass
+        else:
+            self.current_start_time = self.start_times[self.timestep]
 
         # self.start_times = self.start_times.delete(0) # remove the first element
         # if len(self.start_times) > 0:
@@ -204,31 +187,33 @@ class OSWRTMarket(OSWMarket):
         time_window = self.em.configuration['time']['window']
         lookahead = self.em.configuration['time']['lookahead']
         min_freq = self.em.configuration["min_freq"]
-        print(f"Updating commitment history for RT market at timestep {self.timestep} (time is {self.current_start_time}")
-        # print("Commitment history:", self.commitment_hist)
+        logger.debug(f"Updating commitment history for RT market at timestep {self.timestep}"
+                     f"(time is {self.current_start_time}")
         if (self.em.mdl is not None) and (mdl_com is not None):
             for g, g_dict in mdl_com.elements(element_type='generator'):
-                # Initial power is the last power cleared in the previous window (or if initializing from day-ahead
-                # initial power doesn't change
+                # Initial power is the last power cleared in the previous window
+                # If initializing from day-ahead initial power is same as day-ahead initial power
                 if day_ahead_input:
                     self.em.mdl.data['elements']['generator'][g]['initial_p_output'] = g_dict['initial_p_output']
                 else:
                     self.em.mdl.data['elements']['generator'][g]['initial_p_output'] = g_dict['pg']['values'][time_window - 1]
                 # we should also update the q/reactive power, but this first test will be dc only
                 # self.mdl.data['elements']['generator'][g]['initial_q_output'] = g_dict['qg']['values'][self.configuration['time']['window'] - 1]
-                # Function to find initial status (number of hours the unit has been on or off)
-                commit_hist = self.commitment_hist['generator'][g]['commitment']['values']
-                # Find the index for this time (if it isn't there we have problems...) and go back 1 to the last time
 
-                # print(self.commitment_hist['timestamps'])
-                # print(self.current_start_time in self.commitment_hist['timestamps'])
-                # print(self.current_start_time == np.array(self.commitment_hist['timestamps']))
-                t0idx = np.where(self.current_start_time == np.array(self.commitment_hist['timestamps']))[0][0]
+                # Load the commitment history and find the index corresponding to the current time
+                commit_hist = self.commitment_hist['generator'][g]['commitment']['values']
+                if self.current_start_time in self.commitment_hist['timestamps']:
+                    t0idx = np.where(self.current_start_time == np.array(self.commitment_hist['timestamps']))[0][0]
+                else:
+                    t0idx = len(self.commitment_hist['timestamps'])
+                # Function to find initial status (number of hours the unit has been on or off)
                 self.em.mdl.data['elements']['generator'][g]['initial_status'] = (
                     count_onoff(commit_hist, t0idx-1, min_freq=min_freq))
-                # Setting 'commitment' (setting 'fixed_commitment' leads to infeasibilities)
-                commit_hist_window = commit_hist[t0idx:t0idx + time_window + lookahead]
-                self.em.mdl.data['elements']['generator'][g]['commitment'] = {'data_type':'time_series',
+                # It's possible for t0idx in the last interval to have to commitments available. If so, don't pass
+                if t0idx < len(commit_hist):
+                    # Setting 'commitment' (setting 'fixed_commitment' leads to infeasibilities)
+                    commit_hist_window = commit_hist[t0idx:t0idx + time_window + lookahead]
+                    self.em.mdl.data['elements']['generator'][g]['commitment'] = {'data_type':'time_series',
                                                                               'values': commit_hist_window}
 
         else:

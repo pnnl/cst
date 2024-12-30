@@ -70,7 +70,7 @@ class OSWMarket():
         self.market_name = market_name
         self.current_state = market_timing["initial_state"]
         self.start_times = self.interpolate_market_start_times(start_date, end_date)
-        print("osw_market", self.market_name, "start_times: ", self.start_times)
+        logger.info("osw_market", self.market_name, "start_times: ", self.start_times)
         self.timestep = 0
         self.current_start_time = self.start_times[self.timestep]
         self.last_state = None
@@ -156,7 +156,6 @@ class OSWMarket():
         # Keep a copy of the old and the new timestamps
         commit_times_hist = self.commitment_hist['timestamps']
         if merge_dict is None:
-            # print(dir(self.em.mdl))
             commit_times_new = pd.to_datetime(self.em.mdl_sol.data['system']['time_keys'])
             if back_fill_init:
                 # Fill in one day backward at given frequency and append to commit_times_new
@@ -230,7 +229,7 @@ class OSWMarket():
                     self.commitment_hist[etype][unit]['commitment']['values'] = commit_values_hist
         self.commitment_hist['timestamps'] = _commit_times_hist
 
-    def clear_market(self, local_save=True):
+    def clear_market(self, local_save=False):
         """
         Callback method that runs EGRET and clears a market.
 
@@ -245,8 +244,7 @@ class OSWMarket():
         self.em.get_model(self.current_start_time)
         self.em.solve_model()
         if local_save:
-            with open(f'{self.market_name}_results_{self.timestep}.json', 'w') as f:
-                json.dump(self.em.mdl_sol.data, f)
+            self.em.save_model(f'{self.market_name}_results_{self.timestep}.json')
         self.market_results = self.em.mdl_sol
         if self.commitment_hist is None:
             back_fill_init = True
@@ -258,7 +256,7 @@ class OSWMarket():
             pass
         else:
             self.current_start_time = self.start_times[self.timestep]
-        print("OSW ", self.market_name, "next start time: ", self.current_start_time)
+        logger.info("OSW ", self.market_name, "next start time: ", self.current_start_time)
 
     def validate_market_timing(self, market_timing) -> None:
         """
@@ -275,8 +273,8 @@ class OSWMarket():
         self.next_state()
         # self.current_state = self.state_machine.state
         self.current_state = self.state
-        print(self.market_name, "Last state:", self.last_state)
-        print(self.market_name, "Next state:", self.current_state)
+        logger.debug(self.market_name, "Last state:", self.last_state)
+        logger.debug(self.market_name, "Next state:", self.current_state)
         # TODO Debug why logs don't make it to log but prints do
         logger.info(f"{self.market_name} moved from {self.last_state} to {self.current_state}")
         return self.current_state
@@ -290,6 +288,9 @@ class OSWMarket():
         Calculate the value of the next state in terms of simulation time
         based on the timing of the next state in the state machine.
         """
+        # Check - if we've reached the end, next time is returned as -1
+        if self.timestep > len(self.start_times):
+            return self.current_start_time, -999
         last_state_time = self.last_state_time
         self.next_state_time = self.market_timing["states"][self.current_state]["duration"] \
                             + last_state_time \

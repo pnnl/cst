@@ -161,7 +161,7 @@ class OSWTSO(Federate):
             _, next_state_time = market.calculate_next_state_time()
             next_state_times.append(next_state_time)
         self.next_requested_time = min(next_state_times)
-        print("Requested time: ", self.next_requested_time)
+        logger.debug("Requested time: ", self.next_requested_time)
         return self.next_requested_time
 
     def update_power_system_and_market_state(self):
@@ -190,7 +190,11 @@ class OSWTSO(Federate):
         """
         # TODO: may need to process results prior to returning them
         current_state_time = self.markets["da_energy_market"].update_market()
-        self.markets["da_energy_market"].move_to_next_state()
+        # Handling for end-of-horizon
+        if current_state_time == -999:
+            self.markets["rt_energy_market"].state = "idle"
+        else:
+            self.markets["da_energy_market"].move_to_next_state()
         if self.markets["da_energy_market"].state == "clearing":
             return self.markets["da_energy_market"].market_results
         else:
@@ -218,10 +222,14 @@ class OSWTSO(Federate):
         TDH hopes this will be straight-forward and may take the form of calls
         to methods of an EGRET object.
         """
-        print(f"I MADE IT INTO RTM with state {self.markets['rt_energy_market'].state}")
+        logger.debug(f"I MADE IT INTO RTM with state {self.markets['rt_energy_market'].state}")
         # TODO: may need to process results prior to returning them
         current_state_time = self.markets["rt_energy_market"].update_market()
-        self.markets["rt_energy_market"].move_to_next_state()
+        # Handling for end-of-horizon
+        if current_state_time == -999:
+            self.markets["rt_energy_market"].state = "idle"
+        else:
+            self.markets["rt_energy_market"].move_to_next_state()
         if self.markets["rt_energy_market"].state == "clearing":
             return self.markets["rt_energy_market"].market_results
         elif self.markets["rt_energy_market"].state == "bidding":
@@ -276,7 +284,6 @@ class OSWTSO(Federate):
                         for key in price_keys:
                             price_dict[area+' '+key] = da_results.data["elements"]["area"][area][key]
                     # Pass info on to real-time market, if it is present
-                    print("Cleared DA Market", "rt_energy_market" in self.markets.keys())
                     if "rt_energy_market" in self.markets.keys():
                         da_commitment = self.markets["da_energy_market"].commitment_hist
                         self.markets["rt_energy_market"].join_da_commitment(da_commitment)
@@ -284,7 +291,7 @@ class OSWTSO(Federate):
                     print("da_next_time:", da_results)
                 #self.data_to_federation["publication"]["reserve_clearing_result"] = da_results["reserves_prices"]["osw_area"]
         if "rt_energy_market" in self.markets.keys():
-            print("tso:", self.markets["rt_energy_market"].em.configuration["time"]["min_freq"])
+            logger.debug("tso:", self.markets["rt_energy_market"].em.configuration["time"]["min_freq"])
             if self.markets["rt_energy_market"].next_state_time == round(self.granted_time):
                 rt_results = self.run_rt_ed_market()
                 #self.data_to_federation["publication"]["rt_clearing_result"] = rt_results["prices"]["osw_node"]
