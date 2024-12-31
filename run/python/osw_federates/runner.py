@@ -29,7 +29,8 @@ class Runner:
         self.schema_name = schema_name
         self.federation_name = federation_name
         self.docker = docker
-        self.db = DBConfigs(cst.cosim_mongo_host, cst.cosim_mongo_db)
+        # self.db = DBConfigs(cst.cosim_mongo_host, cst.cosim_mongo_db)
+        self.db = DBConfigs(cst.cosim_mg_host, cst.cosim_mongo_db)
 
     def define_scenario(self):
         prefix = "exec python3 "
