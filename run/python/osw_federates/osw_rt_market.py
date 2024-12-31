@@ -17,7 +17,7 @@ import pandas as pd
 import numpy as np
 from transitions import Machine
 from osw_market import OSWMarket
-from pyenergymarket.utils.timeutils import count_onoff, fill_real_time, mk_daterange
+from pyenergymarket.utils.timeutils import count_onoff, mk_daterange
 
 # from typing import TYPE_CHECKING
 # if TYPE_CHECKING:
@@ -107,7 +107,7 @@ class OSWRTMarket(OSWMarket):
         start_time_index = pd.date_range(start_datetime, end_datetime, freq=freq, inclusive='left')
         return start_time_index
 
-    def clear_market(self, local_save=False):
+    def clear_market(self, local_save=True):
         """
         Callback method that runs EGRET and clears a market.
 
@@ -162,22 +162,39 @@ class OSWRTMarket(OSWMarket):
         idx = 1
         for etype, edict in da_commitment.items():
             if etype != 'timestamps':
-                for unit, udict in edict.items():
+                for unit, u_dict in edict.items():
                     # Create dictionary structure the first time through
-                    if etype not in da_commitment_interp.keys():
-                        da_commitment_interp[etype] = {unit: {'commitment':
-                                                                  {'data_type': 'time_series',
-                                                                   'values': []}}}
-                    if unit not in da_commitment_interp[etype].keys():
-                        da_commitment_interp[etype][unit] = {'commitment':
-                                                            {'data_type': 'time_series',
-                                                             'values': []}}
+                    da_commitment_interp = self._prep_commitment_hist(da_commitment_interp, etype, unit)
                     # Call the fill_real_time function on this set of values
                     da_commitment_interp[etype][unit]['commitment']['values'] = (
-                        fill_real_time(da_commitment[etype][unit]['commitment']['values'], min_freq=min_freq))
+                        self.fill_real_time(u_dict['commitment']['values']))
+                    # Add initial status
+                    da_commitment_interp[etype][unit]['initial_status'] = u_dict['initial_status']
         # Call method from the base class. Keep old ensures RT values aren't overwritten.
         # This will just add any new da_commitment values to the existing commitment history
         self.update_commitment_hist(keep='old', merge_dict=da_commitment_interp)
+
+    def fill_real_time(self, da_list: list):
+        """
+        Takes a list of values from the (hourly) day-ahead market and copies into a longer
+        list based on the real-time frequency in minutes. For example, if min_freq=15
+        this will copy each hourly values four times.
+
+        Args:
+            da_list (list): list of any kind of value from market day-ahead market
+        Returns:
+            rt_list (list): list of values copied into the real-time frequency
+        """
+        min_freq = self.em.configuration["min_freq"]
+        # Determine the number of times to copy values
+        remainder = 60 % min_freq
+        if remainder != 0:
+            print(f"Warning: min_freq {min_freq} is not a divisor of 60. Results may be inaccurate")
+        num_copy = int(60 / min_freq)
+        # Use numpy arrays and repeat function for fast copying
+        da_array = np.array(da_list)
+        rt_array = da_array.repeat(num_copy)
+        return list(rt_array)
 
     def update_model_from_previous(self, mdl_com:ModelData, day_ahead_input=False):
         """
@@ -201,7 +218,7 @@ class OSWRTMarket(OSWMarket):
                 # self.mdl.data['elements']['generator'][g]['initial_q_output'] = g_dict['qg']['values'][self.configuration['time']['window'] - 1]
 
                 # Load the commitment history and find the index corresponding to the current time
-                commit_hist = self.commitment_hist['generator'][g]['commitment']['values']
+                commit_hist = self.commitment_hist['generator'][g]
                 if self.current_start_time in self.commitment_hist['timestamps']:
                     t0idx = np.where(self.current_start_time == np.array(self.commitment_hist['timestamps']))[0][0]
                 else:
@@ -209,10 +226,11 @@ class OSWRTMarket(OSWMarket):
                 # Function to find initial status (number of hours the unit has been on or off)
                 self.em.mdl.data['elements']['generator'][g]['initial_status'] = (
                     count_onoff(commit_hist, t0idx-1, min_freq=min_freq))
-                # It's possible for t0idx in the last interval to have to commitments available. If so, don't pass
-                if t0idx < len(commit_hist):
+                # It's possible for t0idx in the last interval to have no commitments available.
+                # If so, skip. Otherwise, pass the commitments for the appropriate window
+                if t0idx < len(commit_hist['commitment']['values']):
                     # Setting 'commitment' (setting 'fixed_commitment' leads to infeasibilities)
-                    commit_hist_window = commit_hist[t0idx:t0idx + time_window + lookahead]
+                    commit_hist_window = commit_hist['commitment']['values'][t0idx:t0idx + time_window + lookahead]
                     self.em.mdl.data['elements']['generator'][g]['commitment'] = {'data_type':'time_series',
                                                                               'values': commit_hist_window}
 

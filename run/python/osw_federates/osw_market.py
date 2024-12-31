@@ -108,7 +108,7 @@ class OSWMarket():
         Callback method that pulls in T2 bids to grid data.
 
         This method must be overloaded in an instance of this class to
-        implement the necessary operatations to update the market in question.
+        implement the necessary operations to update the market in question.
         """
         pass
 
@@ -136,18 +136,39 @@ class OSWMarket():
     #                                                                'timestamps':[],
     #                                                                'values':[]}}}
 
-    def update_commitment_hist(self, keep='new', merge_dict=None, back_fill_init=False):
+    @staticmethod
+    def _prep_commitment_hist(commitment_dict, etype, unit):
+        """
+        Creates an empty dictionary structure for the commitment history for a given element and generator/unit
+
+        Args:
+            etype (str): Type of element ('generator', 'storage', etc.)
+            unit (str): Name of unit (typical use case is Egret generator name)
+        """
+        if etype not in commitment_dict.keys():
+            commitment_dict[etype] = {unit: {'initial_status': None,
+                                             'commitment':
+                                                  {'data_type': 'time_series',
+                                                   'values': []}}}
+        if unit not in commitment_dict[etype].keys():
+            commitment_dict[etype][unit] = {'initial_status': None,
+                                            'commitment':
+                                                 {'data_type': 'time_series',
+                                                  'values': []}}
+        return commitment_dict
+
+    def update_commitment_hist(self, keep='new', merge_dict=None):
         """
         Updates the commitment and initial status of generators (and storage) based on the
         model solution from a cleared market. Stored in the self.commitment_hist dictionary
+        This is a partial copy of the Egret generator element dictionary, specifically designed
+        to hold and update commitment history (and initial status) as markets pass
 
         Args:
             keep (string): In the case of duplicate timestamps whether to keep 'new' or 'old' values. Defaults to new.
             merge_dict (dict): Option to merge a commitment history (typically merging DA into RT). Defaults to None.
                                Note, if merge_dict is specified, Egret model will be ignored. Keep='new' will use
                                the merge_dict values in case of duplicate timestamps.
-            back_fill_init (bool): Option to prepend history with an existing initial_status. To be used only
-                                   when loading the initial day-ahead market (ensures min up/down time is met).
         """
         assert keep in ['new', 'old'], "keep must be either 'new' or 'old'"
         # Create dict if needed with the timestamps as a top level key (shared by all generators/elements)
@@ -157,16 +178,16 @@ class OSWMarket():
         commit_times_hist = self.commitment_hist['timestamps']
         if merge_dict is None:
             commit_times_new = pd.to_datetime(self.em.mdl_sol.data['system']['time_keys'])
-            if back_fill_init:
-                # Fill in one day backward at given frequency and append to commit_times_new
-                end = commit_times_new[0]
-                start = end - dt.timedelta(days=1)
-                if 'min_freq' in self.em.configuration.keys():
-                    min_freq = self.em.configuration["min_freq"]
-                else:
-                    min_freq = 60
-                commit_times_backfill = mk_daterange(start, end, min_freq=min_freq, inclusive='left')
-                commit_times_new = pd.to_datetime(commit_times_backfill).append(commit_times_new)
+            # if back_fill_init:
+            #     # Fill in one day backward at given frequency and append to commit_times_new
+            #     end = commit_times_new[0]
+            #     start = end - dt.timedelta(days=1)
+            #     if 'min_freq' in self.em.configuration.keys():
+            #         min_freq = self.em.configuration["min_freq"]
+            #     else:
+            #         min_freq = 60
+            #     commit_times_backfill = mk_daterange(start, end, min_freq=min_freq, inclusive='left')
+            #     commit_times_new = pd.to_datetime(commit_times_backfill).append(commit_times_new)
         else:
             commit_times_new = merge_dict['timestamps']
         # Check whether to loop over stored PyEnergyMarket Model or an input model dictionary
@@ -180,14 +201,10 @@ class OSWMarket():
             if etype in ['generator']:
                 for unit, u_dict in e_dict.items():
                     # Add empty key if it doesn't already exist. Structure matches Egret (with timestamps added)
-                    if etype not in self.commitment_hist.keys():
-                        self.commitment_hist[etype] = {unit: {'commitment':
-                                                              {'data_type': 'time_series',
-                                                               'values': []}}}
-                    if unit not in self.commitment_hist[etype].keys():
-                        self.commitment_hist[etype][unit] = {'commitment':
-                                                            {'data_type': 'time_series',
-                                                             'values': []}}
+                    self.commitment_hist = self._prep_commitment_hist(self.commitment_hist, etype, unit)
+                    # First time through, set the initial status (this is fixed based on the starting initial_status)
+                    if self.commitment_hist[etype][unit]['initial_status'] is None:
+                        self.commitment_hist[etype][unit]['initial_status'] = u_dict['initial_status']
                     # Get current commitment_hist, then check for duplicate timestamps in the incoming solution
                     # This is expected for RT and for DA if using a lookahead window.
                     # We will use the new value (from the model) as the latest
@@ -197,17 +214,17 @@ class OSWMarket():
                         if 'commitment' in u_dict.keys():
                             commit_values_new = u_dict['commitment']['values']
                             # Using initial_status fill back with 1 (for positive) or 0 (for negative)
-                            if back_fill_init:
-                                initial_status = u_dict['initial_status']
-                                if initial_status is None:
-                                    commit_values_backfill = [None] * commit_times_backfill.size
-                                elif initial_status > 0:
-                                    commit_values_backfill = [1] * commit_times_backfill.size
-                                else:
-                                    commit_values_backfill = [0] * commit_times_backfill.size
-                                # Join lists
-                                commit_values_new = commit_values_backfill + commit_values_new
-
+                            # if back_fill_init:
+                            #     initial_status = u_dict['initial_status']
+                            #     if initial_status is None:
+                            #         commit_values_backfill = [None] * commit_times_backfill.size
+                            #     elif initial_status > 0:
+                            #         commit_values_backfill = [1] * commit_times_backfill.size
+                            #     else:
+                            #         commit_values_backfill = [0] * commit_times_backfill.size
+                            #     # Join lists
+                            #     commit_values_new = commit_values_backfill + commit_values_new
+                            #
                         else: # If missing, Egret accepts the None input for unfixed
                             commit_values_new = [None] * len(commit_times_new)
                     else:
@@ -226,10 +243,11 @@ class OSWMarket():
                     sorted_inds = np.argsort(_commit_times_hist)
                     _commit_times_hist = list(np.array(_commit_times_hist)[sorted_inds])
                     commit_values_hist = list(np.array(commit_values_hist)[sorted_inds])
+                    # Set commitment values
                     self.commitment_hist[etype][unit]['commitment']['values'] = commit_values_hist
         self.commitment_hist['timestamps'] = _commit_times_hist
 
-    def clear_market(self, local_save=False):
+    def clear_market(self, local_save=True):
         """
         Callback method that runs EGRET and clears a market.
 
@@ -246,11 +264,7 @@ class OSWMarket():
         if local_save:
             self.em.save_model(f'{self.market_name}_results_{self.timestep}.json')
         self.market_results = self.em.mdl_sol
-        if self.commitment_hist is None:
-            back_fill_init = True
-        else:
-            back_fill_init = False
-        self.update_commitment_hist(back_fill_init=back_fill_init)
+        self.update_commitment_hist()
         self.timestep += 1
         if self.timestep >= len(self.start_times):
             pass
