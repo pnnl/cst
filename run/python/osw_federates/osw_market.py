@@ -247,7 +247,7 @@ class OSWMarket():
                     self.commitment_hist[etype][unit]['commitment']['values'] = commit_values_hist
         self.commitment_hist['timestamps'] = _commit_times_hist
 
-    def clear_market(self, local_save=True):
+    def clear_market(self, local_save=False):
         """
         Callback method that runs EGRET and clears a market.
 
