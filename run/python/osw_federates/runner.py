@@ -76,13 +76,13 @@ class Runner:
         t2.config("terminate_on_error", True)
 #        t2.config("wait_for_current_time_update", True)
 
-        t2.subs_e(names[0] + "/rt_dispatch", "list", "MW")
-        t2.pubs_e(names[1] + "/rt_bids", "list", "MW")
-        t2.subs_e(names[0] + "/da_dispatch", "list", "MW")
-        t2.pubs_e(names[1] + "/da_bids", "list", "MW")
-        t2.subs_e(names[0] + "/res_dispatch", "list", "MW")
-        t2.pubs_e(names[1] + "/res_bids", "list", "MW")
-        t2.subs_e(names[0] + "/wind_forecasts", "list", "mps") # meters per second
+        t2.subs_e(names[0] + "/rt_dispatch", "string", "MW")
+        t2.pubs_e(names[1] + "/rt_bids", "string", "MW")
+        t2.subs_e(names[0] + "/da_dispatch", "string", "MW")
+        t2.pubs_e(names[1] + "/da_bids", "string", "MW")
+        t2.subs_e(names[0] + "/res_dispatch", "string", "MW")
+        t2.pubs_e(names[1] + "/res_bids", "string", "MW")
+        t2.subs_e(names[0] + "/wind_forecasts", "string", "mps") # meters per second
 
         f2 = {
             "image": "cosim-python:latest",
