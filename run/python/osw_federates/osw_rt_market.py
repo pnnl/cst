@@ -114,6 +114,10 @@ class OSWRTMarket(OSWMarket):
         This method must be overloaded in an instance of this class to
         implement the necessary operates to clear the market in question.
         """
+        if self.current_start_time > max(self.start_times):
+            logger.info(f"RT Market: Current start time {self.current_start_time} is past horizon {max(self.start_times)}"
+                        "Market will not be cleared")
+            return
         self.em.get_model(self.current_start_time)
         if self.em.mdl_sol is not None:
             self.update_model_from_previous(self.em.mdl_sol)
@@ -122,14 +126,15 @@ class OSWRTMarket(OSWMarket):
             self.update_model_from_previous(self.da_mdl_sol, day_ahead_input=True)
         self.em.solve_model()
         self.market_results = self.em.mdl_sol
-        # For now the following won't do anything, but if we allow outages/fast starts this will matter
         self.update_commitment_hist()
         if local_save:
             self.em.save_model(f'{self.market_name}_results_{self.timestep}.json')
 
         self.timestep += 1
         if self.timestep >= len(self.start_times):
-            pass
+            # Add a day (exact value doesn't matter, just need something past the horizon)
+            min_freq = self.em.configuration["min_freq"]
+            self.current_start_time += datetime.timedelta(minutes=min_freq)
         else:
             self.current_start_time = self.start_times[self.timestep]
 

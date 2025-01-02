@@ -178,16 +178,6 @@ class OSWMarket():
         commit_times_hist = self.commitment_hist['timestamps']
         if merge_dict is None:
             commit_times_new = pd.to_datetime(self.em.mdl_sol.data['system']['time_keys'])
-            # if back_fill_init:
-            #     # Fill in one day backward at given frequency and append to commit_times_new
-            #     end = commit_times_new[0]
-            #     start = end - dt.timedelta(days=1)
-            #     if 'min_freq' in self.em.configuration.keys():
-            #         min_freq = self.em.configuration["min_freq"]
-            #     else:
-            #         min_freq = 60
-            #     commit_times_backfill = mk_daterange(start, end, min_freq=min_freq, inclusive='left')
-            #     commit_times_new = pd.to_datetime(commit_times_backfill).append(commit_times_new)
         else:
             commit_times_new = merge_dict['timestamps']
         # Check whether to loop over stored PyEnergyMarket Model or an input model dictionary
@@ -213,18 +203,6 @@ class OSWMarket():
                     if merge_dict is None:
                         if 'commitment' in u_dict.keys():
                             commit_values_new = u_dict['commitment']['values']
-                            # Using initial_status fill back with 1 (for positive) or 0 (for negative)
-                            # if back_fill_init:
-                            #     initial_status = u_dict['initial_status']
-                            #     if initial_status is None:
-                            #         commit_values_backfill = [None] * commit_times_backfill.size
-                            #     elif initial_status > 0:
-                            #         commit_values_backfill = [1] * commit_times_backfill.size
-                            #     else:
-                            #         commit_values_backfill = [0] * commit_times_backfill.size
-                            #     # Join lists
-                            #     commit_values_new = commit_values_backfill + commit_values_new
-                            #
                         else: # If missing, Egret accepts the None input for unfixed
                             commit_values_new = [None] * len(commit_times_new)
                     else:
@@ -259,6 +237,12 @@ class OSWMarket():
                                         This is intended for an initial market clearing only.
             local_save (bool, optional): if True, will save a JSON with the results at each timestep
         """
+        # Don't run market if this start time exceeds the start time list
+        if self.current_start_time > max(self.start_times):
+            # TODO: Validate this and add a version to the RT market (if needed...)
+            logger.info(f"Current start time {self.current_start_time} is past horizon {max(self.start_times)}; "
+                        "Market will not be cleared")
+            return
         self.em.get_model(self.current_start_time)
         self.em.solve_model()
         if local_save:
@@ -267,7 +251,8 @@ class OSWMarket():
         self.update_commitment_hist()
         self.timestep += 1
         if self.timestep >= len(self.start_times):
-            pass
+            # Add a day (exact value doesn't matter, just need something past the horizon)
+            self.current_start_time += dt.timedelta(days=1)
         else:
             self.current_start_time = self.start_times[self.timestep]
         logger.info("OSW ", self.market_name, "next start time: ", self.current_start_time)
@@ -303,8 +288,9 @@ class OSWMarket():
         based on the timing of the next state in the state machine.
         """
         # Check - if we've reached the end, next time is returned as -1
-        if self.timestep > len(self.start_times):
-            return self.current_start_time, -999
+        # print("Timestep", self.timestep, " Start times:", self.start_times)
+        # if self.timestep >= len(self.start_times):
+        #     return self.current_start_time, -999
         last_state_time = self.last_state_time
         self.next_state_time = self.market_timing["states"][self.current_state]["duration"] \
                             + last_state_time \
