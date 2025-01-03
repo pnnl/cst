@@ -19,7 +19,7 @@ fi
 
 echo "HELICS $(helics_broker --version)"
 
-"${BUILD_DIR}/test_helics_java"
+"${BUILD_DIR}/test_helics_java.sh"
 
 gridlabd --version
 

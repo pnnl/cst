@@ -11,8 +11,8 @@ cosim_ver=$(cat ../cosim_version)
 grid_ver=$(cat ../grid_version)
 
 echo
-echo "Stamping Co-Simulation Toolbox ${tesp_ver} and grid applications ${grid_ver}."
-echo "If you want to change the version, edit 'scripts/tesp_version' or 'scripts/grid_version' file."
+echo "Stamping Co-Simulation Toolbox ${cosim_ver} and grid applications ${grid_ver}."
+echo "If you want to change the version, edit 'scripts/cst_version' or 'scripts/grid_version' file."
 echo "You should also update any documentation CHANGELOG.TXT or README.rst before stamping."
 echo "The command below can show the branch and merge history to help you update documentation."
 echo
@@ -20,7 +20,7 @@ echo "    git log --pretty=format:"%h %s" --graph"
 echo
 
 while true; do
-    read -p "Are you ready to stamp Grid $grid_ver? " yn
+    read -rp "Are you ready to stamp Grid $grid_ver? " yn
     case $yn in
         [Yy]* ) stamp="yes"; break;;
         [Nn]* ) stamp="no"; break;;
@@ -62,7 +62,7 @@ fi
 
 echo "Creating grid_binaries_$grid_ver.zip for installed binaries for grid applications software"
 cd "${INSTDIR}" || exit
-zip -r -9 "${BUILD_DIR}/grid_binaries_$grid_ver.zip" . &> "${BUILD_DIR}/grid_binaries.log" &
+# zip -r -9 "${BUILD_DIR}/grid_binaries_$grid_ver.zip" . &> "${BUILD_DIR}/grid_binaries.log" &
 
 pip list > "${BUILD_DIR}/tesp_pypi.id"
 

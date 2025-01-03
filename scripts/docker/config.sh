@@ -13,15 +13,15 @@ SKIP=0
 
 # Image build configration
 CONFIG_BUILDS=(
-  "ubuntu" "./" $SKIP
-  "jupyter" "${SIM_DIR}/src/cosim_toolbox/" $BUILD
-  "airflow" "${SIM_DIR}/src/cosim_toolbox/" $BUILD
-  "library" "./" $SKIP
-  "build" "${SIM_DIR}/scripts/build/" $SKIP
-  "helics" "./" $BUILD
-  "python" "${SIM_DIR}/src/cosim_toolbox/" $BUILD
-#  "tespapi" "./" $SKIP
-#  "julia" "./" $SKIP
+  "ubuntu" "./" "$SKIP"
+  "jupyter" "${SIM_DIR}/src/cosim_toolbox/" "$BUILD"
+  "airflow" "${SIM_DIR}/src/cosim_toolbox/" "$BUILD"
+  "library" "./" "$SKIP"
+  "build" "${SIM_DIR}/scripts/build/" "$SKIP"
+  "helics" "./" "$BUILD"
+  "python" "${SIM_DIR}/src/cosim_toolbox/" "$BUILD"
+#  "tespapi" "./" "$SKIP"
+#  "julia" "./" "$SKIP"
 )
 
 # Image full path on the remote registry

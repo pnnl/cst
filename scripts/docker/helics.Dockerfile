@@ -29,17 +29,12 @@ ENV PATH=$PATH:$INSTDIR/energyplus/PostProcess
 RUN echo "===== Building CoSim HELICS =====" && \
   export DEBIAN_FRONTEND=noninteractive && \
   export DEBCONF_NONINTERACTIVE_SEEN=true && \
-  echo "===== Install Libraries =====" && \
   apt-get update && \
   apt-get dist-upgrade -y && \
-# protect images by changing root password
   echo "root:${COSIM_USER}" | chpasswd && \
-  echo "<<<< Adding the '${COSIM_USER}' user >>>>" && \
   addgroup --gid ${SIM_GID} ${SIM_GRP} && \
-  useradd -m -s /bin/bash -u $SIM_UID ${COSIM_USER} && \
-  echo "<<<< Changing new user password >>>>" && \
-  echo "${COSIM_USER}:${COSIM_USER}" | chpasswd && \
-  usermod -aG sudo,${SIM_GRP} ${COSIM_USER}
+  useradd -m -s /bin/bash -g ${SIM_GRP} -G sudo,${SIM_GRP} -u $SIM_UID ${COSIM_USER} && \
+  echo "${COSIM_USER}:${COSIM_USER}" | chpasswd
 
 #Add cplex
 #COPY $COSIM_HOME/cplex_studio129.linux-x86-64.bin
@@ -50,7 +45,7 @@ RUN echo "===== Building CoSim HELICS =====" && \
 
 # Copy Binaries
 COPY --from=cosim-build:latest $INSTDIR/ $INSTDIR/
-RUN chown -hR $COSIM_USER:$COSIM_USER $COSIM_HOME
+RUN chown -hR $COSIM_USER $COSIM_HOME
 
 # Set as user
 USER $COSIM_USER
