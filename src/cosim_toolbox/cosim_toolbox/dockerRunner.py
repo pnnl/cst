@@ -65,7 +65,7 @@ class DockerRunner:
         """Create the docker-compose.yaml for the provided scenario
 
         Args:
-            scenario_name (str): Name of the scenario run by this docker-compose.yaml
+            scenario_name (str): Name of the scenario
         """
         db = DBConfigs(cst.cosim_mongo, cst.cosim_mongo_db)
 
@@ -80,28 +80,33 @@ class DockerRunner:
       MONGO_HOST: \"""" + cst.cosim_mg_host + """\"
       MONGO_PORT: \"""" + cst.cosim_mg_port + """\"
 """
-        yaml = 'services:\n'
         # Add helics broker federate
         cnt = 2
-        fed_cnt = str(fed_def.__len__())
-        env = [cosim_env, "exec helics_broker --ipv4 -f " + fed_cnt + " --loglevel=warning --name=broker"]
-        yaml += DockerRunner._service("helics", "cosim-helics:latest", env, cnt, depends=None)
-
+        yaml = ""
+        add_logger = False
         for name in fed_def:
             cnt += 1
             image = fed_def[name]['image']
-            env = [cosim_env, fed_def[name]['command']]
+            env = [cosim_env, f"{fed_def[name]['prefix']} && exec {fed_def[name]['command']}"]
             yaml += DockerRunner._service(name, image, env, cnt, depends=None)
+            if fed_def[name]['logger']:
+                add_logger = True
 
         # Add data logger federate
-        # cnt += 1
-        # env = [cosim_env,
-        #        "source /home/worker/venv/bin/activate && " +
-        #        "exec python3 -c \\\"import cosim_toolbox.federateLogger as datalog; datalog.main('FederateLogger', '" +
-        #        schema_name + "', '" + scenario_name + "')\\\""]
-        # yaml += DockerRunner._service(cst.cu_logger, "cosim-python:latest", env, cnt, depends=None)
+        if add_logger:
+            cnt += 1
+            env = [cosim_env,
+                   f"source /home/worker/venv/bin/activate && "
+                   f"exec python3 -c \"import cosim_toolbox.federateLogger as datalog; "
+                   f"datalog.main('FederateLogger', '{schema_name}', '{scenario_name}')\""]
+            yaml += DockerRunner._service(cst.cu_logger, "cosim-python:latest", env, cnt, depends=None)
 
         yaml += DockerRunner._network()
+
+        # fed_cnt = str(fed_def.__len__())
+        env = [cosim_env, f"exec helics_broker --ipv4 -f {cnt} --loglevel=warning --name=broker"]
+        yaml = 'services:\n' + DockerRunner._service("helics", "cosim-helics:latest", env, 2, depends=None) + yaml
+
         op = open(scenario_name + ".yaml", 'w')
         op.write(yaml)
         op.close()
@@ -138,3 +143,41 @@ class DockerRunner:
         cmd = ("sh -c 'cd " + cosim + path + " && " + docker_compose + " up && " + docker_compose + " down'")
         subprocess.Popen(ssh + " \"nohup " + cmd + " > /dev/null &\"", shell=True)
         logger.info('====  Broker Exit in\n        ' + os.getcwd())
+
+    @staticmethod
+    def define_sh(scenario_name: str) -> None:
+        """Create the run shell file for the provided scenario
+
+        Args:
+            scenario_name (str): Name of the scenario
+        """
+        db = DBConfigs(cst.cosim_mongo, cst.cosim_mongo_db)
+
+        scenario_def = db.get_dict(cst.cu_scenarios, None, scenario_name)
+        federation_name = scenario_def["federation"]
+        schema_name = scenario_def["schema"]
+        fed_def = db.get_dict(cst.cu_federations, None, federation_name)["federation"]
+
+        shell = "#!/bin/bash\n\n"
+        # Add helics broker federate
+        cnt = 2
+        fed_cnt = str(fed_def.__len__())
+        shell += f"(exec helics_broker -f {fed_cnt} --loglevel=warning --name=broker &> broker.log &)\n"
+
+        add_logger = False
+        for name in fed_def:
+            cnt += 1
+            shell += f"(exec {fed_def[name]['command']} &> {name}.log &)\n"
+            if fed_def[name]['logger']:
+                add_logger = True
+
+        # Add data logger federate
+        if add_logger:
+            cnt += 1
+            shell += f"(exec python3 -c \"import cosim_toolbox.federateLogger as datalog; "\
+                     f"datalog.main('FederateLogger', '{schema_name} ', '{scenario_name}')\" &> FederateLogger.log &)"
+
+        op = open(f"{scenario_name}.sh", 'w')
+        op.write(shell)
+        op.close()
+        subprocess.run(['chmod', '+x', f"{scenario_name}.sh"])

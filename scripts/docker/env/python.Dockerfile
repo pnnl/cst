@@ -23,7 +23,7 @@ ENV MONGO_PORT=$MONGO_PORT
 COPY . $COSIM_HOME/cosim_toolbox/cosim_toolbox/
 COPY --from=cosim-build:latest $COSIM_HOME/repo/psst/ $COSIM_HOME/psst/psst/
 COPY --from=cosim-build:latest $COSIM_HOME/repo/README.rst $COSIM_HOME/psst
-RUN chown -hR $COSIM_USER:$COSIM_USER $COSIM_HOME
+RUN chown -hR $COSIM_USER $COSIM_HOME
 
 # Set as user
 USER $COSIM_USER
@@ -31,16 +31,7 @@ WORKDIR $COSIM_HOME
 
 # Add directories and files
 RUN echo "===== Building CoSim Python =====" && \
-  echo "Pip install for virtual environment" && \
   pip install --upgrade pip > "_pypi.log" && \
-  pip install virtualenv >> "_pypi.log" && \
-  ".local/bin/virtualenv" venv --prompt TESP && \
-  echo "Add python virtual environment to .bashrc" && \
-  echo ". venv/bin/activate" >> .bashrc && \
-  echo "Activate the python virtual environment" && \
-  . venv/bin/activate && \
-  pip install --upgrade pip > "pypi.log" && \
-  echo "Install Python Libraries" && \
   pip install --no-cache-dir helics >> "pypi.log" && \
   pip install --no-cache-dir helics[cli] >> "pypi.log" && \
   cd $COSIM_HOME/cosim_toolbox/cosim_toolbox || exit && \

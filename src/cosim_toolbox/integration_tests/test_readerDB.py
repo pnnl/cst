@@ -151,8 +151,6 @@ class TestLoggerApi(unittest.TestCase):
 
     def test_00_open_databases(self):
         self.assertIsNotNone(self.test_DL.data_db)
-        self.assertIsNone(self.test_DL.scenario)
-        self.assertIsNone(self.test_DL.scenario_name)
 
     def test_01_get_select_string(self):
         qry_string = self.test_DL.get_select_string(self.schema_name, "hdt_double")

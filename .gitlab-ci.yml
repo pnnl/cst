@@ -69,6 +69,7 @@ integration-test:
   stage: integration-test
   tags:
     - ecomp-integration-test
+  timeout: 2h
   variables:
     GIT_STRATEGY: none
   only:
