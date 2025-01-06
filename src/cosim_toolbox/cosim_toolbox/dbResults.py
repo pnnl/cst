@@ -47,9 +47,8 @@ class DBResults:
                 'HDT_ENDPOINT': 'text'}
 
     def __init__(self):
-        self.scenario = None
-        self.scenario_name = None
         self.data_db = None
+        self._scenario = None
         self.use_timescale = False
 
     @staticmethod
@@ -231,10 +230,14 @@ class DBResults:
         """
         if scenario_name is None or scenario_name == "":
             return None
-        if self.scenario_name != scenario_name:
-            self.scenario = ReadConfig(scenario_name)
-            self.scenario_name = scenario_name
-        return self.scenario
+        if self._scenario is None:
+            self._scenario = ReadConfig(scenario_name)
+        else:
+            if self._scenario.scenario_name == scenario_name:
+                return self._scenario
+            else:
+                self._scenario = ReadConfig(scenario_name)
+        return self._scenario
 
     @staticmethod
     def get_select_string(scheme_name: str, data_type: str) -> str:

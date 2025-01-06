@@ -29,7 +29,7 @@ cd $COPPER_HOME/run/python/test_federation
 rm -rf *.yaml *.log
 export PYTHONPATH=.:$COPPER_HOME/src/cosim_toolbox
 python runner.py
-./runner.sh
+./test_scenario.sh
 docker ps
 ps
 

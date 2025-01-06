@@ -19,4 +19,4 @@ if [[ $image1 == "" ]]; then
 fi
 
 cd "$SIM_DIR/run" || exit
-docker compose -f "$STACK_DIR/timescale-docker-compose.yaml" -f "$STACK_DIR/docker-compose.yaml" up -d --remove-orphans
+docker compose -f "$STACK_DIR/timescale-docker-compose.yaml" up -d --remove-orphans

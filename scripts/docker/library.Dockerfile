@@ -9,7 +9,6 @@ ARG COSIM_USER
 RUN echo "===== Building CoSim Library =====" && \
   export DEBIAN_FRONTEND=noninteractive && \
   export DEBCONF_NONINTERACTIVE_SEEN=true && \
-  echo "===== Install Libraries =====" && \
   apt-get update && \
   apt-get dist-upgrade -y && \
   apt-get install -y \
@@ -20,12 +19,8 @@ RUN echo "===== Building CoSim Library =====" && \
   libtool \
   libjsoncpp-dev \
   gfortran \
-  cmake \
-  subversion && \
+  cmake && \
   echo "root:${COSIM_USER}" | chpasswd && \
-  echo "<<<< Adding the '${COSIM_USER}' user >>>>" && \
   addgroup --gid ${SIM_GID} ${SIM_GRP} && \
-  useradd -m -s /bin/bash -u $SIM_UID ${COSIM_USER} && \
-  echo "<<<< Changing ${COSIM_USER} password >>>>" && \
-  echo "${COSIM_USER}:${COSIM_USER}" | chpasswd && \
-  usermod -aG sudo,${SIM_GRP} ${COSIM_USER}
+  useradd -m -s /bin/bash -g ${SIM_GRP} -G sudo,${SIM_GRP} -u $SIM_UID ${COSIM_USER} && \
+  echo "${COSIM_USER}:${COSIM_USER}" | chpasswd

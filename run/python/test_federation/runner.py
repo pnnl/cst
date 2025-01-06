@@ -23,7 +23,7 @@ class Runner:
         self.db = DBConfigs(cst.cosim_mongo, cst.cosim_mongo_db)
 
     def define_scenario(self):
-        prefix = "source /home/worker/venv/bin/activate && exec python3 "
+        prefix = "source /home/worker/venv/bin/activate"
         names = ["Battery", "EVehicle"]
         t1 = HelicsMsg(names[0], 30)
         if self.docker:
@@ -75,15 +75,20 @@ class Runner:
         t2.endpt(names[1] + "/voltage1", names[0] + "/current1", True, Collect.YES)
 
         f1 = {
+            "logger": False,
             "image": "cosim-python:latest",
-            "command": prefix + "simple_federate.py " + names[0] + " " + self.scenario_name,
+            "prefix": prefix,
+            "command": "python3 simple_federate.py " + names[0] + " " + self.scenario_name,
+            "env": "",
             "federate_type": "combo",
             "time_step": 120,
             "HELICS_config": t1.write_json()
         }
         f2 = {
+            "logger": False,
             "image": "cosim-python:latest",
-            "command": prefix + "simple_federate2.py " + names[1] + " " + self.scenario_name,
+            "prefix": prefix,
+            "command": "python3 simple_federate2.py " + names[1] + " " + self.scenario_name,
             "env": "",
             "federate_type": "combo",
             "time_step": 120,
@@ -119,10 +124,7 @@ class Runner:
 def main():
     remote = False
     with_docker = False
-    _scenario_name = "test_scenario"
-    _schema_name = "test_schema"
-    _federation_name = "test_federation"
-    r = Runner(_scenario_name, _schema_name, _federation_name, with_docker)
+    r = Runner("test_scenario", "test_schema", "test_federation", with_docker)
     r.define_scenario()
     print(r.db.get_collection_document_names(cst.cu_scenarios))
     print(r.db.get_collection_document_names(cst.cu_federations))
@@ -132,6 +134,8 @@ def main():
             DockerRunner.run_remote_yaml(r.scenario_name)
         else:
             DockerRunner.run_yaml(r.scenario_name)
+    else:
+        DockerRunner.define_sh(r.scenario_name)
 
 if __name__ == "__main__":
     main()
