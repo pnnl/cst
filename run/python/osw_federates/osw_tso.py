@@ -517,8 +517,12 @@ def run_osw_tso(h5filepath: str, start: str="2032-01-01 00:00:00", end: str="203
 
 if __name__ == "__main__":    
     if sys.argv.__len__() > 2:
-        market_timing, markets, solver = run_osw_tso(sys.argv[3], sys.argv[4], sys.argv[5])
         wecc_market_fed = OSWTSO(sys.argv[1], market_timing, markets, solver=solver)
+        h5filepath = wecc_market_fed.federate["h5filepath"]
+        market_timing, markets, solver = run_osw_tso(h5filepath,wecc_market_fed.start,wecc_market_fed.stop)
         wecc_market_fed.create_federate(sys.argv[2])
         wecc_market_fed.run_cosim_loop()
+        wecc_market_fed.markets["da_energy_market"].em.data_provider.h5.close()
+        wecc_market_fed.markets["rt_energy_market"].em.data_provider.h5.close()
         wecc_market_fed.destroy_federate()
+ 

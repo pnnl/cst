@@ -33,9 +33,9 @@ class Runner:
         self.db = DBConfigs(cst.cosim_mg_host, cst.cosim_mongo_db)
 
     def define_scenario(self):
-        prefix = "exec python3 "
+        prefix = "source /home/worker/venv/bin/activate"
         names = ["OSW_TSO", "OSW_Plant"]
-        t1 = HelicsMsg(names[0], 30)
+        t1 = HelicsMsg(names[0], 30) #CHANGE FROM 30 SECONDS TO 15 MINUTES
         if self.docker:
             t1.config("brokeraddress", "10.5.0.2")
         t1.config("core_type", "zmq")
@@ -56,12 +56,14 @@ class Runner:
         for b in buses["BusID"]:
             t1.pubs_e(f"{names[0]}/da_price_{b}", "string", "$")
             t1.pubs_e(f"{names[0]}/rt_price_{b}", "string", "$")
-        
 
         f1 = {
+            "logger": False,
             "image": "cosim-python:latest",
-            "command": prefix + "osw_tso.py " + names[0] + " " + self.scenario_name,
-            "federate_type": "value", # if endpoints involved this needs to be different
+            "prefix": prefix,
+            "h5filepath": h5filepath,
+            "command": "python3 osw_tso.py " + names[0] + " " + self.scenario_name,
+            "federate_type": "combo",
             "time_step": 120,
             "HELICS_config": t1.write_json()
         }
@@ -85,17 +87,19 @@ class Runner:
         t2.subs_e(names[0] + "/wind_forecasts", "string", "mps") # meters per second
 
         f2 = {
+            "logger": False,
             "image": "cosim-python:latest",
-            "command": prefix + "osw_plant.py " + names[1] + " " + self.scenario_name, #### TO-DO OSW plant file name -- make sure in the same directory!!
-            "env": "",
+            "prefix": prefix,
+            "command": "python3 osw_plant.py " + names[1] + " " + self.scenario_name,
             "federate_type": "value",
             "time_step": 120,
             "HELICS_config": t2.write_json()
-        } # time_step is in seconds
+        }
+
         diction = {
             "federation": {
-                names[0]: f1 ,
-                names[1]: f2
+                names[0]: f1 #,
+                # names[1]: f2
             }
         }
         print(diction)
@@ -115,21 +119,23 @@ class Runner:
         # print(cst.cu_scenarios, self.db.get_collection_document_names(cst.cu_scenarios))
         # print(self.scenario_name, self.db.get_dict(cst.cu_scenarios, None, self.scenario_name))
 
-
 def main():
-    remote = True
-    _scenario_name = "osw_lmp_test_scenario"
-    _schema_name = "osw_test_schema"
-    _federation_name = "osw_test_federation"
-    r = Runner(_scenario_name, _schema_name, _federation_name, False)
+    remote = False
+    with_docker = False
+    r = Runner("osw_lmp_test_scenario", "osw_test_schema", "osw_test_federation", with_docker)
     r.define_scenario()
-    # print(r.db.get_collection_document_names(cst.cu_scenarios))
-    # print(r.db.get_collection_document_names(cst.cu_federations))
-    DockerRunner.define_yaml(r.scenario_name)
-    # if remote:
-    #     DockerRunner.run_remote_yaml(_scenario_name)
-    # else:
-    #     DockerRunner.run_yaml(_scenario_name)
+    print(r.db.get_collection_document_names(cst.cu_scenarios))
+    print(r.db.get_collection_document_names(cst.cu_federations))
+    if with_docker:
+        DockerRunner.define_yaml(r.scenario_name)
+        if remote:
+            DockerRunner.run_remote_yaml(r.scenario_name)
+        else:
+            DockerRunner.run_yaml(r.scenario_name)
+    else:
+        DockerRunner.define_sh(r.scenario_name)
+
+    h5.close()
 
 if __name__ == "__main__":
     main()
