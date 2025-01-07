@@ -82,6 +82,7 @@ class OSWMarket():
         self.state_list = list(market_timing["states"].keys())
         self.state_machine = Machine(model=self, states=self.state_list, initial=self.current_state)
         self.state_machine.add_ordered_transitions()
+        self.new_data = False # Whethere there is new data to be published to the federation
         # Adding definitions for state transition callbacks
         # "self.clear_market" is the name of the method called when entering
         # the "clearing" state

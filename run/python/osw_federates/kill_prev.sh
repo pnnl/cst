@@ -3,7 +3,7 @@
 pid_array=()
 while IFS= read -r line; do
   pid_array+=( "$line" )
-done < <( ps -ef | grep -v grep | grep osw_federates | awk '{print $2}' )
+done < <( ps -ef | grep -v grep | grep osw | awk '{print $2}' )
 
 for i in "${pid_array[@]}"
 do

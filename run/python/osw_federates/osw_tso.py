@@ -77,6 +77,7 @@ class OSWTSO(Federate):
 
         # Holds the market objects 
         self.markets = markets
+        # self.initial = True
 
         # I don't think we will ever use the "last_market_time" values 
         # but they will give us confidence that we're doing things correctly.
@@ -117,6 +118,8 @@ class OSWTSO(Federate):
         # self.read_power_system_model()
         self.initialize_power_and_market_model()
         self.hfed.enter_initializing_mode() # HELICS API call
+        # Publish the initial DA Market prices
+        super().send_data_to_federation()
 
     # def read_power_system_model(self):
     #     """
@@ -285,6 +288,15 @@ class OSWTSO(Federate):
         "calculate_next_time_step" has populated "self.market_times" to
         indicate which markets need to be run
         """
+        # Clear out values published last time (if there are any)
+        # if not self.initial: # Don't clear on 1st run through (initial DA market)
+        for pub in self.data_to_federation["publications"]:
+            self.data_to_federation["publications"][pub] = None
+        for ep in self.data_to_federation["endpoints"]:
+            self.data_to_federation["endpoints"][ep] = None
+        # self.initial = False # No longer in the initial state
+
+        # Check DA and RT markets - do a clearing as needed and publish data to federation
         self.update_power_system_and_market_state()
         if "da_energy_market" in self.markets.keys():
             if self.markets["da_energy_market"].next_state_time == round(self.granted_time):
@@ -311,9 +323,8 @@ class OSWTSO(Federate):
             logger.debug("tso:", self.markets["rt_energy_market"].em.configuration["time"]["min_freq"])
             if self.markets["rt_energy_market"].next_state_time == round(self.granted_time):
                 rt_results = self.run_rt_ed_market()
-                print("Real time results:", rt_results)
-                print("Type of rt_results:", type(rt_results))
-                if type(rt_results) != int:
+                if isinstance(rt_results, ModelData):
+                    print("RT results are a Model Data Object.")
                     for bus, b_dict in rt_results.elements(element_type="bus"):
                         new_dict = f"{b_dict['lmp']}"
                         new_dict = new_dict.replace("'", '"')
@@ -470,7 +481,7 @@ def run_osw_tso(h5filepath: str, start: str="2032-01-01 00:00:00", end: str="203
             "datefrom": start, # whole year
             "dateto": end,
             'min_freq': 60, #15 minutes
-            'window': 2,
+            'window': 24,
             'lookahead': 0
         },
         "solve_arguments": {
