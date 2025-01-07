@@ -264,7 +264,7 @@ class OSWTSO(Federate):
                 # price_dict[area + ' ' + key] = da_results.data["elements"]["area"][area][key]
                 reserve_dict = f"{da_results.data['elements']['area'][area][key]}"
                 reserve_dict = reserve_dict.replace("'", '"')
-                self.data_to_federation["publication"][f"{self.federate_name}/da_{key}_{area}"] = reserve_dict
+                self.data_to_federation["publications"][f"{self.federate_name}/da_{key}_{area}"] = reserve_dict
 
     def update_internal_model(self):
         """
@@ -311,10 +311,13 @@ class OSWTSO(Federate):
             logger.debug("tso:", self.markets["rt_energy_market"].em.configuration["time"]["min_freq"])
             if self.markets["rt_energy_market"].next_state_time == round(self.granted_time):
                 rt_results = self.run_rt_ed_market()
-                for bus, b_dict in rt_results.elements(element_type="bus"):
-                    new_dict = f"{b_dict['lmp']}"
-                    new_dict = new_dict.replace("'", '"')
-                    self.data_to_federation["publications"][f"{self.federate_name}/rt_price_{bus[0:4]}"] = new_dict
+                print("Real time results:", rt_results)
+                print("Type of rt_results:", type(rt_results))
+                if type(rt_results) != int:
+                    for bus, b_dict in rt_results.elements(element_type="bus"):
+                        new_dict = f"{b_dict['lmp']}"
+                        new_dict = new_dict.replace("'", '"')
+                        self.data_to_federation["publications"][f"{self.federate_name}/rt_price_{bus[0:4]}"] = new_dict
                 #self.data_to_federation["publication"][f"{self.federate_name}/rt_clearing_result"] = rt_results["prices"]["osw_node"]
 
     def run_market_loop(self, market, file_name):
@@ -467,7 +470,7 @@ def run_osw_tso(h5filepath: str, start: str="2032-01-01 00:00:00", end: str="203
             "datefrom": start, # whole year
             "dateto": end,
             'min_freq': 60, #15 minutes
-            'window': 24,
+            'window': 2,
             'lookahead': 0
         },
         "solve_arguments": {
@@ -522,9 +525,8 @@ def run_osw_tso(h5filepath: str, start: str="2032-01-01 00:00:00", end: str="203
 
 if __name__ == "__main__":    
     if sys.argv.__len__() > 2:
+        market_timing, markets, solver = run_osw_tso(sys.argv[3], sys.argv[4], sys.argv[5])
         wecc_market_fed = OSWTSO(sys.argv[1], market_timing, markets, solver=solver)
-        h5filepath = wecc_market_fed.federate["h5filepath"]
-        market_timing, markets, solver = run_osw_tso(h5filepath,wecc_market_fed.start,wecc_market_fed.stop)
         wecc_market_fed.create_federate(sys.argv[2])
         wecc_market_fed.run_cosim_loop()
         wecc_market_fed.markets["da_energy_market"].em.data_provider.h5.close()
