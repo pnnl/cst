@@ -251,7 +251,6 @@ class OSWTSO(Federate):
         price_keys = ['regulation_up_price', 'regulation_down_price', 'flexible_ramp_up_price',
                       'flexible_ramp_down_price']
         price_dict = {}
-        count = 0
         for bus, b_dict in da_results.elements(element_type="bus"):
             new_dict = f"{b_dict['lmp']}"
             new_dict = new_dict.replace("'", '"')
@@ -259,11 +258,13 @@ class OSWTSO(Federate):
             #     json.dump(new_dict, json_file)
             # print("Helics time:",self.granted_time)
             self.data_to_federation["publications"][f"{self.federate_name}/da_price_{bus[0:4]}"] = new_dict
-            count += 1
         # TODO: price_dict isn't used anywhere at the moment. Either send somewhere or we can delete this
         for area, area_dict in da_results.elements(element_type="area"):
             for key in price_keys:
-                price_dict[area + ' ' + key] = da_results.data["elements"]["area"][area][key]
+                # price_dict[area + ' ' + key] = da_results.data["elements"]["area"][area][key]
+                reserve_dict = f"{da_results.data['elements']['area'][area][key]}"
+                reserve_dict = reserve_dict.replace("'", '"')
+                self.data_to_federation["publication"][f"{self.federate_name}/da_{key}_{area}"] = reserve_dict
 
     def update_internal_model(self):
         """
@@ -305,11 +306,15 @@ class OSWTSO(Federate):
                             self.markets["rt_energy_market"].join_da_commitment(da_commitment)
                 else:
                     print("da_next_time:", da_results)
-                #self.data_to_federation["publication"][f"{self.federate_name}/reserve_clearing_result"] = da_results["reserves_prices"]["osw_area"]
+                # = da_results["reserves_prices"]["osw_area"]
         if "rt_energy_market" in self.markets.keys():
             logger.debug("tso:", self.markets["rt_energy_market"].em.configuration["time"]["min_freq"])
             if self.markets["rt_energy_market"].next_state_time == round(self.granted_time):
                 rt_results = self.run_rt_ed_market()
+                for bus, b_dict in rt_results.elements(element_type="bus"):
+                    new_dict = f"{b_dict['lmp']}"
+                    new_dict = new_dict.replace("'", '"')
+                    self.data_to_federation["publications"][f"{self.federate_name}/rt_price_{bus[0:4]}"] = new_dict
                 #self.data_to_federation["publication"][f"{self.federate_name}/rt_clearing_result"] = rt_results["prices"]["osw_node"]
 
     def run_market_loop(self, market, file_name):

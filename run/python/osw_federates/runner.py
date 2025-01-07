@@ -18,7 +18,7 @@ from cosim_toolbox.helicsConfig import HelicsMsg, Collect
 import pandas as pd
 from pnnlpcm import h5fun
  
-h5filepath = '/Users/lill771/Documents/Data/GridView/WECC240_20240807.h5'
+h5filepath = '/Users/corn677/Projects/EComp/Thrust3/pyenergymarket/data_model_tests/data_files/WECC240_20240807.h5'
 h5 = h5fun.H5(h5filepath)
 buses = h5("/mdb/Bus")
 
@@ -56,6 +56,15 @@ class Runner:
         for b in buses["BusID"]:
             t1.pubs_e(f"{names[0]}/da_price_{b}", "string", "$")
             t1.pubs_e(f"{names[0]}/rt_price_{b}", "string", "$")
+        # Add reserve price names
+        price_keys = ['regulation_up_price', 'regulation_down_price', 'flexible_ramp_up_price',
+                      'flexible_ramp_down_price']
+        # TODO: call areas from the h5 file
+        area_keys = ['CALIFORN', 'MEXICO', 'NORTH', 'SOUTH']
+        for area in area_keys:
+            for key in price_keys:
+                # price_dict[area + ' ' + key] = da_results.data["elements"]["area"][area][key]
+                t1.pubs_e(f"{names[0]}/da_{key}_{area}", "string", "$")
 
         f1 = {
             "logger": False,
@@ -98,7 +107,7 @@ class Runner:
 
         diction = {
             "federation": {
-                names[0]: f1 #,
+                names[0]: f1 ,
                 # names[1]: f2
             }
         }
@@ -122,7 +131,7 @@ class Runner:
 def main():
     remote = False
     with_docker = False
-    r = Runner("osw_lmp_test_scenario", "osw_test_schema", "osw_test_federation", with_docker)
+    r = Runner("osw_lmp_test_scenario_mc01", "osw_test_schema", "osw_test_federation", with_docker)
     r.define_scenario()
     print(r.db.get_collection_document_names(cst.cu_scenarios))
     print(r.db.get_collection_document_names(cst.cu_federations))
