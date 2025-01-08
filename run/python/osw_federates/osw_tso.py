@@ -77,7 +77,6 @@ class OSWTSO(Federate):
 
         # Holds the market objects 
         self.markets = markets
-        # self.initial = True
 
         # I don't think we will ever use the "last_market_time" values 
         # but they will give us confidence that we're doing things correctly.
@@ -289,12 +288,10 @@ class OSWTSO(Federate):
         indicate which markets need to be run
         """
         # Clear out values published last time (if there are any)
-        # if not self.initial: # Don't clear on 1st run through (initial DA market)
         for pub in self.data_to_federation["publications"]:
             self.data_to_federation["publications"][pub] = None
         for ep in self.data_to_federation["endpoints"]:
             self.data_to_federation["endpoints"][ep] = None
-        # self.initial = False # No longer in the initial state
 
         # Check DA and RT markets - do a clearing as needed and publish data to federation
         self.update_power_system_and_market_state()
@@ -303,15 +300,18 @@ class OSWTSO(Federate):
             # if self.markets["da_energy_market"].next_state_time == round(self.granted_time) and ((self.stop_time - self.granted_time) > 600):
                 if self.markets["da_energy_market"].state == "idle":
                     self.generate_wind_forecasts() # TODO Publish these for T2 (OSW_Plant) federate to subscribe to
+                # Grab the DAM start time before running UC (it moves to the 'next' start time as part of the clearing)
+                dam = self.markets["da_energy_market"]
+                this_start_time = dam.current_start_time
+                # Run the unit commitment problem
                 da_results = self.run_da_uc_market()
                 
                 #reserve_results = self.run_reserve_market()
                 #self.data_to_federation["publication"][f"{self.federate_name}/da_clearing_result"] = da_results["prices"]["osw_node"]
                 if self.markets["da_energy_market"].state == "clearing":
                     # Only run this if we are still within horizon (omit a potential final DA save/pass)
-                    dam = self.markets["da_energy_market"]
-                    if dam.current_start_time <= max(dam.start_times):
-                        self._update_data_to_federation(da_results)
+                    if this_start_time <= max(dam.start_times):
+                        self._update_da_prices(da_results)
                         # Pass info on to real-time market, if it is present
                         if "rt_energy_market" in self.markets.keys():
                             da_commitment = self.markets["da_energy_market"].commitment_hist
@@ -324,7 +324,6 @@ class OSWTSO(Federate):
             if self.markets["rt_energy_market"].next_state_time == round(self.granted_time):
                 rt_results = self.run_rt_ed_market()
                 if isinstance(rt_results, ModelData):
-                    print("RT results are a Model Data Object.")
                     for bus, b_dict in rt_results.elements(element_type="bus"):
                         new_dict = f"{b_dict['lmp']}"
                         new_dict = new_dict.replace("'", '"')
@@ -541,6 +540,6 @@ if __name__ == "__main__":
         wecc_market_fed.create_federate(sys.argv[2])
         wecc_market_fed.run_cosim_loop()
         wecc_market_fed.markets["da_energy_market"].em.data_provider.h5.close()
-        wecc_market_fed.markets["rt_energy_market"].em.data_provider.h5.close()
+        # wecc_market_fed.markets["rt_energy_market"].em.data_provider.h5.close()
         wecc_market_fed.destroy_federate()
  

@@ -241,7 +241,7 @@ class OSWMarket():
         # Don't run market if this start time exceeds the start time list
         if self.current_start_time > max(self.start_times):
             # TODO: Validate this and add a version to the RT market (if needed...)
-            logger.info(f"Current start time {self.current_start_time} is past horizon {max(self.start_times)}; "
+            logger.warning(f"Current start time {self.current_start_time} is past horizon {max(self.start_times)}; "
                         "Market will not be cleared")
             return
         self.em.get_model(self.current_start_time)

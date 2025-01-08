@@ -115,7 +115,7 @@ class OSWRTMarket(OSWMarket):
         implement the necessary operates to clear the market in question.
         """
         if self.current_start_time > max(self.start_times):
-            logger.info(f"RT Market: Current start time {self.current_start_time} is past horizon {max(self.start_times)}"
+            logger.warning(f"RT Market: Current start time {self.current_start_time} is past horizon {max(self.start_times)}"
                         "Market will not be cleared")
             return
         self.em.get_model(self.current_start_time)
