@@ -23,7 +23,6 @@ class Runner:
         self.db = DBConfigs(cst.cosim_mongo, cst.cosim_mongo_db)
 
     def define_scenario(self):
-        prefix = "source /home/worker/venv/bin/activate"
         names = ["Battery", "EVehicle"]
         t1 = HelicsMsg(names[0], 30)
         if self.docker:
@@ -77,9 +76,7 @@ class Runner:
         f1 = {
             "logger": False,
             "image": "cosim-python:latest",
-            "prefix": prefix,
-            "command": "python3 simple_federate.py " + names[0] + " " + self.scenario_name,
-            "env": "",
+            "command": f"python3 simple_federate.py {names[0]} {self.scenario_name}",
             "federate_type": "combo",
             "time_step": 120,
             "HELICS_config": t1.write_json()
@@ -87,9 +84,7 @@ class Runner:
         f2 = {
             "logger": False,
             "image": "cosim-python:latest",
-            "prefix": prefix,
-            "command": "python3 simple_federate2.py " + names[1] + " " + self.scenario_name,
-            "env": "",
+            "command": f"python3 simple_federate2.py {names[1]} {self.scenario_name}",
             "federate_type": "combo",
             "time_step": 120,
             "HELICS_config": t2.write_json()

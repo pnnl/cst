@@ -88,7 +88,7 @@ class MockDBConfigs:
             "federation": {
                 "Battery": {
                     "image": "python/3.11.7-slim-bullseye",
-                    "command": "exec python3 simple_federate.py TE30 EVehicle",
+                    "command": "python3 simple_federate.py TE30 EVehicle",
                     "federate_type": "value",
                     "time_step": 120,
                     "HELICS_config": {

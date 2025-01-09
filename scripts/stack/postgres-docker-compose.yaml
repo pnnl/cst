@@ -84,17 +84,26 @@ services:
     networks:
       - sim_net
 
+  mongoku:
+    image: huggingface/mongoku
+    container_name: ${CONTAINER_NAME:-mongoku}
+    ports:
+      - "3100:3100"
+    depends_on:
+      - mongodb
+    networks:
+      - sim_net
+
   grafana:
     image: grafana/grafana:10.2.4-ubuntu
     container_name: ${CONTAINER_NAME:-grafana}
-    # container_name: grafana
     restart: unless-stopped
     environment:
       - GF_LOG_LEVEL=info
       - SIM_HOST=${SIM_HOST}
       - POSTGRES_PORT=${POSTGRES_PORT}
     ports:
-      - '3000:3000'
+      - "3000:3000"
     networks:
       - sim_net
     volumes:

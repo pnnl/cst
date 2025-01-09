@@ -24,7 +24,6 @@ class Runner:
 
     def define_scenario(self):
         names = ["Battery", "EVehicle"]
-        prefix = "source /home/worker/venv/bin/activate"
         t1 = HelicsMsg(names[0], 30)
         if self.docker:
             t1.config("brokeraddress", "10.5.0.2")
@@ -39,7 +38,6 @@ class Runner:
         t1 = {
             "logger": False,
             "image": "cosim-python:latest",
-            "prefix": prefix,
             "command": f"python3 simple_federate.py {names[0]} {self.scenario_name}",
             "federate_type": "value",
             "time_step": 120,
@@ -60,9 +58,7 @@ class Runner:
         t2 = {
             "logger": False,
             "image": "cosim-python:latest",
-            "prefix": prefix,
             "command": f"python3 simple_federate.py {names[1]} {self.scenario_name}",
-            "env": "",
             "federate_type": "value",
             "time_step": 120,
             "HELICS_config": t2.write_json()
