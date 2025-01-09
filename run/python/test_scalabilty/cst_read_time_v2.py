@@ -21,24 +21,24 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from cosim_toolbox.dataLogger import DataLogger
-from cosim_toolbox.metadataDB import MetaDB
-from cosim_toolbox import cosim_mg_host, cosim_mongo_db, cu_scenarios, cu_federations
+import cosim_toolbox as cst
+from cosim_toolbox.dbResults import DBResults
+from cosim_toolbox.dbConfigs import DBConfigs
 
 class ScenarioReader:
     def __init__(self, scenario_name: str):
         self.name = scenario_name
         # open Mongo Database to retrieve scenario data (metadata)
-        self.meta_db = MetaDB(uri=cosim_mg_host, db_name=cosim_mongo_db)
+        self.meta_db = DBConfigs(uri=cst.cosim_mg_host, db_name=cst.cosim_mongo_db)
         # retrieve data from MongoDB
-        self.scenario = self.meta_db.get_dict(cu_scenarios, None, scenario_name)
+        self.scenario = self.meta_db.get_dict(cst.cu_scenarios, None, scenario_name)
         self.schema_name = self.scenario.get("schema")
         self.federation_name = self.scenario.get("federation")
         self.start_time = self.scenario.get("start_time")
         self.stop_time = self.scenario.get("stop_time")
         self.use_docker = self.scenario.get("docker")
         if self.federation_name is not None:
-            self.federation = self.meta_db.get_dict(cu_federations, None, self.federation_name)
+            self.federation = self.meta_db.get_dict(cst.cu_federations, None, self.federation_name)
         # close MongoDB client
         if self.meta_db.client is not None:
             self.meta_db.client.close()
@@ -61,7 +61,7 @@ class ValueType(Enum):
     ENDPOINT = 'HDT_ENDPOINT'
 
 
-class DataReader(DataLogger):
+class DataReader(DBResults):
     """
     alternative to ResultsDB
     """
@@ -439,13 +439,10 @@ def validate_scenarios(cu_scalability: str):
     df.to_csv(f"{scale_test_name}_read_test5x.csv")
 
 if __name__ == '__main__':
-
-    os.environ["POSTGRES_HOST"] = "tapteal-ubu.pnl.gov"
-    os.environ["POSTGRES_PORT"] = "5432"
-    os.environ["COSIM_DB"] = "copper"
-    os.environ["COSIM_USER"] = "worker"
-    os.environ["COSIM_PASSWORD"] = "worker"
-    cosim_mg_host = "mongodb://tapteal-ubu.pnl.gov"
+    cst.cosim_mg_host = "mongodb://tapteal-ubu.pnl.gov"
+    cst.cosim_mongo = cst.cosim_mg_host + ":" + cst.cosim_mg_port
+    cst.cosim_pg_host = "tapteal-ubu.pnl.gov"
+    cst.cosim_postgres = cst.cosim_pg_host + ":" + cst.cosim_pg_port
     for test_name in ["scale_test7", "scale_test8", "scale_test9"]:
 
         logger = logging.getLogger(__name__)

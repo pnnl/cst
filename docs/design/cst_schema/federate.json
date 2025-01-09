@@ -33,13 +33,13 @@
       },
       {
         "federate": "battery",
-        "command": "/bin/bash -c \"source /home/worker/venv/bin/activate && exec python3 simple_federate2.py Battery test_scenario\"",
+        "command": "/bin/bash -c \"python3 simple_federate2.py Battery test_scenario\"",
         "federate_type": "value",
         "time_step": 120
       },
       {
         "federate": "eVehicle",
-        "command": "/bin/bash -c \"source /home/worker/venv/bin/activate && exec python3 simple_federate2.py Battery test_scenario\"",
+        "command": "/bin/bash -c \"python3 simple_federate2.py Battery test_scenario\"",
         "federate_type": "value",
         "time_step": 120
       }

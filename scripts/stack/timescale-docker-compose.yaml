@@ -26,9 +26,9 @@ services:
     image: timescale/timescaledb:latest-pg12
     container_name: ${CONTAINER_NAME:-database}
     ports:
-      - 5432:5432
+      - "5432:5432"
     expose:
-      - 5432
+      - "5432"
     environment:
       POSTGRES_HOST: "${POSTGRES_HOST}"
       POSTGRES_PORT: "${POSTGRES_PORT}"
@@ -81,6 +81,16 @@ services:
     environment:
       PGADMIN_DEFAULT_EMAIL: "${PGADMIN_DEFAULT_EMAIL}"
       PGADMIN_DEFAULT_PASSWORD: "${PGADMIN_DEFAULT_PASSWORD}"
+    networks:
+      - sim_net
+
+  mongoku:
+    image: huggingface/mongoku
+    container_name: ${CONTAINER_NAME:-mongoku}
+    ports:
+      - "3100:3100"
+    depends_on:
+      - mongodb
     networks:
       - sim_net
 

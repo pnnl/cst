@@ -55,7 +55,7 @@ docker run \\
     ${IMAGE} \\
     /bin/bash -c "./run.sh"
 """
-        # Write runner shell file
+        # Write runner file
         sh_file = "docker_run.sh"
         op = open(sh_file, 'w')
         op.write(script)
@@ -109,7 +109,7 @@ docker run \\
         # add monitor to set semaphore
         script += f"(exec ../../monitor.sh &)\n"
 
-        # Write runner shell file
+        # Write runner file
         sh_file = scenario_name + ".sh"
         op = open(sh_file, 'w')
         op.write(script)
@@ -176,8 +176,8 @@ docker run \\
         with open(f"{federation_name}.json", "w") as f:
             json.dump(federation['federation'], f, ensure_ascii=False, indent=2)
         if cst_logger:
-            self.db.remove_document(cu_federations, None, federation_name)
-            self.db.add_dict(cu_federations, federation_name, federation)
+            self.db.remove_document(cst.cu_federations, None, federation_name)
+            self.db.add_dict(cst.cu_federations, federation_name, federation)
             # Uncomment for debug
             # print(cst.cu_federations, self.db.get_collection_document_names(cst.cu_federations))
 
@@ -190,8 +190,8 @@ docker run \\
         with open(f"{scenario_name}.json", "w") as f:
             json.dump(scenario, f, ensure_ascii=False, indent=2)
         if cst_logger:
-            self.db.remove_document(cu_scenarios, None, scenario_name)
-            self.db.add_dict(cu_scenarios, scenario_name, scenario)
+            self.db.remove_document(cst.cu_scenarios, None, scenario_name)
+            self.db.add_dict(cst.cu_scenarios, scenario_name, scenario)
             # Uncomment the next two lines for debug
             # print(cst.cu_scenarios, self.db.get_collection_document_names(cst.cu_scenarios))
             # print(scenario_name, self.db.get_dict(cst.cu_scenarios, None, scenario_name))
@@ -248,7 +248,7 @@ docker run \\
                             os.chdir("..")
 
 
-if __name__ == "__main__":
+def main():
     if len(sys.argv) > 2:
         tmp_docker = True
         if sys.argv[2].lower() in ['false', '0', 'f', 'n', 'no', 'nope', 'nada', 'noway', 'uh-uh']:
@@ -260,3 +260,7 @@ if __name__ == "__main__":
     print(r.db.get_collection_document_names(cst.cu_scenarios))
     print(r.db.get_collection_document_names(r.cu_scalability))
     print(r.db.get_collection_document_names(cst.cu_federations))
+
+
+if __name__ == "__main__":
+    main()
