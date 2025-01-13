@@ -16,12 +16,12 @@ import inspect
 from pymongo import MongoClient
 from pymongo.collection import Collection
 
-import cosim_toolbox.metadataDB as mDB
-from dataLogger import DataLogger
+from cosim_toolbox.dbConfigs import DBConfigs
+from cosim_toolbox.dbResults import DBResults
 
 logger = logging.getLogger(__name__)
 
-class DataLoggerMongo(DataLogger):
+class DataLoggerMongo(DBResults):
     """Class for creating and using a data logger that writes to MongoDB
 
     In MongoDB, the abstraction hierarchy is:
@@ -31,11 +31,11 @@ class DataLoggerMongo(DataLogger):
 
  
     The data models between the two databases are not identical as there is no
-    "schema" in MongoDB. The methods reimplemented from the DataLogger class 
+    "schema" in MongoDB. The methods reimplemented from the DBResults class
     are tweaked to account for these difference. Specifically, the data will
     be organized as follows:
         - Each CST scenario will have its own MongoDB database object
-        - To organize the data from the federation, each fedrate will have its
+        - To organize the data from the federation, each federate will have its
         own MongoDB collection
         - Each publication from 
 
@@ -54,7 +54,7 @@ class DataLoggerMongo(DataLogger):
     }
 
     Args:
-        DataLogger (_type_): _description_
+        DBResults (_type_): _description_
     """
 
     # TODO: Everywhere mDB is being used directly in this file, the 

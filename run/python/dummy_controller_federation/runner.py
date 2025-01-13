@@ -23,7 +23,6 @@ class Runner:
         self.db = DBConfigs(cst.cosim_mongo, cst.cosim_mongo_db)
 
     def define_scenario(self):
-        prefix = "source /home/worker/venv/bin/activate && exec python3 "
         names = ["Controller", "Market"]
 
         # Controller federate
@@ -46,8 +45,9 @@ class Runner:
         t1.subs_n(names[1] + "/realtime_clearing_info", "string")
 
         f1 = {
+            "logger": False,
             "image": "cosim-python:latest",
-            "command": prefix + "dummy_controller_fed.py " + names[0] + " " + self.scenario_name,
+            "command": f"python3 dummy_controller_fed.py {names[0]} {self.scenario_name}",
             "federate_type": "value",
             "time_step": 120,
             "HELICS_config": t1.write_json()
@@ -64,19 +64,18 @@ class Runner:
         t2.config("terminate_on_error", True)
         #        t2.config("wait_for_current_time_update", True)
 
-        t2.subs_e(names[0] + "/DAM_bid", "string", None)
-        t2.pubs_e(names[1] + "/DAM_clearing_info", "string", None)
+        t2.subs_e(names[0] + "/DAM_bid", "string", "")
+        t2.pubs_e(names[1] + "/DAM_clearing_info", "string", "")
 
-        t2.subs_e(names[0] + "/frequency_bid", "string", None)
-        t2.pubs_e(names[1] + "/frequency_clearing_info", "string", None)
+        t2.subs_e(names[0] + "/frequency_bid", "string", "")
+        t2.pubs_e(names[1] + "/frequency_clearing_info", "string", "")
 
-        t2.subs_e(names[0] + "/realtime_bid", "string", None)
-        t2.pubs_e(names[1] + "/realtime_clearing_info", "string", None)
-
+        t2.subs_e(names[0] + "/realtime_bid", "string", "")
+        t2.pubs_e(names[1] + "/realtime_clearing_info", "string", "")
         f2 = {
+            "logger": False,
             "image": "cosim-python:latest",
-            "command": prefix + "dummy_market_fed.py " + names[1] + " " + self.scenario_name,
-            "env": "",
+            "command": f"python3 dummy_market_fed.py {names[1]} {self.scenario_name}",
             "federate_type": "value",
             "time_step": 120,
             "HELICS_config": t2.write_json()
@@ -101,8 +100,7 @@ class Runner:
         self.db.add_dict(cst.cu_scenarios, self.scenario_name, scenario)
         # print(cst.cu_scenarios, self.db.get_collection_document_names(cst.cu_scenarios))
 
-
-if __name__ == "__main__":
+def main():
     remote = False
     with_docker = False
     _scenario_name = "test_DummyController"
@@ -110,9 +108,16 @@ if __name__ == "__main__":
     _federation_name = "test_ControllerMarketFederation"
     r = Runner(_scenario_name, _schema_name, _federation_name, with_docker)
     r.define_scenario()
+    # print(r.db.get_collection_document_names(cst.cu_scenarios))
+    # print(r.db.get_collection_document_names(cst.cu_federations))
     if with_docker:
         DockerRunner.define_yaml(r.scenario_name)
         if remote:
-            DockerRunner.run_remote_yaml(_scenario_name)
+            DockerRunner.run_remote_yaml(r.scenario_name)
         else:
-            DockerRunner.run_yaml(_scenario_name)
+            DockerRunner.run_yaml(r.scenario_name)
+    else:
+        DockerRunner.define_sh(r.scenario_name)
+
+if __name__ == "__main__":
+    main()

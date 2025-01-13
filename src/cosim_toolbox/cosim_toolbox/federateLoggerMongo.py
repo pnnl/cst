@@ -12,7 +12,7 @@ import logging
 from os import environ
 
 from cosim_toolbox.federate import Federate
-from cosim_toolbox.dataLogger import DataLoggerMongo
+from cosim_toolbox.dataLoggerMongo import DataLoggerMongo
 from cosim_toolbox.helicsConfig import HelicsMsg
 
 logger = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ class FederateLoggerMongo(Federate):
         self.fed_pts = None
         self.dl = DataLoggerMongo()
         self.dl.open_database_connections(logger_connection)
-        # self.dl.check_version() # Not curently implemented
+        # self.dl.check_version() # Not currently implemented
         # save possibilities yes, no, maybe
         self.collect = "maybe"
         self.interval = 10000   # records
@@ -63,9 +63,9 @@ class FederateLoggerMongo(Federate):
         fed_e = [x for x in self.fed_pts.keys() if len(self.fed_pts[x]) > 0]
         self.logging_feds = [fed_p, fed_e]
 
-        # Remove rendundant elements in the logging_fed list
+        # Remove redundant elements in the logging_fed list
         # We only need one collection per federate
-        logging_feds = list(set(logging_feds))
+        logging_feds = list(set(self.logging_feds))
 
         for fed in self.logging_feds:
             self.dl.meta_db.create_collection(

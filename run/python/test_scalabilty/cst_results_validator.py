@@ -14,7 +14,6 @@ in the repo.
 import json
 import logging
 import os
-import subprocess
 import sys
 import time
 from enum import Enum
@@ -22,31 +21,10 @@ from pathlib import Path
 import numpy as np
 import psutil
 import pandas as pd
-from pyomo.scripting.util import start_time
 
-from cosim_toolbox.dataLogger import DataLogger
-from cosim_toolbox.metadataDB import MetaDB
-# from cosim_toolbox.metadataDB import cosim_mg_host, cosim_mongo_db, cu_scenarios, cu_federations
-from cosim_toolbox import cosim_mg_host, cosim_mongo_db, cu_scenarios, cu_federations
-
-class ScenarioReader:
-    def __init__(self, scenario_name: str):
-        self.name = scenario_name
-        # open Mongo Database to retrieve scenario data (metadata)
-        self.meta_db = MetaDB(uri=cosim_mg_host, db_name=cosim_mongo_db)
-        # retrieve data from MongoDB
-        self.scenario = self.meta_db.get_dict(cu_scenarios, None, scenario_name)
-        self.schema_name = self.scenario.get("schema")
-        self.federation_name = self.scenario.get("federation")
-        self.start_time = self.scenario.get("start_time")
-        self.stop_time = self.scenario.get("stop_time")
-        self.use_docker = self.scenario.get("docker")
-        if self.federation_name is not None:
-            self.federation = self.meta_db.get_dict(cu_federations, None, self.federation_name)
-        # close MongoDB client
-        if self.meta_db.client is not None:
-            self.meta_db.client.close()
-        self.meta_db = None
+import cosim_toolbox as cst
+from cosim_toolbox.dbResults import DBResults
+from cosim_toolbox.readConfig import ReadConfig
 
 logger = logging.getLogger(__name__)
 logger.setLevel(level=logging.INFO)
@@ -72,14 +50,14 @@ class ValueType(Enum):
     ENDPOINT = 'HDT_ENDPOINT'
 
 
-class DataReader(DataLogger):
+class DataReader(DBResults):
     """
     alternative to ResultsDB
     """
     def __init__(self, scenario_name):
         super().__init__()
         self.is_connected = self.open_database_connections()
-        self.scenario_reader = ScenarioReader(scenario_name)
+        self.scenario_reader = ReadConfig(scenario_name)
         self.scenario = self.scenario_reader.scenario
         self.scenario_name = scenario_name
 
@@ -568,14 +546,11 @@ def kill_helics():
 #             logger.info(f"steps: {len(dffp.sim_time) + 1}, simulation time: {np.max(dffp.sim_time)}s")
 
 if __name__ == '__main__':
-
-    os.environ["POSTGRES_HOST"] = "maxwell.pnl.gov"
-    os.environ["POSTGRES_PORT"] = "5432"
-    os.environ["COSIM_DB"] = "copper"
-    os.environ["COSIM_USER"] = "worker"
-    os.environ["COSIM_PASSWORD"] = "worker"
+    cst.cosim_mg_host = "mongodb://maxwell.pnl.gov"
+    cst.cosim_mongo = cst.cosim_mg_host + ":" + cst.cosim_mg_port
+    cst.cosim_pg_host = "maxwell.pnl.gov"
+    cst.cosim_postgres = cst.cosim_pg_host + ":" + cst.cosim_pg_port
     tic = time.perf_counter()
-    cosim_mg_host = "mongodb://maxwell.pnl.gov"
     if len(sys.argv) > 1:
         validate_scenarios(sys.argv[1])
     else:

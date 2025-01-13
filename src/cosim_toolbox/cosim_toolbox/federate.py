@@ -424,6 +424,26 @@ class Federate:
         """
         self.granted_time = self.hfed.request_time(requested_time)
         return self.granted_time
+    
+    def reset_data_to_federation(self) -> None:
+        """Sets all values in dictionary of values being sent out
+        via publications and endpoints in the data_to_federation
+        dictionary to "None".
+
+        Any values in these dictionaries set to `None` do not result in a new
+        output via HELICS. This method wipes out all data so that only entries
+        added to the dictionary after calling this method will be published,
+        preventing duplicate publication of data that has not changed and does
+        not need to be re-sent. This also helps manage the data being logged in
+        the time-series database.
+        """
+
+        for key in self.data_to_federation["publications"].keys():
+            self.data_to_federation["publications"][key] = None
+
+        for key in self.data_to_federation["endpoints"].keys():
+            self.data_to_federation["endpoints"][key] = None
+
 
     def get_data_from_federation(self) -> None:
         """Collects inputs from federation and stores them
@@ -520,7 +540,7 @@ class Federate:
             pub = self.hfed.get_publication_by_index(0)
             self.data_to_federation["publications"][pub.name] = dummy_value
 
-    def send_data_to_federation(self) -> None:
+    def send_data_to_federation(self, reset=False) -> None:
         """Sends specified outputs to rest of HELICS federation
 
         This method provides an easy way for users to send out any data
@@ -537,6 +557,12 @@ class Federate:
 
         Since endpoints can send multiple messages, each message needs its
         own entry in the pub_data.
+
+        Args:
+            reset (bool, optional): When set erases published value which
+            prevents re-publication of the value until manually set to a 
+            non-`None` value. Any entry in this dictionary that is `None` is
+            not sent out via HELICS. Defaults to False.
         """
 
         # Publications
@@ -558,6 +584,9 @@ class Federate:
                 else:  # self.fed_collect == "yes" or "maybe"
                     if item_collect == "yes" or item_collect == "maybe":
                         self.write_to_logger(table, self.federate_name, key, value)
+                
+                if reset:
+                    self.data_to_federation["publications"][key] = None
 
         # Endpoints
         for key, messages in self.data_to_federation["endpoints"].items():
@@ -579,6 +608,9 @@ class Federate:
                             self.write_to_logger("hdt_endpoint", key, ep.default_destination, msg)
 
                 logger.debug(f" {self.federate_name} endpoint: {key}, default destination: {ep.default_destination}, messages: {messages}")
+
+                if reset:
+                    self.data_to_federation["endpoints"][key] = None
 
     def commit_to_logger(self):
         if self._commit_qry != "":

@@ -1,6 +1,9 @@
 # Build runtime image
 FROM jupyter/minimal-notebook:python-3.10
 
+ARG SIM_GID=9002
+ARG SIM_GRP=runner
+
 USER root
 
 ENV GRANT_SUDO=yes
@@ -22,19 +25,14 @@ ENV POSTGRES_PORT=$POSTGRES_PORT
 ENV MONGO_HOST="$MONGO_HOST"
 ENV MONGO_PORT=$MONGO_PORT
 
-COPY . cosim_toolbox/
+COPY . /home/jovyan/cosim_toolbox/
 
 RUN echo "===== Building CoSim Jupyter =====" && \
-  echo "<<<< Adding the '${COSIM_USER}' user >>>>" && \
-  useradd -m -s /bin/bash -u $SIM_UID ${COSIM_USER} && \
-  echo "<<<< Changing '${COSIM_USER}' password >>>>" && \
-  echo "${COSIM_USER}:${COSIM_USER}" | chpasswd && \
-  usermod -aG ${COSIM_USER} jovyan && \
-  cp /home/jovyan/.bashrc ${COSIM_HOME}/.bashrc && \
-  chown -R ${COSIM_USER}:${COSIM_USER} $COSIM_HOME && \
-  cd cosim_toolbox || exit && \
-  pip install --no-cache-dir -e . && \
-  chown -R jovyan ../cosim_toolbox
+  addgroup --gid ${SIM_GID} ${SIM_GRP} && \
+  usermod -g ${SIM_GRP} jovyan && \
+  chown -hR jovyan /home/jovyan/cosim_toolbox && \
+  cd /home/jovyan/cosim_toolbox || exit && \
+  pip install --no-cache-dir -e .
 
 USER jovyan
 WORKDIR /home/jovyan

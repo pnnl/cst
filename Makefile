@@ -46,6 +46,8 @@ integration-test:
 	@$(PYTHON) -m pytest -c pytest.ini --cov-report html --cov-report term --cov-report xml \
 		--cov=cosim_toolbox --cov-fail-under=2 --junitxml results.xml -v \
 		src/cosim_toolbox/integration_tests/test_simple_federation.py \
-		src/cosim_toolbox/integration_tests/test_metaDataDB.py
+		src/cosim_toolbox/integration_tests/test_readerDB.py \
+		src/cosim_toolbox/integration_tests/test_federate.py \
+		src/cosim_toolbox/integration_tests/test_dbConfigs.py
 
 .PHONY: all venv run clean test test-julia coverage integration-test

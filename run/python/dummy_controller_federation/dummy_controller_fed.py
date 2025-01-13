@@ -178,7 +178,7 @@ class DummyControllerFederate(Federate):
         """Determines the next simulated time to request from HELICS
 
         TDH: We may need to do something fancier here, depending on how the
-        market timing works. We may just be able to set self.time_step to 
+        market timing works. We may just be able to set self.period to
         fifteen minutes as that will also likely give us a granted time
         when we need to run the DAM code, too. That is, the DAM market
         will likely run at a multiple of 15 minutes.
@@ -186,7 +186,7 @@ class DummyControllerFederate(Federate):
         Returns:
             self.next_requested_time: Calculated time for the next HELICS time request
         """
-        self.next_requested_time = self.granted_time + self.time_step
+        self.next_requested_time = self.granted_time + self.period
         return self.next_requested_time
 
     def update_internal_model(self) -> None:

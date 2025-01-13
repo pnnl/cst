@@ -6,8 +6,8 @@ import cosim_toolbox as cst
 from cosim_toolbox.dbConfigs import DBConfigs
 from cosim_toolbox.dockerRunner import DockerRunner
 
-PYTHON_CMD_PREFIX = "source /home/worker/venv/bin/activate && exec python3 "
-GRIDLABD_CMD_PREFIX = "source /home/worker/venv/bin/activate && exec gridlabd "
+PYTHON_CMD_PREFIX = "python3 "
+GRIDLABD_CMD_PREFIX = "gridlabd "
 
 class Configurator(DBConfigs):
 
@@ -56,7 +56,6 @@ class Configurator(DBConfigs):
         self.federation_config["federation"][name] = {
                 "image": "cosim-python:latest",
                 "command": PYTHON_CMD_PREFIX + script_path,
-                "env": "",
                 "federate_type": federate_type,
                 "HELICS_config": federate_config
         } 
@@ -72,7 +71,6 @@ class Configurator(DBConfigs):
                 "image": "cosim-python:latest",
                 "command": PYTHON_CMD_PREFIX + "gridlabd_federate.py",
                 "model_path": model_path,
-                "env": "",
                 "federate_type": federate_type,
                 "HELICS_config": federate_config
         }

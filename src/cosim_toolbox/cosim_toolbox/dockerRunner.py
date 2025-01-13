@@ -87,24 +87,28 @@ class DockerRunner:
         for name in fed_def:
             cnt += 1
             image = fed_def[name]['image']
-            env = [cosim_env, f"{fed_def[name]['prefix']} && exec {fed_def[name]['command']}"]
+            commandline = f"{fed_def[name]['command']}"
+            if 'prefix' in fed_def[name]:
+                if fed_def[name]['prefix'] != "":
+                    commandline = f"{fed_def[name]['prefix']} && " + commandline
+            env = [cosim_env, commandline]
             yaml += DockerRunner._service(name, image, env, cnt, depends=None)
-            if fed_def[name]['logger']:
-                add_logger = True
+            if 'logger' in fed_def[name]:
+                if fed_def[name]['logger']:
+                    add_logger = True
 
         # Add data logger federate
         if add_logger:
             cnt += 1
             env = [cosim_env,
-                   f"source /home/worker/venv/bin/activate && "
-                   f"exec python3 -c \"import cosim_toolbox.federateLogger as datalog; "
+                   f"python3 -c \"import cosim_toolbox.federateLogger as datalog; "
                    f"datalog.main('FederateLogger', '{schema_name}', '{scenario_name}')\""]
             yaml += DockerRunner._service(cst.cu_logger, "cosim-python:latest", env, cnt, depends=None)
 
         yaml += DockerRunner._network()
 
         # fed_cnt = str(fed_def.__len__())
-        env = [cosim_env, f"exec helics_broker --ipv4 -f {cnt} --loglevel=warning --name=broker"]
+        env = [cosim_env, f"helics_broker --ipv4 -f {cnt-2} --loglevel=warning --name=broker"]
         yaml = 'services:\n' + DockerRunner._service("helics", "cosim-helics:latest", env, 2, depends=None) + yaml
 
         op = open(scenario_name + ".yaml", 'w')
@@ -158,24 +162,29 @@ class DockerRunner:
         schema_name = scenario_def["schema"]
         fed_def = db.get_dict(cst.cu_federations, None, federation_name)["federation"]
 
-        shell = "#!/bin/bash\n\n"
-        # Add helics broker federate
         cnt = 2
-        fed_cnt = str(fed_def.__len__())
-        shell += f"(exec helics_broker -f {fed_cnt} --loglevel=warning --name=broker &> broker.log &)\n"
-
+        shell = ""
         add_logger = False
         for name in fed_def:
             cnt += 1
-            shell += f"(exec {fed_def[name]['command']} &> {name}.log &)\n"
-            if fed_def[name]['logger']:
-                add_logger = True
+            commandline = f"(exec {fed_def[name]['command']} &> {name}.log &)\n"
+            if 'prefix' in fed_def[name]:
+                if fed_def[name]['prefix'] != "":
+                    commandline = f"{fed_def[name]['prefix']} && " + commandline
+            shell += commandline
+            if 'logger' in fed_def[name]:
+                if fed_def[name]['logger']:
+                    add_logger = True
 
         # Add data logger federate
         if add_logger:
             cnt += 1
-            shell += f"(exec python3 -c \"import cosim_toolbox.federateLogger as datalog; "\
+            shell += f"(exec python3 -c \"import cosim_toolbox.federateLogger as datalog; " \
                      f"datalog.main('FederateLogger', '{schema_name} ', '{scenario_name}')\" &> FederateLogger.log &)"
+
+        # Add helics broker federate
+        shell = f"#!/bin/bash\n\n" \
+                f"(exec helics_broker -f {cnt-2} --loglevel=warning --name=broker &> broker.log &)\n" + shell
 
         op = open(f"{scenario_name}.sh", 'w')
         op.write(shell)
