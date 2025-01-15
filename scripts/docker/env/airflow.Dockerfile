@@ -1,5 +1,5 @@
 # Build runtime image
-FROM apache/airflow:2.7.3 AS cosim-airflow
+FROM apache/airflow:2.7.3-python3.10 AS cosim-airflow
 
 ENV SIM_USER=$SIM_USER
 ENV SIM_HOST=$SIM_HOST
@@ -15,13 +15,14 @@ ENV COSIM_HOME=$COSIM_HOME
 ENV POSTGRES_HOST="$SIM_HOST"
 ENV POSTGRES_PORT=$POSTGRES_PORT
 ENV MONGO_HOST="$MONGO_HOST"
+ENV MONGO_PORT=$MONGO_PORT
 
 # Enable to test connection to servers
 ENV AIRFLOW__CORE__TEST_CONNECTION=Enabled
 
 COPY . cosim_toolbox/
 
-RUN echo "===== Building CoSim Airflow =====" && \
+RUN echo "===== Building CoSim Airflow 2.7.3 python 3.10 =====" && \
   pip install --no-cache-dir --upgrade pip && \
   cd cosim_toolbox || exit && \
   pip install --no-cache-dir -e . && \

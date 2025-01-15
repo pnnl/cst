@@ -1,0 +1,96 @@
+[
+  {
+    "cu_name": "federation"
+  },
+  {
+    "cu_name": "BT1_EV1",
+    "federation": {
+      "Battery": {
+        "image": "python/3.11.7-slim-bullseye",
+        "command": "exec python3 simple_federate.py TE30 EVehicle",
+        "federate_type": "value",
+        "time_step": 120,
+        "HELICS_config": {
+          "name": "Battery",
+          "core_type": "zmq",
+          "log_level": "warning",
+          "period": 60,
+          "uninterruptible": false,
+          "terminate_on_error": true,
+          "wait_for_current_time_update": true,
+          "tags": {"logger": "yes"},
+          "publications": [
+            {
+              "global": true,
+              "key": "Battery/EV1_current",
+              "type": "double",
+              "unit": "A",
+              "tags": {"logger": "no"}
+            }
+          ],
+          "endpoints": [
+            {
+              "global": true,
+              "key": "Battery/EV1_current",
+              "destination": "EVehicle/EV1_voltage",
+              "type": "double",
+              "unit": "V",
+              "tags": {"logger": "yes" }
+            }
+          ],
+          "subscriptions": [
+            {
+              "global": true,
+              "key": "EVehicle/EV1_voltage",
+              "type": "double",
+              "unit": "V"
+            }
+          ]
+        }
+      },
+      "EVehicle": {
+        "image": "python/3.11.7-slim-bullseye",
+        "command": "exec python3 simple_federate.py TE30 EVehicle",
+        "federate_type": "value",
+        "time_step": 120,
+        "HELICS config": {
+          "name": "EVehicle",
+          "core_type": "zmq",
+          "log_level": "warning",
+          "period": 60,
+          "uninterruptible": false,
+          "terminate_on_error": true,
+          "wait_for_current_time_update": true,
+          "tags": {"logger": "no" },
+          "publications": [
+            {
+              "global": true,
+              "key": "EVehicle/EV1_voltage",
+              "type": "double",
+              "unit": "V",
+              "tags": {"logger": "yes" }
+            }
+          ],
+          "endpoints": [
+            {
+              "global": true,
+              "key": "EVehicle/EV1_voltage",
+              "destination": "Battery/EV1_current",
+              "type": "double",
+              "unit": "V",
+              "tags": {"logger": "yes" }
+            }
+          ],
+          "subscriptions": [
+            {
+              "global": true,
+              "key": "Battery/EV1_current",
+              "type": "double",
+              "unit": "A"
+            }
+          ]
+        }
+      }
+    }
+  }
+]

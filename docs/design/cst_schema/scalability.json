@@ -1,0 +1,30 @@
+[
+  {
+    "cu_name": "<string> user defined document name",
+    "number of feds": "<integer>",
+    "number of subs": "<integer>",
+    "use endpoints": "<boolean>",
+    "use CST logger": "<boolean>",
+    "use profiling": "<boolean>",
+    "results": {}
+  },
+  {
+    "cu_name": "Test7",
+    "number of feds": 10,
+    "number of subs": 100,
+    "use endpoints": false,
+    "use CST logger": false,
+    "use profiling": false,
+    "results": {}
+  },
+  {
+    "cu_name": "Test8",
+    "number of feds": 100,
+    "number of subs": 1000,
+    "use endpoints": true,
+    "use CST logger": true,
+    "use profiling": false,
+    "results": {}
+  }
+]
+

@@ -43,6 +43,4 @@ class SimpleFederate(Federate):
 if __name__ == "__main__":
     if sys.argv.__len__() > 2:
         test_fed = SimpleFederate(sys.argv[1])
-        test_fed.create_federate(sys.argv[2])
-        test_fed.run_cosim_loop()
-        test_fed.destroy_federate()
+        test_fed.run(sys.argv[2])

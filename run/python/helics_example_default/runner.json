@@ -1,0 +1,25 @@
+{
+    "name": "helics_example_default",
+    "federates": [
+      {
+        "directory": ".",
+        "name": "battery",
+        "exec": "python battery.py"
+      },
+      {
+        "directory": ".",
+        "name": "charger",
+        "exec": "python charger.py"
+      },
+      {
+        "directory": ".",
+        "name": "logger",
+        "exec": "python logger.py"
+      },
+      {
+        "directory": ".",
+        "name": "broker",
+        "exec": "helics_broker -f 3 --loglevel=warning --name=example_broker2"
+      }
+    ]
+  }

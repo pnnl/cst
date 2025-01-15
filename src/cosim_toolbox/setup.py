@@ -17,18 +17,18 @@ setup(
     url='https://[github]/copper',
     license='BSD',
     install_requires=[
-        'importlib-resources~=6.1.0',
-        'h5py~=3.9.0',
-        'helics~=3.4.0',
-        'pandas~=2.0.3',
-        'numpy~=1.24.4',
-        'scipy~=1.10.1',
-        'matplotlib~=3.7.3',
-        'networkx~=3.1',
+        'importlib_resources~=6.4.2',
+        'h5py~=3.12.1',
+        'helics~=3.5.3',
+        'pandas~=2.2.3',
+        'numpy~=1.26.4',
+        'scipy~=1.14.1',
+        'matplotlib~=3.9.4',
+        'networkx~=3.3',
         'PYPOWER==5.1.16',
         'pyutilib==6.0.0',
         'psycopg2-binary~=2.9.9',
-        'pymongo~=4.6.1',
+        'pymongo~=4.9.1',
         'Pyomo==6.5.0'
     ],
     packages=find_packages(),
@@ -36,7 +36,7 @@ setup(
     package_data={
         # 'tesp_support': ['api/datafiles/*.json']
     },
-    python_requires='>=3.8',
+    python_requires='>=3.10',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Console',
@@ -47,7 +47,7 @@ setup(
         'Natural Language :: English',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.10',
         'Topic :: Scientific/Engineering'
     ],
     zip_safe=False,

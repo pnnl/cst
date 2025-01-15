@@ -16,45 +16,76 @@ image: python:3.10
   echo "$ENV_SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
   chmod 0600 ~/.ssh/id_rsa
   export SSH_CMD="ssh -i ~/.ssh/id_rsa -l $DEVOPS_USER $DEVOPS_SERVER"
+  if [ -n "$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME" ]; then
+    export BRANCH_NAME=$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME
+  else
+    export BRANCH_NAME=$CI_COMMIT_BRANCH
+  fi
 
 stages:
   - test
+  - build-publish
   - integration-test
 
 test:
   stage: test
   before_script:
     - apt-get update && apt-get install -y make wget ca-certificates
-# Julia install for future use.
-#    - update-ca-certificates
-#    - export JULIA_VERSION=1.6.7
-#    - wget --no-check-certificate https://julialang-s3.julialang.org/bin/linux/x64/1.6/julia-${JULIA_VERSION}-linux-x86_64.tar.gz
-#    - tar -xvzf julia-${JULIA_VERSION}-linux-x86_64.tar.gz -C /opt
-#    - ln -s /opt/julia-${JULIA_VERSION}/bin/julia /usr/local/bin/julia
-#    - rm julia-${JULIA_VERSION}-linux-x86_64.tar.gz
-#    - julia --version # Verify Julia installation
   script:
     - export HTTPS_PROXY=http://proxy01.pnl.gov:3128
     - export https_proxy=http://proxy01.pnl.gov:3128
-    - make venv test  
+    - make venv test
   only:
     - merge_requests
+    - devops
     - dev
 
-integration-test:
-  stage: integration-test
+build-publish:
+  stage: build-publish
   tags:
     - ecomp-integration-test
   variables:
     GIT_STRATEGY: none
   only:
+    - merge_requests
     - devops
     - dev
   script:
     - *setup_ssh
     - >
       $SSH_CMD '
-      mkdir -p ~/integration && cd ~/integration &&
-      git clone --depth 1 --branch '$CI_COMMIT_BRANCH' --single-branch '$GIT_URL' '$COPPER_DIR' &&
+      docker login devops-registry.pnnl.gov -u '$ENV_REGISTRY_USER' -p '$ENV_REGISTRY_PASS' &&
+      mkdir -p ~/pipeline && cd ~/pipeline &&
+      git clone --depth 1 --branch '$BRANCH_NAME' --single-branch '$GIT_URL' '$COPPER_DIR' &&
       cd '$COPPER_DIR'/scripts &&
-      ./integration_test.sh '$DEVOPS_SERVER''
+      ./update_cosim_env.sh '$DEVOPS_SERVER' &&
+      ./cleanup_pipeline_folders.sh &&
+      ./cleanup_images.sh &&
+      ./build_publish_images.sh'
+  needs:
+    - test
+
+integration-test:
+  stage: integration-test
+  tags:
+    - ecomp-integration-test
+  timeout: 2h
+  variables:
+    GIT_STRATEGY: none
+  only:
+    - merge_requests
+    - devops
+    - dev
+  script:
+    - *setup_ssh
+    - >
+      $SSH_CMD '
+      docker login devops-registry.pnnl.gov -u '$ENV_REGISTRY_USER' -p '$ENV_REGISTRY_PASS' &&
+      mkdir -p ~/pipeline && cd ~/pipeline &&
+      git clone --depth 1 --branch '$BRANCH_NAME' --single-branch '$GIT_URL' '$COPPER_DIR' &&
+      cd '$COPPER_DIR'/scripts &&
+      ./update_cosim_env.sh '$DEVOPS_SERVER' &&
+      ./download_images.sh &&
+      ./integration_test.sh'
+  needs:
+    - build-publish

@@ -1,3 +1,5 @@
+import collections
+collections.Callable = collections.abc.Callable
 import json
 import os
 import unittest
@@ -21,18 +23,16 @@ class TestHelicsMsg(unittest.TestCase):
         expected_config = {
             "name": "test_name",
             "period": 1,
-            "logging": "warning",
-            "publications": [],
-            "subscriptions": []
+            "logging": "warning"
         }
         self.assertEqual(self.helics_msg.write_json(), expected_config)
 
     def test_config(self):
-        self.helics_msg.config("new_config", "value")
-        self.assertEqual(self.helics_msg._cnfg["new_config"], "value")
+        self.helics_msg.config("core_type", "czmq")
+        self.assertEqual(self.helics_msg._cnfg["core_type"], "czmq")
 
     def test_pubs_and_subs(self):
-        self.helics_msg.pubs("global", "key", "type", "object", "property")
+        self.helics_msg.pubs("key", "type", "object", "property", True)
         self.assertEqual(len(self.helics_msg._pubs), 1)
 
         self.helics_msg.subs("key", "type", "object", "property")

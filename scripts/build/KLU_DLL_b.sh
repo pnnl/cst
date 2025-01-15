@@ -6,8 +6,6 @@ if [[ -z ${INSTDIR} ]]; then
   exit
 fi
 
-mkdir -p build
-
 cd "${REPO_DIR}/KLU_DLL" || exit
 if [[ $1 == "clean" ]]; then
   rm -rf build
