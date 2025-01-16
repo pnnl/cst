@@ -4,7 +4,7 @@
 # file: runcosim
 
 if [[ -z ${SIM_DIR} ]]; then
-  echo "Edit cosim.env in the TESP directory"
+  echo "Edit cosim.env in the Co-Simulation directory"
   echo "Run 'source cosim.env' in that same directory"
   exit
 fi
@@ -18,8 +18,8 @@ if [[ -z $1 ]] ; then
   docker run -it --rm \
          --name foregroundWorker \
          -e LOCAL_USER_ID=${SIM_UID} \
-         --mount type=bind,source="$SIM_DIR/run",destination="$SIM_HOME/run" \
-         -w=$SIM_HOME \
+         --mount type=bind,source="$SIM_DIR/run",destination="$COSIM_HOME/run" \
+         -w=$COSIM_HOME \
          $IMAGE \
          bash
 else
@@ -27,7 +27,7 @@ else
   docker run -itd --rm \
          --name backgroundWorker \
          -e LOCAL_USER_ID=${SIM_UID} \
-         --mount type=bind,source="$SIM_DIR/run",destination="$SIM_HOME/run" \
+         --mount type=bind,source="$SIM_DIR/run",destination="$COSIM_HOME/run" \
          -w=$SIM_HOME \
          $IMAGE \
          bash -c "$1"
