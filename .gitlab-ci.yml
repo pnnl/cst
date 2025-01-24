@@ -35,21 +35,25 @@ test:
     - export HTTPS_PROXY=http://proxy01.pnl.gov:3128
     - export https_proxy=http://proxy01.pnl.gov:3128
     - make venv test
-  only:
-    - merge_requests
-    - devops
-    - dev
-
+  rules:
+    # Rule 1: Run for MRs that are not draft
+    - if: '$CI_MERGE_REQUEST_IID && $CI_MERGE_REQUEST_TITLE !~ /^Draft:/'
+      when: always
+    # Default: Do not run
+    - when: never
+      
 build-publish:
   stage: build-publish
   tags:
     - ecomp-integration-test
   variables:
     GIT_STRATEGY: none
-  only:
-    - merge_requests
-    - devops
-    - dev
+  rules:
+    # Rule 1: Run for MRs that are not draft
+    - if: '$CI_MERGE_REQUEST_IID && $CI_MERGE_REQUEST_TITLE !~ /^Draft:/'
+      when: always
+    # Default: Do not run
+    - when: never
   script:
     - *setup_ssh
     - >
@@ -72,10 +76,12 @@ integration-test:
   timeout: 2h
   variables:
     GIT_STRATEGY: none
-  only:
-    - merge_requests
-    - devops
-    - dev
+  rules:
+    # Rule 1: Run for MRs that are not draft
+    - if: '$CI_MERGE_REQUEST_IID && $CI_MERGE_REQUEST_TITLE !~ /^Draft:/'
+      when: always
+    # Default: Do not run
+    - when: never
   script:
     - *setup_ssh
     - >
