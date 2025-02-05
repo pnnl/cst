@@ -4,30 +4,31 @@
 # file: runcosim
 
 if [[ -z ${SIM_DIR} ]]; then
-  echo "Edit cosim.env in the TESP directory"
+  echo "Edit cosim.env in the Co-Simulation directory"
   echo "Run 'source cosim.env' in that same directory"
   exit
 fi
 
-IMAGE=cosim-python:latest
+# IMAGE=cosim-python:latest
+IMAGE=osw_test_scenario:latest
 
 echo "Should always confirm that you are logged in to docker using 'docker login'"
 
 if [[ -z $1 ]] ; then
   echo "Running foreground image $IMAGE"
   docker run -it --rm \
-         --name foregroundWorker \
+         --name ${SIM_USER}_fgWorker \
          -e LOCAL_USER_ID=${SIM_UID} \
-         --mount type=bind,source="$SIM_DIR/run",destination="$SIM_HOME/run" \
-         -w=$SIM_HOME \
+         --mount type=bind,source="$SIM_DIR/run",destination="$COSIM_HOME/run" \
+         -w=$COSIM_HOME \
          $IMAGE \
          bash
 else
   echo "Running background image $IMAGE"
   docker run -itd --rm \
-         --name backgroundWorker \
+         --name ${SIM_USER}_bgWorker \
          -e LOCAL_USER_ID=${SIM_UID} \
-         --mount type=bind,source="$SIM_DIR/run",destination="$SIM_HOME/run" \
+         --mount type=bind,source="$SIM_DIR/run",destination="$COSIM_HOME/run" \
          -w=$SIM_HOME \
          $IMAGE \
          bash -c "$1"
