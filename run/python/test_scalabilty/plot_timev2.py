@@ -7,12 +7,12 @@ from pathlib import Path
 import pandas as pd
 
 
-def get_times(cu_scalability: str):
-    cu_scalability = Path(cu_scalability)
-    test_num = int(cu_scalability.name[-1])
+def get_times(cst_scalability: str):
+    cst_scalability = Path(cst_scalability)
+    test_num = int(cst_scalability.name[-1])
     mdf = pd.DataFrame(data=[],
                       columns=["name", "n_feds", "n_subs", "n_fedsxsubs", "use_epts", "use_db", "use_pf", "time"])
-    for scenario_dir_path in cu_scalability.iterdir():
+    for scenario_dir_path in cst_scalability.iterdir():
         if not scenario_dir_path.is_dir():
             continue
         scenario_dir_name = scenario_dir_path.name

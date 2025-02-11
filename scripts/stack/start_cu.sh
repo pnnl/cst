@@ -1,7 +1,7 @@
 #!/bin/bash
 
-if [[ -z ${SIM_DIR} ]]; then
-  echo "Edit cosim.env in the Co-Simulation directory"
+if [[ -z ${CST_ROOT} ]]; then
+  echo "Edit cosim.env in the CoSimulation Toolbox directory"
   echo "Run 'source cosim.env' in that same directory"
   exit
 fi
@@ -18,5 +18,5 @@ if [[ $image1 == "" ]]; then
   exit
 fi
 
-cd "$SIM_DIR/run" || exit
+cd "$CST_ROOT/run" || exit
 docker compose -f "$STACK_DIR/timescale-docker-compose.yaml" -f "$STACK_DIR/docker-compose.yaml" up -d --remove-orphans

@@ -1,8 +1,8 @@
 #!/bin/bash
 
-COPPER_HOME=$(realpath ..)
-COSIM_ENV=$COPPER_HOME/cosim.env
-source $COSIM_ENV
+CID_ROOT=$(realpath ..)
+CID_ENV=$CID_ROOT/cosim.env
+source $CID_ENV
 
 # Load configuration from config.sh
 source ./docker/config.sh

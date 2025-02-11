@@ -1,12 +1,12 @@
 # Build runtime image
 FROM cosim-ubuntu:latest AS cosim-library
 
-ARG SIM_GID=9002
-ARG SIM_GRP=runner
-ARG SIM_UID
-ARG COSIM_USER
+ARG CST_GID
+ARG CST_GRP
+ARG CST_UID
+ARG CST_USER
 
-RUN echo "===== Building CoSim Library =====" && \
+RUN echo "===== Building CoSimulation Toolbox - Library =====" && \
   export DEBIAN_FRONTEND=noninteractive && \
   export DEBCONF_NONINTERACTIVE_SEEN=true && \
   apt-get update && \
@@ -20,7 +20,7 @@ RUN echo "===== Building CoSim Library =====" && \
   libjsoncpp-dev \
   gfortran \
   cmake && \
-  echo "root:${COSIM_USER}" | chpasswd && \
-  addgroup --gid ${SIM_GID} ${SIM_GRP} && \
-  useradd -m -s /bin/bash -g ${SIM_GRP} -G sudo,${SIM_GRP} -u $SIM_UID ${COSIM_USER} && \
-  echo "${COSIM_USER}:${COSIM_USER}" | chpasswd
+  echo "root:${CST_USER}" | chpasswd && \
+  addgroup --gid ${CST_GID} ${CST_GRP} && \
+  useradd -m -s /bin/bash -g ${CST_GRP} -G sudo,${CST_GRP} -u $CST_UID ${CST_USER} && \
+  echo "${CST_USER}:${CST_USER}" | chpasswd

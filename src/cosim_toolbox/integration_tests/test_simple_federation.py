@@ -3,7 +3,7 @@ import os
 import time
 import unittest
 
-import cosim_toolbox as cst
+import cosim_toolbox as env
 from cosim_toolbox.dbConfigs import DBConfigs
 from cosim_toolbox.dbResults import DBResults
 
@@ -20,14 +20,14 @@ class TestSimpleFederation(unittest.TestCase):
 
     def setUp(self):
         self.logger_data = DBResults()
-        self.db = DBConfigs(cst.cosim_mongo, cst.cosim_mongo_db)
+        self.db = DBConfigs(env.cst_mongo, env.cst_mongo_db)
         scenario = self.db.scenario('test_schema',
                                     'test_federation',
                                     "2023-12-07T15:31:27",
                                     "2023-12-08T15:31:27",
                                     False)
-        self.db.remove_document(cst.cu_scenarios, None, 'test_scenario')
-        self.db.add_dict(cst.cu_scenarios, 'test_scenario', scenario)
+        self.db.remove_document(env.cst_scenarios, None, 'test_scenario')
+        self.db.add_dict(env.cst_scenarios, 'test_scenario', scenario)
 
     def test_simple_federation_result(self):
         self.logger_data.open_database_connections()

@@ -150,7 +150,7 @@ change the files in th home directory to the named 'user'
 Adding a directories where new modules will be deployed
 =======================================================
 https://stackoverflow.com/questions/67887138/how-to-install-packages-in-airflow-docker-compose
-don't know if the answer is too late, anyway, I've managed to workaround this problem by:
+don't know if the answer is too late, anyway, I've managed to work around this problem by:
 
 Defining new volume in docker compose, pointing to a directory where new modules will be deployed.
 In my case, in Docker compose x-airflow-common: common section, in volumes subsection,

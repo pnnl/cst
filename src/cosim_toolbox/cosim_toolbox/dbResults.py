@@ -22,7 +22,7 @@ import pandas as pd
 import datetime as dt
 import psycopg2 as pg
 
-import cosim_toolbox as cst
+import cosim_toolbox as env
 from cosim_toolbox.readConfig import ReadConfig
 
 logger = logging.getLogger(__name__)
@@ -52,8 +52,7 @@ class DBResults:
         self._scenario = None
         self.use_timescale = False
 
-    @staticmethod
-    def _connect_logger_database(connection: dict = None):
+    def _connect_logger_database(self, connection: dict = None):
         """This function defines the connection to the data database
         and opens a connection to the postgres database
 
@@ -62,7 +61,7 @@ class DBResults:
             access to the postgres database
         """
         if connection is None:
-            connection = cst.cu_data_db
+            connection = env.cst_data_db
         logger.info(connection)
         try:
             return pg.connect(**connection)

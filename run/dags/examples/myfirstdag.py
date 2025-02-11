@@ -7,7 +7,7 @@ from airflow.operators.python import PythonOperator
 from airflow.contrib.hooks.ssh_hook import SSHHook
 # To initiate the DAG Object
 from airflow import DAG
-# Import cosim toolbox
+# Import CoSimulation Toolbox
 from cosim_toolbox.dockerRunner import DockerRunner
 
 # Add new code
@@ -30,7 +30,7 @@ def prepare_yaml():
 
 
 def run_yaml():
-    cosim = os.environ.get("SIM_DIR", "/home/worker/copper")
+    cosim = os.environ.get("CST_ROOT", "/home/worker/copper")
     _scenario_name = "dag_Scenario"
     ssh = SSHHook(ssh_conn_id='myssh')
     ssh_client = None

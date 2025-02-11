@@ -2,7 +2,7 @@
 Created on 11/01/2024 
 
 Data logger class that defines the basic operations of Python-based data logger in
-Co-Simulation Toolbox but writes to MongoDB.
+CoSimulation Toolbox but writes to MongoDB.
 
 @authors:
 trevor.hardy@pnnl.gov
@@ -63,26 +63,17 @@ class DataLoggerMongo(DBResults):
 
     def __init__(self):
         super.__init__()
+        self.meta_db = None
 
     def open_database_connections(self, logger_connection: dict = None) -> bool:
         """Opens connection to MongoDB (metadata and data)
 
         Args:
-            meta_connection (dict, optional): _description_. Defaults to None.
+            logger_connection (dict, optional): _description_. Defaults to None.
 
         Returns:
             bool: Indicates whether connection to database was established
         """
-        # Pass in from federateLoggerMongo.py
-        # if logger_connection is None:
-        #     logger_connection = {
-        #             "host": environ.get("MONGO_HOST", "mongo://localhost"),
-        #             "port": environ.get("MONGO_POST", 27017),
-        #             "dbname": f"{self.scenario_name}_ts_data",
-        #             "user": environ.get("COSIM_USER", "worker"),
-        #             "password": environ.get("COSIM_PASSWORD", "worker")
-        #     }
-
         self.meta_db = super._connect_scenario_database(logger_connection)
         if self.meta_db is None:
             return False

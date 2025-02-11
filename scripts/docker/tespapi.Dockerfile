@@ -3,19 +3,19 @@ FROM cosim-python:latest AS cosim-tespapi
 
 USER root
 
-ARG COSIM_USER
-ENV COSIM_HOME=/home/$COSIM_USER
+ARG CST_USER
+ENV CST_HOME=/home/$CST_USER
 
 # Compile exports
 
 # Copy files
 
 # Set as user
-USER $COSIM_USER
-WORKDIR $COSIM_HOME
+USER $CST_USER
+WORKDIR $CST_HOME
 
 # Add directories and files
-RUN echo "Building CoSim TESP api" && \
+RUN echo "===== Building CoSimulation Toolbox - TESP =====" && \
   echo "Activate the python virtual environment" && \
   . venv/bin/activate && \
   pip install --no-cache-dir tesp-support >> pypi.log && \

@@ -15,22 +15,22 @@ import shutil
 import stat
 import sys
 
-import cosim_toolbox as cst
+import cosim_toolbox as env
 from cosim_toolbox.dbConfigs import DBConfigs
 from cosim_toolbox.helicsConfig import HelicsMsg, Collect
 
 class Runner:
 
     def __init__(self, scalability_name, docker=False):
-        self.cu_scalability = scalability_name
+        self.cst_scalability = scalability_name
         self.docker = docker
-        print(cst.cosim_mongo)
-        self.db = DBConfigs(cst.cosim_mongo, cst.cosim_mongo_db)
+        print(env.cst_mongo)
+        self.db = DBConfigs(env.cst_mongo, env.cst_mongo_db)
 
         # Uncomment the next three lines for debug
         # DBConfigs.federation_database(True)
-        # self.db.db[self.cu_scalability].drop()
-        # self.db.add_collection(self.cu_scalability)
+        # self.db.db[self.cst_scalability].drop()
+        # self.db.add_collection(self.cst_scalability)
 
     @staticmethod
     def define_runner():
@@ -44,9 +44,9 @@ docker run \\
     -itd \\
     --rm --name test_cst \\
     --network=none \\
-    -e LOCAL_USER_ID=$SIM_UID \\
-    -e SIM_HOST=$SIM_HOST \\
-    -e SIM_USER=$SIM_USER \\
+    -e LOCAL_UID=$LOCAL_UID \\
+    -e LOCAL_USER=$LOCAL_USER \\
+    -e CST_HOST=$CST_HOST \\
     -e POSTGRES_HOST=$POSTGRES_HOST \\
     -e MONGO_HOST=$MONGO_HOST \\
     -e MONGO_PORT:$MONGO_PORT \\
@@ -123,10 +123,10 @@ docker run \\
         # Collect all outputs
         collect = Collect.YES
 
-        schema_name = f"{self.cu_scalability}_f{federate_size}_s{subs_size}"
-        scalability_name = f"{self.cu_scalability}_{count}"
-        scenario_name = f"{self.cu_scalability}_s_{count}"
-        federation_name = f"{self.cu_scalability}_f_{count}"  #_f{federate_size}_s{subs_size}_{endpoints}_{cst_logger}_{profiling}"
+        schema_name = f"{self.cst_scalability}_f{federate_size}_s{subs_size}"
+        scalability_name = f"{self.cst_scalability}_{count}"
+        scenario_name = f"{self.cst_scalability}_s_{count}"
+        federation_name = f"{self.cst_scalability}_f_{count}"  #_f{federate_size}_s{subs_size}_{endpoints}_{cst_logger}_{profiling}"
 
         _p = "fed_"
         os.makedirs("federate_outputs")
@@ -176,10 +176,10 @@ docker run \\
         with open(f"{federation_name}.json", "w") as f:
             json.dump(federation['federation'], f, ensure_ascii=False, indent=2)
         if cst_logger:
-            self.db.remove_document(cst.cu_federations, None, federation_name)
-            self.db.add_dict(cst.cu_federations, federation_name, federation)
+            self.db.remove_document(env.cst_federations, None, federation_name)
+            self.db.add_dict(env.cst_federations, federation_name, federation)
             # Uncomment for debug
-            # print(cst.cu_federations, self.db.get_collection_document_names(cst.cu_federations))
+            # print(env.cst_federations, self.db.get_collection_document_names(env.cst_federations))
 
         scenario = self.db.scenario(schema_name,
                                     federation_name,
@@ -190,11 +190,11 @@ docker run \\
         with open(f"{scenario_name}.json", "w") as f:
             json.dump(scenario, f, ensure_ascii=False, indent=2)
         if cst_logger:
-            self.db.remove_document(cst.cu_scenarios, None, scenario_name)
-            self.db.add_dict(cst.cu_scenarios, scenario_name, scenario)
+            self.db.remove_document(env.cst_scenarios, None, scenario_name)
+            self.db.add_dict(env.cst_scenarios, scenario_name, scenario)
             # Uncomment the next two lines for debug
-            # print(cst.cu_scenarios, self.db.get_collection_document_names(cst.cu_scenarios))
-            # print(scenario_name, self.db.get_dict(cst.cu_scenarios, None, scenario_name))
+            # print(env.cst_scenarios, self.db.get_collection_document_names(env.cst_scenarios))
+            # print(scenario_name, self.db.get_dict(env.cst_scenarios, None, scenario_name))
 
         scalability = {
             "number of feds": federate_size,
@@ -208,11 +208,11 @@ docker run \\
         with open(f"{scalability_name}.json", "w") as f:
             json.dump(scalability, f, ensure_ascii=False, indent=2)
         if cst_logger:
-            self.db.remove_document(self.cu_scalability, None, scalability_name)
-            self.db.add_dict(self.cu_scalability, scalability_name, scalability)
+            self.db.remove_document(self.cst_scalability, None, scalability_name)
+            self.db.add_dict(self.cst_scalability, scalability_name, scalability)
             # Uncomment the next two lines for debug
-            # print(self.cu_scalability, self.db.get_collection_document_names(self.cu_scalability))
-            # print(scenario_name, self.db.get_dict(self.cu_scalability, None, scenario_name))
+            # print(self.cst_scalability, self.db.get_collection_document_names(self.cst_scalability))
+            # print(scenario_name, self.db.get_dict(self.cst_scalability, None, scenario_name))
 
         self.define_shell(scenario_name, scenario, scalability, federation)
 #        self.define_runner()
@@ -225,11 +225,11 @@ docker run \\
         cst_logger = [True, False]
         profiling = [True, False]
 
-        if os.path.isdir(self.cu_scalability):
+        if os.path.isdir(self.cst_scalability):
             print("experiment folder already exists, deleting and moving on...")
-            shutil.rmtree(self.cu_scalability)
-        os.makedirs(self.cu_scalability)
-        os.chdir(self.cu_scalability)
+            shutil.rmtree(self.cst_scalability)
+        os.makedirs(self.cst_scalability)
+        os.chdir(self.cst_scalability)
 
         cnt = 1
         for _f in federates:
@@ -257,9 +257,9 @@ def main():
     else:
         r = Runner("cst_scale_z1", False)
     r.define_scenarios()
-    print(r.db.get_collection_document_names(cst.cu_scenarios))
-    print(r.db.get_collection_document_names(r.cu_scalability))
-    print(r.db.get_collection_document_names(cst.cu_federations))
+    print(r.db.get_collection_document_names(env.cst_scenarios))
+    print(r.db.get_collection_document_names(r.cst_scalability))
+    print(r.db.get_collection_document_names(env.cst_federations))
 
 
 if __name__ == "__main__":

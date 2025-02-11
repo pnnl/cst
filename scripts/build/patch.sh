@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [[ -z ${INSTDIR} ]]; then
-  echo "Edit cosim.env in the Co-Simulation directory"
+  echo "Edit cosim.env in the CoSimulation Toolbox directory"
   echo "Run 'source cosim.env' in that same directory"
   exit
 fi
@@ -22,10 +22,10 @@ fi
 cd - > /dev/null || exit
 if [ -f "$patch" ]; then
   if [ -s "$patch" ]; then
-    cp "$patch" "${1}/tesp.patch"
+    cp "$patch" "${1}/copper.patch"
     cd "${1}" || exit
-    git apply tesp.patch
+    git apply copper.patch
     echo "Apply patches for repository ${1}"
-    echo "Patch file at ${1}/tesp.patch"
+    echo "Patch file at ${1}/copper.patch"
   fi
 fi

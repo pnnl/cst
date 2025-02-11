@@ -6,7 +6,7 @@
 if [[ -z ${INSTDIR} ]]; then
   echo
   echo "To build a local environment:"
-  echo "  Edit cosim.env in the Co-Simulation directory"
+  echo "  Edit cosim.env in the CoSimulation Toolbox directory"
   echo "  Define LOCAL_ENV other than a blank in that file"
   echo "  Run 'source cosim.env' in that same directory"
   echo "  Run './scripts/grid_apps.sh [git login] [git email]' in that same directory"
@@ -14,7 +14,7 @@ if [[ -z ${INSTDIR} ]]; then
   exit
 fi
 
-# You should get familiar with the command line to have good success with CoSim Toolbox
+# You should get familiar with the command line to have good success with CoSimulation Toolboxbox
 # As such, you may want to run in remote shh terminal.
 # Here is to how to install and configured ssh server
 #   sudo apt-get -y install openssh-server
@@ -130,38 +130,38 @@ echo
 echo "Download all relevant repositories..."
 if [[ $binaries == "develop" ]]; then
 
-  echo
-  echo ++++++++++++++ TESP
-  if [[ -d "${REPO_DIR}/tesp" ]]; then
-    git clone -b develop https://github.com/pnnl/tesp.git
-    "${BUILD_DIR}/patch.sh" tesp tesp
-  fi
-
-  echo
-  echo ++++++++++++++ MESP
-  if [[ -d "${REPO_DIR}/mesp" ]]; then
-    echo ""
-    # git clone -b develop https://github.com/pnnl/mesp.git
-    # "${BUILD_DIR}/patch.sh" mesp mesp
-  fi
-
-  echo
-  echo ++++++++++++++ PSST
-  if [[ -d "${REPO_DIR}/AMES-V5.0" ]]; then
-    # git clone -b master https://github.com/ames-market/psst.git
-    # For dsot
-    git clone -b master https://github.com/ames-market/AMES-V5.0.git
-    "${BUILD_DIR}/patch.sh" AMES-V5.0 AMES-V5.0
-  fi
-
-  echo
-  echo ++++++++++++++ FNCS
-  if [[ -d "${REPO_DIR}/fncs" ]]; then
-    git clone -b feature/opendss https://github.com/FNCS/fncs.git
-    # For different calling no cpp
-    # git clone -b develop https://github.com/FNCS/fncs.git
-    "${BUILD_DIR}/patch.sh" fncs fncs
-  fi
+#  echo
+#  echo ++++++++++++++ TESP
+#  if [[ -d "${REPO_DIR}/tesp" ]]; then
+#    git clone -b develop https://github.com/pnnl/tesp.git
+#    "${BUILD_DIR}/patch.sh" tesp tesp
+#  fi
+#
+#  echo
+#  echo ++++++++++++++ MESP
+#  if [[ -d "${REPO_DIR}/mesp" ]]; then
+#    echo ""
+#    # git clone -b develop https://github.com/pnnl/mesp.git
+#    # "${BUILD_DIR}/patch.sh" mesp mesp
+#  fi
+#
+#  echo
+#  echo ++++++++++++++ PSST
+#  if [[ -d "${REPO_DIR}/AMES-V5.0" ]]; then
+#    # git clone -b master https://github.com/ames-market/psst.git
+#    # For dsot
+#    git clone -b master https://github.com/ames-market/AMES-V5.0.git
+#    "${BUILD_DIR}/patch.sh" AMES-V5.0 AMES-V5.0
+#  fi
+#
+#  echo
+#  echo ++++++++++++++ FNCS
+#  if [[ -d "${REPO_DIR}/fncs" ]]; then
+#    git clone -b feature/opendss https://github.com/FNCS/fncs.git
+#    # For different calling no cpp
+#    # git clone -b develop https://github.com/FNCS/fncs.git
+#    "${BUILD_DIR}/patch.sh" fncs fncs
+#  fi
 
   echo
   echo ++++++++++++++ HELICS
@@ -177,26 +177,26 @@ if [[ $binaries == "develop" ]]; then
     "${BUILD_DIR}/patch.sh" gridlab-d gridlab-d
   fi
 
-  echo
-  echo ++++++++++++++ ENERGYPLUS
-  if [[ -d "${REPO_DIR}/EnergyPlus" ]]; then
-    git clone -b fncs_9.3.0 https://github.com/FNCS/EnergyPlus.git
-    "${BUILD_DIR}/patch.sh" EnergyPlus EnergyPlus
-  fi
-
-  echo
-  echo ++++++++++++++ NS-3
-  if [[ -d "${REPO_DIR}/gridlab-d" ]]; then
-    git clone -b master https://gitlab.com/nsnam/ns-3-dev.git
-    "${BUILD_DIR}/patch.sh" ns-3-dev ns-3-dev
-  fi
-
-  echo
-  echo ++++++++++++++ HELICS-NS-3
-  if [[ -d "${REPO_DIR}/gridlab-d" ]]; then
-    git clone -b main https://github.com/GMLC-TDC/helics-ns3 ns-3-dev/contrib/helics
-    "${BUILD_DIR}/patch.sh" ns-3-dev/contrib/helics helics-ns3
-  fi
+#  echo
+#  echo ++++++++++++++ ENERGYPLUS
+#  if [[ -d "${REPO_DIR}/EnergyPlus" ]]; then
+#    git clone -b fncs_9.3.0 https://github.com/FNCS/EnergyPlus.git
+#    "${BUILD_DIR}/patch.sh" EnergyPlus EnergyPlus
+#  fi
+#
+#  echo
+#  echo ++++++++++++++ NS-3
+#  if [[ -d "${REPO_DIR}/gridlab-d" ]]; then
+#    git clone -b master https://gitlab.com/nsnam/ns-3-dev.git
+#    "${BUILD_DIR}/patch.sh" ns-3-dev ns-3-dev
+#  fi
+#
+#  echo
+#  echo ++++++++++++++ HELICS-NS-3
+#  if [[ -d "${REPO_DIR}/gridlab-d" ]]; then
+#    git clone -b main https://github.com/GMLC-TDC/helics-ns3 ns-3-dev/contrib/helics
+#    "${BUILD_DIR}/patch.sh" ns-3-dev/contrib/helics helics-ns3
+#  fi
 
   echo
   echo ++++++++++++++ KLU SOLVER

@@ -1,15 +1,15 @@
 # Build runtime image
 FROM alpine:latest AS cosim-alpine
 
-ARG SIM_UID
-ARG COSIM_USER
+ARG LOCAL_UID
+ARG CST_USER
 
 # ENV PATH=$PATH:/usr/bin/ 
 # ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/bin/
 
 # Do not use apt/apt-get in Alpine Linux
 
-RUN echo "===== Building CoSim Alpine =====" && \
+RUN echo "===== Building CoSimulation Toolbox - Alpine =====" && \
 apk update && \
 apk upgrade && \
 apk add build-base bash cmake pkgconf autoconf automake libtool && \
@@ -127,11 +127,11 @@ echo "==ADDING PYTHON SUPPORT PACKAGES==" && \
 apk add py3-pip py3-pillow && \
 ln -s /usr/lib/jvm/java-11-openjdk /usr/lib/jvm/default-java && \ 
 # setting up cosim user
-echo "==SETTING UP COSIM USER==" && \
-echo "root:${COSIM_USER}" | chpasswd && \
-echo "<<<< Adding the '${COSIM_USER}' user >>>>" && \
-adduser -D -s /bin/bash -u $SIM_UID ${COSIM_USER} && \
-echo "<<<< Changing ${COSIM_USER} password >>>>" && \
-echo "${COSIM_USER}:${COSIM_USER}" | chpasswd && \
+echo "==SETTING UP CST USER==" && \
+echo "root:${CST_USER}" | chpasswd && \
+echo "<<<< Adding the '${CST_USER}' user >>>>" && \
+adduser -D -s /bin/bash -u $CST_UID ${CST_USER} && \
+echo "<<<< Changing ${CST_USER} password >>>>" && \
+echo "${CST_USER}:${CST_USER}" | chpasswd && \
 echo "%wheel ALL=(ALL) ALL" >> /etc/sudoers.d/wheel && \
-adduser ${COSIM_USER} wheel 
+adduser ${CST_USER} wheel

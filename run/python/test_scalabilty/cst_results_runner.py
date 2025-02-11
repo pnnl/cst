@@ -23,14 +23,14 @@ from cst_federate import CST_Time
 
 logger = logging.getLogger(__name__)
 
-def run_scenarios(cu_scalability: str):
+def run_scenarios(cst_scalability: str):
     lt = CST_Time()
     rt = CST_Time()
     semaphore = "finished.txt"
     run_only = list(range(1, 4))
     # run_only = list(range(49, 73))
     # run_only = list(range(1, 73))
-    os.chdir(cu_scalability)
+    os.chdir(cst_scalability)
     for run in run_only:
         scenario_dir_name = f"test_{run}"
         with open('progress.log', 'w') as file:
@@ -39,8 +39,8 @@ def run_scenarios(cu_scalability: str):
         print("~~~~~~~~~~ Running the scenario ~~~~~~~~~~", flush=True)
         # change to scenario directory to run test
         os.chdir(scenario_dir_name)
-        scenario_name = f"{cu_scalability}_s_{run}"
-        name = f"{cu_scalability}_{run}.json"
+        scenario_name = f"{cst_scalability}_s_{run}"
+        name = f"{cst_scalability}_{run}.json"
         with open(name, "r") as f:
             scalability = json.load(f)
             _f = scalability["number of feds"]
@@ -103,7 +103,7 @@ def run_scenarios(cu_scalability: str):
         # return to scenario directory to write results
         os.chdir("..")
         scalability = {}
-        name = f"{cu_scalability}_{run}.json"
+        name = f"{cst_scalability}_{run}.json"
         with open(name, "r") as f:
             scalability = json.load(f)
             scalability['results'] = timing

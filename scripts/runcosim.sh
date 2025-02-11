@@ -1,35 +1,45 @@
 #!/bin/bash
 
 # Copyright (C) 2021-2023 Battelle Memorial Institute
-# file: runcosim
+# file: runcosim.sh
 
-if [[ -z ${SIM_DIR} ]]; then
-  echo "Edit cosim.env in the Co-Simulation directory"
+if [[ -z ${CST_ROOT} ]]; then
+  echo "Edit cosim.env in the CoSimulation Toolbox directory"
   echo "Run 'source cosim.env' in that same directory"
   exit
 fi
 
-# IMAGE=cosim-python:latest
-IMAGE=osw_test_scenario:latest
+# standard use
+cst_ver=$(cat "${CST_ROOT}/scripts/cst_version")
+grid_ver=$(cat "${CST_ROOT}/scripts/grid_version")
+docker_tag=${cst_ver}_ubuntu_${grid_ver}
+IMAGE=pnnl/cst:${docker_tag}
+
+# for custom use
+#IMAGE=cosim-ubuntu:cst_${grid_ver}
+#IMAGE=cosim-library:cst_${grid_ver}
+#IMAGE=cosim-build:cst_${grid_ver}
+#IMAGE=cosim-cplex:cst_${grid_ver}
+#IMAGE=cosim-user:cst_${grid_ver}
+#IMAGE=osw_test_scenario:latest
+IMAGE=cosim-python:latest
 
 echo "Should always confirm that you are logged in to docker using 'docker login'"
 
 if [[ -z $1 ]] ; then
   echo "Running foreground image $IMAGE"
   docker run -it --rm \
-         --name ${SIM_USER}_fgWorker \
-         -e LOCAL_USER_ID=${SIM_UID} \
-         --mount type=bind,source="$SIM_DIR/run",destination="$COSIM_HOME/run" \
-         -w=$COSIM_HOME \
+         -e LOCAL_UID=${LOCAL_UID} \
+         --mount type=bind,source="$CST_ROOT/run",destination="$CST_HOME/run" \
+         -w=$CST_HOME \
          $IMAGE \
          bash
 else
   echo "Running background image $IMAGE"
   docker run -itd --rm \
-         --name ${SIM_USER}_bgWorker \
-         -e LOCAL_USER_ID=${SIM_UID} \
-         --mount type=bind,source="$SIM_DIR/run",destination="$COSIM_HOME/run" \
-         -w=$SIM_HOME \
+         -e LOCAL_UID=${LOCAL_UID} \
+         --mount type=bind,source="$CST_ROOT/run",destination="$CST_HOME/run" \
+         -w=$CST_HOME \
          $IMAGE \
          bash -c "$1"
 fi

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [[ -z ${INSTDIR} ]]; then
-  echo "Edit cosim.env in the Co-Simulation directory"
+  echo "Edit cosim.env in the CoSimulation Toolbox directory"
   echo "Run 'source cosim.env' in that same directory"
   exit
 fi

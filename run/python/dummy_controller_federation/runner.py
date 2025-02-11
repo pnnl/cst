@@ -7,7 +7,7 @@ Create scenarios for testing dummy controller
 shat.pratoomratana@pnnl.gov
 """
 
-import cosim_toolbox as cst
+import cosim_toolbox as env
 from cosim_toolbox.dbConfigs import DBConfigs
 from cosim_toolbox.dockerRunner import DockerRunner
 from cosim_toolbox.helicsConfig import HelicsMsg
@@ -20,7 +20,7 @@ class Runner:
         self.schema_name = schema_name
         self.federation_name = federation_name
         self.docker = docker
-        self.db = DBConfigs(cst.cosim_mongo, cst.cosim_mongo_db)
+        self.db = DBConfigs(env.cst_mongo, env.cst_mongo_db)
 
     def define_scenario(self):
         names = ["Controller", "Market"]
@@ -87,18 +87,18 @@ class Runner:
             }
         }
 
-        self.db.remove_document(cst.cu_federations, None, self.federation_name)
-        self.db.add_dict(cst.cu_federations, self.federation_name, diction)
-        # print(cst.cu_federations, self.db.get_collection_document_names(cst.cu_federations))
+        self.db.remove_document(env.cst_federations, None, self.federation_name)
+        self.db.add_dict(env.cst_federations, self.federation_name, diction)
+        # print(env.cst_federations, self.db.get_collection_document_names(env.cst_federations))
 
         scenario = self.db.scenario(self.schema_name,
                                     self.federation_name,
                                     "2023-12-07T15:31:27",
                                     "2023-12-08T15:31:27",
                                     self.docker)
-        self.db.remove_document(cst.cu_scenarios, None, self.scenario_name)
-        self.db.add_dict(cst.cu_scenarios, self.scenario_name, scenario)
-        # print(cst.cu_scenarios, self.db.get_collection_document_names(cst.cu_scenarios))
+        self.db.remove_document(env.cst_scenarios, None, self.scenario_name)
+        self.db.add_dict(env.cst_scenarios, self.scenario_name, scenario)
+        # print(env.cst_scenarios, self.db.get_collection_document_names(env.cst_scenarios))
 
 def main():
     remote = False
@@ -108,8 +108,8 @@ def main():
     _federation_name = "test_ControllerMarketFederation"
     r = Runner(_scenario_name, _schema_name, _federation_name, with_docker)
     r.define_scenario()
-    # print(r.db.get_collection_document_names(cst.cu_scenarios))
-    # print(r.db.get_collection_document_names(cst.cu_federations))
+    # print(r.db.get_collection_document_names(env.cst_scenarios))
+    # print(r.db.get_collection_document_names(env.cst_federations))
     if with_docker:
         DockerRunner.define_yaml(r.scenario_name)
         if remote:

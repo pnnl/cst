@@ -8,20 +8,20 @@
 #
 set -eo pipefail
 
-COPPER_HOME=$(realpath ..)
-COSIM_ENV=$COPPER_HOME/cosim.env
-source $COSIM_ENV
+CID_ROOT=$(realpath ..)
+CID_ENV=$CID_ROOT/cosim.env
+source $CID_ENV
 
 #
 # Build new images
 #
 printf "Stop existing running stack...\n"
-cd $COPPER_HOME/scripts/stack
+cd $CID_ROOT/scripts/stack
 ./stop_cu.sh
 docker network prune -f
 
 printf "Building Cosim Docker images locally with tag latest...\n"
-cd $COPPER_HOME/scripts/docker
+cd $CID_ROOT/scripts/docker
 ./build-cosim-images.sh
 
 # Load configuration from config.sh

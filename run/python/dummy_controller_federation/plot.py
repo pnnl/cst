@@ -12,11 +12,11 @@ from os import environ
 import matplotlib.pyplot as plt
 import psycopg2
 
-import cosim_toolbox as cst
+import cosim_toolbox as env
 
 def open_logger():
     try:
-        return psycopg2.connect(**cst.cu_data_db)
+        return psycopg2.connect(**env.cst_data_db)
     except:
         return
 

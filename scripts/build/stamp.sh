@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [[ -z ${INSTDIR} ]]; then
-  echo "Edit cosim.env in the Co-Simulation directory"
+  echo "Edit cosim.env in the CoSimulation Toolbox directory"
   echo "Run 'source cosim.env' in that same directory"
   exit
 fi
@@ -11,7 +11,7 @@ cosim_ver=$(cat ../cosim_version)
 grid_ver=$(cat ../grid_version)
 
 echo
-echo "Stamping Co-Simulation Toolbox ${cosim_ver} and grid applications ${grid_ver}."
+echo "Stamping CoSimulation Toolbox ${cosim_ver} and grid applications ${grid_ver}."
 echo "If you want to change the version, edit 'scripts/cst_version' or 'scripts/grid_version' file."
 echo "You should also update any documentation CHANGELOG.TXT or README.rst before stamping."
 echo "The command below can show the branch and merge history to help you update documentation."
@@ -64,22 +64,22 @@ echo "Creating grid_binaries_$grid_ver.zip for installed binaries for grid appli
 cd "${INSTDIR}" || exit
 # zip -r -9 "${BUILD_DIR}/grid_binaries_$grid_ver.zip" . &> "${BUILD_DIR}/grid_binaries.log" &
 
-pip list > "${BUILD_DIR}/tesp_pypi.id"
+pip list > "${BUILD_DIR}/venv_pypi.id"
 
 echo "Stamping CoSimulation Toolbox $cosim_ver for install"
-cd "${SIM_DIR}" || exit
+cd "${CST_ROOT}" || exit
 echo "$cosim_ver" > "src/cosim_toolbox/version"
 
 # un-comment for final version
 # git tag "v$cosim_ver"
 
 echo "Creating CoSimulation Toolbox distribution package for pypi"
-cd "${SIM_DIR}/src/cosim_toolbox" || exit
+cd "${CST_ROOT}/src/cosim_toolbox" || exit
 python3 -m build . > "${BUILD_DIR}/package.log"
 echo "Checking CoSimulation Toolbox distribution package for pypi"
 twine check dist/*
 echo
 echo "To upload the new CoSimulation Toolbox $cosim_ver pypi,"
-echo "change directory to ${SIM_DIR}/src/cosim_toolbox"
+echo "change directory to ${CST_ROOT}/src/cosim_toolbox"
 echo "and run the command 'twine upload dist/*'"
 echo

@@ -1,7 +1,7 @@
 #!/bin/bash
 
-if [[ -z ${SIM_DIR} ]]; then
-  echo "Edit cosim.env in the top directory"
+if [[ -z ${CST_ROOT} ]]; then
+  echo "Edit cosim.env in the CoSimulation Toolbox directory"
   echo "Run 'source cosim.env' in that same directory"
   exit 1
 fi
@@ -14,12 +14,13 @@ SKIP=0
 # Image build configration
 CONFIG_BUILDS=(
   "ubuntu" "./" "$SKIP"
-  "jupyter" "${SIM_DIR}/src/cosim_toolbox/" "$BUILD"
-  "airflow" "${SIM_DIR}/src/cosim_toolbox/" "$BUILD"
+  "jupyter" "${CST_ROOT}/src/cosim_toolbox/" "$BUILD"
+  "airflow" "${CST_ROOT}/src/cosim_toolbox/" "$BUILD"
   "library" "./" "$SKIP"
-  "build" "${SIM_DIR}/scripts/build/" "$SKIP"
+  "build" "${CST_ROOT}/scripts/build/" "$SKIP"
   "helics" "./" "$BUILD"
-  "python" "${SIM_DIR}/src/cosim_toolbox/" "$BUILD"
+#  "pyhelics" "./" "$BUILD"
+  "python" "${CST_ROOT}/src/cosim_toolbox/" "$BUILD"
 #  "tespapi" "./" "$SKIP"
 #  "julia" "./" "$SKIP"
 )
@@ -28,7 +29,7 @@ CONFIG_BUILDS=(
 IMAGE_PATH="devops-registry.pnnl.gov/e-comp/thrust-3/copper/"
 
 # Version file
-VERSION_FILE="${SIM_DIR}/src/cosim_toolbox/version"
+VERSION_FILE="${CST_ROOT}/src/cosim_toolbox/version"
 
 # Function to get the latest git commit hash (first 8 characters)
 get_git_commit_hash() {

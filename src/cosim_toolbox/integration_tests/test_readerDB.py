@@ -6,7 +6,7 @@ import os
 import subprocess
 import unittest
 
-import cosim_toolbox as cst
+import cosim_toolbox as env
 from cosim_toolbox.dbResults import DBResults
 from cosim_toolbox.dbConfigs import DBConfigs
 from cosim_toolbox.helicsConfig import HelicsMsg, Collect
@@ -23,7 +23,7 @@ class Singleton(object):
             cls._instance = super(Singleton, cls).__new__(
                             cls, *args, **kwargs)
             # PUT YOUR SETUP ONCE CODE HERE!
-            db = DBConfigs(cst.cosim_mongo, cst.cosim_mongo_db)
+            db = DBConfigs(env.cst_mongo, env.cst_mongo_db)
 
             names = ["Battery", "EVehicle"]
             t1 = HelicsMsg(names[0], 30)
@@ -92,15 +92,15 @@ class Singleton(object):
                 }
             }
 
-            db.remove_document(cst.cu_federations, None, cls.federation_name)
-            db.add_dict(cst.cu_federations, cls.federation_name, diction)
+            db.remove_document(env.cst_federations, None, cls.federation_name)
+            db.add_dict(env.cst_federations, cls.federation_name, diction)
             scenario = db.scenario(cls.schema_name,
                                    cls.federation_name,
                                    "2023-12-07T15:31:27",
                                    "2023-12-08T15:31:27",
                                    cls.docker)
-            db.remove_document(cst.cu_scenarios, None, cls.scenario_name)
-            db.add_dict(cst.cu_scenarios, cls.scenario_name, scenario)
+            db.remove_document(env.cst_scenarios, None, cls.scenario_name)
+            db.add_dict(env.cst_scenarios, cls.scenario_name, scenario)
 
             cmd = (f'docker cp {os.path.dirname(os.path.abspath(__file__))}'
                    f'/data/del_{cls.schema_name}.sql '
@@ -114,8 +114,8 @@ class Singleton(object):
             subprocess.Popen(cmd, shell=True).wait()
             # command string for psql to load database
             cmd = ('docker exec -i $(docker container ls --all --quiet --filter "name=database") '
-                   f'/bin/bash -c "export PGPASSWORD={cst.cu_data_db["user"]} && psql '
-                   f'-U {cst.cu_data_db["user"]} -d {cst.cu_data_db["dbname"]} < ')
+                   f'/bin/bash -c "export PGPASSWORD={env.cst_data_db["user"]} && psql '
+                   f'-U {env.cst_data_db["user"]} -d {env.cst_data_db["dbname"]} < ')
             # remove federation data in postgres database
             subprocess.Popen(cmd + f'/docker-entrypoint-initdb.d/del_{cls.schema_name}.sql"', shell=True).wait()
             # load federation data in postgres database
@@ -123,7 +123,7 @@ class Singleton(object):
 
             # # command string for psql to load database
             # cmd = (f' | docker exec -i $(docker container ls --all --quiet --filter "name=database")'
-            #        f' psql -U {cst.cu_data_db["user"]} -d {cst.cu_data_db["dbname"]}')
+            #        f' psql -U {env.cst_data_db["user"]} -d {env.cst_data_db["dbname"]}')
             # # remove federation data in postgres database
             # dell = f'cat {os.path.dirname(os.path.abspath(__file__))}/data/del_{cls.schema_name}.sql' + cmd
             # subprocess.Popen(dell, shell=True).wait()
@@ -144,7 +144,7 @@ class TestLoggerApi(unittest.TestCase):
     def setUp(self):
         Singleton()
         self.test_DL = DBResults()
-        self.test_DL.open_database_connections(cst.cu_data_db)
+        self.test_DL.open_database_connections(env.cst_data_db)
 
     def test_00_open_databases(self):
         self.assertIsNotNone(self.test_DL.data_db)

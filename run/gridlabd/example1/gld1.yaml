@@ -2,8 +2,8 @@ services:
   helics:
     image: "cosim-helics:latest"
     environment:
-      SIM_HOST: "ecomp-thrust-3-sandbox"
-      SIM_USER: "gray570"
+      CST_HOST: "ecomp-thrust-3-sandbox"
+      LOCAL_USER: "gray570"
       POSTGRES_HOST: "ecomp-thrust-3-sandbox"
       MONGO_HOST: "mongodb://ecomp-thrust-3-sandbox"
       MONGO_PORT: "27017"
@@ -13,14 +13,14 @@ services:
       - .:/home/worker/case
       - ../../../data:/home/worker/tesp/data
     networks:
-      cu_net:
+      cst_net:
         ipv4_address: 10.5.0.2
     command: /bin/bash -c "exec helics_broker --ipv4 -f 3 --loglevel=warning --name=broker"
   ctr:
     image: "cosim-python:latest"
     environment:
-      SIM_HOST: "ecomp-thrust-3-sandbox"
-      SIM_USER: "gray570"
+      CST_HOST: "ecomp-thrust-3-sandbox"
+      LOCAL_USER: "gray570"
       POSTGRES_HOST: "ecomp-thrust-3-sandbox"
       MONGO_HOST: "mongodb://ecomp-thrust-3-sandbox"
       MONGO_PORT: "27017"
@@ -30,14 +30,14 @@ services:
       - .:/home/worker/case
       - ../../../data:/home/worker/tesp/data
     networks:
-      cu_net:
+      cst_net:
         ipv4_address: 10.5.0.3
     command: /bin/bash -c "source /home/worker/venv/bin/activate && exec python3 controller.py"
   gld:
     image: "cosim-python:latest"
     environment:
-      SIM_HOST: "ecomp-thrust-3-sandbox"
-      SIM_USER: "gray570"
+      CST_HOST: "ecomp-thrust-3-sandbox"
+      LOCAL_USER: "gray570"
       POSTGRES_HOST: "ecomp-thrust-3-sandbox"
       MONGO_HOST: "mongodb://ecomp-thrust-3-sandbox"
       MONGO_PORT: "27017"
@@ -47,14 +47,14 @@ services:
       - .:/home/worker/case
       - ../../../data:/home/worker/tesp/data
     networks:
-      cu_net:
+      cst_net:
         ipv4_address: 10.5.0.4
     command: /bin/bash -c "source /home/worker/venv/bin/activate && exec python3 federateGridlabD.py"
-  cu_logger:
+  cosim_logger:
     image: "cosim-python:latest"
     environment:
-      SIM_HOST: "ecomp-thrust-3-sandbox"
-      SIM_USER: "gray570"
+      CST_HOST: "ecomp-thrust-3-sandbox"
+      LOCAL_USER: "gray570"
       POSTGRES_HOST: "ecomp-thrust-3-sandbox"
       MONGO_HOST: "mongodb://ecomp-thrust-3-sandbox"
       MONGO_PORT: "27017"
@@ -64,11 +64,11 @@ services:
       - .:/home/worker/case
       - ../../../data:/home/worker/tesp/data
     networks:
-      cu_net:
+      cst_net:
         ipv4_address: 10.5.0.5
     command: /bin/bash -c "source /home/worker/venv/bin/activate && exec python3 -c \"import cosim_toolbox.federateLogger as datalog; datalog.main('FederateLogger', 'gld1', 'gld1')\""
 networks:
-  cu_net:
+  cst_net:
     driver: bridge
     ipam:
       config:

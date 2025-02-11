@@ -6,8 +6,8 @@ services:
     environment:
       JUPYTER_ENABLE_LAB: "yes"
       GRANT_SUDO: "yes"
-      SIM_HOST: ${SIM_HOST}
-      SIM_USER: ${SIM_USER}
+      CST_HOST: ${CST_HOST}
+      LOCAL_USER: ${LOCAL_USER}
       MONGO_HOST: ${MONGO_HOST}
       MONGO_PORT: ${MONGO_PORT}
       POSTGRES_HOST: ${POSTGRES_HOST}
@@ -32,9 +32,9 @@ services:
     environment:
       POSTGRES_HOST: "${POSTGRES_HOST}"
       POSTGRES_PORT: "${POSTGRES_PORT}"
-      POSTGRES_DB: "${COSIM_DB}"
-      POSTGRES_USER: "${COSIM_USER}"
-      POSTGRES_PASSWORD: "${COSIM_PASSWORD}"
+      POSTGRES_DB: "${CST_DB}"
+      POSTGRES_USER: "${CST_USER}"
+      POSTGRES_PASSWORD: "${CST_PASSWORD}"
     command: postgres -c 'max_connections=1000'
     healthcheck:
       test:
@@ -42,15 +42,15 @@ services:
           "CMD",
           "pg_isready",
           "-U",
-          "${COSIM_USER}",
+          "${CST_USER}",
           "-d",
-          "${COSIM_DB}"
+          "${CST_DB}"
         ]
       interval: 5s
       retries: 5
     restart: always
     volumes:
-      - cu_postgres:/var/lib/postgresql/data
+      - cst_postgres:/var/lib/postgresql/data
       - $STACK_DIR/init-db.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - sim_net
@@ -63,11 +63,11 @@ services:
     expose:
       - "27017"
     environment:
-      MONGO_INITDB_DATABASE: "${COSIM_DB}"
+      MONGO_INITDB_DATABASE: "${CST_DB}"
       MONGODB_INITDB_ROOT_USERNAME: "${MONGODB_INITDB_ROOT_USERNAME}"
       MONGODB_INITDB_ROOT_PASSWORD: "${MONGODB_INITDB_ROOT_PASSWORD}"
     volumes:
-      - cu_mongo:/data/db
+      - cst_mongo:/data/db
       - $STACK_DIR/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
     restart: unless-stopped
     networks:
@@ -103,8 +103,8 @@ services:
       - sim_net
 
 volumes:
-  cu_mongo: null
-  cu_postgres: null
+  cst_mongo: null
+  cst_postgres: null
 
 # Create a custom network for bridging the containers
 networks:

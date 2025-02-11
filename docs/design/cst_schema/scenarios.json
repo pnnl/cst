@@ -1,6 +1,6 @@
 [
   {
-    "cu_name": "scenario",
+    "cst_007": "scenario",
     "start_time": "<ISO 8601 string  %:z -07:00 not supported < py3.12>",
     "stop_stime": "<ISO 8601 string>",
     "federation": "<string>",
@@ -8,7 +8,7 @@
     "docker": "<boolean>"
   },
   {
-    "cu_name": "TE30",
+    "cst_007": "TE30",
     "start_time": "2023-12-07T15:31:27",
     "stop_stime": "2023-12-07T15:31:27",
     "federation": "BT1_EV1",
@@ -16,7 +16,7 @@
     "docker": true
   },
   {
-    "cu_name": "TE100",
+    "cst_007": "TE100",
     "start_time": "2023-12-07T15:31:27−07:00",
     "stop_stime": "2023-12-07T15:31:27−07:00",
     "federation": "BT1_EV1",

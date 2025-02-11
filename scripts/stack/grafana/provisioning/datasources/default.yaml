@@ -5,7 +5,7 @@ datasources:
     type: testdata
   - name: copper
     type: postgres
-    url: ${SIM_HOST}:${POSTGRES_PORT}
+    url: ${CST_HOST}:${POSTGRES_PORT}
     user: worker
     secureJsonData:
       password: 'worker'
