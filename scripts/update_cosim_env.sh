@@ -30,19 +30,19 @@ if [[ -z "$DEVOPS_SERVER" ]]; then
     exit 1
 fi
 
-COPPER_HOME=$(realpath ..)
-COSIM_ENV=$COPPER_HOME/cosim.env
+CID_ROOT=$(realpath ..)
+CID_ENV=$CID_ROOT/cosim.env
 
-echo "Update [$COSIM_ENV] with [$DEVOPS_SERVER]..."
+echo "Update [$CID_ENV] with [$DEVOPS_SERVER]..."
 
 #
 # Update environment
 #
 if [[ "$OSTYPE" == "darwin"* ]]; then
   # macOS system
-  SED_CMD=(-i '' 's/^export SIM_HOST=.*/export SIM_HOST='"$DEVOPS_SERVER"'/')
+  SED_CMD=(-i '' 's/^export CST_HOST=.*/export CST_HOST='"$DEVOPS_SERVER"'/')
 else
   # Assuming Linux
-  SED_CMD=(-i 's/^export SIM_HOST=.*/export SIM_HOST='"$DEVOPS_SERVER"'/')
+  SED_CMD=(-i 's/^export CST_HOST=.*/export CST_HOST='"$DEVOPS_SERVER"'/')
 fi
-sed "${SED_CMD[@]}" "$COSIM_ENV"
+sed "${SED_CMD[@]}" "$CID_ENV"

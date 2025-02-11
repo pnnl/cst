@@ -62,7 +62,7 @@
                 <mxCell id="16" value="&lt;font color=&quot;#000000&quot;&gt;copper/run/python/test_federation&lt;br&gt;copper/src/cosim_toolbox&lt;br&gt;TBD/server_config&lt;br&gt;TBD/user_dev_space&lt;br&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=left;" vertex="1" parent="1">
                     <mxGeometry x="340" y="120" width="200" height="130" as="geometry"/>
                 </mxCell>
-                <mxCell id="18" value="&lt;font color=&quot;#b3b3b3&quot;&gt;CoSim Toolbox run services&lt;/font&gt;" style="text;strokeColor=none;align=center;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#4D4D4D;" vertex="1" parent="1">
+                <mxCell id="18" value="&lt;font color=&quot;#b3b3b3&quot;&gt;CoSimulation Toolbox run services&lt;/font&gt;" style="text;strokeColor=none;align=center;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#4D4D4D;" vertex="1" parent="1">
                     <mxGeometry x="840" y="50" width="170" height="30" as="geometry"/>
                 </mxCell>
                 <mxCell id="20" value="&lt;font color=&quot;#b3b3b3&quot;&gt;CST run services read workflow scripts&lt;/font&gt;" style="text;strokeColor=none;align=center;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#4D4D4D;" vertex="1" parent="1">

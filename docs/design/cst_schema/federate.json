@@ -1,9 +1,9 @@
 [
   {
-    "cu_name": "federate documents"
+    "cst_007": "federate documents"
   },
   {
-    "cu_name": "helics",
+    "cst_007": "helics",
     "image": "cosim-helics:latest",
     "commands": [
       { "command": "/bin/bash -c \"exec helics_broker --ipv4 -f 3 --loglevel=warning --name=broker\"",
@@ -15,14 +15,14 @@
     ]
   },
   {
-    "cu_name": "python",
+    "cst_007": "python",
     "image": "cosim-python:latest",
     "environment": {
       POSTGRES_HOST: "${POSTGRES_HOST}",
       POSTGRES_PORT: "${POSTGRES_PORT}",
-      COSIM_DB: "${COSIM_DB}",
-      COSIM_USER: "${COSIM_USER}",
-      COSIM_PASSWORD: "${COSIM_PASSWORD}"
+      CST_DB: "${CST_DB}",
+      CST_USER: "${CST_USER}",
+      CST_PASSWORD: "${CST_PASSWORD}"
     },
     "commands": [
       {
@@ -46,7 +46,7 @@
     ]
   },
   {
-    "cu_name": "gridlabd",
+    "cst_007": "gridlabd",
     "image": "cosim-gridlabd:latest",
     "commands":
     [

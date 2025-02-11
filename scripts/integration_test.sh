@@ -8,15 +8,15 @@
 #
 set -eo pipefail
 
-COPPER_HOME=$(realpath ..)
-COSIM_ENV=$COPPER_HOME/cosim.env
+CID_ROOT=$(realpath ..)
+CID_ENV=$CID_ROOT/cosim.env
+source $CID_ENV
 
 #
 # Start cosim stacks
 #
 echo "Starting Cosim stacks..."
-source $COPPER_HOME/cosim.env
-cd $COPPER_HOME/scripts/stack
+cd $CID_ROOT/scripts/stack
 ./start_cu.sh
 docker ps
 
@@ -24,18 +24,16 @@ docker ps
 # Run tests in local env
 #
 echo "Starting tests in local environment..."
-source $COPPER_HOME/cosim.env
-cd $COPPER_HOME/run/python/test_federation
-rm -rf *.yaml *.log
-export PYTHONPATH=.:$COPPER_HOME/src/cosim_toolbox
-python runner.py
+cd $CID_ROOT/run/python/test_federation
+rm -rf *.sh *.yaml *.log
+export PYTHONPATH=.:$CID_ROOT/src/cosim_toolbox
+python3 runner.py
 ./test_scenario.sh
-docker ps
 ps
 
 #
 # Run integration test validation
 #
 echo "Running integration test validation... "
-cd $COPPER_HOME
+cd $CID_ROOT
 make venv integration-test

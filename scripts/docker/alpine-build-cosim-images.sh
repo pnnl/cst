@@ -14,20 +14,20 @@ build_tespapi=0
 build_julia=0
 build_mespapi=0
 
-if [[ -z ${SIM_DIR} ]]; then
-  echo "Edit cosim.env in the Co-Simulation directory"
+if [[ -z ${CST_ROOT} ]]; then
+  echo "Edit cosim.env in the CoSimulation Toolbox directory"
   echo "Run 'source cosim.env' in that same directory"
   exit
 fi
 
 paths=(
   "./"
-  "${SIM_DIR}/src/cosim_toolbox/"
-  "${SIM_DIR}/src/cosim_toolbox/"
+  "${CST_ROOT}/src/cosim_toolbox/"
+  "${CST_ROOT}/src/cosim_toolbox/"
   "./"
-  "${SIM_DIR}/scripts/build/"
+  "${CST_ROOT}/scripts/build/"
   "./"
-  "${SIM_DIR}/src/cosim_toolbox/"
+  "${CST_ROOT}/src/cosim_toolbox/"
   "./"
   "./"
   "/home/d3j331/tesp/repository/mesp/"
@@ -58,7 +58,7 @@ done
 # Remove log files from build directory
 rm -f "$BUILD_DIR/*.logs" "$BUILD_DIR/out.txt"
 # Make directories and set permissions
-cd "$SIM_DIR/run" || exit
+cd "$CST_ROOT/run" || exit
 mkdir -p ./dags ./logs ./plugins ./config ./python ../src/cosim_toolbox/cosim_toolbox.egg-info
 # Make wide open for now
 sudo chmod -R 777 ./dags ./logs ./plugins ./config ./python ../src
@@ -76,10 +76,10 @@ for i in "${!names[@]}"; do
     echo "Creating ${IMAGE_NAME} from ${DOCKERFILE}"
     image1=$(docker images -q "${IMAGE_NAME}")
     docker build --no-cache --rm \
-                 --build-arg COSIM_USER="${COSIM_USER}" \
-                 --build-arg SIM_HOST="${SIM_HOST}" \
-                 --build-arg SIM_USER="${SIM_USER}" \
-                 --build-arg SIM_UID=$SIM_UID \
+                 --build-arg CST_USER="${CST_USER}" \
+                 --build-arg CST_HOST="${CST_HOST}" \
+                 --build-arg LOCAL_USER="${LOCAL_USER}" \
+                 --build-arg LOCAL_UID=$LOCAL_UID \
                  --network=host \
                  -f "${DOCKERFILE}" \
                  -t "${IMAGE_NAME}" "${CONTEXT}"

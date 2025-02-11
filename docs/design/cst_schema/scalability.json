@@ -1,6 +1,6 @@
 [
   {
-    "cu_name": "<string> user defined document name",
+    "cst_007": "<string> user defined document name",
     "number of feds": "<integer>",
     "number of subs": "<integer>",
     "use endpoints": "<boolean>",
@@ -9,7 +9,7 @@
     "results": {}
   },
   {
-    "cu_name": "Test7",
+    "cst_007": "Test7",
     "number of feds": 10,
     "number of subs": 100,
     "use endpoints": false,
@@ -18,7 +18,7 @@
     "results": {}
   },
   {
-    "cu_name": "Test8",
+    "cst_007": "Test8",
     "number of feds": 100,
     "number of subs": 1000,
     "use endpoints": true,

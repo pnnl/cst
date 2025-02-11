@@ -3,22 +3,21 @@ import json
 import os
 import unittest
 
+import cosim_toolbox as env
 from cosim_toolbox.dbConfigs import DBConfigs
 
 import collections
 collections.Callable = collections.abc.Callable
-SIM_HOST = os.environ['SIM_HOST']
-
 
 class TestMetadataDBApi(unittest.TestCase):
     fileDictionary = dict()
 
     update_data = [
         {
-            "cu_007": "federation documents"
+            "cst_007": "federation documents"
         },
         {
-            "cu_007": "BT1_EV1",
+            "cst_007": "BT1_EV1",
             "federation": {
                 "EVehicle": {
                     "federate_type": "value",
@@ -27,7 +26,7 @@ class TestMetadataDBApi(unittest.TestCase):
             }
         },
         {
-            "cu_007": "BT2_EV2",
+            "cst_007": "BT2_EV2",
             "federation": {
                 "EVehicle": {
                     "federate_type": "value",
@@ -38,7 +37,7 @@ class TestMetadataDBApi(unittest.TestCase):
     ]
 
     def setUp(self):
-        self.metadb = DBConfigs(uri=f'mongodb://{SIM_HOST}:27017')
+        self.metadb = DBConfigs(env.cst_mg_host, env.cst_mongo_db)
 
     def test_01__open_file(self):
         file_path = os.path.join(os.path.dirname(__file__), "data", "psc_ex.json")
@@ -62,8 +61,8 @@ class TestMetadataDBApi(unittest.TestCase):
         collection_name = "case_data"
         name_list = ["case_data"]
         name_out = self.metadb.add_collection(name=collection_name)
-        collections = self.metadb.update_collection_names()
-        section = list(set(name_list).intersection(collections))
+        name_collections = self.metadb.update_collection_names()
+        section = list(set(name_list).intersection(name_collections))
         self.assertEqual(len(section), 1, "return collection did not contain new collection name")
 
     def test_03_remove_collection(self):
@@ -75,8 +74,8 @@ class TestMetadataDBApi(unittest.TestCase):
                                     'gen': {'bus_num': [1, 2, 3], 'id': ['1', '1', '1'], 'mw': [10, 20, 30]},
                                     'load': {'bus_num': [4, 5, 5], 'id': ['1', '1', '2'], 'mw': [12, 17, 25]}}}
         obj_id = self.metadb.add_dict(collection_name, dict_name, named_file_dict)
-        collection_names = self.metadb.update_collection_names()
-        for c in collection_names:
+        name_collections = self.metadb.update_collection_names()
+        for c in name_collections:
             self.metadb.remove_collection(c)
         self.assertEqual(len(self.metadb.collections), 0, "not all collections were removed")
 
@@ -123,8 +122,8 @@ class TestMetadataDBApi(unittest.TestCase):
         dict_name = "psc7"
         collection_name = "case_data7"
         name_out = self.metadb.add_collection(name=collection_name)
-        collections = self.metadb.update_collection_names()
-        self.assertTrue(len(collections) > 0, "no collection names were returned")
+        name_collections = self.metadb.update_collection_names()
+        self.assertTrue(len(name_collections) > 0, "no collection names were returned")
 
     def test_08_get_collection_document_names(self):
         dict_name = "psc8"
@@ -154,8 +153,8 @@ class TestMetadataDBApi(unittest.TestCase):
             doc_names = self.metadb.get_collection_document_names(collection_name)
             self.metadb.remove_document(collection_name=collection_name, dict_name="psc9")
             doc_names2 = self.metadb.get_collection_document_names(collection_name)
-            collections = self.metadb.update_collection_names()
-            section = list(set(name_list).intersection(collections))
+            name_collections = self.metadb.update_collection_names()
+            section = list(set(name_list).intersection(name_collections))
             self.assertNotEqual(doc_names, doc_names2)
         except AttributeError as e:
             print("AttributeError : ", e)
@@ -185,7 +184,7 @@ class TestMetadataDBApi(unittest.TestCase):
 
     def test_11_update_dict(self):
         collection_name = "case_data11"
-        dict_name = self.update_data[1]['cu_007']
+        dict_name = self.update_data[1]['cst_007']
         name_out = self.metadb.add_collection(name=collection_name)
         copy_dict = copy.deepcopy(self.update_data[1]['federation'])
         obj_id = self.metadb.add_dict(collection_name, dict_name, copy_dict)

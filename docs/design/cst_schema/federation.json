@@ -1,9 +1,9 @@
 [
   {
-    "cu_name": "federation"
+    "cst_007": "federation"
   },
   {
-    "cu_name": "BT1_EV1",
+    "cst_007": "BT1_EV1",
     "federation": {
       "Battery": {
         "image": "python/3.11.7-slim-bullseye",

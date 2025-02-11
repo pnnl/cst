@@ -7,5 +7,5 @@ docker compose -f "$STACK_DIR/docker-compose.yaml" down --remove-orphans
 docker compose -f "$STACK_DIR/timescale-docker-compose.yaml" down --remove-orphans
 
 # to remove all volumes from stack
-#docker volume rm stack_cu_mongo stack_cu_postgres -f
+#docker volume rm stack_cst_mongo stack_cst_postgres -f
 #docker volume prune -f

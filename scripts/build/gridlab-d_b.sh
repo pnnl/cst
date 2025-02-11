@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [[ -z ${INSTDIR} ]]; then
-  echo "Edit cosim.env in the Co-Simulation directory"
+  echo "Edit cosim.env in the CoSimulation Toolbox directory"
   echo "Run 'source cosim.env' in that same directory"
   exit
 fi
@@ -32,7 +32,6 @@ mkdir build
 cd build || exit
 cmake -DCMAKE_INSTALL_PREFIX="${INSTDIR}" -DCMAKE_BUILD_TYPE=Release \
       -DGLD_USE_HDF5=ON \
-      -DGLD_USE_FNCS=ON -DGLD_FNCS_DIR="${INSTDIR}" \
       -DGLD_USE_HELICS=ON -DGLD_HELICS_DIR="${INSTDIR}" ..
 
 # Remove -DGLD_USE_FNCS=ON -DGLD_FNCS_DIR="${INSTDIR}" if you do not need to use FNCS

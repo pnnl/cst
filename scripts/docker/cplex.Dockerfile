@@ -4,9 +4,7 @@ FROM cosim-ubuntu:latest AS cosim-helics
 # User name and work directory
 ARG CST_GID
 ARG CST_GRP
-ARG CST_UID
 ARG CST_USER
-
 ENV CST_HOME=/home/$CST_USER
 ENV INSTDIR=$CST_HOME/tenv
 
@@ -14,17 +12,17 @@ ENV INSTDIR=$CST_HOME/tenv
 ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
 ENV PYHELICS_INSTALL=$INSTDIR
 ENV GLPATH=$INSTDIR/lib/gridlabd:$INSTDIR/share/gridlabd
-ENV CPLUS_INCLUDE_PATH=/usr/include/hdf5/serial:$INSTDIR/include
+# ENV CPLUS_INCLUDE_PATH=/usr/include/hdf5/serial:$INSTDIR/include
 # ENV FNCS_INCLUDE_DIR=$INSTDIR/include
 # ENV FNCS_LIBRARY=$INSTDIR/lib
-ENV LD_LIBRARY_PATH=$INSTDIR/lib
-ENV LD_RUN_PATH=$INSTDIR/lib
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$INSTDIR/lib
+# ENV LD_RUN_PATH=$INSTDIR/lib
 
 # PATH
-ENV PATH=$JAVA_HOME:$INSTDIR/bin:$CST_HOME/.local/bin:$PATH
-#ENV PATH=$PATH:$INSTDIR/energyplus
-#ENV PATH=$PATH:$INSTDIR/energyplus/PreProcess
-#ENV PATH=$PATH:$INSTDIR/energyplus/PostProcess
+ENV PATH=$JAVA_HOME:$INSTDIR/bin:$PATH
+ENV PATH=$PATH:$INSTDIR/energyplus
+ENV PATH=$PATH:$INSTDIR/energyplus/PreProcess
+ENV PATH=$PATH:$INSTDIR/energyplus/PostProcess
 
 RUN echo "===== Building CoSimulation Toolbox - HELICS =====" && \
   export DEBIAN_FRONTEND=noninteractive && \
@@ -36,17 +34,16 @@ RUN echo "===== Building CoSimulation Toolbox - HELICS =====" && \
   useradd -m -s /bin/bash -g ${CST_GRP} -G sudo,${CST_GRP} -u $CST_UID ${CST_USER} && \
   echo "${CST_USER}:${CST_USER}" | chpasswd
 
-##Add cplex
-#ARG CPLEX_BIN=cplex_studio129.linux-x86-64.bin
-#ENV PSST_SOLVER=$INSTDIR/ibm/cplex/bin/x86-64_linux/cplexamp
-#ENV PATH=$INSTDIR/ibm/cplex/bin/x86-64_linux:$PATH
-#
-#COPY "./$CPLEX_BIN" /opt/
-#RUN echo "===== Installing CPlex =====" && \
-#    cd /opt && \
-#    chmod a+x "$CPLEX_BIN" && \
-#    "./$CPLEX_BIN" -i silent -DLICENSE_ACCEPTED=TRUE -DUSER_INSTALL_DIR=$INSTDIR/ibm && \
-#    rm "/opt/$CPLEX_BIN"
+#Add cplex
+ARG CPLEX_BIN=cplex_studio129.linux-x86-64.bin
+ENV PSST_SOLVER=$INSTDIR/ibm/cplex/bin/x86-64_linux/cplexamp
+ENV PATH=$INSTDIR/ibm/cplex/bin/x86-64_linux:$PATH
+
+COPY "./$CPLEX_BIN" /opt/
+RUN cd /opt && \
+    chmod a+x "$CPLEX_BIN" && \
+    "./$CPLEX_BIN" -i silent -DLICENSE_ACCEPTED=TRUE -DUSER_INSTALL_DIR=$INSTDIR/ibm && \
+    rm "/opt/$CPLEX_BIN"
 
 # Copy Binaries
 COPY --from=cosim-build:latest $INSTDIR/ $INSTDIR/

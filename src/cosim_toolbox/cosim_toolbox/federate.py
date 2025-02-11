@@ -13,7 +13,7 @@ import logging
 
 import helics as h
 
-import cosim_toolbox as cst
+import cosim_toolbox as env
 from cosim_toolbox.dbConfigs import DBConfigs
 from cosim_toolbox.dbResults import DBResults
 
@@ -138,10 +138,10 @@ class Federate:
             db_name (str): Name for Mongo database
         """
         self.mddb = DBConfigs(uri, db_name)
-        self.scenario = self.mddb.get_dict(cst.cu_scenarios, None, self.scenario_name)
+        self.scenario = self.mddb.get_dict(env.cst_scenarios, None, self.scenario_name)
         self.federation_name = self.scenario["federation"]
 
-        self.federation = self.mddb.get_dict(cst.cu_federations, None, self.federation_name)
+        self.federation = self.mddb.get_dict(env.cst_federations, None, self.federation_name)
         self.federation = self.federation["federation"]
 
     def connect_to_metadataJSON(self) -> None:
@@ -249,7 +249,7 @@ class Federate:
     def create_federate(self, scenario_name: str) -> None:
         """Create Copper and HELICS federates
 
-        Creates and defines both the instance of this class,(the CoSimulation
+        Creates and defines both the instance of this class,(the Co-Simulation
         federate) and the HELICS federate object (self.hfed). Any
         initialization that cannot take place on instantiation of the
         federate object should be done here. In this case, initializing any
@@ -267,7 +267,7 @@ class Federate:
             raise NameError("scenario_name is None")
         self.scenario_name = scenario_name
         if self.use_mdb:
-            self.connect_to_metadataDB(cst.cosim_mongo, cst.cosim_mongo_db)
+            self.connect_to_metadataDB(env.cst_mongo, env.cst_mongo_db)
         else:
             self.connect_to_metadataJSON()
         self.set_metadata()
