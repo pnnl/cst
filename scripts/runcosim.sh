@@ -21,8 +21,8 @@ IMAGE=pnnl/cst:${docker_tag}
 #IMAGE=cosim-build:cst_${grid_ver}
 #IMAGE=cosim-cplex:cst_${grid_ver}
 #IMAGE=cosim-user:cst_${grid_ver}
-#IMAGE=osw_test_scenario:latest
-IMAGE=cosim-python:latest
+IMAGE=osw_test_scenario:latest
+# IMAGE=cosim-python:latest
 
 echo "Should always confirm that you are logged in to docker using 'docker login'"
 

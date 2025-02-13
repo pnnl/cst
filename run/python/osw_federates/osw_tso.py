@@ -440,7 +440,7 @@ def run_osw_tso(h5filepath: str, start: str="2032-01-01 00:00:00", end: str="203
         }
     }
     loglevel = "INFO"
-    solver = "gurobi" # "gurobi" or "cbc"
+    solver = "cplex" # "gurobi" or "cbc"
     gv = pyen.GVParse(h5filepath, default=default_dam, logger_options={"level": loglevel})
 
     default_rtm = {
