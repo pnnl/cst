@@ -390,12 +390,8 @@ class DBResults:
         """
         qry_string = self.get_query_string(start_time, duration, scenario_name, federate_name, data_name, data_type)
         if qry_string:
-            with self.data_db.cursor() as cur:
-                cur.execute(qry_string)
-                column_names = [desc[0] for desc in cur.description]
-                data = cur.fetchall()
-                dataframe = pd.DataFrame(data, columns=column_names)
-                return dataframe
+            dataframe = self.execute_query(qry_string)
+            return dataframe
         return None
 
     def query_scenario_all_times(self, scenario_name: str, data_type: str) -> pd.DataFrame:
@@ -417,12 +413,8 @@ class DBResults:
         scheme_name = scenario.schema_name
 
         qry_string = f"SELECT * FROM {scheme_name}.{data_type} WHERE scenario='{scenario_name}';"
-        with self.data_db.cursor() as cur:
-            cur.execute(qry_string)
-            column_names = [desc[0] for desc in cur.description]
-            data = cur.fetchall()
-            dataframe = pd.DataFrame(data, columns=column_names)
-            return dataframe
+        dataframe = self.execute_query(qry_string)
+        return dataframe
 
     def query_scheme_all_times(self, scheme_name: str, data_type: str) -> None:
         raise NotImplementedError("method query_scheme_all_times is not implemented yet")
@@ -450,6 +442,18 @@ class DBResults:
             return None
         # Todo: check against meta_db to see if schema name exist?
         qry_string = f"SELECT * FROM {scheme_name}.{data_type} WHERE federate='{federate_name}'"
+        dataframe = self.execute_query(qry_string)
+        return dataframe
+
+    def execute_query(self, qry_string: str) -> pd.DataFrame:
+        """This function executes the input query and converts the result to a dataframe
+
+        Args:
+            qry_string (string) - the SQL query to execute
+        Returns:
+            dataframe (pandas dataframe object) - dataframe that contains the result records
+            returned from the query of the database
+        """
         with self.data_db.cursor() as cur:
             cur.execute(qry_string)
             column_names = [desc[0] for desc in cur.description]
