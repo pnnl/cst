@@ -15,7 +15,7 @@ source ./config.sh
 rm -f "$BUILD_DIR/*.logs" "$BUILD_DIR/out.txt"
 
 # Make directories and set permissions
-cd "$SIM_DIR/run"
+cd "$CST_ROOT/run"
 mkdir -p ./dags ./logs ./plugins ./config ./python ../src/cosim_toolbox/cosim_toolbox.egg-info
 # Make wide open for now
 sudo chmod -R 777 ./dags ./logs ./plugins ./config ./python ../src
@@ -36,10 +36,11 @@ for ((i = 0; i < ${#CONFIG_BUILDS[@]}; i+=3)); do
 
     printf "**** Creating %s from %s\n" "$IMAGE_NAME" "$DOCKERFILE"
     docker build --no-cache --rm \
-                 --build-arg COSIM_USER="${COSIM_USER}" \
-                 --build-arg SIM_HOST="${SIM_HOST}" \
-                 --build-arg SIM_USER="${SIM_USER}" \
-                 --build-arg SIM_UID=$SIM_UID \
+                 --build-arg CST_HOST="${CST_HOST}" \
+                 --build-arg CST_GID=$CST_GID \
+                 --build-arg CST_GRP="${CST_GRP}" \
+                 --build-arg CST_UID=$CST_UID \
+                 --build-arg CST_USER="${CST_USER}" \
                  --network=host \
                  -f "$DOCKERFILE" \
                  -t "$IMAGE_NAME" "$CONTEXT"

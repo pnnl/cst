@@ -14,7 +14,6 @@ in the repo.
 import json
 import logging
 import os
-import subprocess
 import sys
 import time
 from enum import Enum
@@ -22,31 +21,10 @@ from pathlib import Path
 import numpy as np
 import psutil
 import pandas as pd
-from pyomo.scripting.util import start_time
 
-from cosim_toolbox.dataLogger import DataLogger
-from cosim_toolbox.metadataDB import MetaDB
-# from cosim_toolbox.metadataDB import cosim_mg_host, cosim_mongo_db, cu_scenarios, cu_federations
-from cosim_toolbox import cosim_mg_host, cosim_mongo_db, cu_scenarios, cu_federations
-
-class ScenarioReader:
-    def __init__(self, scenario_name: str):
-        self.name = scenario_name
-        # open Mongo Database to retrieve scenario data (metadata)
-        self.meta_db = MetaDB(uri=cosim_mg_host, db_name=cosim_mongo_db)
-        # retrieve data from MongoDB
-        self.scenario = self.meta_db.get_dict(cu_scenarios, None, scenario_name)
-        self.schema_name = self.scenario.get("schema")
-        self.federation_name = self.scenario.get("federation")
-        self.start_time = self.scenario.get("start_time")
-        self.stop_time = self.scenario.get("stop_time")
-        self.use_docker = self.scenario.get("docker")
-        if self.federation_name is not None:
-            self.federation = self.meta_db.get_dict(cu_federations, None, self.federation_name)
-        # close MongoDB client
-        if self.meta_db.client is not None:
-            self.meta_db.client.close()
-        self.meta_db = None
+import cosim_toolbox as env
+from cosim_toolbox.dbResults import DBResults
+from cosim_toolbox.readConfig import ReadConfig
 
 logger = logging.getLogger(__name__)
 logger.setLevel(level=logging.INFO)
@@ -72,14 +50,14 @@ class ValueType(Enum):
     ENDPOINT = 'HDT_ENDPOINT'
 
 
-class DataReader(DataLogger):
+class DataReader(DBResults):
     """
     alternative to ResultsDB
     """
     def __init__(self, scenario_name):
         super().__init__()
         self.is_connected = self.open_database_connections()
-        self.scenario_reader = ScenarioReader(scenario_name)
+        self.scenario_reader = ReadConfig(scenario_name)
         self.scenario = self.scenario_reader.scenario
         self.scenario_name = scenario_name
 
@@ -92,19 +70,6 @@ class DataReader(DataLogger):
             print(f"An exception occurred: {exc_type}, {exc_value}")
         # Return False to propagate the exception, True to suppress it
         return False
-
-    def open_database_connections(self, meta_connection: dict = None, data_connection: dict = None) -> bool:
-        self.data_db = self._connect_logger_database(data_connection)
-        if self.data_db is None:
-            return False
-        return True
-
-    def close_database_connections(self, commit: bool = True) -> None:
-        if self.data_db:
-            if commit:
-                self.data_db.commit()
-            self.data_db.close()
-        self.data_db = None
 
     def get_query_string(self, start_time: int,
                          duration: int,
@@ -372,11 +337,11 @@ class DataReader(DataLogger):
     def close(self):
         self.close_database_connections()
 
-def scenario_map(cu_scalability: str):
-    cu_scalability = Path(cu_scalability)
-    # os.chdir(cu_scalability)
+def scenario_map(cst_scalability: str):
+    cst_scalability = Path(cst_scalability)
+    # os.chdir(cst_scalability)
     scenario_dict = {}
-    for scenario_dir_path in cu_scalability.iterdir():
+    for scenario_dir_path in cst_scalability.iterdir():
         scenario_dir_name = scenario_dir_path.name
         cnt = int(scenario_dir_name.split("_")[-1])
         scenario_name = f"scenario_{cnt}"
@@ -392,13 +357,13 @@ def scenario_map(cu_scalability: str):
     return scenario_dict
 
 
-def validate_scenarios(cu_scalability: str):
-    cu_scalability = Path(cu_scalability)
-    scenario_dict = scenario_map(cu_scalability)
+def validate_scenarios(cst_scalability: str):
+    cst_scalability = Path(cst_scalability)
+    scenario_dict = scenario_map(cst_scalability)
     # run_only = None
     run_only = list(range(1, 2))
 
-    for scenario_dir_path in cu_scalability.iterdir():
+    for scenario_dir_path in cst_scalability.iterdir():
         scenario_dir_name = scenario_dir_path.name
         cnt = int(scenario_dir_name.split("_")[-1])
         if run_only is not None and cnt not in run_only:
@@ -568,14 +533,11 @@ def kill_helics():
 #             logger.info(f"steps: {len(dffp.sim_time) + 1}, simulation time: {np.max(dffp.sim_time)}s")
 
 if __name__ == '__main__':
-
-    os.environ["POSTGRES_HOST"] = "maxwell.pnl.gov"
-    os.environ["POSTGRES_PORT"] = "5432"
-    os.environ["COSIM_DB"] = "copper"
-    os.environ["COSIM_USER"] = "worker"
-    os.environ["COSIM_PASSWORD"] = "worker"
+    env.cst_mg_host = "mongodb://maxwell.pnl.gov"
+    env.cst_mongo = env.cst_mg_host + ":" + env.cst_mg_port
+    env.cst_pg_host = "maxwell.pnl.gov"
+    env.cst_postgres = env.cst_pg_host + ":" + env.cst_pg_port
     tic = time.perf_counter()
-    cosim_mg_host = "mongodb://maxwell.pnl.gov"
     if len(sys.argv) > 1:
         validate_scenarios(sys.argv[1])
     else:

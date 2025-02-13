@@ -1,7 +1,8 @@
+import numpy as np
+import pandas as pd
 import plotly.express as px
 import plotly.graph_objs as go
-import pandas as pd
-import numpy as np
+
 
 def read_time5x():
     df9 = pd.read_csv(f"scale_test9_read_test5x.csv")
@@ -25,16 +26,16 @@ def read_time5x():
     df.loc[df.federate == "fed_4", "federate"] = "one"
     df.loc[df.federate == "3 feds", "federate"] = "three"
     df = df.groupby(["scenario", "schema", "schema_rows", "selected_rows", "time_scale", "test", "ts_indexes",
-                "federate"]).time.mean().rename_axis().reset_index()
+                     "federate"]).time.mean().rename_axis().reset_index()
     df['t'] = df["time"] - 0.0548
-    df["per_schema_row"] = df.time/df.schema_rows
-    df["per_selected_row"] = df.time/df.selected_rows
-    df["a"] = df.t/df.schema_rows
+    df["per_schema_row"] = df.time / df.schema_rows
+    df["per_selected_row"] = df.time / df.selected_rows
+    df["a"] = df.t / df.schema_rows
     df["id"] = df.scenario.str[12:]
     dfp = df.pivot(index=["id", "schema_rows", "selected_rows", "federate"],
-             columns="ts_indexes", values="time").rename_axis(columns=None).reset_index()
-    dfp["mult"] = dfp[1]/dfp[0]
-    dfp["mult2"] = dfp[2]/dfp[0]
+                   columns="ts_indexes", values="time").rename_axis(columns=None).reset_index()
+    dfp["mult"] = dfp[1] / dfp[0]
+    dfp["mult2"] = dfp[2] / dfp[0]
     print(df.head())
     fig = px.histogram(
         dfp,
@@ -83,19 +84,18 @@ def read_time5x():
         log_x=True,
         labels={"schema_rows": "Schema Rows", "per_schema_row": "Query Time Per Row in Schema"},
     )
-    x = 240*10**(np.array(list(range(1, 6, 1))))
-    y1 = 4.6e-7*x+0.0548
-    y2 = 6.7e-7*x+0.064
+    x = 240 * 10 ** (np.array(list(range(1, 6, 1))))
+    y1 = 4.6e-7 * x + 0.0548
+    y2 = 6.7e-7 * x + 0.064
     # y3 = 7.5e-7*x+0.17
-    y3 = 7.5e-7*x+0.1
-    y4 = 5.6e-7*x+0.0548
+    y3 = 7.5e-7 * x + 0.1
+    y4 = 5.6e-7 * x + 0.0548
 
     # fig.add_trace(go.Scatter(x=x, y=y1))
     # fig.add_trace(go.Scatter(x=x, y=y2))
     fig.add_trace(go.Scatter(x=x, y=y3, name="7.5e-7*x+0.1"))
     fig.add_trace(go.Scatter(x=x, y=y4, name="5.6e-7*x+0.0548"))
     fig.show(renderer="browser")
-
 
 
 def read_time():
@@ -120,30 +120,32 @@ def read_time():
     df8["ts_indexes"] = 2
     df9["ts_indexes"] = 0
     df = pd.concat([df5, df6, df7, df8, df9], ignore_index=True)
-    df["per_schema_row"] = df.time/df.schema_rows
-    df["per_selected_row"] = df.time/df.selected_rows
+    df["per_schema_row"] = df.time / df.schema_rows
+    df["per_selected_row"] = df.time / df.selected_rows
     print("max")
-    print(f"test5 {df.loc[df.test==5, 'per_schema_row'].max():.3g}")
-    print(f"test6 {df.loc[df.test==6, 'per_schema_row'].max():.3g}")
-    print(f"test7 {df.loc[df.test==7, 'per_schema_row'].max():.3g}")
-    print(f"test8 {df.loc[df.test==8, 'per_schema_row'].max():.3g}")
-    print(f"test9 {df.loc[df.test==9, 'per_schema_row'].max():.3g}")
+    print(f"test5 {df.loc[df.test == 5, 'per_schema_row'].max():.3g}")
+    print(f"test6 {df.loc[df.test == 6, 'per_schema_row'].max():.3g}")
+    print(f"test7 {df.loc[df.test == 7, 'per_schema_row'].max():.3g}")
+    print(f"test8 {df.loc[df.test == 8, 'per_schema_row'].max():.3g}")
+    print(f"test9 {df.loc[df.test == 9, 'per_schema_row'].max():.3g}")
     print("min")
-    print(f"test5 {df.loc[df.test==5, 'per_schema_row'].min():.3g}")
-    print(f"test6 {df.loc[df.test==6, 'per_schema_row'].min():.3g}")
-    print(f"test7 {df.loc[df.test==7, 'per_schema_row'].min():.3g}")
-    print(f"test8 {df.loc[df.test==8, 'per_schema_row'].min():.3g}")
-    print(f"test9 {df.loc[df.test==9, 'per_schema_row'].min():.3g}")
+    print(f"test5 {df.loc[df.test == 5, 'per_schema_row'].min():.3g}")
+    print(f"test6 {df.loc[df.test == 6, 'per_schema_row'].min():.3g}")
+    print(f"test7 {df.loc[df.test == 7, 'per_schema_row'].min():.3g}")
+    print(f"test8 {df.loc[df.test == 8, 'per_schema_row'].min():.3g}")
+    print(f"test9 {df.loc[df.test == 9, 'per_schema_row'].min():.3g}")
     print("mean")
-    print(f"test5 {df.loc[df.test==5, 'per_schema_row'].mean():.3g}")
-    print(f"test6 {df.loc[df.test==6, 'per_schema_row'].mean():.3g}")
-    print(f"test7 {df.loc[df.test==7, 'per_schema_row'].mean():.3g}")
-    print(f"test8 {df.loc[df.test==8, 'per_schema_row'].mean():.3g}")
-    print(f"test9 {df.loc[df.test==9, 'per_schema_row'].mean():.3g}")
+    print(f"test5 {df.loc[df.test == 5, 'per_schema_row'].mean():.3g}")
+    print(f"test6 {df.loc[df.test == 6, 'per_schema_row'].mean():.3g}")
+    print(f"test7 {df.loc[df.test == 7, 'per_schema_row'].mean():.3g}")
+    print(f"test8 {df.loc[df.test == 8, 'per_schema_row'].mean():.3g}")
+    print(f"test9 {df.loc[df.test == 9, 'per_schema_row'].mean():.3g}")
 
-    fig = px.scatter_matrix(df, dimensions=["time_scale", "ts_indexes", "schema_rows", "selected_rows", "time", "per_schema_row", "per_selected_row"])
+    fig = px.scatter_matrix(df, dimensions=["time_scale", "ts_indexes", "schema_rows", "selected_rows", "time",
+                                            "per_schema_row", "per_selected_row"])
     fig.show(renderer="browser")
-    corr = df.loc[:, ["time_scale", "ts_indexes", "schema_rows", "selected_rows", "time", "per_schema_row", "per_selected_row"]].corr().time
+    corr = df.loc[:, ["time_scale", "ts_indexes", "schema_rows", "selected_rows", "time", "per_schema_row",
+                      "per_selected_row"]].corr().time
     corr = corr.loc[["time_scale", "ts_indexes", "schema_rows", "selected_rows", "per_schema_row", "per_selected_row"]]
     fig = px.bar(corr)
     fig.show(renderer="browser")
@@ -168,6 +170,7 @@ def read_time():
     )
     fig.show(renderer="browser")
 
+
 def analyze_run_time_db_vs_csv():
     df5 = pd.read_csv(f"scale_test5_timing_data.csv")
     df6 = pd.read_csv(f"scale_test6_timing_data.csv")
@@ -191,9 +194,9 @@ def analyze_run_time_db_vs_csv():
     df9["ts_indexes"] = 0
     df = pd.concat([df5, df6, df7, df8, df9], ignore_index=True)
     df = df.pivot(index=["n_feds", "n_subs", "n_fedsxsubs", "use_epts", "use_pf", "time_scale", "test", "ts_indexes"],
-             columns="use_db", values="time").rename_axis(columns=None).reset_index()
-    df["total_inputs"] = df.n_fedsxsubs + df.use_epts*df.n_fedsxsubs
-    df["inputs_per_fed"] = df.n_subs + df.use_epts*df.n_subs
+                  columns="use_db", values="time").rename_axis(columns=None).reset_index()
+    df["total_inputs"] = df.n_fedsxsubs + df.use_epts * df.n_fedsxsubs
+    df["inputs_per_fed"] = df.n_subs + df.use_epts * df.n_subs
     df["diff"] = df[True] - df[False]
     df["mult"] = df[True] / df[False]
     print(df.head())
@@ -243,10 +246,10 @@ def analyze_run_time_timescaledb():
     df = pd.concat([df7, df8, df9], ignore_index=True)
     df = df.loc[df.use_db]
     df = df.pivot(index=["n_feds", "n_subs", "n_fedsxsubs", "use_epts", "use_pf"],
-             columns="ts_indexes", values="time").rename_axis(columns=None).reset_index()
+                  columns="ts_indexes", values="time").rename_axis(columns=None).reset_index()
 
-    df["total_inputs"] = df.n_fedsxsubs + df.use_epts*df.n_fedsxsubs
-    df["inputs_per_fed"] = df.n_subs + df.use_epts*df.n_subs
+    df["total_inputs"] = df.n_fedsxsubs + df.use_epts * df.n_fedsxsubs
+    df["inputs_per_fed"] = df.n_subs + df.use_epts * df.n_subs
     df["diff"] = df[1] - df[0]
     df["mult"] = df[1] / df[0]
     df["diff2"] = df[2] - df[0]
@@ -280,7 +283,7 @@ def run_time():
         print(f"Test {i}")
         df = pd.read_csv(f"scale_test{i}_timing_data.csv")
         df = df.sort_values(by="name", ignore_index=True)
-        df["total_inputs"] = df.n_fedsxsubs + df.use_epts*df.n_fedsxsubs
+        df["total_inputs"] = df.n_fedsxsubs + df.use_epts * df.n_fedsxsubs
         df["log_time"] = df.time.apply(np.log)
         df["log_feds"] = df.n_feds.apply(np.log)
         df["log_subs"] = df.n_subs.apply(np.log)
@@ -298,11 +301,11 @@ def run_time():
             log_x=True, log_y=True,
             # title=f"Scale test {i}",
         )
-        x = 10**(np.array(list(range(50)))/10)
-        y1 = 1/5*np.exp(x*0.0001)
-        y2 = 1/8*x
-        y3 = 1/100*x
-        y4 = (1/100*x)**2
+        x = 10 ** (np.array(list(range(50))) / 10)
+        y1 = 1 / 5 * np.exp(x * 0.0001)
+        y2 = 1 / 8 * x
+        y3 = 1 / 100 * x
+        y4 = (1 / 100 * x) ** 2
 
         fig.add_trace(go.Scatter(x=x, y=y1))
         fig.add_trace(go.Scatter(x=x, y=y2))

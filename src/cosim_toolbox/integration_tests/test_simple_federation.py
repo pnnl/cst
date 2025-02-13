@@ -2,9 +2,8 @@ import logging
 import os
 import time
 import unittest
-from unittest.mock import patch
 
-import cosim_toolbox as cst
+import cosim_toolbox as env
 from cosim_toolbox.dbConfigs import DBConfigs
 from cosim_toolbox.dbResults import DBResults
 
@@ -13,33 +12,23 @@ collections.Callable = collections.abc.Callable
 logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO").upper())
 logger = logging.getLogger(__name__)
 
-SIM_HOST = os.environ['SIM_HOST']
-
-ENVIRON = {
-    "MONGO_HOST": f"mongodb://{SIM_HOST}",
-    "POSTGRES_HOST": SIM_HOST,
-}
-
 START_TIME = 500
 DURATION = 1000
 END_TIME = START_TIME + DURATION
-
 
 class TestSimpleFederation(unittest.TestCase):
 
     def setUp(self):
         self.logger_data = DBResults()
-        self.db = DBConfigs()
+        self.db = DBConfigs(env.cst_mongo, env.cst_mongo_db)
         scenario = self.db.scenario('test_schema',
                                     'test_federation',
                                     "2023-12-07T15:31:27",
                                     "2023-12-08T15:31:27",
                                     False)
-        self.db.remove_document(cst.cu_scenarios, None, 'test_scenario')
-        self.db.add_dict(cst.cu_scenarios, 'test_scenario', scenario)
+        self.db.remove_document(env.cst_scenarios, None, 'test_scenario')
+        self.db.add_dict(env.cst_scenarios, 'test_scenario', scenario)
 
-
-    @patch.dict("os.environ", ENVIRON)
     def test_simple_federation_result(self):
         self.logger_data.open_database_connections()
 

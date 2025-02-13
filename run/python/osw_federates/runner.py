@@ -16,9 +16,9 @@ from cosim_toolbox.dockerRunner import DockerRunner
 from cosim_toolbox.helicsConfig import HelicsMsg, Collect
 
 import pandas as pd
-from pnnlpcm import h5fun
+from gridtune.pcm import h5fun
  
-h5filepath = '/Users/corn677/Projects/EComp/Thrust3/pyenergymarket/data_model_tests/data_files/WECC240_20240807.h5'
+h5filepath = '/home/worker/WECC240_20240807.h5'
 h5 = h5fun.H5(h5filepath)
 buses = h5("/mdb/Bus")
 
@@ -131,7 +131,7 @@ class Runner:
 def main():
     remote = False
     with_docker = False
-    r = Runner("osw_lmp_test_scenario_mc01", "osw_test_schema", "osw_test_federation", with_docker)
+    r = Runner("osw_lmp_test_scenario_kaitlynn", "osw_test_schema_kaitlynn", "osw_test_federation", with_docker)
     r.define_scenario()
     print(r.db.get_collection_document_names(cst.cu_scenarios))
     print(r.db.get_collection_document_names(cst.cu_federations))

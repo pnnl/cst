@@ -2,17 +2,7 @@
 Introduction
 ============
 
-Transactive Energy Simulation Platform (TESP) simulates 
-the electric power distribution grid with transactive control
-of loads and resources. Current features include:
-
-* GridLAB-D_ for the distribution system and residential loads
-* EnergyPlus_ for large buildings
-* MATPOWER_ or PYPOWER_ for the bulk power systems
-* Bindings for transactive agents in Python_, Java or C++
-
-The goal of TESP_ is that researchers can focus their work
-on the last item, to push advances in the field.
+Co-Simulation Toolbox to push advances in the field.
 
 Installation
 ============
@@ -30,7 +20,7 @@ OS X on GitHub.  A Docker_ version is also available for users.
 Development Work Flow for cosim_toolbox
 ======================================
 
-* From this directory, 'pip install -e .' points Python to this cloned repository for any calls to tesp_support functions
+* From this directory, 'pip install -e .' points Python to this cloned repository for any calls to cosim_toolbox functions
 * See the https://[github]/copper/tree/main/src/cosim_toolbox/cosim_toolbox for a roadmap of existing Python source files, and some documentation.  Any changes or additions to the code need to be made in this directory.
 * Run tests from any other directory on this computer
 * When ready, edit the cosim_toolbox version number and dependencies in setup.py

@@ -6,13 +6,13 @@
 import os
 
 
-tesp_inc = os.path.expandvars('$TESPDIR/doc/references/tesp_supports.inc')
-tesp_api = os.path.expandvars('$TESPDIR/src/tesp_support/tesp_support')
+t_inc = os.path.expandvars('$CST_ROOT/doc/references/cosim_toolboxs.inc')
+t_api = os.path.expandvars('$CST_ROOT/src/cosim_toolbox/cosim_toolbox')
 
-root = os.path.split(tesp_api)
+root = os.path.split(t_api)
 
-with open(tesp_inc, "w", encoding='utf-8') as fle:
-    for dir_name, sub_dirs, files in os.walk(tesp_api):
+with open(t_inc, "w", encoding='utf-8') as fle:
+    for dir_name, sub_dirs, files in os.walk(t_api):
         subroot = os.path.split(dir_name)
         if "__" in subroot[1] or "auto_run" in subroot[1]:
             continue

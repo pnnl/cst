@@ -1,3 +1,3 @@
-# CoSim Toolbox Overview
+# CoSimulation Toolbox Overview
 
-This is a placeholder page for the CoSim Toolbox overview documentation.
+This is a placeholder page for the CoSimulation Toolbox overview documentation.

@@ -22,6 +22,7 @@ import pandas as pd
 import datetime as dt
 import psycopg2 as pg
 
+import cosim_toolbox as env
 from cosim_toolbox.readConfig import ReadConfig
 
 logger = logging.getLogger(__name__)
@@ -51,8 +52,7 @@ class DBResults:
         self._scenario = None
         self.use_timescale = False
 
-    @staticmethod
-    def _connect_logger_database(connection: dict = None):
+    def _connect_logger_database(self, connection: dict = None):
         """This function defines the connection to the data database
         and opens a connection to the postgres database
 
@@ -61,13 +61,7 @@ class DBResults:
             access to the postgres database
         """
         if connection is None:
-            connection = {
-                "host": environ.get("POSTGRES_HOST", "localhost"),
-                "port": environ.get("POSTGRES_PORT", 5432),
-                "dbname": environ.get("COSIM_DB", "copper"),
-                "user": environ.get("COSIM_USER", "worker"),
-                "password": environ.get("COSIM_PASSWORD", "worker")
-            }
+            connection = env.cst_data_db
         logger.info(connection)
         try:
             return pg.connect(**connection)
@@ -89,19 +83,16 @@ class DBResults:
             self.data_db.close()
         self.data_db = None
 
-    def open_database_connections(self, meta_connection: dict = None, data_connection: dict = None) -> bool:
+    def open_database_connections(self, data_connection: dict = None) -> bool:
         """Opens connections to the time-series and metadata databases
 
         Args:
-            meta_connection (dict, optional): Defines connection to metadata
-            database. Defaults to None.
             data_connection (dict, optional): Defines connection to time-series
             database. Defaults to None.
 
         Returns:
             bool: _description_
         """
-        # self.meta_db = self._connect_scenario_database(meta_connection)
         self.data_db = self._connect_logger_database(data_connection)
         if self.data_db is None:
             return False

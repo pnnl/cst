@@ -2,17 +2,17 @@
 Created on 12/14/2023
 
 Data logger class that defines the basic operations of Python-based logger federate in
-Co-Simulation Toolbox.
+CoSimulation Toolbox.
 
 @author:
 mitch.pelton@pnnl.gov
 """
 import sys
 import logging
-from os import environ
 
+import cosim_toolbox as env
 from cosim_toolbox.federate import Federate
-from cosim_toolbox.dataLogger import DataLoggerMongo
+from cosim_toolbox.dataLoggerMongo import DataLoggerMongo
 from cosim_toolbox.helicsConfig import HelicsMsg
 
 logger = logging.getLogger(__name__)
@@ -22,22 +22,15 @@ logger.setLevel(logging.INFO)
 class FederateLoggerMongo(Federate):
 
     def __init__(self, fed_name: str = "", scenario_name: str = "default", **kwargs):
-        logger_connection = {
-            "host": environ.get("MONGO_HOST", "mongo://localhost"),
-            "port": environ.get("MONGO_POST", 27017),
-            "user": environ.get("COSIM_USER", "worker"),
-            "password": environ.get("COSIM_PASSWORD", "worker")
-        }
-        # "dbname": f"{self.scenario_name}_ts_data",
-        
-        
+        logger_connection = env.cst_meta_db
         super().__init__(fed_name, **kwargs)
+        self.logging_feds = None
         self.scenario_name = scenario_name
         self.fed_pubs = None
         self.fed_pts = None
         self.dl = DataLoggerMongo()
         self.dl.open_database_connections(logger_connection)
-        # self.dl.check_version() # Not curently implemented
+        # self.dl.check_version() # Not currently implemented
         # save possibilities yes, no, maybe
         self.collect = "maybe"
         self.interval = 10000   # records
@@ -63,11 +56,11 @@ class FederateLoggerMongo(Federate):
         fed_e = [x for x in self.fed_pts.keys() if len(self.fed_pts[x]) > 0]
         self.logging_feds = [fed_p, fed_e]
 
-        # Remove rendundant elements in the logging_fed list
+        # Remove redundant elements in the logging_fed list
         # We only need one collection per federate
-        logging_feds = list(set(logging_feds))
+        logging_feds = list(set(self.logging_feds))
 
-        for fed in self.logging_feds:
+        for fed in logging_feds:
             self.dl.meta_db.create_collection(
                 fed, 
                 timeseries={
@@ -77,7 +70,7 @@ class FederateLoggerMongo(Federate):
 
     def connect_to_helics_config(self) -> None:
         self.federate_type = "combo"
-        self.time_step = 30.0  # 'period' in helics config
+        self.period = 30.0
         publications = []
         self.fed_pubs = {}
         self.fed_pts = {}
@@ -142,7 +135,7 @@ class FederateLoggerMongo(Federate):
                                 source_targets.append(pts["name"])
                                 self.fed_pts[fed].append(pts["name"])
 
-        t1 = HelicsMsg(self.federate_name, self.time_step)
+        t1 = HelicsMsg(self.federate_name, self.period)
         t1.config("core_type", "zmq")
         t1.config("log_level", "warning")
         t1.config("terminate_on_error", True)
@@ -240,7 +233,7 @@ def main(federate_name: str, scenario_name: str) -> None:
     fed_logger.dl.remove_scenario(scenario_name)
     fed_logger.create_federate(scenario_name)
     fed_logger.run_cosim_loop()
-    fed_logger.dl.close_database_connections(True)
+    fed_logger.dl.close_database_connections()
     logger.info(f"Commit count: {fed_logger._commit_cnt}")
     del fed_logger.dl
     fed_logger.destroy_federate()
@@ -249,4 +242,4 @@ def main(federate_name: str, scenario_name: str) -> None:
 
 if __name__ == "__main__":
     if sys.argv.__len__() > 3:
-        main(sys.argv[1], sys.argv[2], sys.argv[3])
+        main(sys.argv[1], sys.argv[2])

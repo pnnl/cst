@@ -1,33 +1,33 @@
+# Login for mongoku
+==**==
+worker:worker@tapteal.pnl.gov:27017/?authSource=copper&authMechanism=SCRAM-SHA-1
 
 
+# PostgreSQL
+==**==
 https://inqira.io/q/which-database-is-better-for-handling-time-series-data-postgresql-or-mysql
+PostgreSQL has some unique features that make it particularly well-suited for
+time-series data. For example, it has a specialized data type called timestamp
+with time zone that makes it easy to work with data across different time zones.
+It also has support for range types and window functions that are useful for
+analyzing time-series data. Additionally, PostgreSQL has excellent support for
+indexing, which can greatly improve query performance.
 
-PostgreSQL has some unique features that make it particularly well-suited for time-series data. For example, it has a specialized data type called timestamp with time zone that makes it easy to work with data across different time zones. It also has support for range types and window functions that are useful for analyzing time-series data. Additionally, PostgreSQL has excellent support for indexing, which can greatly improve query performance.
-
-
-
-
-
-source .env
-
-# Install yq (https://github.com/mikefarah/yq/#install) to parse the YAML file and retrieve the network name
+## Install yq (https://github.com/mikefarah/yq/#install) to parse the YAML file and retrieve the network name
+==**==
 NETWORK_NAME=$(yq eval '.networks' postgres-docker-compose.yaml | cut -f 1 -d':')
 docker network create $NETWORK_NAME
 # or hardcode the network name from the YAML file
-# docker network create etl_network
+    docker network create etl_network
 
 docker-compose --env-file ./.env -f ./postgres-docker-compose.yaml up -d
 
-
-
-
 // Persist in postgress data files
+==**==
 https://stackoverflow.com/questions/41637505/how-to-persist-data-in-a-dockerized-postgres-database-using-volumes
 
-
 You can create a common volume for all Postgres data >>
-docker volume create pgdata
-
+    docker volume create pgdata
 or you can set it to the compose file >>
 
 version: "3"
@@ -48,19 +48,22 @@ volumes:
   pgdata:
 It will create volume name pgdata and mount this volume to container's path.
 
-
 You can inspect this volume >>
-docker volume inspect pgdata
+    docker volume inspect pgdata
 
-some files need the line endings to be changed (in VScode, in the command palette select 'Change End of Line Sequence' and change from CRLF to LF)
-Windows doesn't like empty lines on shell scripts
-For starting up Docker, running the commands in the shell script in the terminal works better than running the script itself.
+Some files need the line endings to be changed (in VScode, in the command
+palette select 'Change End of Line Sequence' and change from CRLF to LF).
+Windows doesn't like empty lines on shell scripts.
+For starting up Docker, running the commands in the shell script in the
+terminal works better than running the script itself.
 
-
-For AIRFLOW, in the admin interface add a connection the with the password
+# AIRFLOW
+==**==
+In the admin interface add a connection the with the password
 Either the copy for running the dags one the same server as airflow
 
-For Jupyter
+# For Jupyter
+==**==
 # remove old fingerprint if any, not needed in file was empty
 ssh-keygen -R boomer
 # add the new fingerprint
@@ -69,17 +72,15 @@ ssh-keyscan boomer >> ~/.ssh/known_hosts
 from the node airflow is running from copy the file to docker
 ## For UA for ssh remote access to servers
  === from the host, remember passphrase, may be needed when copy to remote host
-ssh-keygen -f ~/copper-key-ecdsa -t ecdsa -b 521
+    ssh-keygen -f ~/copper-key-ecdsa -t ecdsa -b 521
  === user@host is the remote user and host
-ssh-copy-id -i ~/copper-key-ecdsa user@host
+    ssh-copy-id -i ~/copper-key-ecdsa user@host
 need add to cosim-airflow and jupyter through terminal:
-ssh-copy-id -i ~/copper-key-ecdsa d3j331@gage.pnl.gov
+    ssh-copy-id -i ~/copper-key-ecdsa d3j331@gage.pnl.gov
  === to run without password/first time may require passphrase
 
-
-
-## Info about keygen
-================================
+# Info about keygen
+==**==
 Creating an SSH Key Pair for User Authentication
 The simplest way to generate a key pair is to run ssh-keygen without arguments. In this case, it will prompt for the file in which to store keys. Here's an example:
 
@@ -149,7 +150,7 @@ change the files in th home directory to the named 'user'
 Adding a directories where new modules will be deployed
 =======================================================
 https://stackoverflow.com/questions/67887138/how-to-install-packages-in-airflow-docker-compose
-don't know if the answer is too late, anyway, I've managed to workaround this problem by:
+don't know if the answer is too late, anyway, I've managed to work around this problem by:
 
 Defining new volume in docker compose, pointing to a directory where new modules will be deployed.
 In my case, in Docker compose x-airflow-common: common section, in volumes subsection,

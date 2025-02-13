@@ -40,19 +40,6 @@ class ReadResults(DBResults):
         # Return False to propagate the exception, True to suppress it
         return False
 
-    def open_database_connections(self, meta_connection: dict = None, data_connection: dict = None) -> bool:
-        self.data_db = self._connect_logger_database(data_connection)
-        if self.data_db is None:
-            return False
-        return True
-
-    def close_database_connections(self, commit: bool = True) -> None:
-        if self.data_db:
-            if commit:
-                self.data_db.commit()
-            self.data_db.close()
-        self.data_db = None
-
     def get_results(
             self,
             start_time=None,

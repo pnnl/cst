@@ -13,7 +13,7 @@ from pymongo import MongoClient
 import gridfs
 import bson
 
-import cosim_toolbox as cst
+import cosim_toolbox as env
 from cosim_toolbox.helicsConfig import HelicsMsg
 
 logger = logging.getLogger(__name__)
@@ -21,13 +21,13 @@ logger = logging.getLogger(__name__)
 def federation_database(clear: bool = False) -> None:
     """Removes existing default CST databases and creates new ones.
     """
-    db = DBConfigs(cst.cosim_mongo, cst.cosim_mongo_db)
+    db = DBConfigs(env.cst_mongo, env.cst_mongo_db)
     logger.info("Before: ", db.update_collection_names())
     if clear:
-        db.db[cst.cu_federations].drop()
-        db.db[cst.cu_scenarios].drop()
-    db.add_collection(cst.cu_scenarios)
-    db.add_collection(cst.cu_federations)
+        db.db[env.cst_federations].drop()
+        db.db[env.cst_scenarios].drop()
+    db.add_collection(env.cst_scenarios)
+    db.add_collection(env.cst_federations)
     logger.info("After clear: ", db.update_collection_names())
 
 
@@ -42,7 +42,7 @@ class DBConfigs:
     Mongo has databases, collections, and documents. Postgres has databases,
     schemes, and tables. Should these line up one-to-one?
     """
-    _cu_dict_name = 'cu_007'
+    _cst_name = 'cst_007'
 
     def __init__(self, uri: str = None, db_name: str = None) -> None:
         self.collections = None
@@ -86,11 +86,11 @@ class DBConfigs:
         """
         # Set up default uri_string to the server Trevor was using on the EIOC
         if uri is None:
-            uri = cst.cosim_mongo
+            uri = env.cst_mongo
         if db is None:
-            db = cst.cosim_mongo_db
+            db = env.cst_mongo_db
         # Set up connection
-        uri = uri.replace('//', '//' + cst.cosim_user + ':' + cst.cosim_password + '@')
+        uri = uri.replace('//', '//' + env.cst_user + ':' + env.cst_password + '@')
         client = MongoClient(uri + '/?authSource=' + db + '&authMechanism=SCRAM-SHA-1')
         # Test connection
         try:
@@ -110,9 +110,9 @@ class DBConfigs:
         method decide what to do with it.
         """
         ret_val = True
-        for doc in (self.db[collection_name].find({}, {"_id": 0, self._cu_dict_name: 1})):
+        for doc in (self.db[collection_name].find({}, {"_id": 0, self._cst_name: 1})):
             if doc.__len__():
-                if doc[self._cu_dict_name] == new_name:
+                if doc[self._cst_name] == new_name:
                     ret_val = False
         return ret_val
 
@@ -202,7 +202,7 @@ class DBConfigs:
             logger.warning("Using provided object ID (and not provided name) to remove document.")
             self.db[collection_name].delete_one({"_id": object_id})
         elif dict_name is not None:
-            self.db[collection_name].delete_one({self._cu_dict_name: dict_name})
+            self.db[collection_name].delete_one({self._cst_name: dict_name})
         elif object_id is not None:
             self.db[collection_name].delete_one({"_id": object_id})
         # TODO: Add check for success on delete.
@@ -213,7 +213,7 @@ class DBConfigs:
         Remove the dictionary specified by "dict_name" from the
         collection specified by "collection_name".
         """
-        self.db[collection_name].delete_one({self._cu_dict_name: dict_name})
+        self.db[collection_name].delete_one({self._cst_name: dict_name})
         # TODO: Add check for success on delete.
 
     def add_collection(self, name: str):
@@ -242,9 +242,9 @@ class DBConfigs:
         "collection_name"
         """
         doc_names = []
-        for doc in (self.db[collection_name].find({}, {"_id": 0, self._cu_dict_name: 1})):
+        for doc in (self.db[collection_name].find({}, {"_id": 0, self._cst_name: 1})):
             if doc.__len__():
-                doc_names.append(doc[self._cu_dict_name])
+                doc_names.append(doc[self._cst_name])
         return doc_names
 
     def get_dict_key_names(self, collection_name: str, doc_name: str) -> list:
@@ -257,7 +257,7 @@ class DBConfigs:
             raise NameError(f"Collection '{collection_name}' does not exist.")
         if doc_name not in self.get_collection_document_names(collection_name):
             raise NameError(f"Document '{doc_name}' does not exist in collection {collection_name}.")
-        doc = self.db[collection_name].find({self._cu_dict_name: doc_name})
+        doc = self.db[collection_name].find({self._cst_name: doc_name})
         return doc[0].keys()
 
     def add_dict(self, collection_name: str, dict_name: str, dict_to_add: dict) -> str:
@@ -267,12 +267,12 @@ class DBConfigs:
         by that name; if it does, throw an error.
 
         To allow later access to the document by name,
-        the field "cu_007" is added to the dictionary before adding
-        it to the collection (the assumption is that "cu_007" will
+        the field "cst_007" is added to the dictionary before adding
+        it to the collection (the assumption is that "cst_007" will
         always be a unique field in the dictionary).
         """
         if self._check_unique_doc_name(collection_name, dict_name):
-            dict_to_add[self._cu_dict_name] = dict_name
+            dict_to_add[self._cst_name] = dict_name
         else:
             raise NameError(f"{dict_name} is not unique in collection {collection_name} and cannot be added.")
         obj_id = self.db[collection_name].insert_one(dict_to_add).inserted_id
@@ -296,7 +296,7 @@ class DBConfigs:
             logger.warning("Using provided object ID (and not provided name) to get dictionary.")
             doc = self.db[collection_name].find_one({"_id": object_id})
         elif dict_name is not None:
-            doc = self.db[collection_name].find_one({self._cu_dict_name: dict_name})
+            doc = self.db[collection_name].find_one({self._cst_name: dict_name})
             if not doc:
                 raise NameError(f"{dict_name} does not exist in collection {collection_name} and cannot be retrieved.")
         elif object_id is not None:
@@ -305,7 +305,7 @@ class DBConfigs:
         #   the dictionary into the database. Will not raise an error if
         #   somehow that key does not exist in the dictionary
         if doc:
-            doc.pop(self._cu_dict_name, None)
+            doc.pop(self._cst_name, None)
             doc.pop("_id", None)
         return doc
 
@@ -321,14 +321,14 @@ class DBConfigs:
         was created when the dictionary was added but not both.
         """
         result = None
-        updated_dict[self._cu_dict_name] = dict_name
+        updated_dict[self._cst_name] = dict_name
         if dict_name is None and object_id is None:
             raise AttributeError("Must provide the name or object ID of the dictionary to be modified.")
         elif dict_name is not None and object_id is not None:
             logger.warning("Using provided object ID (and not provided name) to update database.")
             result = self.db[collection_name].replace_one({"_id": object_id}, updated_dict)
         elif dict_name is not None:
-            doc = self.db[collection_name].find_one({self._cu_dict_name: dict_name})
+            doc = self.db[collection_name].find_one({self._cst_name: dict_name})
             if doc:
                 result = self.db[collection_name].replace_one({"_id": doc['_id']}, updated_dict)
             else:
@@ -340,7 +340,7 @@ class DBConfigs:
     @staticmethod
     def scenario(schema_name: str, federation_name: str, start: str, stop: str, docker: bool = False) -> dict:
         """
-        Creates a properly formatted CoSim Toolbox scenario document
+        Creates a properly formatted CoSimulation Toolbox scenario document
         (dictionary), using the provided inputs.
         """
         return {
@@ -352,41 +352,31 @@ class DBConfigs:
         }
 
     def store_federation_config(self, name: str, config: dict) -> None:
-        self.remove_dict(cst.cu_federations, name)
-        self.add_dict(cst.cu_federations, name, config)
+        self.remove_dict(env.cst_federations, name)
+        self.add_dict(env.cst_federations, name, config)
 
-    def store_scenario(
-            self,
-            scenario_name: str,
-            schema_name: str,
-            federation_name: str,
-            start: str,
-            stop: str,
-            docker: bool = False) -> None:
-        scenario = self.scenario(
-            schema_name,
-            federation_name,
-            start,
-            stop,
-            docker)
-        self.remove_dict(cst.cu_scenarios, scenario_name)
-        self.add_dict(cst.cu_scenarios, scenario_name, scenario)
+    def store_scenario(self,
+            scenario_name: str, schema_name: str, federation_name: str,
+            start: str, stop: str, docker: bool = False) -> None:
+        scenario = self.scenario(schema_name, federation_name, start, stop, docker)
+        self.remove_dict(env.cst_scenarios, scenario_name)
+        self.add_dict(env.cst_scenarios, scenario_name, scenario)
 
     def get_scenario(self, scenario_name) -> dict:
         if scenario_name not in self.list_scenarios():
             logger.error(f"{scenario_name} not found in {self.list_scenarios()}.")
-        return self.get_dict(cst.cu_scenarios, None, scenario_name)
+        return self.get_dict(env.cst_scenarios, None, scenario_name)
 
     def get_federation_config(self, federation_name) -> dict:
         if federation_name not in self.list_federations():
             logger.error(f"{federation_name} not found in {self.list_federations()}.")
-        return self.get_dict(cst.cu_federations, None, federation_name)
+        return self.get_dict(env.cst_federations, None, federation_name)
 
     def list_scenarios(self) -> list:
-        return self.get_collection_document_names(cst.cu_scenarios)
+        return self.get_collection_document_names(env.cst_scenarios)
 
     def list_federations(self) -> list:
-        return self.get_collection_document_names(cst.cu_federations)
+        return self.get_collection_document_names(env.cst_federations)
 
     # TODO: discuss what might be useful for extra user defined data
     def store_user_defined_config(self, name):
@@ -405,10 +395,10 @@ def mytest1():
     docker run --name mongodb -d -p 27017:27017 mongodb/mongodb-community-server:$MONGODB_VERSION
     If no version number is important the tag MONGODB_VERSION=latest can be used
     """
-    db = DBConfigs(cst.cosim_mongo, cst.cosim_mongo_db)
+    db = DBConfigs(env.cst_mongo, env.cst_mongo_db)
     logger.info(db.update_collection_names())
-    db.add_collection(cst.cu_scenarios)
-    db.add_collection(cst.cu_federations)
+    db.add_collection(env.cst_scenarios)
+    db.add_collection(env.cst_federations)
 
     t1 = HelicsMsg("Battery", 30)
     t1.config("core_type", "zmq")
@@ -434,15 +424,15 @@ def mytest1():
     scenario_name = "ME30"
     schema_name = "Tesp"
     federate_name = "BT1"
-    db.add_dict(cst.cu_federations, federate_name, diction)
+    db.add_dict(env.cst_federations, federate_name, diction)
 
     scenario = db.scenario(schema_name, federate_name, "2023-12-07T15:31:27", "2023-12-08T15:31:27")
-    db.add_dict(cst.cu_scenarios, scenario_name, scenario)
+    db.add_dict(env.cst_scenarios, scenario_name, scenario)
 
-    logger.info(db.get_collection_document_names(cst.cu_scenarios))
-    logger.info(db.get_collection_document_names(cst.cu_federations))
-    logger.info(db.get_dict_key_names(cst.cu_federations, federate_name))
-    logger.info(db.get_dict(cst.cu_federations, None, federate_name))
+    logger.info(db.get_collection_document_names(env.cst_scenarios))
+    logger.info(db.get_collection_document_names(env.cst_federations))
+    logger.info(db.get_dict_key_names(env.cst_federations, federate_name))
+    logger.info(db.get_dict(env.cst_federations, None, federate_name))
 
 
 def mytest2():
@@ -454,10 +444,10 @@ def mytest2():
     docker run --name mongodb -d -p 27017:27017 mongodb/mongodb-community-server:$MONGODB_VERSION
     If no version number is important the tag MONGODB_VERSION=latest can be used
     """
-    db = DBConfigs(cst.cosim_mongo, cst.cosim_mongo_db)
+    db = DBConfigs(env.cst_mongo, env.cst_mongo_db)
     logger.info(db.update_collection_names())
-    db.add_collection(cst.cu_scenarios)
-    db.add_collection(cst.cu_federations)
+    db.add_collection(env.cst_scenarios)
+    db.add_collection(env.cst_federations)
 
     t1 = HelicsMsg("Battery", 30)
     t1.config("core_type", "zmq")
@@ -500,20 +490,20 @@ def mytest2():
     scenario_name = "TE30"
     schema_name = "Tesp"
     federate_name = "BT1_EV1"
-    db.add_dict(cst.cu_federations, federate_name, diction)
+    db.add_dict(env.cst_federations, federate_name, diction)
 
     scenario = db.scenario(schema_name, federate_name, "2023-12-07T15:31:27", "2023-12-08T15:31:27")
-    db.add_dict(cst.cu_scenarios, scenario_name, scenario)
+    db.add_dict(env.cst_scenarios, scenario_name, scenario)
 
     scenario_name = "TE100"
     # seems to remember the scenario address, not the value so reinitialize
     scenario = db.scenario(schema_name, federate_name, "2023-12-07T15:31:27", "2023-12-10T15:31:27", True)
-    db.add_dict(cst.cu_scenarios, scenario_name, scenario)
+    db.add_dict(env.cst_scenarios, scenario_name, scenario)
 
-    logger.info(db.get_collection_document_names(cst.cu_scenarios))
-    logger.info(db.get_collection_document_names(cst.cu_federations))
-    logger.info(db.get_dict_key_names(cst.cu_federations, federate_name))
-    logger.info(db.get_dict(cst.cu_federations, None, federate_name))
+    logger.info(db.get_collection_document_names(env.cst_scenarios))
+    logger.info(db.get_collection_document_names(env.cst_federations))
+    logger.info(db.get_dict_key_names(env.cst_federations, federate_name))
+    logger.info(db.get_dict(env.cst_federations, None, federate_name))
 
 
 if __name__ == "__main__":

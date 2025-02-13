@@ -1,6 +1,6 @@
-# CoSim Toolbox Documentation Homepage
+# CoSimulation Toolbox Documentation Homepage
 
-CoSim Toolbox is great and this is the homepage for the documentation.
+CoSimulation Toolbox is great and this is the homepage for the documentation.
 
 
 ```{eval-rst}

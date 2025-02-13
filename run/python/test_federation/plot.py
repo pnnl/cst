@@ -11,17 +11,11 @@ from os import environ
 import matplotlib.pyplot as plt
 import psycopg2
 
+import cosim_toolbox as env
 
 def open_logger():
-    connection = {
-        "host": environ.get("POSTGRES_HOST", "localhost"),
-        "port": environ.get("POSTGRES_PORT", 5432),
-        "dbname": environ.get("COSIM_DB", "copper"),
-        "user": environ.get("COSIM_USER", "worker"),
-        "password": environ.get("COSIM_PASSWORD", "worker")
-    }
     try:
-        return psycopg2.connect(**connection)
+        return psycopg2.connect(**env.cst_data_db)
     except Exception as ex:
         return
 

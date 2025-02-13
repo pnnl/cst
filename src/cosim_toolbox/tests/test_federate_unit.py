@@ -67,10 +67,10 @@ class MockDBResults:
         return True
 
 class MockDBConfigs:
-    cosim_mongo = None
-    cosim_mongo_db = None
-    cu_federations = "federations"
-    cu_scenarios = "scenarios"
+    cst_mongo = None
+    cst_mongo_db = None
+    cst_federations = "federations"
+    cst_scenarios = "scenarios"
 
     def __init__(self, uri, db_name):
         self.uri = uri
@@ -84,11 +84,11 @@ class MockDBConfigs:
         }
 
         self.federation_dict = {
-            "cu_name": "BT1_EV1",
+            "cst_007": "BT1_EV1",
             "federation": {
                 "Battery": {
                     "image": "python/3.11.7-slim-bullseye",
-                    "command": "exec python3 simple_federate.py TE30 EVehicle",
+                    "command": "python3 simple_federate.py TE30 EVehicle",
                     "federate_type": "value",
                     "time_step": 120,
                     "HELICS_config": {

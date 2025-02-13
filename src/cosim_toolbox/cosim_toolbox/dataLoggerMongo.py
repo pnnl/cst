@@ -2,7 +2,7 @@
 Created on 11/01/2024 
 
 Data logger class that defines the basic operations of Python-based data logger in
-Co-Simulation Toolbox but writes to MongoDB.
+CoSimulation Toolbox but writes to MongoDB.
 
 @authors:
 trevor.hardy@pnnl.gov
@@ -16,12 +16,12 @@ import inspect
 from pymongo import MongoClient
 from pymongo.collection import Collection
 
-import cosim_toolbox.metadataDB as mDB
-from dataLogger import DataLogger
+from cosim_toolbox.dbConfigs import DBConfigs
+from cosim_toolbox.dbResults import DBResults
 
 logger = logging.getLogger(__name__)
 
-class DataLoggerMongo(DataLogger):
+class DataLoggerMongo(DBResults):
     """Class for creating and using a data logger that writes to MongoDB
 
     In MongoDB, the abstraction hierarchy is:
@@ -31,11 +31,11 @@ class DataLoggerMongo(DataLogger):
 
  
     The data models between the two databases are not identical as there is no
-    "schema" in MongoDB. The methods reimplemented from the DataLogger class 
+    "schema" in MongoDB. The methods reimplemented from the DBResults class
     are tweaked to account for these difference. Specifically, the data will
     be organized as follows:
         - Each CST scenario will have its own MongoDB database object
-        - To organize the data from the federation, each fedrate will have its
+        - To organize the data from the federation, each federate will have its
         own MongoDB collection
         - Each publication from 
 
@@ -54,7 +54,7 @@ class DataLoggerMongo(DataLogger):
     }
 
     Args:
-        DataLogger (_type_): _description_
+        DBResults (_type_): _description_
     """
 
     # TODO: Everywhere mDB is being used directly in this file, the 
@@ -63,26 +63,17 @@ class DataLoggerMongo(DataLogger):
 
     def __init__(self):
         super.__init__()
+        self.meta_db = None
 
     def open_database_connections(self, logger_connection: dict = None) -> bool:
         """Opens connection to MongoDB (metadata and data)
 
         Args:
-            meta_connection (dict, optional): _description_. Defaults to None.
+            logger_connection (dict, optional): _description_. Defaults to None.
 
         Returns:
             bool: Indicates whether connection to database was established
         """
-        # Pass in from federateLoggerMongo.py
-        # if logger_connection is None:
-        #     logger_connection = {
-        #             "host": environ.get("MONGO_HOST", "mongo://localhost"),
-        #             "port": environ.get("MONGO_POST", 27017),
-        #             "dbname": f"{self.scenario_name}_ts_data",
-        #             "user": environ.get("COSIM_USER", "worker"),
-        #             "password": environ.get("COSIM_PASSWORD", "worker")
-        #     }
-
         self.meta_db = super._connect_scenario_database(logger_connection)
         if self.meta_db is None:
             return False

@@ -2,32 +2,14 @@
 import collections
 collections.Callable = collections.abc.Callable
 
+import os
 import subprocess
-from os import environ
 import unittest
 
-import cosim_toolbox as cst
+import cosim_toolbox as env
 from cosim_toolbox.dbResults import DBResults
 from cosim_toolbox.dbConfigs import DBConfigs
 from cosim_toolbox.helicsConfig import HelicsMsg, Collect
-
-
-_data_db = {
-    "host": environ.get("POSTGRES_HOST", "gage.pnl.gov"),
-    "port": environ.get("POSTGRES_PORT", 5432),
-    "dbname": environ.get("COSIM_DB", "copper"),
-    "user": environ.get("COSIM_USER", "worker"),
-    "password": environ.get("COSIM_PASSWORD", "worker")
-}
-
-_meta_db = {
-    "host": environ.get("MONGO_HOST", "mongodb://gage.pnl.gov"),
-    "port": environ.get("MONGO_POST", "27017"),
-    "dbname": environ.get("COSIM_DB", "copper"),
-    "user": environ.get("COSIM_USER", "worker"),
-    "password": environ.get("COSIM_PASSWORD", "worker")
-}
-
 
 class Singleton(object):
     _instance = None
@@ -41,10 +23,8 @@ class Singleton(object):
             cls._instance = super(Singleton, cls).__new__(
                             cls, *args, **kwargs)
             # PUT YOUR SETUP ONCE CODE HERE!
-            uri = f"{_meta_db['host']}:{_meta_db['port']}"
-            db = DBConfigs(uri, _meta_db['dbname'])
+            db = DBConfigs(env.cst_mongo, env.cst_mongo_db)
 
-            prefix = "source /home/worker/venv/bin/activate && exec python3 "
             names = ["Battery", "EVehicle"]
             t1 = HelicsMsg(names[0], 30)
             if cls.docker:
@@ -70,7 +50,7 @@ class Singleton(object):
             t1.subs_e(names[1] + "/voltage6", "vector", "V")
             f1 = {
                 "image": "cosim-python:latest",
-                "command": prefix + "simple_federate.py " + names[0] + " " + cls.scenario_name,
+                "command": f"python3 simple_federate.py {names[0]} {cls.scenario_name}",
                 "federate_type": "value",
                 "time_step": 120,
                 "HELICS_config": t1.write_json()
@@ -100,8 +80,7 @@ class Singleton(object):
             t2.pubs_e(names[1] + "/voltage6", "vector", "V")
             f2 = {
                 "image": "cosim-python:latest",
-                "command": prefix + "simple_federate2.py " + names[1] + " " + cls.scenario_name,
-                "env": "",
+                "command": f"python3 simple_federate2.py {names[1]} {cls.scenario_name}",
                 "federate_type": "value",
                 "time_step": 120,
                 "HELICS_config": t2.write_json()
@@ -113,25 +92,43 @@ class Singleton(object):
                 }
             }
 
-            db.remove_document(cst.cu_federations, None, cls.federation_name)
-            db.add_dict(cst.cu_federations, cls.federation_name, diction)
+            db.remove_document(env.cst_federations, None, cls.federation_name)
+            db.add_dict(env.cst_federations, cls.federation_name, diction)
             scenario = db.scenario(cls.schema_name,
                                    cls.federation_name,
                                    "2023-12-07T15:31:27",
                                    "2023-12-08T15:31:27",
                                    cls.docker)
-            db.remove_document(cst.cu_scenarios, None, cls.scenario_name)
-            db.add_dict(cst.cu_scenarios, cls.scenario_name, scenario)
+            db.remove_document(env.cst_scenarios, None, cls.scenario_name)
+            db.add_dict(env.cst_scenarios, cls.scenario_name, scenario)
 
+            cmd = (f'docker cp {os.path.dirname(os.path.abspath(__file__))}'
+                   f'/data/del_{cls.schema_name}.sql '
+                   f'$(docker container ls --all --quiet --filter "name=database"):'
+                   f'/docker-entrypoint-initdb.d/del_{cls.schema_name}.sql')
+            subprocess.Popen(cmd, shell=True).wait()
+            cmd = (f'docker cp {os.path.dirname(os.path.abspath(__file__))}'
+                   f'/data/{cls.schema_name}.sql '
+                   f'$(docker container ls --all --quiet --filter "name=database"):'
+                   f'/docker-entrypoint-initdb.d/{cls.schema_name}.sql')
+            subprocess.Popen(cmd, shell=True).wait()
             # command string for psql to load database
             cmd = ('docker exec -i $(docker container ls --all --quiet --filter "name=database") '
-                   f'/bin/bash -c "PGPASSWORD={_meta_db["user"]} psql --username '
-                   f'{_meta_db["user"]} {(_meta_db["dbname"])}" < ')
-
+                   f'/bin/bash -c "export PGPASSWORD={env.cst_data_db["user"]} && psql '
+                   f'-U {env.cst_data_db["user"]} -d {env.cst_data_db["dbname"]} < ')
             # remove federation data in postgres database
-            subprocess.Popen(cmd + f'del_{cls.schema_name}.sql', shell=True).wait()
+            subprocess.Popen(cmd + f'/docker-entrypoint-initdb.d/del_{cls.schema_name}.sql"', shell=True).wait()
             # load federation data in postgres database
-            subprocess.Popen(cmd + f'{cls.schema_name}.sql', shell=True).wait()
+            subprocess.Popen(cmd + f'/docker-entrypoint-initdb.d/{cls.schema_name}.sql"', shell=True).wait()
+
+            # # command string for psql to load database
+            # cmd = (f' | docker exec -i $(docker container ls --all --quiet --filter "name=database")'
+            #        f' psql -U {env.cst_data_db["user"]} -d {env.cst_data_db["dbname"]}')
+            # # remove federation data in postgres database
+            # dell = f'cat {os.path.dirname(os.path.abspath(__file__))}/data/del_{cls.schema_name}.sql' + cmd
+            # subprocess.Popen(dell, shell=True).wait()
+            # # load federation data in postgres database
+            # subprocess.Popen(f'cat {os.path.dirname(os.path.abspath(__file__))}/data/{cls.schema_name}.sql' + cmd, shell=True).wait()
 
             cls.setUpBool = True
 
@@ -147,7 +144,7 @@ class TestLoggerApi(unittest.TestCase):
     def setUp(self):
         Singleton()
         self.test_DL = DBResults()
-        self.test_DL.open_database_connections(data_connection=_data_db, meta_connection=_meta_db)
+        self.test_DL.open_database_connections(env.cst_data_db)
 
     def test_00_open_databases(self):
         self.assertIsNotNone(self.test_DL.data_db)
@@ -232,24 +229,9 @@ class TestLoggerApi(unittest.TestCase):
         df = self.test_DL.get_time_range(self.schema_name, "hdt_boolean", self.scenario_name, "Battery")
         self.assertTrue(len(df) > 0)
 
-    def test_11_make_logger_database(self):
-        scheme_name = self.schema_name
-        # Ensure that make_logger_database constructs the expected queries
-        expected_query = ""  # Update this with the expected query based on your implementation
-        # self.assertEqual(self.test_DL.make_logger_database(scheme_name), expected_query)
-
-    def test_12_remove_scenario(self):
-        scheme_name = self.schema_name
-        scenario_name = self.scenario_name
-        # Ensure that remove_scenario constructs the expected queries
-        expected_query = ""  # Update this with the expected query based on your implementation
-        # self.assertEqual(self.test_DL.remove_scenario(scheme_name, scenario_name), expected_query)
-
-    def test_20_close_databases(self):
+    def tearDown(self):
         self.test_DL.close_database_connections()
         self.assertIsNone(self.test_DL.data_db)
-
-    def tearDown(self):
         pass
 
 

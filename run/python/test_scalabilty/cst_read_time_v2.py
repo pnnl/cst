@@ -21,24 +21,24 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from cosim_toolbox.dataLogger import DataLogger
-from cosim_toolbox.metadataDB import MetaDB
-from cosim_toolbox import cosim_mg_host, cosim_mongo_db, cu_scenarios, cu_federations
+import cosim_toolbox as env
+from cosim_toolbox.dbResults import DBResults
+from cosim_toolbox.dbConfigs import DBConfigs
 
 class ScenarioReader:
     def __init__(self, scenario_name: str):
         self.name = scenario_name
         # open Mongo Database to retrieve scenario data (metadata)
-        self.meta_db = MetaDB(uri=cosim_mg_host, db_name=cosim_mongo_db)
+        self.meta_db = DBConfigs(uri=env.cst_mg_host, db_name=env.cst_mongo_db)
         # retrieve data from MongoDB
-        self.scenario = self.meta_db.get_dict(cu_scenarios, None, scenario_name)
+        self.scenario = self.meta_db.get_dict(env.cst_scenarios, None, scenario_name)
         self.schema_name = self.scenario.get("schema")
         self.federation_name = self.scenario.get("federation")
         self.start_time = self.scenario.get("start_time")
         self.stop_time = self.scenario.get("stop_time")
         self.use_docker = self.scenario.get("docker")
         if self.federation_name is not None:
-            self.federation = self.meta_db.get_dict(cu_federations, None, self.federation_name)
+            self.federation = self.meta_db.get_dict(env.cst_federations, None, self.federation_name)
         # close MongoDB client
         if self.meta_db.client is not None:
             self.meta_db.client.close()
@@ -61,7 +61,7 @@ class ValueType(Enum):
     ENDPOINT = 'HDT_ENDPOINT'
 
 
-class DataReader(DataLogger):
+class DataReader(DBResults):
     """
     alternative to ResultsDB
     """
@@ -81,19 +81,6 @@ class DataReader(DataLogger):
             print(f"An exception occurred: {exc_type}, {exc_value}")
         # Return False to propagate the exception, True to suppress it
         return False
-
-    def open_database_connections(self, meta_connection: dict = None, data_connection: dict = None) -> bool:
-        self.data_db = self._connect_logger_database(data_connection)
-        if self.data_db is None:
-            return False
-        return True
-
-    def close_database_connections(self, commit: bool = True) -> None:
-        if self.data_db:
-            if commit:
-                self.data_db.commit()
-            self.data_db.close()
-        self.data_db = None
 
     def get_query_string(self, start_time: int,
                          duration: int,
@@ -376,15 +363,15 @@ class DataReader(DataLogger):
 
 
 
-def validate_scenarios(cu_scalability: str):
-    scale_test_name = cu_scalability
+def validate_scenarios(cst_scalability: str):
+    scale_test_name = cst_scalability
     test_num = scale_test_name[-1]
-    cu_scalability = Path(cu_scalability)
+    cst_scalability = Path(cst_scalability)
     run_only = None
     # run_only = list(range(13, 14))
 
     df = pd.DataFrame(data=[], columns=["scenario", "schema", "federate", "schema_rows", "selected_rows", "time"])
-    for scenario_dir_path in cu_scalability.iterdir():
+    for scenario_dir_path in cst_scalability.iterdir():
         if not scenario_dir_path.is_dir():
             continue
         scenario_dir_name = scenario_dir_path.name
@@ -439,13 +426,10 @@ def validate_scenarios(cu_scalability: str):
     df.to_csv(f"{scale_test_name}_read_test5x.csv")
 
 if __name__ == '__main__':
-
-    os.environ["POSTGRES_HOST"] = "tapteal-ubu.pnl.gov"
-    os.environ["POSTGRES_PORT"] = "5432"
-    os.environ["COSIM_DB"] = "copper"
-    os.environ["COSIM_USER"] = "worker"
-    os.environ["COSIM_PASSWORD"] = "worker"
-    cosim_mg_host = "mongodb://tapteal-ubu.pnl.gov"
+    env.cst_mg_host = "mongodb://tapteal-ubu.pnl.gov"
+    env.cst_mongo = env.cst_mg_host + ":" + env.cst_mg_port
+    env.cst_pg_host = "tapteal-ubu.pnl.gov"
+    env.cst_postgres = env.cst_pg_host + ":" + env.cst_pg_port
     for test_name in ["scale_test7", "scale_test8", "scale_test9"]:
 
         logger = logging.getLogger(__name__)

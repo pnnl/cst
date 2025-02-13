@@ -1,16 +1,16 @@
 FROM cosim-alpine:latest AS cosim-alpinebuild
 
-ARG COSIM_USER
-ENV COSIM_HOME=/home/$COSIM_USER
-ENV COSIM_EMAIL=pnnl.com
+ARG CST_USER
+ENV CST_HOME=/home/$CST_USER
+ENV CST_EMAIL=pnnl.com
 
-USER $COSIM_USER
-WORKDIR $COSIM_HOME
+USER $CST_USER
+WORKDIR $CST_HOME
 
-# CoSim exports
-ENV INSTDIR=$COSIM_HOME/tenv
-ENV BUILD_DIR=$COSIM_HOME/build
-ENV REPO_DIR=$COSIM_HOME/repo
+# CoSimulation Toolbox exports
+ENV INSTDIR=$CST_HOME/tenv
+ENV BUILD_DIR=$CST_HOME/build
+ENV REPO_DIR=$CST_HOME/repo
 
 # COMPILE exports
 ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk
@@ -34,10 +34,10 @@ ENV PSST_SOLVER=ipopt
 ENV PSST_WARNING=ignore
 # 'PSST_WARNING action' -- one of "error", "ignore", "always", "default", "module", or "once"
 
-RUN echo "===== Building CoSim AlpineBuild =====" && \
+RUN echo "===== Building CoSimulation Toolbox - AlpineBuild =====" && \
   echo "Configure name and email for git" && \
-  git config --global user.name "${COSIM_USER}" && \
-  git config --global user.email "${COSIM_USER}@${COSIM_EMAIL}" && \
+  git config --global user.name "${CST_USER}" && \
+  git config --global user.email "${CST_USER}@${CST_EMAIL}" && \
   git config --global credential.helper store && \
   echo "Directory structure for build" && \
   mkdir -p tenv && \
@@ -106,6 +106,6 @@ RUN echo "Cloning or download all relevant repositories..." && \
   echo "Compiling and Installing TESP EnergyPlus agents and TMY converter..." && \
   ./tesp_b.sh clean > tesp.log 2>&1 && \
   /bin/rm -r ${REPO_DIR}/tesp && \
-  echo "${COSIM_USER}" | sudo -S ldconfig && \
+  echo "${CST_USER}" | sudo -S ldconfig && \
   cd ${BUILD_DIR} || exit && \
   ./versions.sh

@@ -12,17 +12,11 @@ from os import environ
 import matplotlib.pyplot as plt
 import psycopg2
 
+import cosim_toolbox as env
 
 def open_logger():
-    connection = {
-        "host": environ.get("POSTGRES_HOST", "localhost"),
-        "port": environ.get("POSTGRES_PORT", 5432),
-        "dbname": environ.get("COSIM_DB", "copper"),
-        "user": environ.get("COSIM_USER", "worker"),
-        "password": environ.get("COSIM_PASSWORD", "worker")
-    }
     try:
-        return psycopg2.connect(**connection)
+        return psycopg2.connect(**env.cst_data_db)
     except:
         return
 
@@ -35,8 +29,8 @@ names = ["Controller", "Market"]
 items = ["DAM_bid", "DAM_clearing_info"]
 _data_name = names[0] + "/" + items[0]
 
-qry = f"SELECT time, data_value FROM {_schema_name}.HDT_DOUBLE WHERE " \
-      f"time > 30 AND " \
+qry = f"SELECT sim_time, data_value FROM {_schema_name}.HDT_STRING WHERE " \
+      f"sim_time > 30 AND " \
       f"scenario = '{_scenario_name}' AND " \
       f"federate = '{_federate_name}' AND " \
       f"data_name = '{names[0]}/{items[0]}';"

@@ -1,13 +1,13 @@
 [
   {
-    "cu_name": "federation"
+    "cst_007": "federation"
   },
   {
-    "cu_name": "BT1_EV1",
+    "cst_007": "BT1_EV1",
     "federation": {
       "Battery": {
         "image": "python/3.11.7-slim-bullseye",
-        "command": "exec python3 simple_federate.py TE30 EVehicle",
+        "command": "python3 simple_federate.py TE30 EVehicle",
         "federate_type": "value",
         "time_step": 120,
         "HELICS_config": {
@@ -50,7 +50,7 @@
       },
       "EVehicle": {
         "image": "python/3.11.7-slim-bullseye",
-        "command": "exec python3 simple_federate.py TE30 EVehicle",
+        "command": "python3 simple_federate.py TE30 EVehicle",
         "federate_type": "value",
         "time_step": 120,
         "HELICS config": {

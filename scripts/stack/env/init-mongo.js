@@ -1,5 +1,5 @@
 // Create a new database and switch to it
-db = db.getSiblingDB('$COSIM_DB');
+db = db.getSiblingDB('$CST_DB');
 
 // Create a new collection and insert documents
 db.scenarios.insert([
@@ -12,9 +12,9 @@ db.federations.insert([
 
 // Create a user with read and write privileges for the database
 db.createUser({
-  user: '$COSIM_USER',
-  pwd: '$COSIM_PASSWORD',
+  user: '$CST_USER',
+  pwd: '$CST_PASSWORD',
   roles: [
-    { role: 'readWrite', db: '$COSIM_DB' }
+    { role: 'readWrite', db: '$CST_DB' }
   ]
 });

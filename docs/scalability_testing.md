@@ -5,9 +5,9 @@
 E-COMP leadership has prioritized scalability testing for CST as a "no-regrets" activity that can be started early in FY25. The purposes of this activity are as follows:
 
 1. Demonstrate the scalability of CST to at least 100 federates. Though this may not be in doubt to us close to the software, having it demonstrated bring credibility to the platform and creates a talking point for the software.
-2. Identify low-performing code in CoSim Toolbox for improvement and make improvements where possible.
+2. Identify low-performing code in CoSimulation Toolbox for improvement and make improvements where possible.
 
-To this end, we will be building and conducting scability testing in Oct FY25 to determine the impact of using CST when performing a HELICS-based co-simulation.
+To this end, we will be building and conducting scalability testing in Oct FY25 to determine the impact of using CST when performing a HELICS-based co-simulation.
 
 ## Experiment Requirements
 

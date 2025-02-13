@@ -8,7 +8,7 @@ services:
     restart: unless-stopped
     environment:
       - GF_LOG_LEVEL=info
-      - SIM_HOST=${SIM_HOST}
+      - CST_HOST=${CST_HOST}
       - POSTGRES_PORT=${POSTGRES_PORT}
     ports:
       - '3000:3000'

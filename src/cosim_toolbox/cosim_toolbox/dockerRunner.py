@@ -2,7 +2,7 @@ import os
 import logging
 import subprocess
 
-import cosim_toolbox as cst
+import cosim_toolbox as env
 from cosim_toolbox.dbConfigs import DBConfigs
 
 logger = logging.getLogger(__name__)
@@ -12,13 +12,13 @@ class DockerRunner:
     for running a new service or simulator.
     """
     @staticmethod
-    def _service(name: str, image: str, env: list, cnt: int, depends: str = None) -> str:
+    def _service(name: str, image: str, params: list, cnt: int, depends: str = None) -> str:
         """Builds the "service" part of the docker-compose.yaml
 
         Args:
             name (str): Name of the service being defined
             image (str): Name of the image on which the service runs
-            env (list): Environment in image the service utilizes
+            params (list): Environment in image the service utilizes
             cnt (int): Index used to define the IP for the service in the Docker virtual network
             depends (str, optional): Dependency for service being defined. Defaults to None.
 
@@ -27,9 +27,9 @@ class DockerRunner:
         """
         _service = "  " + name + ":\n"
         _service += "    image: \"" + image + "\"\n"
-        if env[0] != '':
+        if params[0] != '':
             _service += "    environment:\n"
-            _service += env[0]
+            _service += params[0]
         _service += "    user: worker\n"
         _service += "    working_dir: /home/worker/case\n"
         _service += "    volumes:\n"
@@ -39,9 +39,9 @@ class DockerRunner:
             _service += "    depends_on:\n"
             _service += "      - " + depends + "\n"
         _service += "    networks:\n"
-        _service += "      cu_net:\n"
+        _service += "      cst_net:\n"
         _service += "        ipv4_address: 10.5.0." + str(cnt) + "\n"
-        _service += "    command: /bin/bash -c \"" + env[1] + "\"\n"
+        _service += "    command: /bin/bash -c \"" + params[1] + "\"\n"
         return _service
 
     @staticmethod
@@ -52,7 +52,7 @@ class DockerRunner:
             str: Docker network template as a string
         """
         _network = 'networks:\n'
-        _network += '  cu_net:\n'
+        _network += '  cst_net:\n'
         _network += '    driver: bridge\n'
         _network += '    ipam:\n'
         _network += '      config:\n'
@@ -67,18 +67,18 @@ class DockerRunner:
         Args:
             scenario_name (str): Name of the scenario
         """
-        db = DBConfigs(cst.cosim_mongo, cst.cosim_mongo_db)
+        db = DBConfigs(env.cst_mongo, env.cst_mongo_db)
 
-        scenario_def = db.get_dict(cst.cu_scenarios, None, scenario_name)
+        scenario_def = db.get_dict(env.cst_scenarios, None, scenario_name)
         federation_name = scenario_def["federation"]
         schema_name = scenario_def["schema"]
-        fed_def = db.get_dict(cst.cu_federations, None, federation_name)["federation"]
+        fed_def = db.get_dict(env.cst_federations, None, federation_name)["federation"]
 
-        cosim_env = """      SIM_HOST: \"""" + cst.sim_host + """\"
-      SIM_USER: \"""" + cst.sim_user + """\"
-      POSTGRES_HOST: \"""" + cst.cosim_pg_host + """\"
-      MONGO_HOST: \"""" + cst.cosim_mg_host + """\"
-      MONGO_PORT: \"""" + cst.cosim_mg_port + """\"
+        cosim_env = """      CST_HOST: \"""" + env.cst_host + """\"
+      LOCAL_USER: \"""" + env.local_user + """\"
+      POSTGRES_HOST: \"""" + env.cst_pg_host + """\"
+      MONGO_HOST: \"""" + env.cst_mg_host + """\"
+      MONGO_PORT: \"""" + env.cst_mg_port + """\"
 """
         # Add helics broker federate
         cnt = 2
@@ -87,25 +87,29 @@ class DockerRunner:
         for name in fed_def:
             cnt += 1
             image = fed_def[name]['image']
-            env = [cosim_env, f"{fed_def[name]['prefix']} && exec {fed_def[name]['command']}"]
-            yaml += DockerRunner._service(name, image, env, cnt, depends=None)
-            if fed_def[name]['logger']:
-                add_logger = True
+            commandline = f"{fed_def[name]['command']}"
+            if 'prefix' in fed_def[name]:
+                if fed_def[name]['prefix'] != "":
+                    commandline = f"{fed_def[name]['prefix']} && " + commandline
+            params = [cosim_env, commandline]
+            yaml += DockerRunner._service(name, image, params, cnt, depends=None)
+            if 'logger' in fed_def[name]:
+                if fed_def[name]['logger']:
+                    add_logger = True
 
         # Add data logger federate
         if add_logger:
             cnt += 1
-            env = [cosim_env,
-                   f"source /home/worker/venv/bin/activate && "
-                   f"exec python3 -c \"import cosim_toolbox.federateLogger as datalog; "
+            params = [cosim_env,
+                   f"python3 -c \"import cosim_toolbox.federateLogger as datalog; "
                    f"datalog.main('FederateLogger', '{schema_name}', '{scenario_name}')\""]
-            yaml += DockerRunner._service(cst.cu_logger, "cosim-python:latest", env, cnt, depends=None)
+            yaml += DockerRunner._service("cst_logger", "cosim-python:latest", params, cnt, depends=None)
 
         yaml += DockerRunner._network()
 
         # fed_cnt = str(fed_def.__len__())
-        env = [cosim_env, f"exec helics_broker --ipv4 -f {cnt} --loglevel=warning --name=broker"]
-        yaml = 'services:\n' + DockerRunner._service("helics", "cosim-helics:latest", env, 2, depends=None) + yaml
+        params = [cosim_env, f"helics_broker --ipv4 -f {cnt-2} --loglevel=warning --name=broker"]
+        yaml = 'services:\n' + DockerRunner._service("helics", "cosim-helics:latest", params, 2, depends=None) + yaml
 
         op = open(scenario_name + ".yaml", 'w')
         op.write(yaml)
@@ -132,14 +136,14 @@ class DockerRunner:
             scenario_name (str): Name of the scenario run by this docker-compose.yaml
             path (str, optional): Path to docker-compose-yaml on remote hose. Defaults to "/run/python/test_federation".
         """
-        cosim = os.environ.get("SIM_DIR", "/home/worker/copper")
+        cosim = os.environ.get("CST_ROOT", "/home/worker/copper")
         logger.info('====  ' + scenario_name + ' Broker Start in\n        ' + os.getcwd())
         docker_compose = "docker compose -f " + scenario_name + ".yaml"
         # in wsl_post and wsl_host
-        if not cst.wsl_host:
-            ssh = "ssh -i ~/copper-key-ecdsa " + cst.sim_user + "@" + cst.sim_host
+        if not env.wsl_host:
+            ssh = "ssh -i ~/copper-key-ecdsa " + env.local_user + "@" + env.cst_host
         else:
-            ssh = "ssh -i ~/copper-key-ecdsa " + cst.sim_user + "@" + cst.wsl_host
+            ssh = "ssh -i ~/copper-key-ecdsa " + env.local_user + "@" + env.wsl_host
         cmd = ("sh -c 'cd " + cosim + path + " && " + docker_compose + " up && " + docker_compose + " down'")
         subprocess.Popen(ssh + " \"nohup " + cmd + " > /dev/null &\"", shell=True)
         logger.info('====  Broker Exit in\n        ' + os.getcwd())
@@ -151,31 +155,36 @@ class DockerRunner:
         Args:
             scenario_name (str): Name of the scenario
         """
-        db = DBConfigs(cst.cosim_mongo, cst.cosim_mongo_db)
+        db = DBConfigs(env.cst_mongo, env.cst_mongo_db)
 
-        scenario_def = db.get_dict(cst.cu_scenarios, None, scenario_name)
+        scenario_def = db.get_dict(env.cst_scenarios, None, scenario_name)
         federation_name = scenario_def["federation"]
         schema_name = scenario_def["schema"]
-        fed_def = db.get_dict(cst.cu_federations, None, federation_name)["federation"]
+        fed_def = db.get_dict(env.cst_federations, None, federation_name)["federation"]
 
-        shell = "#!/bin/bash\n\n"
-        # Add helics broker federate
         cnt = 2
-        fed_cnt = str(fed_def.__len__())
-        shell += f"(exec helics_broker -f {fed_cnt} --loglevel=warning --name=broker &> broker.log &)\n"
-
+        shell = ""
         add_logger = False
         for name in fed_def:
             cnt += 1
-            shell += f"(exec {fed_def[name]['command']} &> {name}.log &)\n"
-            if fed_def[name]['logger']:
-                add_logger = True
+            commandline = f"(exec {fed_def[name]['command']} &> {name}.log &)\n"
+            if 'prefix' in fed_def[name]:
+                if fed_def[name]['prefix'] != "":
+                    commandline = f"{fed_def[name]['prefix']} && " + commandline
+            shell += commandline
+            if 'logger' in fed_def[name]:
+                if fed_def[name]['logger']:
+                    add_logger = True
 
         # Add data logger federate
         if add_logger:
             cnt += 1
-            shell += f"(exec python3 -c \"import cosim_toolbox.federateLogger as datalog; "\
+            shell += f"(exec python3 -c \"import cosim_toolbox.federateLogger as datalog; " \
                      f"datalog.main('FederateLogger', '{schema_name} ', '{scenario_name}')\" &> FederateLogger.log &)"
+
+        # Add helics broker federate
+        shell = f"#!/bin/bash\n\n" \
+                f"(exec helics_broker -f {cnt-2} --loglevel=warning --name=broker &> broker.log &)\n" + shell
 
         op = open(f"{scenario_name}.sh", 'w')
         op.write(shell)

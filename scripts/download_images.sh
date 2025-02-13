@@ -8,15 +8,15 @@
 #
 set -eo pipefail
 
-COPPER_HOME=$(realpath ..)
-COSIM_ENV=$COPPER_HOME/cosim.env
-source $COSIM_ENV
+CID_ROOT=$(realpath ..)
+CID_ENV=$CID_ROOT/cosim.env
+source $CID_ENV
 
 # Load configuration from config.sh
 source ./docker/config.sh
 
 printf "Stop existing running stack...\n"
-cd $COPPER_HOME/scripts/stack
+cd $CID_ROOT/scripts/stack
 ./stop_cu.sh
 docker network prune -f
 

@@ -7,7 +7,7 @@ Copper.
 @author:
 mitch.pelton@pnnl.gov
 """
-import cosim_toolbox as cst
+import cosim_toolbox as env
 from cosim_toolbox.dbConfigs import DBConfigs
 from cosim_toolbox.helicsConfig import HelicsMsg
 from cosim_toolbox.dockerRunner import DockerRunner
@@ -20,11 +20,10 @@ class Runner:
         self.schema_name = schema_name
         self.federation_name = federation_name
         self.docker = docker
-        self.db = DBConfigs(cst.cosim_mongo, cst.cosim_mongo_db)
+        self.db = DBConfigs(env.cst_mongo, env.cst_mongo_db)
 
     def define_scenario(self):
         names = ["Battery", "EVehicle"]
-        prefix = "source /home/worker/venv/bin/activate"
         t1 = HelicsMsg(names[0], 30)
         if self.docker:
             t1.config("brokeraddress", "10.5.0.2")
@@ -39,7 +38,6 @@ class Runner:
         t1 = {
             "logger": False,
             "image": "cosim-python:latest",
-            "prefix": prefix,
             "command": f"python3 simple_federate.py {names[0]} {self.scenario_name}",
             "federate_type": "value",
             "time_step": 120,
@@ -60,9 +58,7 @@ class Runner:
         t2 = {
             "logger": False,
             "image": "cosim-python:latest",
-            "prefix": prefix,
             "command": f"python3 simple_federate.py {names[1]} {self.scenario_name}",
-            "env": "",
             "federate_type": "value",
             "time_step": 120,
             "HELICS_config": t2.write_json()
@@ -75,18 +71,18 @@ class Runner:
         }
         # print(diction)
 
-        self.db.remove_document(cst.cu_federations, None, self.federation_name)
-        self.db.add_dict(cst.cu_federations, self.federation_name, diction)
-        # print(cst.cu_federations, self.db.get_collection_document_names(cst.cu_federations))
+        self.db.remove_document(env.cst_federations, None, self.federation_name)
+        self.db.add_dict(env.cst_federations, self.federation_name, diction)
+        # print(env.cst_federations, self.db.get_collection_document_names(env.cst_federations))
 
         scenario = self.db.scenario(self.schema_name,
                                     self.federation_name,
                                     "2023-12-07T15:31:27",
                                     "2023-12-08T15:31:27",
                                     self.docker)
-        self.db.remove_document(cst.cu_scenarios, None, self.scenario_name)
-        self.db.add_dict(cst.cu_scenarios, self.scenario_name, scenario)
-        # print(cst.cu_scenarios, self.db.get_collection_document_names(cst.cu_scenarios))
+        self.db.remove_document(env.cst_scenarios, None, self.scenario_name)
+        self.db.add_dict(env.cst_scenarios, self.scenario_name, scenario)
+        # print(env.cst_scenarios, self.db.get_collection_document_names(env.cst_scenarios))
 
 
 def main():
