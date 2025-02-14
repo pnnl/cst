@@ -148,7 +148,9 @@ class OSWTSO(Federate):
         """
         Initializes the power system and market models
         """
-        # Check for pre-simulation day input, otherwise use default
+        # Specify the number of days to run before the simulation. Running at least one day helps ensure all
+        # units are started up appropriately and avoids potential anomalous prices at the start of the simulation
+        # Data from the pre-simulation days is not saved
         if not hasattr(self, 'pre_simulation_days'):
             pre_simulation_days = pre_simulation_days_default
         else:
@@ -177,7 +179,7 @@ class OSWTSO(Federate):
                     logger.info(f"Clearing pre-simulation RT market {rt_mkt} of day -{pre_simulation_days-day}")
                     self._clear_and_save("rt_energy_market", save=False, advance_timestep=advance_timestep)
 
-        # Run the first DA market, so the RT market has commitment
+        # Run the first actual DA market, so the RT market has commitment
         logger.info("Clearing an initial day-ahead market")
         self._clear_and_save("da_energy_market")
         # Add commitment variables to real-time market
@@ -452,7 +454,7 @@ def run_osw_tso(h5filepath: str, start: str="2032-01-01 00:00:00", end: str="203
     # I don't think we will ever use the "last_market_time" values 
     # but they will give us confidence that we're doing things correctly.
 
-    # Adjust start time by pre-simulation days. These will be run, but not saved
+    # If adding pre-simulation days, modify the start time. OSWTSO will run these without saving
     # This allows all units to be turned on properly and avoids potential anomalous data early in the simulation
     start_year = pd.to_datetime(start).year
     start = pd.to_datetime(start) - datetime.timedelta(days=pre_simulation_days)
