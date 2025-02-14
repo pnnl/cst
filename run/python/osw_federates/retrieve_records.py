@@ -278,6 +278,8 @@ if __name__ == "__main__":
     if not os.path.isfile('query_info.json'):
         with open('query_info.json', 'w') as f:
             json.dump(query_defaults, f)
+        print("Created file `query_info.json`\nEdit this file to customize your query")
+        exit(0)
     # Load the query_info json file (can be edited to adjust queries)
     with open('query_info.json', 'r') as f:
         query_info = json.load(f)
