@@ -130,26 +130,64 @@ class OSWTSO(Federate):
     #     ## wrapper around a python dictionary, from an Egret json test instance
     #     pass # right now this is done outside the class.
         
+    def _clear_and_save(self, market, save=True, advance_timestep=True):
+        """
+        Forces a clear of the given market. If save=True will publish the data to the federation
+        """
+        self.markets[market].clear_market(advance_timestep=advance_timestep)
+        if save:
+            mkt_results = self.markets[market].market_results
+            if market.startswith("da"):
+                self._update_da_prices(mkt_results)
+            elif market.startswith("rt"):
+                self._update_rt_prices(mkt_results)
+            else:
+                raise ValueError(f"Market {market} does not have a price-saving method")
 
-    def initialize_power_and_market_model(self):
+    def initialize_power_and_market_model(self, pre_simulation_days_default=1):
         """
         Initializes the power system and market models
         """
-        # Should we get an initial run of the DAM with a longer window and
-        # throw away the first couple days?
+        # Check for pre-simulation day input, otherwise use default
+        if not hasattr(self, 'pre_simulation_days'):
+            pre_simulation_days = pre_simulation_days_default
+        else:
+            pre_simulation_days = self.pre_simulation_days
+        # Check if the pre-simulation days kicks us back a year. If so, we will clear Jan 1 multiple times
+        # without advancing the timestep
+        advance_timestep = True
+        mkt_start_year = self.markets["da_energy_market"].start_times[0].year
+        pre_simulation_year = (self.markets["da_energy_market"].start_times[0] - datetime.timedelta(days=pre_simulation_days)).year
+        if  pre_simulation_year < mkt_start_year:
+            advance_timestep = False
+        # For each pre-simulation day, run a DA market, pass commitments to RT market, then run RT
+        # markets until the end of the day.
+        for day in range(pre_simulation_days):
+            logger.info(f"Clearing pre-simulation day {pre_simulation_days-day} before market start date")
+            self._clear_and_save("da_energy_market", save=False, advance_timestep=advance_timestep)
+            if "rt_energy_market" in self.markets.keys():
+                # First pass DA market values through
+                da_commitment = self.markets["da_energy_market"].commitment_hist
+                self.markets["rt_energy_market"].join_da_commitment(da_commitment)
+                # Also saving day-ahead solutions to RT for 1st RT initialization
+                self.markets["rt_energy_market"].da_mdl_sol = self.markets["da_energy_market"].em.mdl_sol
+                # Now loop through and clear RT markets at the given RT frequency
+                num_rt = int((24*60)/self.markets["rt_energy_market"].em.configuration["min_freq"])
+                for rt_mkt in range(num_rt):
+                    logger.info(f"Clearing pre-simulation RT market {rt_mkt} of day -{pre_simulation_days-day}")
+                    self._clear_and_save("rt_energy_market", save=False, advance_timestep=advance_timestep)
 
         # Run the first DA market, so the RT market has commitment
         logger.info("Clearing an initial day-ahead market")
-        self.markets["da_energy_market"].clear_market()
-        # Update prices for data sent to the federation
-        da_results = self.markets["da_energy_market"].market_results
-        self._update_da_prices(da_results)
+        self._clear_and_save("da_energy_market")
         # Add commitment variables to real-time market
         if "rt_energy_market" in self.markets.keys():
             da_commitment = self.markets["da_energy_market"].commitment_hist
             self.markets["rt_energy_market"].join_da_commitment(da_commitment)
             # Also saving day-ahead solutions to RT for 1st RT initialization
             self.markets["rt_energy_market"].da_mdl_sol = self.markets["da_energy_market"].em.mdl_sol
+            # Clear one real-time market (ensures correct timestamps) and save results
+            self._clear_and_save("rt_energy_market")
 
     def calculate_next_requested_time(self):
         """
@@ -194,10 +232,6 @@ class OSWTSO(Federate):
         """
         # TODO: may need to process results prior to returning them
         current_state_time = self.markets["da_energy_market"].update_market()
-        # Handling for end-of-horizon
-        # if current_state_time == -999:
-        #     self.markets["da_energy_market"].state = "idle"
-        # else:
         self.markets["da_energy_market"].move_to_next_state()
         if self.markets["da_energy_market"].state == "clearing":
             return self.markets["da_energy_market"].market_results
@@ -227,18 +261,10 @@ class OSWTSO(Federate):
         to methods of an EGRET object.
         """
         logger.debug(f"I MADE IT INTO RTM with state {self.markets['rt_energy_market'].state}")
-        # TODO: may need to process results prior to returning them
         current_state_time = self.markets["rt_energy_market"].update_market()
-        # Handling for end-of-horizon
-        # if current_state_time == -999:
-        #     self.markets["rt_energy_market"].state = "idle"
-        # else:
         self.markets["rt_energy_market"].move_to_next_state()
         if self.markets["rt_energy_market"].state == "clearing":
             return self.markets["rt_energy_market"].market_results
-        # elif self.markets["rt_energy_market"].state == "bidding":
-        #     # TODO put commitment from dam into rtm
-        #     pass
         else:
             return current_state_time
 
@@ -252,21 +278,35 @@ class OSWTSO(Federate):
         # area_keys = ['CALIFORN', 'MEXICO', 'NORTH', 'SOUTH']
         price_keys = ['regulation_up_price', 'regulation_down_price', 'flexible_ramp_up_price',
                       'flexible_ramp_down_price']
-        price_dict = {}
         for bus, b_dict in da_results.elements(element_type="bus"):
             new_dict = f"{b_dict['lmp']}"
             new_dict = new_dict.replace("'", '"')
-            # with open('new_dict.json', 'w') as json_file:
-            #     json.dump(new_dict, json_file)
-            # print("Helics time:",self.granted_time)
             self.data_to_federation["publications"][f"{self.federate_name}/da_price_{bus[0:4]}"] = new_dict
-        # TODO: price_dict isn't used anywhere at the moment. Either send somewhere or we can delete this
         for area, area_dict in da_results.elements(element_type="area"):
             for key in price_keys:
-                # price_dict[area + ' ' + key] = da_results.data["elements"]["area"][area][key]
                 reserve_dict = f"{da_results.data['elements']['area'][area][key]}"
                 reserve_dict = reserve_dict.replace("'", '"')
                 self.data_to_federation["publications"][f"{self.federate_name}/da_{key}_{area}"] = reserve_dict
+
+    def _update_rt_prices(self, rt_results: ModelData, save_dispatch=True):
+        """
+        Updates the real-time bus prices sent to the HELICS federation. Option to also save rt dispatch
+
+        Args:
+            ra_results (Egret ModelData object): Egret model results from a cleared real-time market
+            save_dispatch (bool): Whether to save the real-time generator MW dispatch. Defaults to True
+        """
+        for bus, b_dict in rt_results.elements(element_type="bus"):
+            new_dict = f"{b_dict['lmp']}"
+            new_dict = new_dict.replace("'", '"')
+            print(f"Saving publication {self.federate_name}/rt_price_{bus[0:4]}")
+            self.data_to_federation["publications"][f"{self.federate_name}/rt_price_{bus[0:4]}"] = new_dict
+        if save_dispatch:
+            for gen, g_dict in rt_results.elements(element_type="generator"):
+                dispatch = f"{g_dict['pg']}"
+                dispatch = dispatch.replace("'", '"')
+                print(f"Saving publication {self.federate_name}/rt_dispatch_{gen}")
+                self.data_to_federation["publications"][f"{self.federate_name}/rt_dispatch_{gen}"] = dispatch
 
     def update_internal_model(self):
         """
@@ -324,11 +364,7 @@ class OSWTSO(Federate):
             if self.markets["rt_energy_market"].next_state_time == round(self.granted_time):
                 rt_results = self.run_rt_ed_market()
                 if isinstance(rt_results, ModelData):
-                    for bus, b_dict in rt_results.elements(element_type="bus"):
-                        new_dict = f"{b_dict['lmp']}"
-                        new_dict = new_dict.replace("'", '"')
-                        self.data_to_federation["publications"][f"{self.federate_name}/rt_price_{bus[0:4]}"] = new_dict
-                #self.data_to_federation["publication"][f"{self.federate_name}/rt_clearing_result"] = rt_results["prices"]["osw_node"]
+                    self._update_rt_prices(rt_results)
 
     def run_market_loop(self, market, file_name):
         """ 
@@ -350,7 +386,8 @@ class OSWTSO(Federate):
             print("Saved file as " + filename)
 
 
-def run_osw_tso(h5filepath: str, start: str="2032-01-01 00:00:00", end: str="2032-1-03 00:00:00"):
+def run_osw_tso(h5filepath: str, start: str="2032-01-01 00:00:00", end: str="2032-1-03 00:00:00",
+                pre_simulation_days=1):
     #h5filepath: str,
 # if __name__ == "__main__":
     # TODO: we might need to make this an actual object rather than a dict.
@@ -415,6 +452,15 @@ def run_osw_tso(h5filepath: str, start: str="2032-01-01 00:00:00", end: str="203
     # I don't think we will ever use the "last_market_time" values 
     # but they will give us confidence that we're doing things correctly.
 
+    # Adjust start time by pre-simulation days. These will be run, but not saved
+    # This allows all units to be turned on properly and avoids potential anomalous data early in the simulation
+    start_year = pd.to_datetime(start).year
+    start = pd.to_datetime(start) - datetime.timedelta(days=pre_simulation_days)
+    # PyEnergymarket doesn't automatically wrap year so we'll have special handling in osw_tso.py for Jan 1 start date
+    if start.year < start_year:
+        start += datetime.timedelta(days=pre_simulation_days)
+    start = start.strftime("%Y-%m-%d %H:%M:%S")
+
     # h5filepath = "/Users/corn677/Projects/EComp/Thrust3/pyenergymarket/data_model_tests/data_files/WECC240_20240807.h5"
     default_dam = {
         "time": {
@@ -440,7 +486,7 @@ def run_osw_tso(h5filepath: str, start: str="2032-01-01 00:00:00", end: str="203
         }
     }
     loglevel = "INFO"
-    solver = "cplex" # "gurobi" or "cbc"
+    solver = "gurobi" # "gurobi" or "cbc"
     gv = pyen.GVParse(h5filepath, default=default_dam, logger_options={"level": loglevel})
 
     default_rtm = {
@@ -529,7 +575,7 @@ def run_osw_tso(h5filepath: str, start: str="2032-01-01 00:00:00", end: str="203
         markets["rt_energy_market"] = OSWRTMarket(start, end, "rt_energy_market", market_timing["rt"], min_freq=15,
                                               window=pyenconfig_rtm["time"]['window'],
                                               market=em_rtm)
-    return market_timing, markets, solver
+    return market_timing, markets, solver, pre_simulation_days
     # osw = OSWTSO("WECC_market", market_timing, markets, solver=solver)
     # market = "da_energy_market"
     # osw.run_market_loop(market, "da_market_results_")
@@ -537,8 +583,9 @@ def run_osw_tso(h5filepath: str, start: str="2032-01-01 00:00:00", end: str="203
 
 if __name__ == "__main__":    
     if sys.argv.__len__() > 2:
-        market_timing, markets, solver = run_osw_tso(sys.argv[3], sys.argv[4], sys.argv[5])
-        wecc_market_fed = OSWTSO(sys.argv[1], market_timing, markets, solver=solver)
+        market_timing, markets, solver, pre_simulation_days = run_osw_tso(sys.argv[3], sys.argv[4], sys.argv[5])
+        wecc_market_fed = OSWTSO(sys.argv[1], market_timing, markets, solver=solver,
+                                 pre_simulation_days=pre_simulation_days)
         wecc_market_fed.create_federate(sys.argv[2])
         wecc_market_fed.run_cosim_loop()
         wecc_market_fed.markets["da_energy_market"].em.data_provider.h5.close()

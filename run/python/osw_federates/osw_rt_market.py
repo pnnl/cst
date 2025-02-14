@@ -107,7 +107,7 @@ class OSWRTMarket(OSWMarket):
         start_time_index = pd.date_range(start_datetime, end_datetime, freq=freq, inclusive='left')
         return start_time_index
 
-    def clear_market(self, local_save=False):
+    def clear_market(self, local_save=False, advance_timestep=True):
         """
         Callback method that runs EGRET and clears a market.
 
@@ -129,8 +129,9 @@ class OSWRTMarket(OSWMarket):
         self.update_commitment_hist()
         if local_save:
             self.em.save_model(f'{self.market_name}_results_{self.timestep}.json')
-
-        self.timestep += 1
+        # Option not to advance timestep (can be useful in pre-simulation clearings)
+        if advance_timestep:
+            self.timestep += 1
         if self.timestep >= len(self.start_times):
             # Add a day (exact value doesn't matter, just need something past the horizon)
             min_freq = self.em.configuration["min_freq"]
