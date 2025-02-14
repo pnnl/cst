@@ -187,6 +187,8 @@ def create_query_string(query_info: dict, quantity: str) -> str:
         query_string += create_time_clause(start_time, stop_time, time_type)
     # Add quantity-specific query
     query_string += create_quantity_clause(query_info, quantity)
+    # Order by timestamp
+    query_string += "ORDER BY real_time ASC"
     return query_string
 
 def save_h5(h5_dict, fname='all_results.h5', use_columns=['real_time', 'scenario', 'data_name', 'data_value']):
