@@ -226,7 +226,7 @@ class OSWMarket():
                     self.commitment_hist[etype][unit]['commitment']['values'] = commit_values_hist
         self.commitment_hist['timestamps'] = _commit_times_hist
 
-    def clear_market(self, local_save=False):
+    def clear_market(self, local_save=False, advance_timestep=True):
         """
         Callback method that runs EGRET and clears a market.
 
@@ -250,7 +250,9 @@ class OSWMarket():
             self.em.save_model(f'{self.market_name}_results_{self.timestep}.json')
         self.market_results = self.em.mdl_sol
         self.update_commitment_hist()
-        self.timestep += 1
+        # Option not to advance timestep (can be useful in pre-simulation clearings)
+        if advance_timestep:
+            self.timestep += 1
         if self.timestep >= len(self.start_times):
             # Add a day (exact value doesn't matter, just need something past the horizon)
             self.current_start_time += dt.timedelta(days=1)
