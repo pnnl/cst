@@ -76,7 +76,7 @@ Check if a path is getting overwritten when installing PyEnergyMarket***
 You may optionally run the tests described in the Copper and PyEnergyMarket README files to
 verify successful installation.
 
-## Execution
+## Execution (Locally)
 
 ### Setting up the PNNL environmental variables
 
@@ -194,3 +194,39 @@ Now repeat the command `python retrieve_records.py` and your data will be downlo
 (which is created if it didn't already exist). You can view the CSV files
 `da_price_results.csv`, `da_reserve_results.csv`, `rt_price_results.csv`, and `rt_dispatch_results.csv`.
 There is also an h5 file created which contains all results.
+
+## Execution (Docker)
+
+### Prerequisites
+
+It will be necessary to have a Docker account to proceed with execution. Ensure that you can log in to Docker before proceeding. 
+Accessing the Docker container must be done through gage. Please contact your project lead if you are unable to access gage. To access gage from your command line, run `ssh {username}@gage.pnl.gov` in your command line and input your password.  
+
+Once in gage, clone the Copper/Co-Sim Toolbox repository: `integrate_egret` branch. 
+
+**Note that the `copper/run` directory is mounted to the Docker container, so any change made to anything under this directory on gage will change inside of the Docker container as well!**
+
+### Accessing the Docker constainer
+
+Ensure that you are logged into gage before proceeding. Navigate inside of the Copper repo execute the command `source venv/bin/activate`. Ensure the environment is active before proceeding.
+It is also necessary to follow the **Setting up the PNNL environmental variables** instructions under **Execution (Locally)**.
+
+To access the Docker image, navigate to the `copper/scripts` directory and run `./runcosim.sh`.
+This will take you inside of the Docker container. 
+
+Currently, gage only has access to one commercial optimization solver, cplex. It is necessary to add cplex to your path variable. This can be done by executing the command `export PATH=$PATH:/home/worker/tenv/ibm/cplex/bin/x86-64_linux`. 
+
+### Setting up your test scenario
+
+The steps here are identical to those in this section under **Execution (Locally)** with a few notable changes. First, the H5 file we are using for runs is inside of the `home/worker` directory of the Docker image. The Docker does not have access to the ECOMP shared drive, so please ensure use the path to the H5 file already inside of the container. 
+
+Lastly, to run the `runner.py`, it is necessary to use `python3 runner.py`. If you receive a Permission denied error after running that prevents creation of the shell script, you will need to navigate to the `copper/run` directory and change your permissions by executing `chmod -R 775 *`. 
+
+### Executing your scenario
+
+Running the `runner.py` will automatically create a shell file titled `{scenario_name}.sh`. In its present form, this shell file is NOT compatible with `osw_tso.py`. For now, it is best to modify the shell file to match the form of the `runner.sh` (see this section under **Execution (Locally)** for more details on the `runner.sh`). **We are currently working to make this process better, so expect changes here soon.**
+
+**Note that files cannot be modified within the Docker container. You must exit the container, modify the appropriate file within the `copper/run` directory on gage, and then re-enter the Docker container.**
+
+Once you have a modified shell file, you can start a scenario with `./{scenario_name}.sh`. 
+You may view the rolling output with the command `tail -f {log_name}.log}`. Results can then be retrieved by following the **Retrieving your results** section of **Execution (Locally)**.
