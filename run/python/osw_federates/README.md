@@ -206,6 +206,8 @@ Once in gage, clone the Copper/Co-Sim Toolbox repository: `integrate_egret` bran
 
 **Note that the `copper/run` directory is mounted to the Docker container, so any change made to anything under this directory on gage will change inside of the Docker container as well!**
 
+**Also note that files cannot be modified within the Docker container. You must exit the container, modify the appropriate file within the `copper/run` directory on gage, and then re-enter the Docker container.**
+
 ### Accessing the Docker constainer
 
 Ensure that you are logged into gage before proceeding. Navigate inside of the Copper repo execute the command `source venv/bin/activate`. Ensure the environment is active before proceeding.
@@ -214,7 +216,7 @@ It is also necessary to follow the **Setting up the PNNL environmental variables
 To access the Docker image, navigate to the `copper/scripts` directory and run `./runcosim.sh`.
 This will take you inside of the Docker container. 
 
-Currently, gage only has access to one commercial optimization solver, cplex. It is necessary to add cplex to your path variable. This can be done by executing the command `export PATH=$PATH:/home/worker/tenv/ibm/cplex/bin/x86-64_linux`. 
+Currently, gage only has access to one commercial optimization solver, cplex. It is necessary to add cplex to your path variable. This can be done by executing the command `export PATH=$PATH:/home/worker/tenv/ibm/cplex/bin/x86-64_linux`. This step must be performed **each** time you enter the Docker container.
 
 ### Setting up your test scenario
 
@@ -225,8 +227,6 @@ Lastly, to run the `runner.py`, it is necessary to use `python3 runner.py`. If y
 ### Executing your scenario
 
 Running the `runner.py` will automatically create a shell file titled `{scenario_name}.sh`. In its present form, this shell file is NOT compatible with `osw_tso.py`. For now, it is best to modify the shell file to match the form of the `runner.sh` (see this section under **Execution (Locally)** for more details on the `runner.sh`). **We are currently working to make this process better, so expect changes here soon.**
-
-**Note that files cannot be modified within the Docker container. You must exit the container, modify the appropriate file within the `copper/run` directory on gage, and then re-enter the Docker container.**
 
 Once you have a modified shell file, you can start a scenario with `./{scenario_name}.sh`. 
 You may view the rolling output with the command `tail -f {log_name}.log}`. Results can then be retrieved by following the **Retrieving your results** section of **Execution (Locally)**.
