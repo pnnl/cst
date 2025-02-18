@@ -39,7 +39,7 @@ class Runner:
         self.federation_name = federation_name
         self.docker = docker
         # self.db = DBConfigs(cst.cosim_mongo_host, cst.cosim_mongo_db)
-        self.db = DBConfigs(cst.cosim_mg_host, cst.cosim_mongo_db)
+        self.db = DBConfigs(cst.cst_mg_host, cst.cst_mongo_db)
 
     def define_scenario(self):
         prefix = "source /home/worker/venv/bin/activate"
@@ -122,8 +122,8 @@ class Runner:
         }
         print(diction)
 
-        self.db.remove_document(cst.cu_federations, None, self.federation_name)
-        self.db.add_dict(cst.cu_federations, self.federation_name, diction)
+        self.db.remove_document(cst.cst_federations, None, self.federation_name)
+        self.db.add_dict(cst.cst_federations, self.federation_name, diction)
         # print(cst.cu_federations, self.db.get_collection_document_names(cst.cu_federations))
         # print(self.federation_name, self.db.get_dict(cst.cu_federations, None, self.federation_name))
 
@@ -132,8 +132,8 @@ class Runner:
                                     "2032-01-01T00:00:00",
                                     "2032-01-03T00:00:00",
                                     self.docker)
-        self.db.remove_document(cst.cu_scenarios, None, self.scenario_name)
-        self.db.add_dict(cst.cu_scenarios, self.scenario_name, scenario)
+        self.db.remove_document(cst.cst_scenarios, None, self.scenario_name)
+        self.db.add_dict(cst.cst_scenarios, self.scenario_name, scenario)
         # print(cst.cu_scenarios, self.db.get_collection_document_names(cst.cu_scenarios))
         # print(self.scenario_name, self.db.get_dict(cst.cu_scenarios, None, self.scenario_name))
 
@@ -142,8 +142,8 @@ def main():
     with_docker = False
     r = Runner("osw_lmp_test_scenario_kaitlynn", "osw_test_schema_kaitlynn", "osw_test_federation", with_docker)
     r.define_scenario()
-    print(r.db.get_collection_document_names(cst.cu_scenarios))
-    print(r.db.get_collection_document_names(cst.cu_federations))
+    print(r.db.get_collection_document_names(cst.cst_scenarios))
+    print(r.db.get_collection_document_names(cst.cst_federations))
     if with_docker:
         DockerRunner.define_yaml(r.scenario_name)
         if remote:
