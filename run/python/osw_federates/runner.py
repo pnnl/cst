@@ -22,6 +22,15 @@ h5filepath = '/home/worker/WECC240_20240807.h5'
 h5 = h5fun.H5(h5filepath)
 buses = h5("/mdb/Bus")
 
+"""
+python osw_tso.py 
+ OSW_TSO 
+ osw_lmp_test_scenario 
+ /Users/lill771/Documents/Data/GridView/WECC240_20240807.h5 
+ 2032-1-01T00:00:00 
+ 2032-01-03T00:00:00
+"""
+
 class Runner:
 
     def __init__(self, scenario_name, schema_name, federation_name, docker=False):

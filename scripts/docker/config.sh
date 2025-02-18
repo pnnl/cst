@@ -19,10 +19,8 @@ CONFIG_BUILDS=(
   "library" "./" "$SKIP"
   "build" "${CST_ROOT}/scripts/build/" "$SKIP"
   "helics" "./" "$BUILD"
-#  "pyhelics" "./" "$BUILD"
   "python" "${CST_ROOT}/src/cosim_toolbox/" "$BUILD"
-#  "tespapi" "./" "$SKIP"
-#  "julia" "./" "$SKIP"
+#  "osw" "./" "$BUILD"
 )
 
 # Image full path on the remote registry
