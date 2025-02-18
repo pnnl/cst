@@ -216,8 +216,6 @@ It is also necessary to follow the **Setting up the PNNL environmental variables
 To access the Docker image, navigate to the `copper/scripts` directory and run `./runcosim.sh`.
 This will take you inside of the Docker container. 
 
-Currently, gage only has access to one commercial optimization solver, cplex. It is necessary to add cplex to your path variable. This can be done by executing the command `export PATH=$PATH:/home/worker/tenv/ibm/cplex/bin/x86-64_linux`. This step must be performed **each** time you enter the Docker container.
-
 ### Setting up your test scenario
 
 The steps here are identical to those in this section under **Execution (Locally)** with a few notable changes. First, the H5 file we are using for runs is inside of the `home/worker` directory of the Docker image. The Docker does not have access to the ECOMP shared drive, so please ensure use the path to the H5 file already inside of the container. 
