@@ -10,7 +10,7 @@ adapted by Molly 8/29/24
 mollyrose.kelly-gorham@pnnl.gov
 """
 
-import cosim_toolbox as cst
+import cosim_toolbox as env
 from cosim_toolbox.dbConfigs import DBConfigs
 from cosim_toolbox.dockerRunner import DockerRunner
 from cosim_toolbox.helicsConfig import HelicsMsg, Collect
@@ -19,17 +19,11 @@ import pandas as pd
 from gridtune.pcm import h5fun
  
 h5filepath = '/home/worker/WECC240_20240807.h5'
+b_time = "2032-01-01T00:00:00"
+e_time = "2032-01-03T00:00:00"
+
 h5 = h5fun.H5(h5filepath)
 buses = h5("/mdb/Bus")
-
-"""
-python osw_tso.py 
- OSW_TSO 
- osw_lmp_test_scenario 
- /Users/lill771/Documents/Data/GridView/WECC240_20240807.h5 
- 2032-1-01T00:00:00 
- 2032-01-03T00:00:00
-"""
 
 class Runner:
 
@@ -39,10 +33,11 @@ class Runner:
         self.federation_name = federation_name
         self.docker = docker
         # self.db = DBConfigs(cst.cosim_mongo_host, cst.cosim_mongo_db)
-        self.db = DBConfigs(cst.cst_mg_host, cst.cst_mongo_db)
+        self.db = DBConfigs(env.cst_mg_host, env.cst_mongo_db)
+        # error check for scenario
+
 
     def define_scenario(self):
-        prefix = "source /home/worker/venv/bin/activate"
         names = ["OSW_TSO", "OSW_Plant"]
         t1 = HelicsMsg(names[0], 30) #CHANGE FROM 30 SECONDS TO 15 MINUTES
         if self.docker:
@@ -78,9 +73,8 @@ class Runner:
         f1 = {
             "logger": False,
             "image": "cosim-python:latest",
-            "prefix": prefix,
             "h5filepath": h5filepath,
-            "command": "python3 osw_tso.py " + names[0] + " " + self.scenario_name,
+            "command": f"python3 osw_tso.py {names[0]} {self.scenario_name} {h5filepath} {b_time} {e_time}",
             "federate_type": "combo",
             "time_step": 120,
             "HELICS_config": t1.write_json()
@@ -107,7 +101,6 @@ class Runner:
         f2 = {
             "logger": False,
             "image": "cosim-python:latest",
-            "prefix": prefix,
             "command": "python3 osw_plant.py " + names[1] + " " + self.scenario_name,
             "federate_type": "value",
             "time_step": 120,
@@ -122,28 +115,28 @@ class Runner:
         }
         print(diction)
 
-        self.db.remove_document(cst.cst_federations, None, self.federation_name)
-        self.db.add_dict(cst.cst_federations, self.federation_name, diction)
+        self.db.remove_document(env.cst_federations, None, self.federation_name)
+        self.db.add_dict(env.cst_federations, self.federation_name, diction)
         # print(cst.cu_federations, self.db.get_collection_document_names(cst.cu_federations))
         # print(self.federation_name, self.db.get_dict(cst.cu_federations, None, self.federation_name))
 
         scenario = self.db.scenario(self.schema_name,
                                     self.federation_name,
-                                    "2032-01-01T00:00:00",
-                                    "2032-01-03T00:00:00",
+                                    b_time,
+                                    e_time,
                                     self.docker)
-        self.db.remove_document(cst.cst_scenarios, None, self.scenario_name)
-        self.db.add_dict(cst.cst_scenarios, self.scenario_name, scenario)
+        self.db.remove_document(env.cst_scenarios, None, self.scenario_name)
+        self.db.add_dict(env.cst_scenarios, self.scenario_name, scenario)
         # print(cst.cu_scenarios, self.db.get_collection_document_names(cst.cu_scenarios))
         # print(self.scenario_name, self.db.get_dict(cst.cu_scenarios, None, self.scenario_name))
 
 def main():
     remote = False
     with_docker = False
-    r = Runner("osw_lmp_test_scenario_kaitlynn", "osw_test_schema_kaitlynn", "osw_test_federation", with_docker)
+    r = Runner("osw_test_scenario_mp", "osw_test_schema_mp", "osw_test_federation_mp", with_docker)
     r.define_scenario()
-    print(r.db.get_collection_document_names(cst.cst_scenarios))
-    print(r.db.get_collection_document_names(cst.cst_federations))
+    print(r.db.get_collection_document_names(env.cst_scenarios))
+    print(r.db.get_collection_document_names(env.cst_federations))
     if with_docker:
         DockerRunner.define_yaml(r.scenario_name)
         if remote:
