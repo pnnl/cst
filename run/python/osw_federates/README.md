@@ -116,7 +116,7 @@ Note MacOSX users will need to mount the `Shared Data` folder (through Finder ->
 -> enter `smb://pnl/Projects/ECOMP/Shared Data`) to use PyEnergyMarket tests.
 
 Optionally, you may download a local copy of this H5 file to your system. Please place it **outside
-of the repos**. Whether local or on the shared drive, note the path you used (hereafter: <path-to-WECC-h5>).
+of the repos**. Whether local or on the shared drive, note the path you used (hereafter: `<path-to-WECC-h5>`).
 
 ### Setting up your test scenario
 
