@@ -12,18 +12,10 @@ mollyrose.kelly-gorham@pnnl.gov
 
 import cosim_toolbox as env
 from cosim_toolbox.dbConfigs import DBConfigs
+from cosim_toolbox.dbResults import DBResults
 from cosim_toolbox.dockerRunner import DockerRunner
 from cosim_toolbox.helicsConfig import HelicsMsg, Collect
-
-import pandas as pd
 from gridtune.pcm import h5fun
- 
-h5filepath = '/home/worker/WECC240_20240807.h5'
-b_time = "2032-01-01T00:00:00"
-e_time = "2032-01-03T00:00:00"
-
-h5 = h5fun.H5(h5filepath)
-buses = h5("/mdb/Bus")
 
 class Runner:
 
@@ -32,12 +24,31 @@ class Runner:
         self.schema_name = schema_name
         self.federation_name = federation_name
         self.docker = docker
-        # self.db = DBConfigs(cst.cosim_mongo_host, cst.cosim_mongo_db)
         self.db = DBConfigs(env.cst_mg_host, env.cst_mongo_db)
-        # error check for scenario
 
+        # error check for scenario results
+        self.dl = DBResults()
+        self.dl.open_database_connections()
+        if self.dl.schema_exist(self.schema_name):
+            df = self.dl.get_scenario_list(self.schema_name, "hdt_string")
+            if df.shape[0] > 0:
+                print(f"There are results in this scenario-> {scenario_name}, and this schema-> {schema_name}")
+                choice = input(f"Want to remove these scenario results? (Yy/Nn)")
+                if choice in ['y', 'Y', 'yes', 'YES']:
+                    self.dl.remove_scenario(self.schema_name, self.scenario_name)
+                else:
+                    print(f"Runner has ended, no output was generated, rename or remove scenario and/or schema")
+                    exit()
 
-    def define_scenario(self):
+        # uncomment debug, clears schema
+        # which means all scenarios are gone in that scheme
+        # self.dl.drop_schema(self.scheme_name)
+
+    def define_scenario(self, h5filepath, b_time, e_time):
+        h5 = h5fun.H5(h5filepath)
+        buses = h5("/mdb/Bus")
+        h5.close()
+
         names = ["OSW_TSO", "OSW_Plant"]
         t1 = HelicsMsg(names[0], 30) #CHANGE FROM 30 SECONDS TO 15 MINUTES
         if self.docker:
@@ -134,7 +145,7 @@ def main():
     remote = False
     with_docker = False
     r = Runner("osw_test_scenario_mp", "osw_test_schema_mp", "osw_test_federation_mp", with_docker)
-    r.define_scenario()
+    r.define_scenario('/home/worker/WECC240_20240807.h5', "2032-01-01T00:00:00", "2032-01-03T00:00:00")
     print(r.db.get_collection_document_names(env.cst_scenarios))
     print(r.db.get_collection_document_names(env.cst_federations))
     if with_docker:
@@ -146,7 +157,6 @@ def main():
     else:
         DockerRunner.define_sh(r.scenario_name)
 
-    h5.close()
 
 if __name__ == "__main__":
     main()
