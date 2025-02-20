@@ -46,6 +46,7 @@ class Runner:
 
     def define_scenario(self, h5filepath, b_time, e_time):
         h5 = h5fun.H5(h5filepath)
+        generators = h5("/mdb/Generator")
         buses = h5("/mdb/Bus")
         h5.close()
 
@@ -68,17 +69,19 @@ class Runner:
         t1.pubs_e(names[0] + "/res_dispatch", "string", "MW")
         #t1.subs_e(names[1] + "/res_bids", "list", "V")
         t1.pubs_e(names[0] + "/windforecast", "string", "mps", True, Collect.YES)# collect into logger or not.
-        for b in buses["BusID"]:
-            t1.pubs_e(f"{names[0]}/da_price_{b}", "string", "$")
+        for b in buses["BusID"]:    
+            t1.pubs_e(f"{names[0]}/da_price_{b}", "string", "$")    
             t1.pubs_e(f"{names[0]}/rt_price_{b}", "string", "$")
+        for g in generators["GeneratorName"]:    
+            t1.pubs_e(f"{names[0]}/rt_dispatch_{g}", "string", "$")
         # Add reserve price names
-        price_keys = ['regulation_up_price', 'regulation_down_price', 'flexible_ramp_up_price',
+        price_keys = ['regulation_up_price', 'regulation_down_price', 'flexible_ramp_up_price',              
                       'flexible_ramp_down_price']
         # TODO: call areas from the h5 file
         area_keys = ['CALIFORN', 'MEXICO', 'NORTH', 'SOUTH']
-        for area in area_keys:
-            for key in price_keys:
-                # price_dict[area + ' ' + key] = da_results.data["elements"]["area"][area][key]
+        for area in area_keys:    
+            for key in price_keys:        
+                # price_dict[area + ' ' + key] = da_results.data["elements"]["area"][area][key]        
                 t1.pubs_e(f"{names[0]}/da_{key}_{area}", "string", "$")
 
         f1 = {
@@ -144,8 +147,8 @@ class Runner:
 def main():
     remote = False
     with_docker = False
-    r = Runner("osw_test_scenario_mp", "osw_test_schema_mp", "osw_test_federation_mp", with_docker)
-    r.define_scenario('/home/worker/WECC240_20240807.h5', "2032-01-01T00:00:00", "2032-01-03T00:00:00")
+    r = Runner("osw_test_scenario_kl", "osw_test_schema_kl", "osw_test_federation", with_docker)
+    r.define_scenario('/Users/lill771/Documents/Data/GridView/WECC240_20240807.h5', "2032-01-01T00:00:00", "2032-01-03T00:00:00")
     print(r.db.get_collection_document_names(env.cst_scenarios))
     print(r.db.get_collection_document_names(env.cst_federations))
     if with_docker:
