@@ -156,12 +156,12 @@ class DBResults:
             cur.execute(query)
             self.data_db.commit()
 
-    def schema_exist(self, scheme_name: str) -> None:
+    def schema_exist(self, scheme_name: str) -> bool:
         with self.data_db.cursor() as cur:
             cur.execute("select * from information_schema.tables "
                         "where table_schema=%s",
                         (scheme_name,))
-            if bool(cur.rowcount):  return
+            return(bool(cur.rowcount))
 
     def table_exist(self, analysis_name: str, table_name: str) -> None:
         """Checks to see if the specified tables exist in the specified analysis
