@@ -224,7 +224,5 @@ Lastly, to run the `runner.py`, it is necessary to use `python3 runner.py`. If y
 
 ### Executing your scenario
 
-Running the `runner.py` will automatically create a shell file titled `{scenario_name}.sh`. In its present form, this shell file is NOT compatible with `osw_tso.py`. For now, it is best to modify the shell file to match the form of the `runner.sh` (see this section under **Execution (Locally)** for more details on the `runner.sh`). **We are currently working to make this process better, so expect changes here soon.**
-
-Once you have a modified shell file, you can start a scenario with `./{scenario_name}.sh`. 
+Running the `runner.py` will automatically create a shell file titled `{scenario_name}.sh`. You can start a scenario with `./{scenario_name}.sh`. 
 You may view the rolling output with the command `tail -f {log_name}.log}`. Results can then be retrieved by following the **Retrieving your results** section of **Execution (Locally)**.
