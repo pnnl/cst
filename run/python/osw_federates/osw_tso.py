@@ -25,8 +25,8 @@ from egret.data.model_data import ModelData
 
 from cosim_toolbox.federate import Federate
 from cosim_toolbox.dbResults import DBResults
-from osw_da_market import OSWDAMarket
-from osw_rt_market import OSWRTMarket
+from pyenergymarket.marketmodels.osw_da_market import OSWDAMarket
+from pyenergymarket.marketmodels.osw_rt_market import OSWRTMarket
 # from osw_reserves_market import OSWReservesMarket
 
 logger = logging.getLogger(__name__)
@@ -186,15 +186,20 @@ class OSWTSO(Federate):
 
         # Run the first actual DA market, so the RT market has commitment
         logger.info("Clearing an initial day-ahead market")
-        self._clear_and_save("da_energy_market")
-        # Add commitment variables to real-time market
+        self.markets["da_energy_market"].clear_market()
+        # Update prices for data sent to the federation
+        da_results = self.markets["da_energy_market"].market_results
+        self._update_da_prices(da_results)
+        # Add commitment variables to real-time market and clear the first RT interval
         if "rt_energy_market" in self.markets.keys():
             da_commitment = self.markets["da_energy_market"].commitment_hist
             self.markets["rt_energy_market"].join_da_commitment(da_commitment)
             # Also saving day-ahead solutions to RT for 1st RT initialization
             self.markets["rt_energy_market"].da_mdl_sol = self.markets["da_energy_market"].em.mdl_sol
-            # Clear one real-time market (ensures correct timestamps) and save results
-            self._clear_and_save("rt_energy_market")
+            # Now run an initial RT market (required to properly sync timesteps) and send data to federation
+            self.markets["rt_energy_market"].clear_market()
+            rt_results = self.markets["rt_energy_market"].market_results
+            self._update_rt_prices(rt_results)
 
     def calculate_next_requested_time(self):
         """
@@ -237,9 +242,11 @@ class OSWTSO(Federate):
         TDH hopes this will be straight-forward and may take the form of calls
         to methods of an EGRET object.
         """
-        # TODO: may need to process results prior to returning them
+        # Get state time
         current_state_time = self.markets["da_energy_market"].update_market()
+        # Move to next market state
         self.markets["da_energy_market"].move_to_next_state()
+        # If it is a clearing state, clear the market and return the Egret ModelData results
         if self.markets["da_energy_market"].state == "clearing":
             return self.markets["da_energy_market"].market_results
         else:
@@ -254,8 +261,6 @@ class OSWTSO(Federate):
         TDH hopes this will be straight-forward and may take the form of calls
         to methods of an EGRET object.
         """
-
-        # TODO: may need to process results prior to returning them
         self.markets["reserve_market"].update_market()
         return self.markets["reserve_market"].market_results
        
@@ -268,8 +273,11 @@ class OSWTSO(Federate):
         to methods of an EGRET object.
         """
         logger.debug(f"I MADE IT INTO RTM with state {self.markets['rt_energy_market'].state}")
+        # Get the state time
         current_state_time = self.markets["rt_energy_market"].update_market()
+        # Move state
         self.markets["rt_energy_market"].move_to_next_state()
+        # If in clearing, clear the market and return the Egret ModelData results
         if self.markets["rt_energy_market"].state == "clearing":
             return self.markets["rt_energy_market"].market_results
         else:
@@ -306,13 +314,11 @@ class OSWTSO(Federate):
         for bus, b_dict in rt_results.elements(element_type="bus"):
             new_dict = f"{b_dict['lmp']}"
             new_dict = new_dict.replace("'", '"')
-            print(f"Saving publication {self.federate_name}/rt_price_{bus[0:4]}")
             self.data_to_federation["publications"][f"{self.federate_name}/rt_price_{bus[0:4]}"] = new_dict
         if save_dispatch:
             for gen, g_dict in rt_results.elements(element_type="generator"):
                 dispatch = f"{g_dict['pg']}"
                 dispatch = dispatch.replace("'", '"')
-                print(f"Saving publication {self.federate_name}/rt_dispatch_{gen}")
                 self.data_to_federation["publications"][f"{self.federate_name}/rt_dispatch_{gen}"] = dispatch
 
     def update_internal_model(self):
@@ -359,7 +365,7 @@ class OSWTSO(Federate):
                     # Only run this if we are still within horizon (omit a potential final DA save/pass)
                     if this_start_time <= max(dam.start_times):
                         self._update_da_prices(da_results)
-                        # Pass info on to real-time market, if it is present
+                        # Pass commitment info on to real-time market, if it is present
                         if "rt_energy_market" in self.markets.keys():
                             da_commitment = self.markets["da_energy_market"].commitment_hist
                             self.markets["rt_energy_market"].join_da_commitment(da_commitment)
@@ -368,10 +374,12 @@ class OSWTSO(Federate):
                 # = da_results["reserves_prices"]["osw_area"]
         if "rt_energy_market" in self.markets.keys():
             logger.debug("tso:", self.markets["rt_energy_market"].em.configuration["time"]["min_freq"])
+            # Check if it is time to run the market
             if self.markets["rt_energy_market"].next_state_time == round(self.granted_time):
                 rt_results = self.run_rt_ed_market()
+                # After a market run, update the prices to send to the HELICS federation
                 if isinstance(rt_results, ModelData):
-                    self._update_rt_prices(rt_results)
+                    self._update_rt_prices(rt_results, save_dispatch=True)
 
     def run_market_loop(self, market, file_name):
         """ 
@@ -435,15 +443,15 @@ def run_osw_tso(h5filepath: str, start: str="2032-01-01 00:00:00", end: str="203
             "states": {
                 "idle": {
                     "start_time": 0,
-                    "duration": 85800
+                    "duration": 42660
                 },
                 "bidding": {
-                    "start_time": 85800,
+                    "start_time": 42660,
                     "duration": 540
                 },
                 "clearing": {
-                    "start_time": 86340,
-                    "duration": 60
+                    "start_time": 43200,
+                    "duration": 43200
                 },
             },
             "initial_offset": 0,
