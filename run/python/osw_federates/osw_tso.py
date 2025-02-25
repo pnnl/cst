@@ -148,6 +148,8 @@ class OSWTSO(Federate):
         """
         Initializes the power system and market models
         """
+
+        '''
         # Specify the number of days to run before the simulation. Running at least one day helps ensure all
         # units are started up appropriately and avoids potential anomalous prices at the start of the simulation
         # Data from the pre-simulation days is not saved
@@ -177,7 +179,10 @@ class OSWTSO(Federate):
                 num_rt = int((24*60)/self.markets["rt_energy_market"].em.configuration["min_freq"])
                 for rt_mkt in range(num_rt):
                     logger.info(f"Clearing pre-simulation RT market {rt_mkt} of day -{pre_simulation_days-day}")
+                    # TODO: This always runs the first RT interval - check if this is okay. Otherwise
+                    # we can run all of the intervals then reset timestep to 0 at the end.
                     self._clear_and_save("rt_energy_market", save=False, advance_timestep=advance_timestep)
+        '''
 
         # Run the first actual DA market, so the RT market has commitment
         logger.info("Clearing an initial day-ahead market")
