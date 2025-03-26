@@ -18,6 +18,7 @@ import sys
 import pandas as pd
 import copy
 import json
+import cosim_toolbox
 
 # internal packages
 import pyenergymarket as pyen
@@ -92,6 +93,9 @@ class OSWTSO(Federate):
         self.market_timing = market_timing
         self.markets = self.calculate_initial_market_times(self.markets)
         # print("tso init:", self.markets["rt_energy_market"].em.configuration["time"]["min_freq"])
+
+        wind_data = self.pull_data_from_db("osw_era5_schema","windspeeds")
+        print("WIND DATA:", wind_data)
 
     def calculate_initial_market_times(self, markets):
         """
@@ -226,6 +230,31 @@ class OSWTSO(Federate):
         """
         pass
 
+    def pull_data_from_db(self,schema_name,table_name):
+        """
+        Pulls tabular data from postgreSQL by schema and table names and converts
+        the tabular data into a pandas dataframe
+        """
+        connection = cosim_toolbox.cst_data_db
+        connection['host'] = 'gage.pnl.gov'
+        db_conn = self.dl._connect_logger_database()
+        cursor = db_conn.cursor()
+        query = f"SELECT * FROM {schema_name}.{table_name}"
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        colnames = [desc[0] for desc in cursor.description]
+        df = pd.DataFrame(rows,columns=colnames)
+        return df
+
+    def extract_one_day(self,df,day):
+        """
+        Takes in full time series data and returns data for just one specified day
+        """
+        timestamp = pd.to_datetime(day)
+        print("timestamp: ", timestamp)
+        print(timestamp.year, timestamp.day)
+        return df[(df['real_time'].dt.year == timestamp.year) & (df['real_time'].dt.dayofyear == timestamp.day)]
+
     def generate_wind_forecasts(self) -> list:
         """
         The T2 controller needs 30 wind forecast profiles to run their 
@@ -352,6 +381,8 @@ class OSWTSO(Federate):
             if self.markets["da_energy_market"].next_state_time == round(self.granted_time):
             # if self.markets["da_energy_market"].next_state_time == round(self.granted_time) and ((self.stop_time - self.granted_time) > 600):
                 if self.markets["da_energy_market"].state == "idle":
+                    one_day_wind_data = self.extract_one_day(self.pull_data_from_db("osw_era5_schema","windspeeds"),self.markets["da_energy_market"].current_start_time)
+                    print("one day wind data: ", one_day_wind_data)
                     self.generate_wind_forecasts() # TODO Publish these for T2 (OSW_Plant) federate to subscribe to
                 # Grab the DAM start time before running UC (it moves to the 'next' start time as part of the clearing)
                 dam = self.markets["da_energy_market"]
@@ -402,7 +433,7 @@ class OSWTSO(Federate):
 
 
 def run_osw_tso(h5filepath: str, start: str="2032-01-01 00:00:00", end: str="2032-1-03 00:00:00",
-                pre_simulation_days=1):
+                pre_simulation_days=0):
     #h5filepath: str,
 # if __name__ == "__main__":
     # TODO: we might need to make this an actual object rather than a dict.
@@ -603,7 +634,7 @@ if __name__ == "__main__":
                                  pre_simulation_days=pre_simulation_days)
         wecc_market_fed.create_federate(sys.argv[2])
         wecc_market_fed.run_cosim_loop()
-        wecc_market_fed.markets["da_energy_market"].em.data_provider.h5.close()
+        # wecc_market_fed.markets["da_energy_market"].em.data_provider.h5.close()
         # wecc_market_fed.markets["rt_energy_market"].em.data_provider.h5.close()
         wecc_market_fed.destroy_federate()
  
