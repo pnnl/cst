@@ -134,6 +134,9 @@ class WindFarm:
         # Objective and solver initialization
         model.objective = Objective(expr=sum(model.pDA[t] for t in T) - Weight * sum(model.pDiff[t, s] for t in T for s in S) / np.size(WP, 0), sense=maximize)
         solver = SolverFactory('ipopt')
+        solver.options['print_level'] = 0
+        solver.options['print_time'] = 0
+        solver.options['sb'] = 'yes'
         # solver.options['tee'] = False
         # result= solver.solve(model, tee=False)
         result= solver.solve(model)
@@ -153,6 +156,7 @@ class WindFarm:
     # SymRes is the rate between up and down reserve
     def create_day_ahead_energy_bid(self, current_time, wind_forecast, Weight=3, SymRes=1):
         future_time = current_time.ceil('D')
+        print(f'OBC/DA: {future_time}')
         if future_time in self.DABid:
             DABid = self.DABid[future_time]
             return [[[0, DABid[i]], 0, DABid[i]] for i in range(24)]
@@ -167,6 +171,7 @@ class WindFarm:
     # Otherwise it specifies the rate between them, the function returns two vectors
     def create_reserve_bid(self, current_time, wind_forecast, Weight=3, SymRes=1):
         future_time = current_time.ceil('D')
+        print(f'OBC/Res: {future_time}')
         if future_time in self.UpRev:
             if SymRes == 1:
                 # Return the minimum of up and down reserves if SymRes is 1
@@ -209,6 +214,8 @@ class WindFarm:
         future_time = current_time.ceil('15min')
         current_day = current_time.floor('D')
         current_hour = current_time.hour
+
+        print(f'OBC/RT: Future time: {future_time}, curr_day: {current_day}, curr_hour: {current_hour}')
 
         DelfU = self.Delf
         if current_day in self.reserve_clearing:
@@ -273,6 +280,9 @@ class WindFarm:
 
         ######## store bidding result in the dictionary and return it ###########
         solver = SolverFactory('ipopt')
+        solver.options['print_level'] = 0
+        solver.options['print_time'] = 0
+        solver.options['sb'] = 'yes'
         # solver.options['tee'] = False
         # result = solver.solve(model, tee=False)
         result = solver.solve(model)
@@ -301,6 +311,7 @@ class WindFarm:
         future_time = current_time.ceil('15min')
         current_day = current_time.floor('D')
         current_hour = current_time.hour
+        print(f'OBC/Disp: Future time: {future_time}, curr_day: {current_day}, curr_hour: {current_hour}')
 
         if current_day in self.reserve_clearing:
             pRU = self.reserve_clearing[current_day][current_hour]/self.PowerBase
@@ -387,6 +398,9 @@ class WindFarm:
         model.objective = Objective(expr=model.pDiff, sense=minimize)
         
         solver = SolverFactory('ipopt')
+        solver.options['print_level'] = 0
+        solver.options['print_time'] = 0
+        solver.options['sb'] = 'yes'
         # solver.options['tee'] = False
         # result = solver.solve(model, tee=False)
         result = solver.solve(model)
@@ -397,11 +411,13 @@ class WindFarm:
         if (result.solver.status == SolverStatus.ok) and (result.solver.termination_condition == TerminationCondition.optimal):
             self.SoC = model.SC.value
             self.HisSoC[future_time] = self.SoC
+            print(f'Disp Optimal: [{model.pWR.value * self.PowerBase}, 0], SOC: {self.SoC}')
             return [model.pWR.value * self.PowerBase, 0]
         else:
             print("Solver Status: ", result.solver.status)
             ### if no solution, remove transmission loss and reserve from wind power for dispatch, no battery operation
             self.HisSoC[future_time] = self.SoC
+            print(f'Disp Unoptimal: [{max(WP*(1-self.RatedPower/self.g/self.Vmax[0]**2)-pRU, 0)*self.PowerBase}, 0], SOC: {self.SoC}')
             return [max(WP*(1-self.RatedPower/self.g/self.Vmax[0]**2)-pRU, 0)*self.PowerBase, 0]
         
 
