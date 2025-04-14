@@ -30,10 +30,6 @@ sys.path.append(os.path.join(file_path, "plant"))
 from OnlineBidClass_tk import WindFarm as WF
 from T2_Controller_Class import T2_Controller as TC
 
-from load_db_data import DB 
-
-from create_synthetic_forecast import SF
-
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler())
 logger.setLevel(logging.ERROR)
@@ -59,12 +55,6 @@ class OSWPLANT(Federate):
 
         # initialize WF
         self.OneWindFarm = TC.initialize_WindFarm()
-        
-        # # load yearlong wind information
-        # schema = "osw_era5_schema"
-        # tables = ["windspeeds", "power_normalization"]
-        # Data = DB().read_db_data(schema, tables)
-        # self.windspeeds = Data['windspeeds']
 
         # get list of buses
 

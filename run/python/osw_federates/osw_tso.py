@@ -256,7 +256,7 @@ class OSWTSO(Federate):
         """
         # timestamp = pd.to_datetime(day)
         timestamp = timestamp.replace(year = 2016)
-        print("timestamp: ", timestamp)
+        # print("timestamp: ", timestamp)
         # print(timestamp.year, timestamp.day)
         # return df[(df['real_time'].dt.year == timestamp.year) & (df['real_time'].dt.dayofyear == timestamp.day)]
         return df.loc[(df.index.year == timestamp.year) & (df.index.dayofyear == timestamp.day)]
@@ -291,8 +291,6 @@ class OSWTSO(Federate):
         return current_windspeed
 
 
-
-    
     def autocor_norm(self, av,st,le,au):
         # average, standard deviation, length, autocorrelation
         rn = np.random.normal(av,st,le)
@@ -465,7 +463,7 @@ class OSWTSO(Federate):
                 # Run the unit commitment problem
                 da_results = self.run_da_uc_market()
                 
-                ## Enter bidding? Read results from osw_plant??
+                ## Enter bidding? Read results from osw_plant?? ---- move to collect bids?? leave (bcoz from federation) then pass to market
                 if self.markets["da_energy_market"].state == "bidding":
                     da_bid = self.data_from_federation["inputs"]['OSW_Plant/da_bids']
                     print(f'DA Bid: {da_bid}')
@@ -497,29 +495,8 @@ class OSWTSO(Federate):
                     current_windspeed = self.get_current_windspeed(rt_timestamp, bus)
                     self.data_to_federation["publications"][f"{self.federate_name}/wind_rt"] = str(current_windspeed)
                     print(f'current published windspeed: {current_windspeed}')
-                    # try:
-                    #     wind_rt = interp_wind[bus].loc[self.markets["rt_energy_market"].current_start_time]
-                    #     self.data_to_federation["publications"][f"{self.federate_name}/wind_rt"] = str(wind_rt)
-                    #     print(wind_rt)
-                    # except Exception as ex:
-                    #     print(f'No pd {ex}')
-
-                    # try:
-                    #     wind_rt = interp_wind[bus].loc[rt_timestamp]
-                    #     self.data_to_federation["publications"][f"{self.federate_name}/wind_rt"] = str(wind_rt)
-                    #     print(wind_rt)
-                    # except Exception as ex:
-                    #     print(f'pd datetime {ex}')
-
-                # # get two days data then do interpolation for 15 minute data for RT
-                #     current_day = self.extract_one_day(self.pull_data_from_db("osw_era5_schema","windspeeds"),self.markets["da_energy_market"].current_start_time)
-                #     next_day =  self.extract_one_day(self.pull_data_from_db("osw_era5_schema","windspeeds"),self.markets["da_energy_market"].current_start_time)
-                #     # cycle through offshore wind forecasts and publish generated forecasts lists
-                #     bus = 'bus_3234'
-                #     forecast_list = self.generate_wind_forecasts(curr_day_wind_data[bus]) # TODO Publish these for T2 (OSW_Plant) federate to subscribe to
-                #     print(f'forecast_list: {forecast_list}')
-                #     self.data_to_federation["publications"][f"{self.federate_name}/wind_forecasts"] = str(forecast_list)
-
+                    rt_bid = self.data_from_federation["inputs"]['OSW_Plant/rt_bids']
+                    print(f'RT Bid: {rt_bid}')
 
                 rt_results = self.run_rt_ed_market()
                 # After a market run, update the prices to send to the HELICS federation
