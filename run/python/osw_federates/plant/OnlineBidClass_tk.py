@@ -134,9 +134,6 @@ class WindFarm:
         # Objective and solver initialization
         model.objective = Objective(expr=sum(model.pDA[t] for t in T) - Weight * sum(model.pDiff[t, s] for t in T for s in S) / np.size(WP, 0), sense=maximize)
         solver = SolverFactory('ipopt')
-        solver.options['print_level'] = 0
-        solver.options['print_time'] = 0
-        solver.options['sb'] = 'yes'
         # solver.options['tee'] = False
         # result= solver.solve(model, tee=False)
         result= solver.solve(model)
@@ -280,9 +277,6 @@ class WindFarm:
 
         ######## store bidding result in the dictionary and return it ###########
         solver = SolverFactory('ipopt')
-        solver.options['print_level'] = 0
-        solver.options['print_time'] = 0
-        solver.options['sb'] = 'yes'
         # solver.options['tee'] = False
         # result = solver.solve(model, tee=False)
         result = solver.solve(model)
@@ -398,9 +392,6 @@ class WindFarm:
         model.objective = Objective(expr=model.pDiff, sense=minimize)
         
         solver = SolverFactory('ipopt')
-        solver.options['print_level'] = 0
-        solver.options['print_time'] = 0
-        solver.options['sb'] = 'yes'
         # solver.options['tee'] = False
         # result = solver.solve(model, tee=False)
         result = solver.solve(model)
