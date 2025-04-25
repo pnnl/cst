@@ -259,7 +259,7 @@ class OSWTSO(Federate):
         # print("timestamp: ", timestamp)
         # print(timestamp.year, timestamp.day)
         # return df[(df['real_time'].dt.year == timestamp.year) & (df['real_time'].dt.dayofyear == timestamp.day)]
-        return df.loc[(df.index.year == timestamp.year) & (df.index.dayofyear == timestamp.day)]
+        return df.loc[(df.index.year == timestamp.year) & (df.index.dayofyear == timestamp.dayofyear)]
         # return df.loc[timestamp]
 
     
@@ -421,7 +421,7 @@ class OSWTSO(Federate):
                 dispatch = dispatch.replace("'", '"')
                 self.data_to_federation["publications"][f"{self.federate_name}/rt_dispatch_{gen}"] = dispatch
 
-    def update_internal_model(self, forecast_wind=False):
+    def update_internal_model(self, forecast_wind=True):
         """
         Overload of Federate class method
 
@@ -480,7 +480,7 @@ class OSWTSO(Federate):
                 # Run the unit commitment problem
                 da_results = self.run_da_uc_market()
                 
-                ## Enter bidding? Read results from osw_plant?? ---- move to collect bids?? leave (bcoz from federation) then pass to market
+                # Enter bidding? Read results from osw_plant?? ---- move to collect bids?? leave (bcoz from federation) then pass to market
                 if forecast_wind:
                     if self.markets["da_energy_market"].state == "bidding":
                         da_bid = self.data_from_federation["inputs"]['OSW_Plant/da_bids']

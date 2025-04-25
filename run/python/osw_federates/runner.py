@@ -45,18 +45,25 @@ class Runner:
         # which means all scenarios are gone in that scheme
         # self.dl.drop_schema(self.scheme_name)
 
-    def define_scenario(self, h5filepath, b_time, e_time):
+    def define_scenario(self, h5filepath, b_time, e_time, include_plant=False):
+        # Retrieve information from h5 file
         h5 = h5fun.H5(h5filepath)
         generators = h5("/mdb/Generator")
         buses = h5("/mdb/Bus")
         # h5.close()
 
+        # Lists for federate setup
         names = ["OSW_TSO", "OSW_Plant"]
         # Reserve prices by area and product
         reserve_keys = ['regulation_up', 'regulation_down', 'flexible_ramp_up',
                       'flexible_ramp_down']
         # TODO: call areas from the h5 file
         area_keys = ['CALIFORN', 'MEXICO', 'NORTH', 'SOUTH']
+
+        ###########################################################
+        ############# TSO federate settings #######################
+        ###########################################################
+        # Configuration
         t1 = HelicsMsg(names[0], 30) #CHANGE FROM 30 SECONDS TO 15 MINUTES
         if self.docker:
             t1.config("brokeraddress", "10.5.0.2")
@@ -68,14 +75,19 @@ class Runner:
         #        t1.config("wait_for_current_time_update", True)
         t1.collect(Collect.YES)
 
-        ###########################################################
-        ############# TSO publications list #######################
-        ###########################################################
+        # Publications for TSO
         # Publish json-formatted string with model results
         t1.pubs_e(f"{names[0]}/da_model_results", "string", "json")
         t1.pubs_e(f"{names[0]}/rt_model_results", "string", "json")
         # Wind forecast for OSW farm
-        t1.pubs_e(names[0] + "/windforecast", "string", "mps", True, Collect.YES)  # collect into logger or not.
+        t1.pubs_e(names[0] + "/rt_dispatch", "string", "MW")
+        t1.subs_e(names[1] + "/rt_bids", "string", "MW")
+        t1.pubs_e(names[0] + "/da_dispatch", "string", "MW")
+        t1.subs_e(names[1] + "/da_bids", "string", "MW")
+        t1.pubs_e(names[0] + "/res_dispatch", "string", "MW")
+        t1.subs_e(names[1] + "/res_bids", "string", "MW")
+        t1.pubs_e(names[0] + "/wind_forecasts", "string", "mps")  # collect into logger or not.
+        t1.pubs_e(names[0] + "/wind_rt", "string", "mps")
         # Dispatch values by generator
         for g in generators["GeneratorName"]:
             t1.pubs_e(f"{names[0]}/rt_dispatch_{g}", "string", "MW")
@@ -103,6 +115,10 @@ class Runner:
             "HELICS_config": t1.write_json()
         }
 
+        ###########################################################
+        ################# OSW federate settings ###################
+        ###########################################################
+        # Configuration
         t2 = HelicsMsg(names[1], 30) # 30 seconds == how frequently HELICS checks if there's any update from federate
         if self.docker:
             t2.config("brokeraddress", "10.5.0.2")
@@ -113,9 +129,7 @@ class Runner:
         t2.config("terminate_on_error", True)
 #        t2.config("wait_for_current_time_update", True)
 
-        ###########################################################
-        ########## OSW publications/subscriptions list ############
-        ###########################################################
+        # Publications/subscriptions list
         t2.subs_e(names[0] + "/rt_dispatch", "string", "MW")
         t2.pubs_e(names[1] + "/rt_bids", "string", "MW")
         t2.subs_e(names[0] + "/da_dispatch", "string", "MW")
@@ -123,6 +137,7 @@ class Runner:
         t2.subs_e(names[0] + "/res_dispatch", "string", "MW")
         t2.pubs_e(names[1] + "/res_bids", "string", "MW")
         t2.subs_e(names[0] + "/wind_forecasts", "string", "mps") # meters per second
+        t2.subs_e(names[0] + "/wind_rt", "string", "mps")
 
         f2 = {
             "logger": False,
@@ -136,11 +151,15 @@ class Runner:
         diction = {
             "federation": {
                 names[0]: f1 ,
-                # names[1]: f2
             }
         }
-        print(diction)
+        if include_plant:
+            diction["federation"].update({names[1]: f2})
+        print(diction["federation"].keys())
 
+        ###########################################################
+        ############### Establish scenario on DB ##################
+        ###########################################################
         self.db.remove_document(env.cst_federations, None, self.federation_name)
         self.db.add_dict(env.cst_federations, self.federation_name, diction)
         # print(cst.cu_federations, self.db.get_collection_document_names(cst.cu_federations))
@@ -160,28 +179,38 @@ def get_config():
     """Creates a json configuration file. This can be edited to allow users to change options
        without affecting runner.py
     """
-    if not os.path.exists("runner_config.json"):
-        default_config = {
-            "scenario_name": "osw_test_scenario",
-            "schema_name": "osw_test_schema",
-            "federation_name": "osw_test_federation",
-            "h5path": "/Users/lill771/Documents/Data/GridView/WECC240_20240807.h5",
-            "beginning_time": "2032-01-01T00:00:00",
-            "ending_time": "2032-01-03T00:00:00",
-        }
+    def _write_config(new_config, exit_message=True):
         with open('runner_config.json', 'w') as f:
-            json.dump(default_config, f, indent=4)
-        print("Created file `runner_config.json` with default settings."
-              "\nEdit this file to customize your run scenario settings.")
-        exit(0)
+            json.dump(new_config, f, indent=4)
+        if exit_message:
+            print("Created file `runner_config.json` with default settings."
+                  "\nEdit this file to customize your run scenario settings.")
+            exit(0)
+    default_config = {
+        "scenario_name": "osw_test_scenario",
+        "schema_name": "osw_test_schema",
+        "federation_name": "osw_test_federation",
+        "h5path": "/Users/lill771/Documents/Data/GridView/WECC240_20240807.h5",
+        "beginning_time": "2032-01-01T00:00:00",
+        "ending_time": "2032-01-03T00:00:00",
+        "include_plant": False
+    }
+    if not os.path.exists("runner_config.json"):
+        _write_config(default_config)
     else:
         with open('runner_config.json', 'r') as f:
             config = json.load(f)
+        # If new default options are added, write these to the existing config, but keep running
+        for key in default_config.keys():
+            if key not in config.keys():
+                config[key] = default_config[key]
+        _write_config(config, exit_message=False)
     return config
 
 def main(config, remote=False, with_docker=False):
     r = Runner(config["scenario_name"], config["schema_name"], config["federation_name"], with_docker)
-    r.define_scenario(config["h5path"], config["beginning_time"], config["ending_time"])
+    r.define_scenario(config["h5path"], config["beginning_time"], config["ending_time"],
+                      include_plant=config["include_plant"])
     print(r.db.get_collection_document_names(env.cst_scenarios))
     print(r.db.get_collection_document_names(env.cst_federations))
     if with_docker:
