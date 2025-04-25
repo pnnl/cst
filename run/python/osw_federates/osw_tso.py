@@ -63,7 +63,7 @@ class OSWTSO(Federate):
     methods can be called as stand-alone operations. 
     """
 
-    def __init__(self, fed_name, market_timing, markets:dict={}, **kwargs):
+    def __init__(self, fed_name, market_timing, markets:dict={}, publish_model=False, **kwargs):
         """
         Add a few extra things on top of the Federate class init
 
@@ -79,6 +79,7 @@ class OSWTSO(Federate):
 
         # Holds the market objects 
         self.markets = markets
+        self.publish_model = publish_model
 
         # I don't think we will ever use the "last_market_time" values 
         # but they will give us confidence that we're doing things correctly.
@@ -402,6 +403,10 @@ class OSWTSO(Federate):
                         res_dispatch = res_dispatch.replace("'", '"')
                         self.data_to_federation["publications"][f"{self.federate_name}/da_{key}_dispatch_{gen}"] = \
                             res_dispatch
+        if self.publish_model:
+            timestep = self.markets["da_energy_market"].timestep
+            results_string = json.dumps(da_results.data)
+            self.data_to_federation["publications"][f"{self.federate_name}/da_model_results"] = results_string
 
     def _update_rt_prices(self, rt_results: ModelData, save_dispatch:bool=True):
         """
@@ -420,6 +425,10 @@ class OSWTSO(Federate):
                 dispatch = f"{g_dict['pg']}"
                 dispatch = dispatch.replace("'", '"')
                 self.data_to_federation["publications"][f"{self.federate_name}/rt_dispatch_{gen}"] = dispatch
+        if self.publish_model:
+            timestep = self.markets["rt_energy_market"].timestep
+            results_string = json.dumps(rt_results.data)
+            self.data_to_federation["publications"][f"{self.federate_name}/rt_model_results"] = results_string
 
     def update_internal_model(self, forecast_wind=True):
         """
