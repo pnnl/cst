@@ -279,7 +279,7 @@ class OSWTSO(Federate):
 
     def get_current_windspeed(self, timestamp, bus):
         curr_day_wind_data = self.extract_one_day(self.pull_data_from_db("osw_era5_schema","windspeeds"),timestamp)
-        next_timestamp = timestamp.replace(day = timestamp.day + 1)
+        next_timestamp = timestamp + datetime.timedelta(days=1)
         next_day_wind_data = self.extract_one_day(self.pull_data_from_db("osw_era5_schema","windspeeds"), next_timestamp)
 
         current_windspeed = self.interpolate_rt_wind_forecasts(curr_day_wind_data, next_day_wind_data)
@@ -367,7 +367,7 @@ class OSWTSO(Federate):
         else:
             return current_state_time
 
-    def _update_da_prices(self, da_results: ModelData):
+    def _update_da_prices(self, da_results: ModelData, save_dispatch:bool=True):
         """
         Updates the day-ahead bus prices sent to the HELICS federation
 
@@ -375,19 +375,35 @@ class OSWTSO(Federate):
             da_results (Egret ModelData object): Egret model results from a cleared Day-ahead market
         """
         # area_keys = ['CALIFORN', 'MEXICO', 'NORTH', 'SOUTH']
-        price_keys = ['regulation_up_price', 'regulation_down_price', 'flexible_ramp_up_price',
-                      'flexible_ramp_down_price']
+        reserve_keys = ['regulation_up', 'regulation_down', 'flexible_ramp_up',
+                      'flexible_ramp_down']
         for bus, b_dict in da_results.elements(element_type="bus"):
             new_dict = f"{b_dict['lmp']}"
             new_dict = new_dict.replace("'", '"')
             self.data_to_federation["publications"][f"{self.federate_name}/da_price_{bus[0:4]}"] = new_dict
         for area, area_dict in da_results.elements(element_type="area"):
-            for key in price_keys:
-                reserve_dict = f"{da_results.data['elements']['area'][area][key]}"
+            for key in reserve_keys:
+                res_price_key = f"{key}_price" # Matches Egret naming convention
+                reserve_dict = f"{da_results.data['elements']['area'][area][res_price_key]}"
                 reserve_dict = reserve_dict.replace("'", '"')
-                self.data_to_federation["publications"][f"{self.federate_name}/da_{key}_{area}"] = reserve_dict
+                self.data_to_federation["publications"][f"{self.federate_name}/da_{key}_price_{area}"] = reserve_dict
+        # Also can save the dispatch results from the market
+        if save_dispatch:
+            for gen, g_dict in da_results.elements(element_type="generator"):
+                # Power/Energy
+                dispatch = f"{g_dict['pg']}"
+                dispatch = dispatch.replace("'", '"')
+                self.data_to_federation["publications"][f"{self.federate_name}/da_dispatch_{gen}"] = dispatch
+                # Reserves/Ancillary Services
+                for key in reserve_keys:
+                    supplied = f"{key}_supplied"
+                    if supplied in g_dict.keys(): # Only save if the reserve is actually supplied by this gen
+                        res_dispatch = f"{g_dict[supplied]}"
+                        res_dispatch = res_dispatch.replace("'", '"')
+                        self.data_to_federation["publications"][f"{self.federate_name}/da_{key}_dispatch_{gen}"] = \
+                            res_dispatch
 
-    def _update_rt_prices(self, rt_results: ModelData, save_dispatch=True):
+    def _update_rt_prices(self, rt_results: ModelData, save_dispatch:bool=True):
         """
         Updates the real-time bus prices sent to the HELICS federation. Option to also save rt dispatch
 
@@ -405,7 +421,7 @@ class OSWTSO(Federate):
                 dispatch = dispatch.replace("'", '"')
                 self.data_to_federation["publications"][f"{self.federate_name}/rt_dispatch_{gen}"] = dispatch
 
-    def update_internal_model(self):
+    def update_internal_model(self, forecast_wind=False):
         """
         Overload of Federate class method
 
@@ -442,20 +458,21 @@ class OSWTSO(Federate):
             # if self.markets["da_energy_market"].next_state_time == round(self.granted_time) and ((self.stop_time - self.granted_time) > 600):
                 if self.markets["da_energy_market"].state == "idle":
                     timestamp = pd.to_datetime(self.markets["da_energy_market"].current_start_time)
-                    curr_day_wind_data = self.extract_one_day(self.pull_data_from_db("osw_era5_schema","windspeeds"),timestamp)
-                    print("one day wind data: ", curr_day_wind_data)
-                    print(f'DA Market: {self.markets["da_energy_market"].current_start_time}')
-                    try:
-                        next_timestamp = timestamp.replace(day = timestamp.day + 1)
-                        next_day_wind_data = self.extract_one_day(self.pull_data_from_db("osw_era5_schema","windspeeds"), next_timestamp)
-                    except Exception as ex:
-                        print(ex)
-                    
-                    # cycle through offshore wind forecasts and publish generated forecasts lists
-                    bus = 'bus_3234'
-                    forecast_list = self.generate_wind_forecasts(curr_day_wind_data[bus]) # TODO Publish these for T2 (OSW_Plant) federate to subscribe to
-                    print(f'forecast_list: {np.shape(forecast_list)} {forecast_list}')
-                    self.data_to_federation["publications"][f"{self.federate_name}/wind_forecasts"] = str(forecast_list)
+                    if forecast_wind:
+                        curr_day_wind_data = self.extract_one_day(self.pull_data_from_db("osw_era5_schema","windspeeds"),timestamp)
+                        print("one day wind data: ", curr_day_wind_data)
+                        print(f'DA Market: {self.markets["da_energy_market"].current_start_time}')
+                        try:
+                            next_timestamp = timestamp + datetime.timedelta(days=1)
+                            next_day_wind_data = self.extract_one_day(self.pull_data_from_db("osw_era5_schema","windspeeds"), next_timestamp)
+                        except Exception as ex:
+                            print(ex)
+
+                        # cycle through offshore wind forecasts and publish generated forecasts lists
+                        bus = 'bus_3234'
+                        forecast_list = self.generate_wind_forecasts(curr_day_wind_data[bus]) # TODO Publish these for T2 (OSW_Plant) federate to subscribe to
+                        print(f'forecast_list: {np.shape(forecast_list)} {forecast_list}')
+                        self.data_to_federation["publications"][f"{self.federate_name}/wind_forecasts"] = str(forecast_list)
 
                 # Grab the DAM start time before running UC (it moves to the 'next' start time as part of the clearing)
                 dam = self.markets["da_energy_market"]
@@ -464,9 +481,10 @@ class OSWTSO(Federate):
                 da_results = self.run_da_uc_market()
                 
                 ## Enter bidding? Read results from osw_plant?? ---- move to collect bids?? leave (bcoz from federation) then pass to market
-                if self.markets["da_energy_market"].state == "bidding":
-                    da_bid = self.data_from_federation["inputs"]['OSW_Plant/da_bids']
-                    print(f'DA Bid: {da_bid}')
+                if forecast_wind:
+                    if self.markets["da_energy_market"].state == "bidding":
+                        da_bid = self.data_from_federation["inputs"]['OSW_Plant/da_bids']
+                        print(f'DA Bid: {da_bid}')
 
                 #reserve_results = self.run_reserve_market()
                 #self.data_to_federation["publication"][f"{self.federate_name}/da_clearing_result"] = da_results["prices"]["osw_node"]
@@ -487,16 +505,17 @@ class OSWTSO(Federate):
             logger.debug("tso:", self.markets["rt_energy_market"].em.configuration["time"]["min_freq"])
             # Check if it is time to run the market
             if self.markets["rt_energy_market"].next_state_time == round(self.granted_time):
-                if self.markets["rt_energy_market"].state == "idle":
-                    print(f'RT_Market: {self.markets["rt_energy_market"].current_start_time}')
-                    rt_timestamp = pd.to_datetime(self.markets["rt_energy_market"].current_start_time)
-                    # cycle through offshore wind forecasts and publish generated forecasts lists
-                    bus = 'bus_3234'
-                    current_windspeed = self.get_current_windspeed(rt_timestamp, bus)
-                    self.data_to_federation["publications"][f"{self.federate_name}/wind_rt"] = str(current_windspeed)
-                    print(f'current published windspeed: {current_windspeed}')
-                    rt_bid = self.data_from_federation["inputs"]['OSW_Plant/rt_bids']
-                    print(f'RT Bid: {rt_bid}')
+                if forecast_wind:
+                    if self.markets["rt_energy_market"].state == "idle":
+                        print(f'RT_Market: {self.markets["rt_energy_market"].current_start_time}')
+                        rt_timestamp = pd.to_datetime(self.markets["rt_energy_market"].current_start_time)
+                        # cycle through offshore wind forecasts and publish generated forecasts lists
+                        bus = 'bus_3234'
+                        current_windspeed = self.get_current_windspeed(rt_timestamp, bus)
+                        self.data_to_federation["publications"][f"{self.federate_name}/wind_rt"] = str(current_windspeed)
+                        print(f'current published windspeed: {current_windspeed}')
+                        rt_bid = self.data_from_federation["inputs"]['OSW_Plant/rt_bids']
+                        print(f'RT Bid: {rt_bid}')
 
                 rt_results = self.run_rt_ed_market()
                 # After a market run, update the prices to send to the HELICS federation
@@ -683,14 +702,13 @@ def run_osw_tso(h5filepath: str, start: str="2032-01-01 00:00:00", end: str="203
             "dateto": end,
             'min_freq':15, # 15 minutes
             'window':1,
-            'lookahead':1
+            'lookahead':4
         },
         "solve_arguments": {
             "solver": solver,
             "solver_tee": False, # change to False to remove some logging
             "OutputFlag": 0,  # Gurobi-specific option to suppress output
             "solver_options": {
-                "solver_tee": False,
                 "OutputFlag": 0  # Gurobi-specific option to suppress output
             },
             "kwargs":{
