@@ -63,7 +63,7 @@ class OSWTSO(Federate):
     methods can be called as stand-alone operations. 
     """
 
-    def __init__(self, fed_name, market_timing, markets:dict={}, publish_model=False, **kwargs):
+    def __init__(self, fed_name, market_timing, markets:dict={}, options=None, **kwargs):
         """
         Add a few extra things on top of the Federate class init
 
@@ -79,7 +79,8 @@ class OSWTSO(Federate):
 
         # Holds the market objects 
         self.markets = markets
-        self.publish_model = publish_model
+        self.publish_model = options['simulation']['publish_model']
+        self.pre_simulation_days = options['simulation']['pre_simulation_days']
 
         # I don't think we will ever use the "last_market_time" values 
         # but they will give us confidence that we're doing things correctly.
@@ -206,6 +207,7 @@ class OSWTSO(Federate):
             self.markets["rt_energy_market"].clear_market()
             rt_results = self.markets["rt_energy_market"].market_results
             self._update_rt_prices(rt_results)
+        print("Finished initialization")
 
     def calculate_next_requested_time(self):
         """
@@ -404,7 +406,6 @@ class OSWTSO(Federate):
                         self.data_to_federation["publications"][f"{self.federate_name}/da_{key}_dispatch_{gen}"] = \
                             res_dispatch
         if self.publish_model:
-            timestep = self.markets["da_energy_market"].timestep
             results_string = json.dumps(da_results.data)
             self.data_to_federation["publications"][f"{self.federate_name}/da_model_results"] = results_string
 
@@ -426,11 +427,10 @@ class OSWTSO(Federate):
                 dispatch = dispatch.replace("'", '"')
                 self.data_to_federation["publications"][f"{self.federate_name}/rt_dispatch_{gen}"] = dispatch
         if self.publish_model:
-            timestep = self.markets["rt_energy_market"].timestep
             results_string = json.dumps(rt_results.data)
             self.data_to_federation["publications"][f"{self.federate_name}/rt_model_results"] = results_string
 
-    def update_internal_model(self, forecast_wind=True):
+    def update_internal_model(self, forecast_wind=False):
         """
         Overload of Federate class method
 
@@ -552,7 +552,7 @@ class OSWTSO(Federate):
 
 
 def run_osw_tso(h5filepath: str, start: str="2032-01-01 00:00:00", end: str="2032-1-03 00:00:00",
-                pre_simulation_days=0):
+                options: dict=None):
     #h5filepath: str,
 # if __name__ == "__main__":
     # TODO: we might need to make this an actual object rather than a dict.
@@ -620,6 +620,7 @@ def run_osw_tso(h5filepath: str, start: str="2032-01-01 00:00:00", end: str="203
     # If adding pre-simulation days, modify the start time. OSWTSO will run these without saving
     # This allows all units to be turned on properly and avoids potential anomalous data early in the simulation
     start_year = pd.to_datetime(start).year
+    pre_simulation_days = options['simulation']['pre_simulation_days']
     start = pd.to_datetime(start) - datetime.timedelta(days=pre_simulation_days)
     # PyEnergymarket doesn't automatically wrap year so we'll have special handling in osw_tso.py for Jan 1 start date
     if start.year < start_year:
@@ -650,8 +651,8 @@ def run_osw_tso(h5filepath: str, start: str="2032-01-01 00:00:00", end: str="203
             }
         }
     }
-    loglevel = "INFO"
-    solver = "gurobi" # "cplex", "cplexamp", "gurobi" or "cbc"
+    loglevel = options['simulation']['loglevel_da']
+    solver = options['simulation']['solver'] # "cplex", "cplexamp", "gurobi" or "cbc"
     gv = pyen.GVParse(h5filepath, default=default_dam, logger_options={"level": loglevel})
 
     default_rtm = {
@@ -680,7 +681,7 @@ def run_osw_tso(h5filepath: str, start: str="2032-01-01 00:00:00", end: str="203
             }
         }
     }
-    loglevel = "WARNING"
+    loglevel = options['simulation']['loglevel_rt']
     gv_rt = pyen.GVParse(h5filepath, default=default_rtm, logger_options={"level": loglevel})
 
 
@@ -691,8 +692,8 @@ def run_osw_tso(h5filepath: str, start: str="2032-01-01 00:00:00", end: str="203
             "datefrom": start, # whole year
             "dateto": end,
             'min_freq': 60, #15 minutes
-            'window': 24,
-            'lookahead': 0
+            'window': options['market']['da_window'],
+            'lookahead': options['market']['da_lookahead'],
         },
         "solve_arguments": {
             "solver": solver,
@@ -709,9 +710,9 @@ def run_osw_tso(h5filepath: str, start: str="2032-01-01 00:00:00", end: str="203
         "time": {
             "datefrom": start, 
             "dateto": end,
-            'min_freq':15, # 15 minutes
-            'window':1,
-            'lookahead':4
+            'min_freq':options['market']['rt_min_freq'], # 15 minutes
+            'window':options['market']['rt_window'],
+            'lookahead':options['market']['rt_lookahead'],
         },
         "solve_arguments": {
             "solver": solver,
@@ -738,19 +739,64 @@ def run_osw_tso(h5filepath: str, start: str="2032-01-01 00:00:00", end: str="203
     if "rt" in market_timing.keys():
         markets["rt_energy_market"] = OSWRTMarket(start, end, "rt_energy_market", market_timing["rt"], min_freq=15,
                                               window=pyenconfig_rtm["time"]['window'],
+                                              lookahead=pyenconfig_rtm["time"]['lookahead'],
                                               market=em_rtm)
     
-    return market_timing, markets, solver, pre_simulation_days
+    return market_timing, markets, solver
     # osw = OSWTSO("WECC_market", market_timing, markets, solver=solver)
     # market = "da_energy_market"
     # osw.run_market_loop(market, "da_market_results_")
     # osw.run_market_loop(market, 'C:\\Users\\kell175\\copper\\run\\python\\results\\da_results_')
 
+def get_options(use_defaults=False) -> dict:
+    """ Gets the options from a json file (creating a new file if it doesn't exist).
+    TODO: this mostly mirrors get_config from runner.py -> these both could probably be pushed to a utils.py later
+    Args:
+        use_defaults (bool, optional): Whether to use default options instead of json file. Defaults to False.
+    ReturnsL
+        options (dict): A dictionary of the relevant options.
+    """
+    def _write_options(new_options, exit_message=True):
+        with open('options_osw.json', 'w') as f:
+            json.dump(new_options, f, indent=4)
+        if exit_message:
+            print("Created file `options_osw.json` with default settings."
+                  "\nEdit this file to customize your OSW settings.")
+            exit(0)
+    default_options = {'market': {'da_window': 24,
+                                  'da_lookahead': 0,
+                                  'rt_window': 1,
+                                  'rt_lookahead': 4,
+                                  'rt_min_freq': 15,
+                                  },
+                       'simulation': {'solver': 'gurobi',
+                                      'pre_simulation_days': 1,
+                                      'publish_model': False,
+                                      'loglevel_da': "INFO",
+                                      'loglevel_rt': "WARNING",}
+                       }
+    if use_defaults:
+        return default_options
+
+    # If not using defaults, read info from json. First time, json file will be created with default options
+    if not os.path.exists("options_osw.json"):
+        _write_options(default_options)
+    else:
+        with open('options_osw.json', 'r') as f:
+            options = json.load(f)
+        # If new default options are added, write these to the existing config, but keep running
+        for key in default_options.keys():
+            if key not in options.keys():
+                options[key] = default_options[key]
+        _write_options(options, exit_message=False)
+    return options
+
 if __name__ == "__main__":    
     if sys.argv.__len__() > 2:
-        market_timing, markets, solver, pre_simulation_days = run_osw_tso(sys.argv[3], sys.argv[4], sys.argv[5])
-        wecc_market_fed = OSWTSO(sys.argv[1], market_timing, markets, solver=solver,
-                                 pre_simulation_days=pre_simulation_days)
+        osw_options = get_options()
+        market_timing, markets, solver = run_osw_tso(sys.argv[3], sys.argv[4], sys.argv[5],
+                                                     options=osw_options)
+        wecc_market_fed = OSWTSO(sys.argv[1], market_timing, markets, options=osw_options)
         wecc_market_fed.create_federate(sys.argv[2])
         wecc_market_fed.run_cosim_loop()
         # wecc_market_fed.markets["da_energy_market"].em.data_provider.h5.close()

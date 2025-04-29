@@ -11,3 +11,6 @@ venv/
 docs/_build/
 docs/_static/
 docs/_template/
+run/python/osw_federates/runner_config.json
+run/python/osw_federates/options_osw.json
+run/python/osw_federates/query_info.json
