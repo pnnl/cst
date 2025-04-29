@@ -778,9 +778,9 @@ def get_options(use_defaults=False) -> dict:
     if use_defaults:
         return default_options
 
-    # If not using defaults, read info from json. First time, json file will be created with default options
+    # If not using defaults, read info from json. The first time through the code will be run with default settings
     if not os.path.exists("options_osw.json"):
-        _write_options(default_options)
+        _write_options(default_options, exit_message=False)
     else:
         with open('options_osw.json', 'r') as f:
             options = json.load(f)
