@@ -793,6 +793,8 @@ def get_options(use_defaults=False) -> dict:
 
 if __name__ == "__main__":    
     if sys.argv.__len__() > 2:
+        import time
+        t1 = time.time()
         osw_options = get_options()
         market_timing, markets, solver = run_osw_tso(sys.argv[3], sys.argv[4], sys.argv[5],
                                                      options=osw_options)
@@ -802,4 +804,6 @@ if __name__ == "__main__":
         # wecc_market_fed.markets["da_energy_market"].em.data_provider.h5.close()
         # wecc_market_fed.markets["rt_energy_market"].em.data_provider.h5.close()
         wecc_market_fed.destroy_federate()
+        t2 = time.time()
+        print(f"Total simulation time: {t2 - t1:.2f} seconds")
  
