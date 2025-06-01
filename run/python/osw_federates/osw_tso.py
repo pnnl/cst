@@ -17,9 +17,10 @@ import os
 import sys
 import pandas as pd
 import copy
-import json
 import cosim_toolbox
 import numpy as np
+
+np.random.seed(10)
 
 # internal packages
 import pyenergymarket as pyen
@@ -240,7 +241,11 @@ class OSWTSO(Federate):
         the tabular data into a pandas dataframe
         """
         connection = cosim_toolbox.cst_data_db
+        # connection['host'] = 'penny.pnl.gov'
         connection['host'] = 'gage.pnl.gov'
+        # connection['host'] = '192.168.20.5'
+        # connection['host'] = 'copper'
+
         db_conn = self.dl._connect_logger_database()
         cursor = db_conn.cursor()
         query = f"SELECT * FROM {schema_name}.{table_name}"
@@ -430,7 +435,7 @@ class OSWTSO(Federate):
             results_string = json.dumps(rt_results.data)
             self.data_to_federation["publications"][f"{self.federate_name}/rt_model_results"] = results_string
 
-    def update_internal_model(self, forecast_wind=False):
+    def update_internal_model(self, forecast_wind=True):
         """
         Overload of Federate class method
 
@@ -466,22 +471,23 @@ class OSWTSO(Federate):
             if self.markets["da_energy_market"].next_state_time == round(self.granted_time):
             # if self.markets["da_energy_market"].next_state_time == round(self.granted_time) and ((self.stop_time - self.granted_time) > 600):
                 if self.markets["da_energy_market"].state == "idle":
-                    timestamp = pd.to_datetime(self.markets["da_energy_market"].current_start_time)
+                    # timestamp = pd.to_datetime(self.markets["da_energy_market"].current_start_time)
                     if forecast_wind:
-                        curr_day_wind_data = self.extract_one_day(self.pull_data_from_db("osw_era5_schema","windspeeds"),timestamp)
-                        print("one day wind data: ", curr_day_wind_data)
-                        print(f'DA Market: {self.markets["da_energy_market"].current_start_time}')
-                        try:
-                            next_timestamp = timestamp + datetime.timedelta(days=1)
-                            next_day_wind_data = self.extract_one_day(self.pull_data_from_db("osw_era5_schema","windspeeds"), next_timestamp)
-                        except Exception as ex:
-                            print(ex)
-
-                        # cycle through offshore wind forecasts and publish generated forecasts lists
-                        bus = 'bus_3234'
-                        forecast_list = self.generate_wind_forecasts(curr_day_wind_data[bus]) # TODO Publish these for T2 (OSW_Plant) federate to subscribe to
-                        print(f'forecast_list: {np.shape(forecast_list)} {forecast_list}')
-                        self.data_to_federation["publications"][f"{self.federate_name}/wind_forecasts"] = str(forecast_list)
+                        timestamp = pd.to_datetime(self.markets["da_energy_market"].current_start_time)
+                        # timestamp = timestamp.replace(day = timestamp.day + 1)
+                        if (timestamp.hour == 0) & (timestamp.minute == 0):
+                            da_wind_data = self.extract_one_day(self.pull_data_from_db("osw_era5_schema","windspeeds"),timestamp.replace(day = timestamp.day + 1))
+                            print("one day wind data: ", da_wind_data)
+                            print(f'DA Market: {self.markets["da_energy_market"].current_start_time}')
+                            
+                            # cycle through offshore wind forecasts and publish generated forecasts lists
+                            # buses = ['4005','3902','3903','4202', '3911' ] #OSW buses
+                            osw_bus = 'bus_3902'
+                            forecast_list = self.generate_wind_forecasts(da_wind_data[osw_bus]) # TODO Publish these for T2 (OSW_Plant) federate to subscribe to
+                            print(f'{timestamp}, forecast_list: {np.shape(forecast_list)} {forecast_list}')
+                            # self.data_to_federation["publications"][f"{self.federate_name}/wind_forecasts"] = str(forecast_list)
+                            forecast_dict = json.dumps({"time": str(timestamp), "bus": osw_bus, "forecast": forecast_list.tolist()})
+                            self.data_to_federation["publications"][f"{self.federate_name}/wind_forecasts"] = forecast_dict
 
                 # Grab the DAM start time before running UC (it moves to the 'next' start time as part of the clearing)
                 dam = self.markets["da_energy_market"]
@@ -518,13 +524,15 @@ class OSWTSO(Federate):
                     if self.markets["rt_energy_market"].state == "idle":
                         print(f'RT_Market: {self.markets["rt_energy_market"].current_start_time}')
                         rt_timestamp = pd.to_datetime(self.markets["rt_energy_market"].current_start_time)
-                        # cycle through offshore wind forecasts and publish generated forecasts lists
-                        bus = 'bus_3234'
-                        current_windspeed = self.get_current_windspeed(rt_timestamp, bus)
-                        self.data_to_federation["publications"][f"{self.federate_name}/wind_rt"] = str(current_windspeed)
-                        print(f'current published windspeed: {current_windspeed}')
-                        rt_bid = self.data_from_federation["inputs"]['OSW_Plant/rt_bids']
-                        print(f'RT Bid: {rt_bid}')
+                        if (rt_timestamp.dayofyear > 1) & (np.mod(rt_timestamp.minute,15) == 0):
+                            # cycle through offshore wind forecasts and publish generated forecasts lists
+                            osw_bus = 'bus_3902'
+                            current_windspeed = self.get_current_windspeed(rt_timestamp, osw_bus)
+                            wind_rt_dict = json.dumps({"time": str(rt_timestamp), "bus": osw_bus, "wind_rt": current_windspeed})
+                            self.data_to_federation["publications"][f"{self.federate_name}/wind_rt"] = wind_rt_dict
+                            print(f'current published windspeed: {current_windspeed}')
+                            rt_bid = self.data_from_federation["inputs"]['OSW_Plant/rt_bids']
+                            print(f'RT Bid: {rt_bid}')
 
                 rt_results = self.run_rt_ed_market()
                 # After a market run, update the prices to send to the HELICS federation
@@ -699,7 +707,7 @@ def run_osw_tso(h5filepath: str, start: str="2032-01-01 00:00:00", end: str="203
             "solver": solver,
             "solver_tee": False,
             "kwargs":{
-                "solver_tee": True # change to False to remove some logging
+                "solver_tee": False # change to False to remove some logging
             }
         }
     }
