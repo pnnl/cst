@@ -120,30 +120,17 @@ of the repos**. Whether local or on the shared drive, note the path you used (he
 
 ### Setting up your test scenario
 
-***This process will be streamlined to minimize conflicts between team members.
-Stay tuned...***
-
-You may set up your scenario by directly editing runner.py. There are multiple options you can
+The first time you execute `runner.py` the code will create the file `runner_config.json` and exit.
+You may edit `runner_config.json` to set up your specific scenario. There are multiple options you can
 change here; for now we focus on the minimum changes to begin execution.
 
-1. Change `h5filepath` (around line 21) to your local/network H5 file path `<path-to-WECC-h5>`.
-2. Set your desired start and end date (running 2 days is a good starting test). This is around line 125; you may edit the 
-dates directly. This looks like:
-```
-scenario = self.db.scenario(self.schema_name,
-                                    self.federation_name,
-                                    "2032-01-01T00:00:00",
-                                    "2032-01-03T00:00:00",
-                                    self.docker)
-```
-3. Set up your custom schema and scenario. This controls the save location within the Postgres database. Within the `__main__`
-function edit 
-
-`r = Runner("osw_lmp_test_scenario", "osw_test_schema", "osw_test_federation", with_docker)`
-
-to something like (your exact name choices can vary)
-
-`r = Runner("osw_lmp_test_scenario_[your_initals]", "osw_test_schema_[your_username]", "osw_test_federation", with_docker)`
+1. Change `h5path` to your local/network H5 file path `<path-to-WECC-h5>`.
+2. Set your desired beginning time and ending time/date (running 2 days is a good starting test). These are
+string formatted as YYYY-mm-ddTHH:MM:SS (such as "2032-01-01T00:00:00") 
+3. Set up your custom schema and scenario. This controls the save location within the Postgres database. Your exact name choices can vary.
+If you chose a name with an existing schema or scenario, you will be asked whether to overwrite this or not. Ensure you only overwrite
+scenarios if you are the creator or have permission from the creator.
+4. If using the offshore wind plant, set `include_plant` to `true`, otherwise use `false`.
 
 You may now run
 
@@ -153,32 +140,15 @@ If this fails, ensure you have run `source cosim.env` and are connected to the P
 
 ### Executing your scenario
 
-***This process will be streamlined to minimize conflicts between team members.
-Stay tuned...***
+Running the `runner.py` will automatically create a shell file titled `{scenario_name}.sh`. You can start a scenario with `./{scenario_name}.sh`. 
+You may view the rolling output with the command `tail -f {log_name}.log}` or `less +F {log_name}.log}`. The default for `log_name` is `OSW_TSO`.
 
-Your chosen scenario is started by running
+When `osw_tso.py` is executed (this is done by `{scenario_name}.sh`), it will create the file `options_osw.json`. This file
+has various simulation settings that you may edit to customize your run, although the defaults are generally a good starting point.
 
-`./runner.sh`
-
-Before starting, check runner.sh for the following:
-1. In the first line `(exec helics_broker -f 1 ...` ensure the integer matches the number of federates
-(uncommented lines). The default should work, but must be changed to 2 when adding the OSW plant.
-2. In the second line update the scenario name, WECC h5 path, and start/stop dates. This should become:
-`(exec python osw_tso.py OSW_TSO <your_scenario_from_runner.py> <path-to-WECC-h5> <start_date_from_runner.py>
-<stop_date_from_runner.py> ...`
-
-You may also need to run the commands
-
-```
-chmod u+x kill_prev.sh
-chmod u+x runner.sh
-```
-
-Once this is done, you can start a scenario with `./runner.sh`
-
-You may view the rolling output with the command
-
-`less +F OSW_TSO50.log`
+Note that if a scenario encounters an error, the helics broker will
+not be stopped. You may need to run `./kill_prev.sh` or manually kill any hung processes before re-starting the scenario.
+This may require changing permissions using `chmod u+x kill_prev.sh`.
 
 ### Retrieving your results
 

@@ -18,7 +18,6 @@ import sys
 import pandas as pd
 import numpy as np
 import random
-import os
 
 
 # internal packages
@@ -27,7 +26,7 @@ from cosim_toolbox.dbResults import DBResults
 
 file_path = os.getcwd()
 sys.path.append(os.path.join(file_path, "plant"))
-from OnlineBidClass_tk import WindFarm as WF
+from OnlineBidClass_NoReserve_tk import WindFarm as WF
 from T2_Controller_Class import T2_Controller as TC
 
 logger = logging.getLogger(__name__)
@@ -45,7 +44,7 @@ class OSWPLANT(Federate):
         self.rt_bid: float = None # RT Bids
         self.da_bid: list = None # DA Bids
         self.res_bid: list = None # RES Bids
-        self.wind_forecast: list = None # wind forecasts
+        self.wind_forecasts: list = None # wind forecasts
         self.wind_speed_current_period: float = None
 
         #keys for the subscriptions
@@ -54,15 +53,20 @@ class OSWPLANT(Federate):
         self.res_dispatch: list = None # RES dispatch
 
         # initialize WF
-        self.OneWindFarm = TC.initialize_WindFarm()
-
+        # self.OneWindFarm = TC.initialize_WindFarm()
+        self.WF_inits = {}
         # get list of buses
+        for bus in ['4005','3902','3903','4202', '3911' ]: #OSW buses
+            self.WF_inits[f'bus_{bus}'] = TC.initialize_WindFarm(bus)
 
         # Set simulation start time
-        self.sim_start_time = pd.Timestamp(datetime.datetime(2020, 1, 1, 0, 0, 0))
+        self.sim_start_time = pd.Timestamp(datetime.datetime(2032, 1, 1, 0, 0, 0))
         self.sim_time = 0
 
-        self.prev_forecast = np.zeros((30,24))
+        self.da_time = self.sim_start_time
+        self.rt_time = self.sim_start_time
+
+        self.prev_forecasts = np.zeros((30,24))
         self.prev_wind_rt = -1000.00
 
         self.day_count = 0
@@ -85,101 +89,87 @@ class OSWPLANT(Federate):
 
 
     def read_published_forecasts(self):
-                # new_wind_forecast = np.fromstring(self.data_from_federation["inputs"]['OSW_TSO/wind_forecasts'], dtype = int, sep = ",")
-        new_wind_forecasts = self.data_from_federation["inputs"]['OSW_TSO/wind_forecasts']
+        jsonload = json.loads(self.data_from_federation["inputs"]['OSW_TSO/wind_forecasts'])
+        # print("DA JSONLOAD: ", jsonload)
         try:
-            new_wind_forecasts = np.fromstring(new_wind_forecasts.replace('[', '').replace(']', ''), sep=' ')[:,np.newaxis]
+            self.da_time = pd.Timestamp(jsonload['time'])
+            self.wind_forecasts = np.array(jsonload['forecast'])
+            self.da_bus = jsonload['bus']
+            # print("DA JSONLOAD: ", jsonload)
+
         except Exception as ex:
-            print(ex)
-        if len(new_wind_forecasts) >= 24:
-            self.wind_forecasts = new_wind_forecasts.reshape(int(len(new_wind_forecasts)/24), 24)
-        else:
-            self.wind_forecasts = new_wind_forecasts
+            # print('NWF error: ', ex)
+            self.wind_forecasts = self.prev_forecasts
 
     def read_rt_wind(self):
-        self.wind_rt = float(self.data_from_federation["inputs"]['OSW_TSO/wind_rt'])
+        jsonload = json.loads(self.data_from_federation["inputs"]['OSW_TSO/wind_rt'])
+        # print("RT JSONLOAD: ", jsonload)
+        try:
+            self.rt_time = pd.Timestamp(jsonload['time'])
+            self.wind_rt = (jsonload['wind_rt'])
+            self.rt_bus = jsonload['bus']
+            # print("RT JSONLOAD: ", jsonload)
+
+        except Exception as ex:
+            # print('WRT error: ', ex)
+            self.wind_rt = self.prev_wind_rt 
 
     # 
     def update_internal_model(self):
 
-        ## DIFF times for day ahead and RT???
-
-        # self.granted_time = min(self.sim_time_rt, self.sim_time_da)
-        self.granted_time = self.sim_time
-        ## convert HELICS time to pandas datetime
-        Time = self.sim_start_time + datetime.timedelta(seconds = self.granted_time)
-        # _wind_forecast = self.data_from_federation["inputs"]['OSW_TSO/wind_forecasts']
-        # wind_forecast = np.fromstring(_wind_forecast.replace('[', '').replace(']', ''), sep=' ')[:,np.newaxis]
         self.read_published_forecasts()
-        wind_forecast = self.wind_forecasts
-
         self.read_rt_wind()
-        # read_publ
-
-        # if (len(wind_forecast) >= 24) & (np.sum(np.sum(wind_forecast - self.prev_forecast))!= 0):
-        if (len(wind_forecast) >= 24) & ((wind_forecast != self.prev_forecast).any()):
-
-            try:
-                print(f"{Time}, {np.shape(wind_forecast)}, {wind_forecast}")
-            except Exception as ex:
-                print(ex)
-            # Generate DA Bid
-            self.da_bid = WF.create_day_ahead_energy_bid(self.OneWindFarm, Time, wind_forecast)
-            self.data_to_federation["publications"][f"{self.federate_name}/da_bids"] = str(self.da_bid)
-            print(Time, " ","DA Bid: ", self.da_bid)
         
-            # Generate Reserves
-            self.res_bid = WF.create_reserve_bid(self.OneWindFarm, Time, wind_forecast)
-            self.data_to_federation["publications"][f"{self.federate_name}/res_bids"] = str(self.res_bid)
-            print(Time, " ", "Reserve Bid: ", self.res_bid)
+        # Time = max(self.da_time, self.rt_time)
+        # print('Granted time: ',  self.sim_start_time + datetime.timedelta(seconds = self.granted_time))
+        # print('Time: ', Time)
 
-            # update reserves clearing
-            reserve_clearing = [self.res_bid[n][2] for n in range(1,24)]
-            # self.OneWindFarm.reserve_clearing[Dates.ceil(DTDA, Dates.Day)] = reserve_clearing;
-            self.OneWindFarm.reserve_clearing[Time.ceil('D')] = reserve_clearing
+        # if (np.sum(np.sum(self.prev_forecast)) != 0) & ((Time.hour == 0) & (Time.minute == 0)):
+        # print('WF: ', self.wind_forecasts)
+        # print('PF: ', np.sum(np.sum(self.prev_forecasts)), self.prev_forecasts)
+
+        # if (np.sum(np.sum(self.prev_forecast)) != 0) & (len(self.wind_forecast)) & ((self.wind_forecast != self.prev_forecast).any()) & ((Time.hour == 0) & (Time.minute == 0)):
+        # if (self.wind_forecast is not None) & ((self.wind_forecast != self.prev_forecast).any()) & ((Time.hour == 0) & (Time.minute == 0)):
+        if self.wind_forecasts is None:
+            self.wind_forecasts = self.prev_forecasts
+        
+        if ((self.wind_forecasts != self.prev_forecasts).any()):# & ((Time.hour == 0) & (Time.minute == 0)):
+
+            # Generate DA Bid
+            try:
+                bus = self.da_bus
+                self.da_bid = WF.create_day_ahead_energy_bid(self.WF_inits[bus], self.da_time, self.wind_forecasts)
+                self.data_to_federation["publications"][f"{self.federate_name}/da_bids"] = str(self.da_bid)
+                print(self.da_time, " ","DA Bid: ", self.da_bid)
+            except Exception as ex:
+                print('DA Bid Error: ', ex)
 
             # update prev_forecast
-            self.prev_forecast = wind_forecast
-
-            # # update sim_time
-            # self.sim_time += 60*60*24
-
+            self.prev_forecasts = self.wind_forecasts
 
         # # Generate RT Bid every 15 minutes --- start after 9:55am and go ad infinitum?
-        if (self.prev_wind_rt != self.wind_rt) & (self.wind_rt >= 0):
-            # print(f'WIND_RT: {self.wind_rt}')
-            print(f'RTM: {Time}')
-            try:
-                self.rt_bid = WF.create_real_time_energy_bid(self.OneWindFarm, Time, self.wind_rt)
-            except Exception as ex:
-                print(f"RT: {ex}")
+        # if 0:
+        if self.rt_time.dayofyear > 1:
+            if (self.prev_wind_rt != self.wind_rt) & (self.wind_rt >= 0):
+                # print(f'WIND_RT: {self.wind_rt}')
+                # print(f'RTM: {self.rt_time}')
+                try:
+                    bus = self.rt_bus
+                    self.rt_bid = WF.create_real_time_energy_bid(self.WF_inits[bus], self.rt_time, self.wind_rt) 
+                    self.data_to_federation["publications"][f"{self.federate_name}/rt_bids"] = str(self.rt_bid)
+                    print(self.rt_time, "RT Bid: ", self.rt_bid, "WindSpeed: ", self.wind_rt )
+                except Exception as ex:
+                    print(f"RT Bid Error: {ex}")
 
-            self.data_to_federation["publications"][f"{self.federate_name}/rt_bids"] = str(self.rt_bid)
-            print(Time, "RT Bid: ", self.rt_bid, "WindSpeed: ", self.wind_rt )
+                try:
+                    bus = self.rt_bus
+                    WF.create_dispatch(self.WF_inits[bus], self.rt_time+datetime.timedelta(minutes=1), [0,self.rt_bid], self.wind_rt)
+                    print(self.rt_time+datetime.timedelta(minutes=1), ' Dispatched')
+                except Exception as ex:
+                    print(f"Dispatch Error: {ex}")
 
-            try:
-                WF.create_dispatch(self.OneWindFarm, Time, [0,self.rt_bid], self.wind_rt)
-                print(Time, ' Dispatched')
-            except Exception as ex:
-                print(f"Dispatch: {ex}")
-
-            #
-            self.prev_wind_rt = self.wind_rt
-
-            # update sim_time
-            self.sim_time += 60*15
-
-
-        #     # store last RTM cleared HELICS time (float)
-        #     self.RTM_mostrecent_cleared_period = self.granted_time
-
-        # # # dispatch 5 mins after RT bidding
-        # if (self.RTM_mostrecent_cleared_period > 0) & (self.granted_time == (self.RTM_mostrecent_cleared_period + 5*60)):
-        #     try:
-        #         WF.create_dispatch(self.OneWindFarm, Time, [0,self.rt_bid], self.wind_speed_current_period)
-        #         print(Time, ' Dispatched')
-        #     except Exception as ex:
-        #         print(f"Dispatch: {ex}")
+                #
+                self.prev_wind_rt = self.wind_rt
 
 
 if __name__ == "__main__":    
