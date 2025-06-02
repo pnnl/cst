@@ -199,8 +199,11 @@ class OSWTSO(Federate):
         self._update_da_prices(da_results)
         # Add commitment variables to real-time market and clear the first RT interval
         if "rt_energy_market" in self.markets.keys():
+            # Commitment
             da_commitment = self.markets["da_energy_market"].commitment_hist
             self.markets["rt_energy_market"].join_da_commitment(da_commitment)
+            # State-of-Charge
+            self.markets["rt_energy_market"].storage_soc = self.markets["da_energy_market"].storage_soc
             # Also saving day-ahead solutions to RT for 1st RT initialization
             self.markets["rt_energy_market"].da_mdl_sol = self.markets["da_energy_market"].em.mdl_sol
             # Now run an initial RT market (required to properly sync timesteps) and send data to federation
@@ -501,10 +504,11 @@ class OSWTSO(Federate):
                     # Only run this if we are still within horizon (omit a potential final DA save/pass)
                     if this_start_time <= max(dam.start_times):
                         self._update_da_prices(da_results)
-                        # Pass commitment info on to real-time market, if it is present
+                        # Pass commitment and soc info on to real-time market, if it is present
                         if "rt_energy_market" in self.markets.keys():
                             da_commitment = self.markets["da_energy_market"].commitment_hist
                             self.markets["rt_energy_market"].join_da_commitment(da_commitment)
+                            self.markets["rt_energy_market"].storage_soc = self.markets["da_energy_market"].storage_soc
                 else:
                     print("da_next_time:", da_results)
                 # = da_results["reserves_prices"]["osw_area"]
@@ -567,24 +571,27 @@ def run_osw_tso(h5filepath: str, start: str="2032-01-01 00:00:00", end: str="203
     # the market interval and ending when clearing begins two minutes before 
     # the end of the interval.
 
+    # Use adjustable minute frequency to allow variable-length RTM
+    rtm_min_freq = options['market']['rt_min_freq']
+    rtm_mkt_interval = rtm_min_freq * 60
     rt_market_timing = {
             "states": {
                 "idle": {
                     "start_time": 0,
-                    "duration": 600
+                    "duration": int(rtm_mkt_interval*2/3),
                 },
                 "bidding": {
-                    "start_time": 600,
-                    "duration": 180
+                    "start_time": int(rtm_mkt_interval*2/3),
+                    "duration": int(rtm_mkt_interval*0.2),
                 },
                 "clearing": {
-                    "start_time": 780,
-                    "duration": 120
+                    "start_time": int(rtm_mkt_interval*2.6/3),
+                    "duration": int(rtm_mkt_interval*0.4/3),
                 }
             },
             "initial_offset":  0,
             "initial_state": "idle",
-            "market_interval": 900
+            "market_interval": rtm_mkt_interval
         }
     # Daily market with bidding beginning nine minutes before the end of 
     # the market interval and ending when clearing begins one minutee before 
@@ -737,7 +744,8 @@ def run_osw_tso(h5filepath: str, start: str="2032-01-01 00:00:00", end: str="203
     # Note that for now the reserves markets are operated when we run the day ahead energy market model, but I left the comment to remind us this may change.
     # markets["reserves_market"] = OSWReservesMarket("reserves_market", market_timing["reserves"])
     if "rt" in market_timing.keys():
-        markets["rt_energy_market"] = OSWRTMarket(start, end, "rt_energy_market", market_timing["rt"], min_freq=15,
+        markets["rt_energy_market"] = OSWRTMarket(start, end, "rt_energy_market", market_timing["rt"],
+                                              min_freq=pyenconfig_rtm["time"]["min_freq"],
                                               window=pyenconfig_rtm["time"]['window'],
                                               lookahead=pyenconfig_rtm["time"]['lookahead'],
                                               market=em_rtm)
