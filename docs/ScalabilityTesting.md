@@ -1,5 +1,7 @@
 # Scalability Testing 
 
+TODO update this to reflect actual implementation
+
 ## Motivation
 
 E-COMP leadership has prioritized scalability testing for CST as a "no-regrets" activity that can be started early in FY25. The purposes of this activity are as follows:
@@ -279,7 +281,7 @@ cst_results_validator.py # After all scenarios are complete, validate their resu
 cst_scalability_post_processing.py # After results have been validated, create the results graphs
 ```
 
-
+## Results
 
 ## Stretch Goals
 

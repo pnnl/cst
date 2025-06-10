@@ -1,0 +1,121 @@
+<mxfile host="65bd71144e">
+    <diagram id="3wqcLzqxSmU_hRkXba1D" name="Page-1">
+        <mxGraphModel dx="844" dy="774" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="10000" pageHeight="10000" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="42" value="" style="endArrow=classic;html=1;" parent="1" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="180" y="340" as="sourcePoint"/>
+                        <mxPoint x="1740" y="340" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="43" value="&lt;font style=&quot;font-size: 20px;&quot;&gt;Simulated Time&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="1760" y="325" width="160" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="44" value="&lt;font size=&quot;1&quot;&gt;create_real_time_energy_bid()&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;" parent="1" vertex="1">
+                    <mxGeometry x="390" y="290" width="150" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="45" value="&lt;font size=&quot;1&quot;&gt;May 1, 9:55am&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;fillColor=#0050ef;fontColor=#ffffff;strokeColor=#001DBC;" parent="1" vertex="1">
+                    <mxGeometry x="390" y="340" width="150" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="46" value="&lt;font size=&quot;1&quot;&gt;(formulate bid based on current conditions)&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;" parent="1" vertex="1">
+                    <mxGeometry x="390" y="140" width="150" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="47" value="" style="endArrow=classic;html=1;fontSize=14;exitX=0.25;exitY=0;exitDx=0;exitDy=0;entryX=0.25;entryY=1;entryDx=0;entryDy=0;" parent="1" source="44" target="46" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="550" y="330" as="sourcePoint"/>
+                        <mxPoint x="600" y="280" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="48" value="" style="endArrow=classic;html=1;fontSize=14;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" parent="1" source="46" target="44" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="430" y="300" as="sourcePoint"/>
+                        <mxPoint x="430" y="190" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="49" value="Real-Time&lt;br&gt;Energy Market" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=#005700;fillColor=#008a00;fontSize=14;fontColor=#ffffff;" parent="1" vertex="1">
+                    <mxGeometry x="50" y="320" width="110" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="50" value="&lt;div style=&quot;text-align: left;&quot;&gt;&lt;ul style=&quot;font-size: 12px;&quot;&gt;&lt;li&gt;&lt;span style=&quot;font-size: 12px; background-color: initial;&quot;&gt;current_time,&lt;/span&gt;&lt;/li&gt;&lt;li&gt;wind_speed_current_period&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" parent="1" vertex="1">
+                    <mxGeometry x="220" y="170" width="210" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="51" value="&lt;div style=&quot;text-align: left;&quot;&gt;&lt;ul style=&quot;font-size: 12px;&quot;&gt;&lt;li&gt;bid curve &lt;br&gt;[n of [Price, Quantity] Pmax, Pmin]&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" parent="1" vertex="1">
+                    <mxGeometry x="465" y="225" width="250" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="52" value="&lt;font size=&quot;1&quot;&gt;May 1, 10:00am&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;fillColor=#0050ef;fontColor=#ffffff;strokeColor=#001DBC;" parent="1" vertex="1">
+                    <mxGeometry x="950" y="340" width="170" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="53" value="&lt;font size=&quot;1&quot;&gt;create_dispatch()&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;" parent="1" vertex="1">
+                    <mxGeometry x="950" y="290" width="170" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="54" value="&lt;font size=&quot;1&quot;&gt;(update model state based on market clearing reults)&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;" parent="1" vertex="1">
+                    <mxGeometry x="950" y="130" width="170" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="55" value="" style="endArrow=classic;html=1;fontSize=14;exitX=0.25;exitY=0;exitDx=0;exitDy=0;entryX=0.25;entryY=1;entryDx=0;entryDy=0;" parent="1" source="53" target="54" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="1110" y="330" as="sourcePoint"/>
+                        <mxPoint x="1160" y="280" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="56" value="" style="endArrow=classic;html=1;fontSize=14;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" parent="1" source="54" target="53" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="990" y="300" as="sourcePoint"/>
+                        <mxPoint x="990" y="190" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="57" value="&lt;div style=&quot;&quot;&gt;&lt;ul style=&quot;font-size: 12px;&quot;&gt;&lt;li&gt;&lt;span style=&quot;font-size: 12px; background-color: initial;&quot;&gt;current_time&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;span style=&quot;font-size: 12px; background-color: initial;&quot;&gt;real_time_clearing_price_quantity&lt;/span&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" parent="1" vertex="1">
+                    <mxGeometry x="760" y="160" width="240" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="62" value="&lt;div style=&quot;text-align: left;&quot;&gt;&lt;ul style=&quot;font-size: 12px;&quot;&gt;&lt;li&gt;&lt;span style=&quot;font-size: 12px; background-color: initial;&quot;&gt;net dispatch of OSW + ES&amp;nbsp;&lt;br&gt;(generally should match bid)&lt;/span&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" parent="1" vertex="1">
+                    <mxGeometry x="1050" y="230" width="210" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="63" value="&lt;font size=&quot;1&quot;&gt;create_real_time_energy_bid()&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;" parent="1" vertex="1">
+                    <mxGeometry x="1340" y="290" width="150" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="64" value="&lt;font size=&quot;1&quot;&gt;May 1, 10:10am&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;fillColor=#0050ef;fontColor=#ffffff;strokeColor=#001DBC;" parent="1" vertex="1">
+                    <mxGeometry x="1340" y="340" width="150" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="65" value="&lt;font size=&quot;1&quot;&gt;(formulate bid based on current conditions)&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;" parent="1" vertex="1">
+                    <mxGeometry x="1340" y="140" width="150" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="66" value="" style="endArrow=classic;html=1;fontSize=14;exitX=0.25;exitY=0;exitDx=0;exitDy=0;entryX=0.25;entryY=1;entryDx=0;entryDy=0;" parent="1" source="63" target="65" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="1500" y="330" as="sourcePoint"/>
+                        <mxPoint x="1550" y="280" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="67" value="" style="endArrow=classic;html=1;fontSize=14;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" parent="1" source="65" target="63" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="1380" y="300" as="sourcePoint"/>
+                        <mxPoint x="1380" y="190" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="69" value="&lt;div style=&quot;text-align: left;&quot;&gt;&lt;ul style=&quot;font-size: 12px;&quot;&gt;&lt;li&gt;&lt;span style=&quot;font-size: 12px; background-color: initial;&quot;&gt;current_time,&lt;/span&gt;&lt;/li&gt;&lt;li&gt;wind_speed_current_period&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" parent="1" vertex="1">
+                    <mxGeometry x="1170" y="160" width="210" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="70" value="&lt;div style=&quot;text-align: left;&quot;&gt;&lt;ul style=&quot;font-size: 12px;&quot;&gt;&lt;li&gt;bid curve&lt;br&gt;&amp;nbsp;[n of [Price, Quantity] Pmax, Pmin]&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" parent="1" vertex="1">
+                    <mxGeometry x="1415" y="225" width="250" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="77" value="&lt;font size=&quot;1&quot;&gt;bidding&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;fillColor=#d80073;fontColor=#ffffff;strokeColor=#4F001F;strokeWidth=5;" parent="1" vertex="1">
+                    <mxGeometry x="390" y="370" width="290" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="78" value="&lt;font size=&quot;1&quot;&gt;May 1, 9:58am&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;fillColor=#0050ef;fontColor=#ffffff;strokeColor=#001DBC;" parent="1" vertex="1">
+                    <mxGeometry x="680" y="340" width="150" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="79" value="&lt;font size=&quot;1&quot;&gt;idle&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;fillColor=#d80073;fontColor=#ffffff;strokeColor=#4F001F;strokeWidth=5;" parent="1" vertex="1">
+                    <mxGeometry x="180" y="370" width="210" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="80" value="&lt;font size=&quot;1&quot;&gt;clearing&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;fillColor=#d80073;fontColor=#ffffff;strokeColor=#4F001F;strokeWidth=5;" parent="1" vertex="1">
+                    <mxGeometry x="680" y="370" width="270" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="81" value="&lt;font size=&quot;1&quot;&gt;idle&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;fillColor=#d80073;fontColor=#ffffff;strokeColor=#4F001F;strokeWidth=5;" parent="1" vertex="1">
+                    <mxGeometry x="950" y="370" width="390" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="82" value="&lt;font size=&quot;1&quot;&gt;bidding&lt;/font&gt;" style="whiteSpace=wrap;html=1;fontSize=15;fillColor=#d80073;fontColor=#ffffff;strokeColor=#4F001F;strokeWidth=5;" parent="1" vertex="1">
+                    <mxGeometry x="1340" y="370" width="290" height="30" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
