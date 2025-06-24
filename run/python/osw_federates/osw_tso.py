@@ -80,8 +80,8 @@ class OSWTSO(Federate):
 
         # Holds the market objects 
         self.markets = markets
-        self.publish_model = options['simulation']['publish_model']
-        self.pre_simulation_days = options['simulation']['pre_simulation_days']
+        self.publish_model = options['simulation']['publish_model'] if options is not None else False
+        self.pre_simulation_days = options['simulation']['pre_simulation_days'] if options is not None else 0
 
         # I don't think we will ever use the "last_market_time" values 
         # but they will give us confidence that we're doing things correctly.
@@ -784,12 +784,19 @@ def get_options(use_defaults=False) -> dict:
                                   'rt_window': 1,
                                   'rt_lookahead': 4,
                                   'rt_min_freq': 15,
+                                  'fixed_commit': True,
+                                  'unfix_fast_start': False,
                                   },
                        'simulation': {'solver': 'gurobi',
                                       'pre_simulation_days': 1,
                                       'publish_model': False,
                                       'loglevel_da': "INFO",
-                                      'loglevel_rt': "WARNING",}
+                                      'loglevel_rt': "WARNING",
+                                      'local_save': False,},
+                       'contingency': {'apply_contingencies': False,
+                                       'gen_new_list': False,
+                                       'filename': 'hourly_contingency_lists.csv',
+                                       'unfix_fast_start': True,}
                        }
     if use_defaults:
         return default_options
@@ -821,5 +828,4 @@ if __name__ == "__main__":
         # wecc_market_fed.markets["rt_energy_market"].em.data_provider.h5.close()
         wecc_market_fed.destroy_federate()
         t2 = time.time()
-        print(f"Total simulation time: {t2 - t1:.2f} seconds")
- 
+        print(f"Total simulation time: {(t2 - t1)/60:.2f} minutes")
