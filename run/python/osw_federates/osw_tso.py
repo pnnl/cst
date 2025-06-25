@@ -580,7 +580,7 @@ def run_osw_tso(h5filepath: str, start: str="2032-01-01 00:00:00", end: str="203
     # the end of the interval.
 
     # Use adjustable minute frequency to allow variable-length RTM
-    rtm_min_freq = options['market']['rt_min_freq']
+    rtm_min_freq = options['market']['rt_min_freq'] * options['market']['rt_window']
     rtm_mkt_interval = rtm_min_freq * 60
     rt_market_timing = {
             "states": {
@@ -779,6 +779,15 @@ def get_options(use_defaults=False) -> dict:
             print("Created file `options_osw.json` with default settings."
                   "\nEdit this file to customize your OSW settings.")
             exit(0)
+
+    def _recurse_add_keys(d1, d2):
+        """ Adds any missing keys from d2 to d1. If d2 value is a dict, will recurse """
+        for k2, v2 in d2.items():
+            if k2 not in d1.keys():
+                d1[k2] = v2
+            elif isinstance(v2, dict):
+                _recurse_add_keys(d1[k2], v2)
+
     default_options = {'market': {'da_window': 24,
                                   'da_lookahead': 0,
                                   'rt_window': 1,
@@ -808,9 +817,7 @@ def get_options(use_defaults=False) -> dict:
         with open('options_osw.json', 'r') as f:
             options = json.load(f)
         # If new default options are added, write these to the existing config, but keep running
-        for key in default_options.keys():
-            if key not in options.keys():
-                options[key] = default_options[key]
+        _recurse_add_keys(options, default_options)
         _write_options(options, exit_message=False)
     return options
 
