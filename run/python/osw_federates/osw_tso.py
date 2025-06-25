@@ -626,8 +626,9 @@ def run_osw_tso(h5filepath: str, start: str="2032-01-01 00:00:00", end: str="203
     market_timing = {
             "da": da_market_timing,
             #"reserves": da_market_timing,
-            "rt": rt_market_timing
-        }
+            }
+    if not options['market']['da_only']:
+        market_timing["rt"] = rt_market_timing
     
     # I don't think we will ever use the "last_market_time" values 
     # but they will give us confidence that we're doing things correctly.
@@ -752,11 +753,21 @@ def run_osw_tso(h5filepath: str, start: str="2032-01-01 00:00:00", end: str="203
     # Note that for now the reserves markets are operated when we run the day ahead energy market model, but I left the comment to remind us this may change.
     # markets["reserves_market"] = OSWReservesMarket("reserves_market", market_timing["reserves"])
     if "rt" in market_timing.keys():
-        markets["rt_energy_market"] = OSWRTMarket(start, end, "rt_energy_market", market_timing["rt"],
+        # TODO: Remove try/except one PyEnergyMarket main is updated
+        try:
+            markets["rt_energy_market"] = OSWRTMarket(start, end, "rt_energy_market", market_timing["rt"],
                                               min_freq=pyenconfig_rtm["time"]["min_freq"],
                                               window=pyenconfig_rtm["time"]['window'],
                                               lookahead=pyenconfig_rtm["time"]['lookahead'],
-                                              market=em_rtm)
+                                              market=em_rtm,
+                                              fixed_commitment=options['market']['fixed_commitment'],
+                                              unfix_fast_start=options['market']['unfix_fast_start'],)
+        except KeyError:
+            markets["rt_energy_market"] = OSWRTMarket(start, end, "rt_energy_market", market_timing["rt"],
+                                                      min_freq=pyenconfig_rtm["time"]["min_freq"],
+                                                      window=pyenconfig_rtm["time"]['window'],
+                                                      lookahead=pyenconfig_rtm["time"]['lookahead'],
+                                                      market=em_rtm,)
     
     return market_timing, markets, solver
     # osw = OSWTSO("WECC_market", market_timing, markets, solver=solver)
@@ -790,6 +801,7 @@ def get_options(use_defaults=False) -> dict:
 
     default_options = {'market': {'da_window': 24,
                                   'da_lookahead': 0,
+                                  'da_only': False,
                                   'rt_window': 1,
                                   'rt_lookahead': 4,
                                   'rt_min_freq': 15,
