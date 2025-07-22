@@ -1,7 +1,7 @@
 variables:
   DEVOPS_SERVER: "ecomp-devops.pnl.gov"
   DEVOPS_USER: "devops"
-  GIT_URL: "https://$ENV_GIT_USER:$ENV_GIT_TOKEN@devops.pnnl.gov/e-comp/thrust-3/copper.git"
+  GIT_URL: "https://$CI_DEPLOY_USER:$CI_DEPLOY_PASSWORD@devops.pnnl.gov/e-comp/thrust-3/copper.git"
   COPPER_DIR: "copper_$CI_JOB_ID"
 
 image: python:3.10
@@ -29,6 +29,8 @@ stages:
 
 test:
   stage: test
+  tags:
+    - ecomp
   before_script:
     - apt-get update && apt-get install -y make wget ca-certificates
   script:
@@ -39,7 +41,7 @@ test:
     # Rule 1: Run for MRs that are not draft
     - if: '$CI_MERGE_REQUEST_IID && $CI_MERGE_REQUEST_TITLE !~ /^Draft:/'
       when: always
-    # Default: Do not run
+    # Default: Do not run, but can manually run
     - when: never
       
 build-publish:
@@ -52,13 +54,13 @@ build-publish:
     # Rule 1: Run for MRs that are not draft
     - if: '$CI_MERGE_REQUEST_IID && $CI_MERGE_REQUEST_TITLE !~ /^Draft:/'
       when: always
-    # Default: Do not run
+    # Default: Do not run, but can manually run
     - when: never
   script:
     - *setup_ssh
     - >
       $SSH_CMD '
-      docker login devops-registry.pnnl.gov -u '$ENV_REGISTRY_USER' -p '$ENV_REGISTRY_PASS' &&
+      docker login devops-registry.pnnl.gov -u '$CI_DEPLOY_USER' -p '$CI_DEPLOY_PASSWORD' &&
       mkdir -p ~/pipeline && cd ~/pipeline &&
       git clone --depth 1 --branch '$BRANCH_NAME' --single-branch '$GIT_URL' '$COPPER_DIR' &&
       cd '$COPPER_DIR'/scripts &&
@@ -80,13 +82,13 @@ integration-test:
     # Rule 1: Run for MRs that are not draft
     - if: '$CI_MERGE_REQUEST_IID && $CI_MERGE_REQUEST_TITLE !~ /^Draft:/'
       when: always
-    # Default: Do not run
+    # Default: Do not run, but can manually run
     - when: never
   script:
     - *setup_ssh
     - >
       $SSH_CMD '
-      docker login devops-registry.pnnl.gov -u '$ENV_REGISTRY_USER' -p '$ENV_REGISTRY_PASS' &&
+      docker login devops-registry.pnnl.gov -u '$CI_DEPLOY_USER' -p '$CI_DEPLOY_PASSWORD' &&
       mkdir -p ~/pipeline && cd ~/pipeline &&
       git clone --depth 1 --branch '$BRANCH_NAME' --single-branch '$GIT_URL' '$COPPER_DIR' &&
       cd '$COPPER_DIR'/scripts &&
