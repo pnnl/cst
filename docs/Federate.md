@@ -30,7 +30,7 @@ This method establishes the connection to the metadata database and pulls down a
 - "federation" (dictionary)
 - "stop_time" (seconds)
 
-### `connect_to_helics_config()`
+### `get_helics_config()`
 This method looks at the "federation" attribute to define a few HELICS-specific attributes
 - "federate" (name)
 - "federate_type" (HELICS federate type: "value", "message", "combo")

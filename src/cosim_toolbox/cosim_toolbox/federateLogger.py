@@ -36,7 +36,7 @@ class FederateLogger(Federate):
         # which means all scenarios are gone in that scheme
         # self.dl.drop_schema(self.scheme_name)
 
-    def connect_to_helics_config(self) -> None:
+    def get_helics_config(self) -> None:
         """Sets a few class attributes related to HELICS configuration.
 
         Also determines which publications need to be pushed into the

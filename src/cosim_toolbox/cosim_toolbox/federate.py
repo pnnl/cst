@@ -55,18 +55,48 @@ class Federate:
     a given time-step.
 
     Attributes:
-        hfed: The HELICS federate object used to access the HELICS interfaces
-        federate_name (str): The federate name
+        hfed (HelicsFederate): The HELICS federate object used to access the
+          HELICS interfaces
+        mddb (DBConfigs): metadata database object
+        config (dict): HELICS configuration
+        scenario (str): scenario defintion dictionary
+        scenario_name (str): name of scenario
+        federation (dict): federation definition
+        federation_name (str): name of federation
         federate (dict): Dictionary with all configuration information,
-         including but not limited to the HELICS JSON config string
-        federate_type (str): The federate type. Must be "value", "message", or "combo"
-        config: Valid HELICS config JSON string
-        granted_time: The last time granted to this federate
-        period: The size of the simulated time step takes when requesting the next time
-        scenario_name (str): The scenario name
-        scenario (dict): Dictionary with all scenario configuration information
-        federation_name (str): The federation name
-        federation (dict): Dictionary with all federate configuration information
+          including but not limited to the HELICS JSON config string
+        federate_type (str): The federate type. Must be "value", 
+          "message", or "combo"
+        federate_name (str): The federate name
+        scheme_name (str): name of analysis (collection of scenarios)
+        start_time (datetime): start time of simulation
+        stop_time (datetime): stop time of simulation
+        granted_time (datetime): The last time granted to this 
+          federate as a datetime object
+        granted_htime (float): The last time granted to this 
+          federate an ordinal time where
+         the simulation starts at granted_htime=0
+        period (float): The size of the simulated time step takes when 
+          requesting the next time
+        pubs (dict): HELICS publication objects
+        inputs (dict): HELICS input and subscription objects
+        endpoints (dict): HELICS endpoint objects
+        debug (bool): indicates whether federate is to run in debug mode
+        use_mdb (bool): indicates whether federate gets configuration from
+          the metadataDB
+        dl (DBResults): time-series database object
+        interval (int): number of bytes of data collected before written to
+          database
+        fed_collect (str): indicates whether to log outputs from any of the
+          federate's publications. Set to "no" to disable logging of all 
+          outputs.
+        path_csv (str): path (without filename) where CSV output will be
+          written
+        output_csv (file object): File object for opened CSV where results
+          will be written
+        use_pdb (bool): indicates the use of the time-series database for
+          data collection
+        
     """
 
     def __init__(self, fed_name="", use_mdb=True, use_pdb=True, **kwargs):
@@ -81,13 +111,12 @@ class Federate:
         self.federate_type: str = None
         self.federate_name: str = fed_name
         self.scheme_name: str = None
-        self.start: str = None
-        self.stop: str = None
-        self.no_t_start = None
-        self.period = -1.0
-        self.stop_time = -1.0
-        self.granted_time = -1.0
-        self.next_requested_time = -1.0
+        self.start_time: datetime.datetime = None
+        self.stop_time: datetime.datetime = None
+        self.granted_time: datetime.datetime = None
+        self.granted_htime: float  = -1.0
+        self.next_requested_htime = -1.0
+        self.period: float = -1.0
         self.pubs = {}
         self.inputs = {}
         self.endpoints = {}
@@ -97,20 +126,18 @@ class Federate:
 
         # following for datalogger
         self.dl: DBResults = None
-        self._s = None
-        self._ep = None
-        self._count = 0
-        self._commit_cnt = 0
-        self._commit_qry = ""
-        self.interval = 100000
-        self.fed_collect = "maybe"
-        self.path_csv = ""
-        self.output_csv = None
-        self.use_pdb = use_pdb
+        self._count: int = 0
+        self._commit_cnt: int = 0
+        self._commit_qry: str = ""
+        self.interval: int = 100000
+        self.fed_collect: str = "maybe"
+        self.path_csv: str = ""
+        self.output_csv: = None
+        self.use_pdb: bool = use_pdb
 
         # Initialize the structure of the interface dictionaries
-        self.data_from_federation = {"inputs": {}, "endpoints": {}}
-        self.data_to_federation = {"publications": {}, "endpoints": {}}
+        self.data_from_federation: dict = {"inputs": {}, "endpoints": {}}
+        self.data_to_federation: dict = {"publications": {}, "endpoints": {}}
 
         # if not wanting to debug, add debug=False as an argument
         self.__dict__.update(kwargs)
@@ -126,12 +153,14 @@ class Federate:
         self._use_timescale = self.dl.use_timescale
 
     def connect_to_metadataDB(self, uri: str, db_name: str) -> None:
-        """Connects to the Copper dbConfigs
+        """Connects to the CST metadata database
 
-        The metadata database (dbConfigs) contains the HELICS configuration
+        The metadata database contains the HELICS configuration
         JSON along with other pieces of useful configuration or federation
         management data. This method connects to that database and makes it
-        available for other methods in this class.
+        available for other methods in this class. The database connection
+        object is assigned to the `mddb` attribute and uses the dBConfigs 
+        class to establish the connection.
 
         Args:
             uri (str): URI for Mongo database
@@ -145,9 +174,9 @@ class Federate:
         self.federation = self.federation["federation"]
 
     def connect_to_metadataJSON(self) -> None:
-        """Connects to the Copper json file
+        """Opens CST configuration JSON files
 
-        The Copper json file contains the HELICS configuration
+        The CST JSON files contains the HELICS configuration
         JSON along with other pieces of useful configuration or federation
         management data. This method connects to that database and makes it
         available for other methods in this class.
@@ -161,6 +190,12 @@ class Federate:
             self.federation = json.load(federation)
 
     def connect_to_dataDB(self):
+        """Establishes connection to CST time-series database
+
+        CST, by default, stores all logged data in a time-series database.
+        This method  established a connection to that database and assigns
+        the database object to the `dl` attribute.
+        """
         self.dl = DBResults()
         self.dl.open_database_connections()
         # self.dl.check_version()
@@ -181,6 +216,12 @@ class Federate:
                     logger.exception(f"Rolling back: make tables for schema!")
 
     def connect_to_dataCSV(self):
+        """Opens local CSV file for writing output data
+
+        Optionally, CST allows time-series data to be written to CSV files.
+        This method opens the CSV file for writing and assigns the file object
+        to the `output_csv` attribute.
+        """
         if self.output_csv is None:
             out_path = f"{self.path_csv}{self.federate_name}_outputs.csv"
             try:
@@ -188,12 +229,20 @@ class Federate:
             except Exception as ex:
                 logger.exception(f"{ex}\nUnable to open output file: {out_path}")
 
-    def close_metadata(self):
+    def disconnect_from_metadataDB(self):
+        """Closes connect to the metadata database
+
+        Deletes the `mddb` attribute from this class.
+        """
         if self.use_mdb:
-            logger.debug(f"Closing mongo database connection")
+            logger.debug(f"Closing metadata database connection")
             del self.mddb
 
-    def close_data(self):
+    def disconnect_fom_dataDB(self):
+        """Closes connect to the time-series database
+
+        Deletes the `dl` attribute from this class.
+        """
         if self.use_pdb:
             logger.debug(f"Closing postgres database connection")
             self.commit_to_logger()
@@ -213,38 +262,31 @@ class Federate:
         them more easily accessible.
         """
 
-        # setting start and stop time
-        self.start = self.scenario["start_time"]
-        self.stop = self.scenario["stop_time"]
-        # setting max in seconds
-        ep = datetime.datetime(1970, 1, 1)
-        # %:z in version  python 3.12, for now, no time offsets (zones)
-        s = datetime.datetime.strptime(self.start, '%Y-%m-%dT%H:%M:%S')
-        e = datetime.datetime.strptime(self.stop, '%Y-%m-%dT%H:%M:%S')
-        s_idx = (s - ep).total_seconds()
-        e_idx = (e - ep).total_seconds()
-        self.stop_time = int((e_idx - s_idx))
-        self.no_t_start = self.start.replace('T',' ')
-        self._s = datetime.datetime.strptime(self.start, '%Y-%m-%dT%H:%M:%S')
+        # Setting start and stop time
+        # Timestamp must be ISO 8601 which does support fractional seconds
+        self.start_time = datetime.datetime.fromisoformat(self.scenario["start_time"])
+        self.stop_time = datetime.datetime.fromisoformat(self.scenario["stop_time"])
 
         # setting up data logging
         self.scheme_name = self.scenario["schema"]
         if self.federation.get("tags"):
             self.fed_collect = self.federation["tags"].get("logger", self.fed_collect)
 
-    def connect_to_helics_config(self) -> None:
-        """Sets instance attributes to enable HELICS config query of dbConfigs
+    def get_helics_config(self) -> None:
+        """Sets instance attributes to pull down HELICS config from metadata
+        database
 
-        HELICS configuration information is generally stored in the dbConfigs
-        and is copied into the `self.federation` attribute. This method pulls
-        out a few keys configuration parameters from that attribute to make
-        them more easily accessible.
+        HELICS configuration information is generally stored in the metadata
+        database and is copied into the `self.federation` attribute. This 
+        method pulls out a few keys configuration parameters from that 
+        attribute to make them more easily accessible.
         """
+
+        # TODO - Is self.federate just the HELICS configuration? If so rename to `helics_config`
         self.federate = self.federation[self.federate_name]
         self.federate_type = self.federate["federate_type"]
         self.period = self.federate["HELICS_config"]["period"]
         self.config = self.federate["HELICS_config"]
-        # self.image = self.federate["image"]
 
     def create_federate(self, scenario_name: str) -> None:
         """Create Copper and HELICS federates
@@ -271,7 +313,7 @@ class Federate:
         else:
             self.connect_to_metadataJSON()
         self.set_metadata()
-        self.connect_to_helics_config()
+        self.get_helics_config()
 
         # Provide internal copies of the HELICS interfaces for convenience during debugging.
         if "publications" in self.config.keys():
@@ -307,11 +349,11 @@ class Federate:
     def create_helics_fed(self) -> None:
         """Creates the HELICS federate object
 
-        Using the HELICS configuration document from the dbConfigs, this
-        method creates the HELICS federate. HELICS has distinct APIs for the
-        creation of a federate based on its type and thus, the type of federate
-        needs to be defined as an instance attribute to enable the correct API
-        to be called.
+        Using the HELICS configuration document pulled from the metadata 
+        database (`mddb`), this method creates the HELICS federate. HELICS has
+        distinct APIs for the creation of a federate based on its type and 
+        thus, the type of federate needs to be defined as an instance attribute
+        to enable the correct API to be called.
 
         Raises:
             ValueError: Invalid value for self.federate_type
@@ -345,8 +387,8 @@ class Federate:
         to fit the needs of a given federate and/or federation.
         """
         if self.hfed is None:
-            raise ValueError("Helics Federate object has not been created")
-        self.granted_time = 0
+            raise ValueError("HELICS Federate object has not been created")
+        self.granted_htime = 0.0
         self.on_start()
         self.enter_initialization()
         self.on_enter_initialization_mode()
@@ -386,8 +428,8 @@ class Federate:
         is collected and used to update the internal model before sending out
         new data for the rest of the federation to use.
         """
-        next_requested_time = self.calculate_next_requested_time()
-        self.request_time(next_requested_time)
+        next_requested_htime = self.calculate_next_requested_time()
+        self.request_time(next_requested_htime)
         self.get_data_from_federation()
         self.update_internal_model()
         self.send_data_to_federation()
@@ -403,10 +445,10 @@ class Federate:
         Returns:
             self.next_requested_time: Calculated time for the next HELICS time request
         """
-        self.next_requested_time = self.granted_time + self.period
-        return self.next_requested_time
+        self.next_requested_htime = self.granted_htime + self.period
+        return self.next_requested_htime
 
-    def request_time(self, requested_time: float) -> float:
+    def request_time(self, requested_htime: float) -> float:
         """Requests next simulated time from HELICS
 
         HELICS provides a variety of means of requesting time. The most common
@@ -420,10 +462,11 @@ class Federate:
             requested_time: Simulated time this federate needs to request
 
         Returns:
-            self.granted_time: Simulated time granted by HELICS
+            self.granted_htime: Simulated time granted by HELICS
         """
-        self.granted_time = self.hfed.request_time(requested_time)
-        return self.granted_time
+        self.granted_htime = self.hfed.request_time(requested_htime)
+        self.granted_time = self.start_time + datetime.timedelta(seconds=self.granted_htime)
+        return self.granted_htime
     
     def reset_data_to_federation(self) -> None:
         """Sets all values in dictionary of values being sent out
@@ -633,15 +676,14 @@ class Federate:
                 self.commit_to_logger()
 
     def write_to_logger(self, table, name, key, value):
-        # print(f"{table} : {name} : {key} : {value}", flush=True)
-        t = self.granted_time
-        d = datetime.timedelta(seconds=int(self.granted_time))
         if self.use_pdb:
             query = (f"INSERT INTO {self.scheme_name}.{table} "
                    "(real_time, sim_time, scenario, federate, data_name, data_value)"
-                   f" VALUES( to_timestamp('{self.no_t_start}','YYYY-MM-DD HH24:MI:SS') + interval '1s' * "
-                   f"{self.granted_time}, {self.granted_time}, "
-                   f"'{self.scenario_name}', '{name}', '{key}', ")
+                   f" VALUES( to_timestamp('{self.granted_time}','YYYY-MM-DDTHH24:MI:SS.US'),"
+                   f"{self.granted_time}, "
+                   f"'{self.scenario_name}'," 
+                   f"'{name}',"
+                   f"'{key}', ")
             if (type(value) is str) or (type(value) is complex) or (type(value) is list):
                 query += f"'{value}'); "
             else:
@@ -649,8 +691,8 @@ class Federate:
             # add to logger database
             self.query_to_logger(query)
         else:
-            real_time = datetime.datetime.strftime(self._s + d, '%Y-%m-%dT%H:%M:%S')
-            val_string = (f"{real_time}, {t}, "
+            real_time = datetime.datetime.isoformat(self.granted_time)
+            val_string = (f"{real_time}, {self.granted_htime}, "
                           f"{self.scenario_name}, {name}, {key}, {value}\n")
             # add to logger output csv
             self.output_csv.write(val_string)
@@ -668,8 +710,8 @@ class Federate:
 
         logger.debug(f'{h.helicsFederateGetName(self.hfed)} being destroyed, '
                      f'max time = {h.HELICS_TIME_MAXTIME}')
-        self.close_data()
-        self.close_metadata()
+        self.disconnect_fom_dataDB()
+        self.disconnect_from_metadataDB()
         h.helicsFederateClearMessages(self.hfed)
         # TODO: there is a bug for h.helicsFederateRequestTime
         # requested_time = int(h.helicsFederateRequestTime)

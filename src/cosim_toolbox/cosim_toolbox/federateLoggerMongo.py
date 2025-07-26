@@ -68,7 +68,7 @@ class FederateLoggerMongo(Federate):
                     'metafield': 'metadata'})
         return self.logging_feds
 
-    def connect_to_helics_config(self) -> None:
+    def get_helics_config(self) -> None:
         self.federate_type = "combo"
         self.period = 30.0
         publications = []
