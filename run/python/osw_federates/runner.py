@@ -82,7 +82,7 @@ class Runner:
         }
         print(diction)
 
-        self.db.remove_document(mDB.cu_federations, None, self.federation_name)
+        self.db.remove_dataset(mDB.cu_federations, None, self.federation_name)
         self.db.add_dict(mDB.cu_federations, self.federation_name, diction)
         # print(mDB.cu_federations, self.db.get_collection_document_names(mDB.cu_federations))
         # print(self.federation_name, self.db.get_dict(mDB.cu_federations, None, self.federation_name))
@@ -92,7 +92,7 @@ class Runner:
                                     "2023-12-07T15:31:27",
                                     "2023-12-08T15:31:27",
                                     self.docker)
-        self.db.remove_document(mDB.cu_scenarios, None, self.scenario_name)
+        self.db.remove_dataset(mDB.cu_scenarios, None, self.scenario_name)
         self.db.add_dict(mDB.cu_scenarios, self.scenario_name, scenario)
         # print(mDB.cu_scenarios, self.db.get_collection_document_names(mDB.cu_scenarios))
         # print(self.scenario_name, self.db.get_dict(mDB.cu_scenarios, None, self.scenario_name))

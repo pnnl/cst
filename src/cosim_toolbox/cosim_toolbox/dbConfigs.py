@@ -18,6 +18,8 @@ from cosim_toolbox.helicsConfig import HelicsMsg
 
 logger = logging.getLogger(__name__)
 
+# TODO - Is this what we want to happen? As soon as this file is imported
+# the existing database gets blown away?
 def federation_database(clear: bool = False) -> None:
     """Removes existing default CST databases and creates new ones.
     """
@@ -33,14 +35,46 @@ def federation_database(clear: bool = False) -> None:
 
 class DBConfigs:
     """
-    Provides methods to read and write to the metadata database.
+    Provides methods to read and write to the metadata database. This database
+    is generally use for storing configuration information but can be used for
+    storing any structured data (think JSON or Python dictionary). CST uses it
+    mostly for storing all the federation configuration data that is needed to 
+    run a co-simulation but other similar data could easily be stored in this 
+    database. For example, model metadata for one of the federates could be 
+    stored here for use in post-processing.
 
-    TODO: Update method names so they don't refer to "dictionaries" or
-    "documents" but are instead using the CST terminology. We might need to
-    add some of these terms into the Mongo documents so that they can be
-    queried with the same parameters as we use in the time-series database.
-    Mongo has databases, collections, and documents. Postgres has databases,
-    schemes, and tables. Should these line up one-to-one?
+    The APIs that CST uses for accessing MongoDB has been genericized and 
+    harmonized across the CST to allow for more consistent API names. The 
+    table below provides a mapping between the terms used in the various 
+    databases.
+
+
+    | CST Name     | Postgres Name     | MongoDB Name    |  
+    |--------------|-------------------|-----------------|
+    | analysis     | database          | database        |
+    | scenario     | schema            | collections     |
+    | dataset      | table             |                 |
+    | record       | record (row)      | document (BSON) |
+
+    If you're comfortable with using either database directly and/or need to 
+    work around the simplification that CST provides, you can access the 
+    database objects directly. In this case, `self.client` is the MongoDB
+    object.
+
+    TODO - Maybe the following will not always be true?
+    Of particular note, on import of this file in a Python script, the default
+    database used by CST is erased. This database name is defined by the current
+    value of `cst_mongo` in the TODO (where does this value come from)?
+
+    Attributes:
+        collections (list[str]) - list of collection names in the database
+        db_name (str) - Name of MongoDB database being used
+        client (MongoClient[Dict[str, Any]]) - MongoDB object, used for 
+          accessing the MongoDB server
+        db (Database): Mongo database object, used for access the data in
+          the database named `db_name`
+
+
     """
     _cst_name = 'cst_007'
 
@@ -51,6 +85,8 @@ class DBConfigs:
         self.fs = gridfs.GridFS(self.db)
 
     def __del__(self):
+        """Closes connection to the Mongo database
+        """
         if self.client is not None:
             self.client.close()
 
@@ -182,29 +218,30 @@ class DBConfigs:
             else:
                 return db_file
 
-    def remove_collection(self, collection_name: str):
+    def remove_scenario(self, scenario_name: str):
         """
-        Removes the collection from the dbConfigs specified by "collection_name"
+        Removes the scneario (MongoDB collection) from the dbConfigs specified
+          by "scneario_name"
         """
-        self.db[collection_name].drop()
+        self.db[scenario_name].drop()
         self.update_collection_names()
 
-    def remove_document(self, collection_name: str,
+    def remove_dataset(self, scenario_name: str,
                         object_id: bson.objectid.ObjectId = None,
-                        dict_name: str = None) -> None:
+                        dataset_name: str = None) -> None:
         """
-        Remove the document specified by "object_id" or "dict_name" from the
+        Remove the document specified by "object_id" or "dataset_name" from the
         collection specified by "collection_name".
         """
-        if dict_name is None and object_id is None:
+        if dataset_name is None and object_id is None:
             raise AttributeError("Must provide the name or object ID of the dictionary to be retrieved.")
-        elif dict_name is not None and object_id is not None:
+        elif dataset_name is not None and object_id is not None:
             logger.warning("Using provided object ID (and not provided name) to remove document.")
-            self.db[collection_name].delete_one({"_id": object_id})
-        elif dict_name is not None:
-            self.db[collection_name].delete_one({self._cst_name: dict_name})
+            self.db[scenario_name].delete_one({"_id": object_id})
+        elif dataset_name is not None:
+            self.db[scenario_name].delete_one({self._cst_name: dataset_name})
         elif object_id is not None:
-            self.db[collection_name].delete_one({"_id": object_id})
+            self.db[scenario_name].delete_one({"_id": object_id})
         # TODO: Add check for success on delete.
 
     def remove_dict(self, collection_name: str,

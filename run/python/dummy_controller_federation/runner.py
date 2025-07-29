@@ -87,7 +87,7 @@ class Runner:
             }
         }
 
-        self.db.remove_document(env.cst_federations, None, self.federation_name)
+        self.db.remove_dataset(env.cst_federations, None, self.federation_name)
         self.db.add_dict(env.cst_federations, self.federation_name, diction)
         # print(env.cst_federations, self.db.get_collection_document_names(env.cst_federations))
 
@@ -96,7 +96,7 @@ class Runner:
                                     "2023-12-07T15:31:27",
                                     "2023-12-08T15:31:27",
                                     self.docker)
-        self.db.remove_document(env.cst_scenarios, None, self.scenario_name)
+        self.db.remove_dataset(env.cst_scenarios, None, self.scenario_name)
         self.db.add_dict(env.cst_scenarios, self.scenario_name, scenario)
         # print(env.cst_scenarios, self.db.get_collection_document_names(env.cst_scenarios))
 

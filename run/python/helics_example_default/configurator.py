@@ -107,13 +107,13 @@ class Configurator(DBConfigs):
             stop,
             docker)
         
-        self.db.remove_document(env.cst_scenarios, None, scenario_name)
+        self.db.remove_dataset(env.cst_scenarios, None, scenario_name)
         self.db.add_dict(env.cst_scenarios, scenario_name, scenario)
 
     def store_federation_config(self, name=None) -> None:
         if name is None:
             name = self.federation_name
-        self.db.remove_document(env.cst_federations, None, name)
+        self.db.remove_dataset(env.cst_federations, None, name)
         self.db.add_dict(env.cst_federations, name, self.federation_config)
 
     def get_scenario(self, name=None) -> dict:

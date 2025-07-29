@@ -1,6 +1,24 @@
 # Time-Series Data Logging
 There will be things written here that will likely be very important.
 
+## Schemas across the databases
+
+| CST Name     | Postgres Name     | MongoDB Name    |  
+|--------------|-------------------|-----------------|
+| analysis     | database          | database        |
+| scenario     | schema            | collections     |
+| dataset      | table(s)          | document(s)     |
+| data         | record            | document        |
+
+
+| CST Abstraction | Postgres Name     | MongoDB Name    |  
+|-----------------|-------------------|-----------------|
+| (cooper)        | database          | database        | Always connecting to one database when using Copper
+| analysis        | schema            | field in scenario document |
+| scenario        | column in table   | collection      |
+| dataset         | table(s)          | document(s)     |
+| data            | record            | document        |
+
 ## Overview of Postgres database
 
 ## Postgres Schema

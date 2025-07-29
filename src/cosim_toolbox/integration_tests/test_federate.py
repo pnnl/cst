@@ -100,7 +100,7 @@ def setup_cosim(test_federation_name):
     try:
         metadb.add_dict(collection_name, dict_to_add=collection_scenarios, dict_name="current scenario")
     except NameError as _e:
-        metadb.remove_collection(collection_name)
+        metadb.remove_scenario(collection_name)
         metadb.add_collection(collection_name)
         metadb.add_dict(collection_name, dict_to_add=collection_scenarios, dict_name="current scenario")
 
@@ -113,7 +113,7 @@ def add_federation_collection(test_federation_name, test_federation_dict, num_fe
         metadb.add_collection(test_federation_name)
         metadb.add_dict(test_federation_name, "federation", test_federation_dict)
     except NameError as _e:
-        metadb.remove_collection(test_federation_name)
+        metadb.remove_scenario(test_federation_name)
         metadb.add_collection(test_federation_name)
         metadb.add_dict(test_federation_name, "federation", test_federation_dict)
     return broker
@@ -127,8 +127,8 @@ def federate_cosim(fed: Federate):
 
 def cleanup(broker, test_federation_name):
     # cleanup
-    metadb.remove_collection(collection_name)
-    metadb.remove_collection(test_federation_name)
+    metadb.remove_scenario(collection_name)
+    metadb.remove_scenario(test_federation_name)
     h.helicsBrokerDestroy(broker)
 
 
@@ -173,6 +173,6 @@ if __name__ == "__main__":
     try:
         metadb.add_collection(collection_name)
     except NameError as e:
-        metadb.remove_collection(collection_name)
+        metadb.remove_scenario(collection_name)
         metadb.add_collection(collection_name)
     run_single_federate()

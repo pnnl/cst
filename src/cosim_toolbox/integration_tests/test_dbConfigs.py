@@ -76,7 +76,7 @@ class TestMetadataDBApi(unittest.TestCase):
         obj_id = self.metadb.add_dict(collection_name, dict_name, named_file_dict)
         name_collections = self.metadb.update_collection_names()
         for c in name_collections:
-            self.metadb.remove_collection(c)
+            self.metadb.remove_scenario(c)
         self.assertEqual(len(self.metadb.collections), 0, "not all collections were removed")
 
     def test_04_add_dict(self):
@@ -151,7 +151,7 @@ class TestMetadataDBApi(unittest.TestCase):
         obj_id = self.metadb.add_dict(collection_name, dict_name, named_file_dict)
         try:
             doc_names = self.metadb.get_collection_document_names(collection_name)
-            self.metadb.remove_document(collection_name=collection_name, dict_name="psc9")
+            self.metadb.remove_dataset(collection_name=collection_name, dict_name="psc9")
             doc_names2 = self.metadb.get_collection_document_names(collection_name)
             name_collections = self.metadb.update_collection_names()
             section = list(set(name_list).intersection(name_collections))
@@ -161,7 +161,7 @@ class TestMetadataDBApi(unittest.TestCase):
         obj_id = self.metadb.add_dict(collection_name, dict_name, named_file_dict)
         try:
             doc_names = self.metadb.get_collection_document_names(collection_name)
-            self.metadb.remove_document(collection_name=collection_name, dict_name="blah")
+            self.metadb.remove_dataset(collection_name=collection_name, dict_name="blah")
             doc_names2 = self.metadb.get_collection_document_names(collection_name)
             self.assertEqual(doc_names, doc_names2, "invalid dict_name entered")
         except NameError as e:

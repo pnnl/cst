@@ -56,6 +56,10 @@ class DBResults:
         """This function defines the connection to the data database
         and opens a connection to the postgres database
 
+        Args: 
+            connection (dict): parameters used to connect to time-
+                series database
+
         Returns:
             psycopg2 connection object - connection object that provides
             access to the postgres database

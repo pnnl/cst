@@ -107,7 +107,7 @@ if __name__ == "__main__":
         metadb.add_collection(collection_name)
         metadb.add_dict(collection_name, dict_to_add=collection_scenarios, dict_name="current scenario")
     except NameError as e:
-        metadb.remove_collection(collection_name)
+        metadb.remove_scenario(collection_name)
         metadb.add_collection(collection_name)
         metadb.add_dict(collection_name, dict_to_add=collection_scenarios, dict_name="current scenario")
     # create and begin a broker for the cosim
@@ -117,7 +117,7 @@ if __name__ == "__main__":
         metadb.add_collection(federation_name)
         metadb.add_dict(federation_name, "federation", federation_dict)
     except NameError as e:
-        metadb.remove_collection(federation_name)
+        metadb.remove_scenario(federation_name)
         metadb.add_collection(federation_name)
         metadb.add_dict(federation_name, "federation", federation_dict)
     # create the federates
@@ -132,6 +132,6 @@ if __name__ == "__main__":
     py_process.join()
     jl_process.join()
     # cleanup the cosim
-    metadb.remove_collection(collection_name)
-    metadb.remove_collection(federation_name)
+    metadb.remove_scenario(collection_name)
+    metadb.remove_scenario(federation_name)
     h.helicsBrokerDestroy(broker)
