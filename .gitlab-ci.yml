@@ -4,7 +4,7 @@ variables:
   GIT_URL: "https://$CI_DEPLOY_USER:$CI_DEPLOY_PASSWORD@devops.pnnl.gov/e-comp/thrust-3/copper.git"
   COPPER_DIR: "copper_$CI_JOB_ID"
 
-image: python:3.10
+image: python:3.12
 
 .__setup_ssh: &setup_ssh |
   mkdir -p ~/.ssh && chmod 0700 ~/.ssh
