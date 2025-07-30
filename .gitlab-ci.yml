@@ -42,7 +42,7 @@ test:
     - if: '$CI_MERGE_REQUEST_IID && $CI_MERGE_REQUEST_TITLE !~ /^Draft:/'
       when: always
     # Default: Do not run, but can manually run
-    - when: never
+    - when: manual
       
 build-publish:
   stage: build-publish
@@ -55,7 +55,7 @@ build-publish:
     - if: '$CI_MERGE_REQUEST_IID && $CI_MERGE_REQUEST_TITLE !~ /^Draft:/'
       when: always
     # Default: Do not run, but can manually run
-    - when: never
+    - when: manual
   script:
     - *setup_ssh
     - >
@@ -83,7 +83,7 @@ integration-test:
     - if: '$CI_MERGE_REQUEST_IID && $CI_MERGE_REQUEST_TITLE !~ /^Draft:/'
       when: always
     # Default: Do not run, but can manually run
-    - when: never
+    - when: manual
   script:
     - *setup_ssh
     - >
