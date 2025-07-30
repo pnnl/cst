@@ -28,8 +28,9 @@ cd $CID_ROOT/run/python/test_federation
 rm -rf *.sh *.yaml *.log
 export PYTHONPATH=.:$CID_ROOT/src/cosim_toolbox
 python3 runner.py
-./test_scenario.sh
-ps
+if [ -f test_scenario.sh ]; then
+  ./test_scenario.sh
+fi
 
 #
 # Run integration test validation

@@ -109,12 +109,12 @@ class FederateLogger(Federate):
                                 source_targets.append(pts["name"])
                                 self.fed_pts[fed].append(pts["name"])
 
-        t1 = HelicsMsg(self.federate_name, 30)
+        t1 = HelicsMsg(self.federate_name, period=30)
         t1.config("core_type", "zmq")
         t1.config("log_level", "warning")
         t1.config("terminate_on_error", True)
         if self.scenario["docker"]:
-            t1.config("brokeraddress", "10.5.0.2")
+            t1.config("broker_address", "10.5.0.2")
         self.config = t1.config("subscriptions", publications)
 
         endpoints = [{

@@ -26,9 +26,9 @@ class Runner:
     def define_scenario(self):
         prefix = "exec python3 "
         names = ["OSW_TSO", "OSW_Plant"]
-        t1 = HelicsMsg(names[0], 30)
+        t1 = HelicsMsg(names[0], period=30)
         if self.docker:
-            t1.config("brokeraddress", "10.5.0.2")
+            t1.config("broker_address", "10.5.0.2")
         t1.config("core_type", "zmq")
         t1.config("log_level", "warning")
         t1.config("period", 30)
@@ -41,16 +41,16 @@ class Runner:
         # t1.subs_e(names[1] + "/voltage", "double", "V")
 
         f1 = {
-            "image": "cosim-python:latest",
+            "image": "cosim-cst:latest",
             "command": prefix + "osw_tso.py " + names[0] + " " + self.scenario_name,
             "federate_type": "value", # if endpoints involved this needs to be different
             "time_step": 120,
             "HELICS_config": t1.write_json()
         }
 
-        t2 = HelicsMsg(names[1], 30)
+        t2 = HelicsMsg(names[1], period=30)
         if self.docker:
-            t2.config("brokeraddress", "10.5.0.2")
+            t2.config("broker_address", "10.5.0.2")
         t2.config("core_type", "zmq")
         t2.config("log_level", "warning")
         t2.config("period", 60)
@@ -67,7 +67,7 @@ class Runner:
         t2.subs_e(names[0] + "/wind_forecasts", "double", "A")
 
         f2 = {
-            "image": "cosim-python:latest",
+            "image": "cosim-cst:latest",
             "command": prefix + "osw.py " + names[1] + " " + self.scenario_name, #### TO-DO OSW plant file name -- make sure in the same directory!!
             "env": "",
             "federate_type": "value",

@@ -1,5 +1,5 @@
 # Build runtime image
-FROM cosim-python:latest AS cosim-julia
+FROM cosim-cst:latest AS cosim-julia
 
 USER root
 

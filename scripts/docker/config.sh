@@ -8,20 +8,20 @@ fi
 
 # BUILD: to build image
 # SKIP: skip building image
-BUILD=1
-SKIP=0
+BUILD="1"
+SKIP="0"
 
 # Image build configration
 CONFIG_BUILDS=(
-  "ubuntu" "./" "$SKIP"
+  "ubuntu" "${CST_ROOT}/src/cosim_toolbox/" "$BUILD"
+  "cst" "${CST_ROOT}/src/cosim_toolbox/" "$BUILD"
+  "gridlabd" "${CST_ROOT}/scripts/build/" "$BUILD"
   "jupyter" "${CST_ROOT}/src/cosim_toolbox/" "$BUILD"
   "airflow" "${CST_ROOT}/src/cosim_toolbox/" "$BUILD"
-  "library" "./" "$SKIP"
-  "build" "${CST_ROOT}/scripts/build/" "$SKIP"
-  "helics" "./" "$BUILD"
-#  "pyhelics" "./" "$BUILD"
-  "python" "${CST_ROOT}/src/cosim_toolbox/" "$BUILD"
-#  "tespapi" "./" "$SKIP"
+#  "tesp-ubuntu" "./" "$SKIP"
+#  "tesp-library" "./" "$SKIP"
+#  "tesp-build" "${CST_ROOT}/scripts/build/" "$SKIP"
+#  "tesp-api" "./" "$SKIP"
 #  "julia" "./" "$SKIP"
 )
 

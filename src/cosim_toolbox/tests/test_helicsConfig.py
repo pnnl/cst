@@ -1,21 +1,25 @@
 import collections
+
 collections.Callable = collections.abc.Callable
 import json
 import os
 import unittest
 
 from cosim_toolbox.helicsConfig import HelicsMsg
+from cosim_toolbox.federation import FederateConfig
+from cosim_toolbox.federation import FederationConfig
 
 
 class TestHelicsMsg(unittest.TestCase):
 
     def setUp(self):
-        self.helics_msg = HelicsMsg("test_name", 1)
+        self.helics_msg = HelicsMsg("test_name", period=1)
+        self.federation = FederationConfig("MyTestScenario", "MyTestSchema", "MyTestFederation", False)
 
     def test_init(self):
         self.assertEqual(self.helics_msg._cnfg["name"], "test_name")
         self.assertEqual(self.helics_msg._cnfg["period"], 1)
-        self.assertEqual(self.helics_msg._cnfg["logging"], "warning")
+        self.assertEqual(self.helics_msg._cnfg["log_level"], "warning")
         self.assertEqual(self.helics_msg._subs, [])
         self.assertEqual(self.helics_msg._pubs, [])
 
@@ -23,7 +27,7 @@ class TestHelicsMsg(unittest.TestCase):
         expected_config = {
             "name": "test_name",
             "period": 1,
-            "logging": "warning"
+            "log_level": "warning"
         }
         self.assertEqual(self.helics_msg.write_json(), expected_config)
 
@@ -37,6 +41,45 @@ class TestHelicsMsg(unittest.TestCase):
 
         self.helics_msg.subs("key", "type", "object", "property")
         self.assertEqual(len(self.helics_msg._subs), 1)
+
+    def test_add_groups(self):
+        names = ["a1", "b1"]
+        load = {"src": {"from_fed": names[0],
+                        "fed": "",
+                        "keys": ["", "network_node"],
+                        "indices": []},
+                "des": [{"to_fed": names[1],
+                         "fed": names[0],
+                         "keys": ["/", ""],
+                         "indices": []
+                         }]}
+
+        f1 = self.federation.add_federate_config(FederateConfig(names[0], period=15))
+        f2 = self.federation.add_federate_config(FederateConfig(names[1], period=15))
+        self.federation.add_group("distribution_load", "complex", load)
+        self.federation.define_io()
+
+        f1.config("image", "cosim-cst:latest")
+        f2.config("image", "cosim-cst:latest")
+        f1.config("command", f"gridlabd -D USE_HELICS -D METRICS_FILE=test_metrics.json test.glm")
+        f2.config("command", f"python3 -c \"import tesp_support.api.substation as tesp;tesp.substation_loop('test_agent_dict.json','test',helicsConfig='{names[1]}.json')\"")
+
+        self.assertEqual(f1._fed_cnfg["image"], "cosim-cst:latest")
+        self.assertEqual(f2._fed_cnfg["image"], "cosim-cst:latest")
+        self.assertEqual(f1._fed_cnfg["command"], f"gridlabd -D USE_HELICS -D METRICS_FILE=test_metrics.json test.glm")
+        self.assertEqual(f2._fed_cnfg["command"],
+                         f"python3 -c \"import tesp_support.api.substation as tesp;tesp.substation_loop('test_agent_dict.json','test',helicsConfig='{names[1]}.json')\"")
+        # print(f1.helics.write_json())
+        # print(f2.helics.write_json())
+        f1_expected_config = {'name': 'a1', 'log_level': 'warning', 'period': 15, 'terminate_on_error': True,
+                              'publications': [
+                                  {'type': 'complex', 'key': 'distribution_load',
+                                   'info': {'object': 'network_node', 'property': 'distribution_load'}}]}
+        f2_expected_config = {'name': 'b1', 'log_level': 'warning', 'period': 15, 'terminate_on_error': True,
+                              'subscriptions': [{'type': 'complex', 'key': 'a1/distribution_load'}]}
+
+        self.assertEqual(f1.helics.write_json(), f1_expected_config)
+        self.assertEqual(f2.helics.write_json(), f2_expected_config)
 
     # Additional tests for other methods like pubs_n, pubs_e, subs_e, subs_n can be added here
 

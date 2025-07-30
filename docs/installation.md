@@ -44,7 +44,7 @@ Once installed, the persistent services can be started:
    - (Linux and macOS) run `source cosim.env` 
    - (Windows) TODO: figure out how to do this for Windows
 3. Launch the persistent services
-   - **2025-03-26: Problem Trevor had** - The images that were pulled from the Gitlab registry did not have the "latest" tag. They were versioned ("1.0.0-419f0a13"). I had to copy and re-tag the images doing `docker tag devops-registry.pnnl.gov/e-comp/thrust-3/copper/cosim-helics:1.0.0-419f0a13 cosim-helics:latest` (manually doing this for all the images).
+   - **2025-03-26: Problem Trevor had** - The images that were pulled from the Gitlab registry did not have the "latest" tag. They were versioned ("1.0.0-419f0a13"). I had to copy and re-tag the images doing `docker tag devops-registry.pnnl.gov/e-comp/thrust-3/copper/cosim-helics:1.0.0-419f0a13 cosim-cst:latest` (manually doing this for all the images).
    -  (Linux and macOS) Run "start_cu.sh" in the "scripts/stack" folder 
    -  (Windows) TODO: The "start_cu.sh" script might work in PowerShell; if not, we need a Windows-specific script
 

@@ -1,5 +1,5 @@
 # Build runtime image
-FROM jupyter/minimal-notebook:python-3.10
+FROM jupyter/minimal-notebook:python-3.11
 
 ARG CST_GID
 ARG CST_GRP

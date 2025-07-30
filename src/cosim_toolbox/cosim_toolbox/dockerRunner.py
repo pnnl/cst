@@ -103,13 +103,13 @@ class DockerRunner:
             params = [cosim_env,
                    f"python3 -c \"import cosim_toolbox.federateLogger as datalog; "
                    f"datalog.main('FederateLogger', '{schema_name}', '{scenario_name}')\""]
-            yaml += DockerRunner._service("cst_logger", "cosim-python:latest", params, cnt, depends=None)
+            yaml += DockerRunner._service("cst_logger", "cosim-cst:latest", params, cnt, depends=None)
 
         yaml += DockerRunner._network()
 
         # fed_cnt = str(fed_def.__len__())
         params = [cosim_env, f"helics_broker --ipv4 -f {cnt-2} --loglevel=warning --name=broker"]
-        yaml = 'services:\n' + DockerRunner._service("helics", "cosim-helics:latest", params, 2, depends=None) + yaml
+        yaml = 'services:\n' + DockerRunner._service("helics", "cosim-cst:latest", params, 2, depends=None) + yaml
 
         op = open(scenario_name + ".yaml", 'w')
         op.write(yaml)

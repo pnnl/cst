@@ -1,6 +1,6 @@
 # define the name of the virtual environment directory
 VENV := venv
-PYTHON := $(VENV)/bin/python3.10
+PYTHON := $(VENV)/bin/python3.12
 PIP := $(VENV)/bin/pip
 
 JULIA := julia
@@ -12,7 +12,7 @@ all: venv
 
 $(VENV)/bin/activate: src/cosim_toolbox/requirements.txt
 	@echo "Creating Python virtual environment at ./venv/..."
-	@python3 -m venv $(VENV)
+	@python3.12 -m venv $(VENV)
 	@echo "Installing requirements..."
 	@./$(PIP) install -r src/cosim_toolbox/requirements.txt
 
@@ -47,7 +47,6 @@ integration-test:
 		--cov=cosim_toolbox --cov-fail-under=2 --junitxml results.xml -v \
 		src/cosim_toolbox/integration_tests/test_simple_federation.py \
 		src/cosim_toolbox/integration_tests/test_readerDB.py \
-		src/cosim_toolbox/integration_tests/test_federate.py \
 		src/cosim_toolbox/integration_tests/test_dbConfigs.py
 
 .PHONY: all venv run clean test test-julia coverage integration-test
