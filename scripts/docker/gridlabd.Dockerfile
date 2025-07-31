@@ -78,10 +78,10 @@ RUN echo "===== Building CoSimulation Toolbox - GridlabD Docker =====" && \
   apt-get autoremove -y && \
   export REPO_DIR= && \
   export BUILD_DIR= && \
-  rm -rf /var/lib/apt/lists/* && \
+#  rm -rf /var/lib/apt/lists/* && \
   gridlabd --version && \
   chown -hR $CST_USER:$CST_GRP $CST_HOME
 
 # Set as user
-#USER $CST_USER
-#WORKDIR /home/$CST_USER
+USER $CST_USER
+WORKDIR /home/$CST_USER
