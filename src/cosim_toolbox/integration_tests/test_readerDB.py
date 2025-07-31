@@ -92,14 +92,14 @@ class Singleton(object):
                 }
             }
 
-            db.remove_dataset(env.cst_federations, None, cls.federation_name)
+            db.remove_dict(env.cst_federations, None, cls.federation_name)
             db.add_dict(env.cst_federations, cls.federation_name, diction)
             scenario = db.scenario(cls.schema_name,
                                    cls.federation_name,
                                    "2023-12-07T15:31:27",
                                    "2023-12-08T15:31:27",
                                    cls.docker)
-            db.remove_dataset(env.cst_scenarios, None, cls.scenario_name)
+            db.remove_dict(env.cst_scenarios, None, cls.scenario_name)
             db.add_dict(env.cst_scenarios, cls.scenario_name, scenario)
 
             cmd = (f'docker cp {os.path.dirname(os.path.abspath(__file__))}'

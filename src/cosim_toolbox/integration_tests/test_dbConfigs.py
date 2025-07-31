@@ -76,7 +76,7 @@ class TestMetadataDBApi(unittest.TestCase):
         obj_id = self.metadb.add_dict(collection_name, dict_name, named_file_dict)
         name_collections = self.metadb.update_collection_names()
         for c in name_collections:
-            self.metadb.remove_scenario(c)
+            self.metadb.remove_collection(c)
         self.assertEqual(len(self.metadb.collections), 0, "not all collections were removed")
 
     def test_04_add_dict(self):
@@ -105,7 +105,7 @@ class TestMetadataDBApi(unittest.TestCase):
     def test_06_check_unique_doc_name(self):
         collection_name = "case_data"
         dict_name = "psc"
-        file_name_unique = self.metadb._check_unique_doc_name(collection_name, dict_name)
+        file_name_unique = self.metadb._check_unique_dict_name(collection_name, dict_name)
         self.assertTrue(file_name_unique, "unique check incorrectly returned False")
         dict_name = "psc6"
         collection_name = "case_data6"
@@ -115,7 +115,7 @@ class TestMetadataDBApi(unittest.TestCase):
                                     'gen': {'bus_num': [1, 2, 3], 'id': ['1', '1', '1'], 'mw': [10, 20, 30]},
                                     'load': {'bus_num': [4, 5, 5], 'id': ['1', '1', '2'], 'mw': [12, 17, 25]}}}
         obj_id = self.metadb.add_dict(collection_name, dict_name, named_file_dict)
-        file_name_unique = self.metadb._check_unique_doc_name(collection_name, dict_name)
+        file_name_unique = self.metadb._check_unique_dict_name(collection_name, dict_name)
         self.assertFalse(file_name_unique, "unique check incorrectly returned True")
 
     def test_07_update_collection_names(self):
@@ -136,7 +136,7 @@ class TestMetadataDBApi(unittest.TestCase):
                                     'load': {'bus_num': [4, 5, 5], 'id': ['1', '1', '2'], 'mw': [12, 17, 25]}}}
         obj_id = self.metadb.add_dict(collection_name, dict_name, named_file_dict)
 
-        doc_names = self.metadb.get_collection_document_names(collection_name)
+        doc_names = self.metadb.get_dict_names_in_collection(collection_name)
         self.assertTrue(len(doc_names) > 0, "no document names were returned")
 
     def test_09_remove_document(self):
@@ -150,9 +150,9 @@ class TestMetadataDBApi(unittest.TestCase):
                                     'load': {'bus_num': [4, 5, 5], 'id': ['1', '1', '2'], 'mw': [12, 17, 25]}}}
         obj_id = self.metadb.add_dict(collection_name, dict_name, named_file_dict)
         try:
-            doc_names = self.metadb.get_collection_document_names(collection_name)
-            self.metadb.remove_dataset(collection_name=collection_name, dict_name="psc9")
-            doc_names2 = self.metadb.get_collection_document_names(collection_name)
+            doc_names = self.metadb.get_dict_names_in_collection(collection_name)
+            self.metadb.remove_dict(collection_name=collection_name, dict_name="psc9")
+            doc_names2 = self.metadb.get_dict_names_in_collection(collection_name)
             name_collections = self.metadb.update_collection_names()
             section = list(set(name_list).intersection(name_collections))
             self.assertNotEqual(doc_names, doc_names2)
@@ -160,9 +160,9 @@ class TestMetadataDBApi(unittest.TestCase):
             print("AttributeError : ", e)
         obj_id = self.metadb.add_dict(collection_name, dict_name, named_file_dict)
         try:
-            doc_names = self.metadb.get_collection_document_names(collection_name)
-            self.metadb.remove_dataset(collection_name=collection_name, dict_name="blah")
-            doc_names2 = self.metadb.get_collection_document_names(collection_name)
+            doc_names = self.metadb.get_dict_names_in_collection(collection_name)
+            self.metadb.remove_dict(collection_name=collection_name, dict_name="blah")
+            doc_names2 = self.metadb.get_dict_names_in_collection(collection_name)
             self.assertEqual(doc_names, doc_names2, "invalid dict_name entered")
         except NameError as e:
             print("NameError : ", e)
@@ -190,11 +190,11 @@ class TestMetadataDBApi(unittest.TestCase):
         obj_id = self.metadb.add_dict(collection_name, dict_name, copy_dict)
         dict_obj = self.metadb.get_dict(collection_name=collection_name, dict_name=dict_name)
         dict_obj["EVehicle"]["time_step"] -= 60
-        # print(self.metadb.get_collection_document_names(collection_name), flush=True)
+        # print(self.metadb.get_dict_names_in_collection(collection_name), flush=True)
         test_result = self.metadb.update_dict(collection_name=collection_name, updated_dict=dict_obj,
                                               dict_name=dict_name)
         new_dict_obj = self.metadb.get_dict(collection_name=collection_name, dict_name=dict_name)
-        # print(self.metadb.get_collection_document_names(collection_name), flush=True)
+        # print(self.metadb.get_dict_names_in_collection(collection_name), flush=True)
         self.assertNotEqual(new_dict_obj, dict_obj)
         self.assertEqual(copy_dict["EVehicle"]["time_step"] - 60, new_dict_obj["EVehicle"]["time_step"])
 

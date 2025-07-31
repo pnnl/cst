@@ -113,7 +113,7 @@ class DataLoggerMongo(DBResults):
         method_name = print(inspect.stack()[1][3])
         raise NotImplementedError(f"method {method_name} is not implemented for MongoDB")
 
-    def remove_scenario(self, scenario_name: str) -> None:
+    def remove_collection(self, scenario_name: str) -> None:
         """Removes the scenario (MongoDB database) from MongoDB
 
         Args:

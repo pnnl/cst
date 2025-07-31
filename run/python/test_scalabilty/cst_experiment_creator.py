@@ -176,10 +176,10 @@ docker run \\
         with open(f"{federation_name}.json", "w") as f:
             json.dump(federation['federation'], f, ensure_ascii=False, indent=2)
         if cst_logger:
-            self.db.remove_dataset(env.cst_federations, None, federation_name)
+            self.db.remove_dict(env.cst_federations, None, federation_name)
             self.db.add_dict(env.cst_federations, federation_name, federation)
             # Uncomment for debug
-            # print(env.cst_federations, self.db.get_collection_document_names(env.cst_federations))
+            # print(env.cst_federations, self.db.get_dict_names_in_collection(env.cst_federations))
 
         scenario = self.db.scenario(schema_name,
                                     federation_name,
@@ -190,10 +190,10 @@ docker run \\
         with open(f"{scenario_name}.json", "w") as f:
             json.dump(scenario, f, ensure_ascii=False, indent=2)
         if cst_logger:
-            self.db.remove_dataset(env.cst_scenarios, None, scenario_name)
+            self.db.remove_dict(env.cst_scenarios, None, scenario_name)
             self.db.add_dict(env.cst_scenarios, scenario_name, scenario)
             # Uncomment the next two lines for debug
-            # print(env.cst_scenarios, self.db.get_collection_document_names(env.cst_scenarios))
+            # print(env.cst_scenarios, self.db.get_dict_names_in_collection(env.cst_scenarios))
             # print(scenario_name, self.db.get_dict(env.cst_scenarios, None, scenario_name))
 
         scalability = {
@@ -208,10 +208,10 @@ docker run \\
         with open(f"{scalability_name}.json", "w") as f:
             json.dump(scalability, f, ensure_ascii=False, indent=2)
         if cst_logger:
-            self.db.remove_dataset(self.cst_scalability, None, scalability_name)
+            self.db.remove_dict(self.cst_scalability, None, scalability_name)
             self.db.add_dict(self.cst_scalability, scalability_name, scalability)
             # Uncomment the next two lines for debug
-            # print(self.cst_scalability, self.db.get_collection_document_names(self.cst_scalability))
+            # print(self.cst_scalability, self.db.get_dict_names_in_collection(self.cst_scalability))
             # print(scenario_name, self.db.get_dict(self.cst_scalability, None, scenario_name))
 
         self.define_shell(scenario_name, scenario, scalability, federation)
@@ -257,9 +257,9 @@ def main():
     else:
         r = Runner("cst_scale_z1", False)
     r.define_scenarios()
-    print(r.db.get_collection_document_names(env.cst_scenarios))
-    print(r.db.get_collection_document_names(r.cst_scalability))
-    print(r.db.get_collection_document_names(env.cst_federations))
+    print(r.db.get_dict_names_in_collection(env.cst_scenarios))
+    print(r.db.get_dict_names_in_collection(r.cst_scalability))
+    print(r.db.get_dict_names_in_collection(env.cst_federations))
 
 
 if __name__ == "__main__":

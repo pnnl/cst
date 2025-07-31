@@ -230,7 +230,7 @@ class FederateLoggerMongo(Federate):
 def main(federate_name: str, scenario_name: str) -> None:
     fed_logger = FederateLoggerMongo(federate_name, scenario_name)
     # Remove old data for scenario
-    fed_logger.dl.remove_scenario(scenario_name)
+    fed_logger.dl.remove_collection(scenario_name)
     fed_logger.create_federate(scenario_name)
     fed_logger.run_cosim_loop()
     fed_logger.dl.close_database_connections()

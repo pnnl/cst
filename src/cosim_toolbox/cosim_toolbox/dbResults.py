@@ -145,7 +145,7 @@ class DBResults:
             cur.execute(query)
             self.data_db.commit()
 
-    def remove_scenario(self, analysis_name: str, scenario_name: str) -> None:
+    def remove_collection(self, analysis_name: str, scenario_name: str) -> None:
         """Removes all data from the specified analysis_name with the specified
         scenario_name
 

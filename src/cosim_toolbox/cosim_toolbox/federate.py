@@ -175,7 +175,7 @@ class Federate:
             if not self.dl.table_exist(self.scheme_name, 'hdt_double'):
                 try:
                     self.dl.make_logger_database(self.scheme_name)
-                    self.dl.remove_scenario(self.scheme_name, self.scenario_name)
+                    self.dl.remove_collection(self.scheme_name, self.scenario_name)
                 except Exception as ex:
                     self.dl.data_db.rollback()
                     logger.exception(f"Rolling back: make tables for schema!")
