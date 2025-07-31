@@ -16,7 +16,7 @@ description = "Python support for the CoSimulation Toolbox"
 readme = "README.rst"
 license = {file = "LICENSE"}
 keywords = ["power system", "transactive", "energy"]
-requires-python = ">=3.12"
+requires-python = ">=3.10"
 dependencies = [
     "helics~=3.6.1",
     "pandas~=2.2.3",
@@ -33,7 +33,7 @@ classifiers = [
     "Natural Language :: English",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.10",
     "Topic :: Scientific/Engineering"
 ]
 
