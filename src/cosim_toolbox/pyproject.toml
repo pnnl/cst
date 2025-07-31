@@ -16,21 +16,12 @@ description = "Python support for the CoSimulation Toolbox"
 readme = "README.rst"
 license = {file = "LICENSE"}
 keywords = ["power system", "transactive", "energy"]
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 dependencies = [
-    "importlib-resources~=6.4.5",
-    "h5py~=3.14.0",
     "helics~=3.6.1",
     "pandas~=2.2.3",
-    "numpy~=1.26.4",
-    "scipy~=1.16.1",
-    "matplotlib~=3.10.3",
-    "networkx~=3.5",
-    "PYPOWER==5.1.16",
-    "pyutilib==6.0.0",
     "psycopg2-binary~=2.9.10",
-    "pymongo~=4.13.2",
-    "Pyomo==6.5.0"
+    "pymongo~=4.13.2"
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -42,7 +33,7 @@ classifiers = [
     "Natural Language :: English",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering"
 ]
 
