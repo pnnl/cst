@@ -1,0 +1,151 @@
+@startuml
+class TSDataStoreEnum {
+   Postgres
+   CSVFile
+}
+
+class MDDataStoreEnum {
+   MongoDB
+   JSONFile
+}
+
+class TSDataTypeEnum {
+   boolean
+   complex
+   complex_vector
+   double
+   integer
+   json
+   named_point
+   string 
+   time 
+   vector
+}
+
+class HELICSFederateTypeEnum{
+    HELICSValue
+    HELICSMessage
+    HELICSCombo
+}
+
+class TSRecord {
+    real_time: datetime
+    ordinal_time: float 
+    scenario: str
+    federate: str
+    data_name: str
+    data_value: Any
+}
+
+class TSDataWriter {
+    name: str
+    writer_type: TSDataStoreEnum
+    location: Any
+    buffer_size: integer
+    connect(): bool
+    disconnect(): None
+    write_data(data_type: TSDataTypeEnum, data: list): bool
+}
+
+class TSDataReader {
+    name: str
+    reader_type: TSDataStoreEnum
+    location: Any
+    connect(): bool
+    disconnect(): None
+    read_data(start_time: datetime, stop_time: datetime, scenario_name: str, federate_name: str, data_name: str, TSDataTypeEnum): pd.DataFrame
+    read_all_scenario_data(scenario_name: str, data_type: TSDataTypeEnum,): pd.DataFrame 
+    read_all_scenario_federate_data(scenario_name: str, federate_name: str, data_type: TSDataTypeEnum): pd.DataFrame 
+}
+
+class MDDataWriter{
+    name: str
+    writer_type: MDDataStoreEnum
+    location: Any
+    connect(): bool
+    disconnect(): None
+    write_data:(data: dict)
+}
+
+class MDDataReader{
+    name: str
+    writer_type: MDDataStoreEnum
+    location: Any
+    connect(): bool
+    disconnect(): None
+    read_data:(): dict
+}
+
+class FederationMD{
+    logger: bool
+    image: str
+    command: str
+    federate_type: HELICSFederateTypeEnum
+    time_step: float
+    HELICS_config: HELICSConfig
+}
+
+class ScenarioMD{
+    analysis_name: str
+    scenario_name: str
+    federation: str
+    start_time: str
+    stop_time: str
+}
+
+class PostgresDataRW{
+    name: str
+    db: PostgresDatabase
+    writer: PostgresDataWriter
+    reader: PostgresDataReader
+}
+
+class CSVFileRW{
+    name: str
+    writer: PostgresDataWriter
+    reader: PostgresDataReader
+    file_handless: dict
+}
+
+class MongoDataRW{
+    name: str
+    db: MongoDB
+    writer: MongoDataWriter
+    reader: MongoDataReader
+}
+
+
+class PostgresDataWriter{
+    db: PostgresDatabase
+}
+
+class PostgresDataReader{
+    db: PostgresDatabase
+}
+
+class CSVDataWriter{
+    file_handles: dict
+}
+
+class CSVFileDataReader{
+    file_handles: dict
+}
+
+class MongoDataWriter{
+    db: MongoDB
+}
+
+class MongoDataReader{
+    db: MongoDB
+}
+
+class JSONFileDataWriter{
+    file_handles: dict
+}
+
+class JSONFileDataReader{
+    file_handles: dict
+}
+
+
+@enduml
