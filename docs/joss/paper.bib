@@ -1,0 +1,80 @@
+
+@article{Hardy:2024aa,
+	author = {Hardy, Trevor D. and Palmintier, Bryan and Top, Philip L. and Krishnamurthy, Dheepak and Fuller, Jason C.},
+	doi = {{10.1109/ACCESS.2024.3363615}},
+	journal = {{IEEE Access}},
+	keywords = {PNNL,Natural gas;Renewable energy sources;Government;Transactive energy;Scalability;Power system stability;Power system dynamics;Simulation;Power system analysis computing;power system simulation;HELICS;co-simulation;natural gas;transportation;multi-energy analysis;multi-domain analysis;energy system analysis},
+	month = {1},
+	pages = {{24325-24347}},
+	title = {{HELICS: A Co-Simulation Framework for Scalable Multi-Domain Modeling and Analysis}},
+	url = {https://ieeexplore.ieee.org/document/10424422},
+	volume = {12},
+	year = {2024}
+}
+
+@misc{fmi_github,
+  author = {Modelica Association Project FMI},
+  title = {fmi: Functional Mock-Up Interface},
+  year = {2025},
+  publisher = {GitHub},
+  journal = {GitHub repository},
+  url = {https://github.com/modelica/fmi-standard}
+}
+
+
+@inproceedings{Theisen:2024aa,
+	abstract = {The changing landscape of the electricity industry, characterized by a surge in distributed energy resources (DERs) and proactive customers, necessitates practical solutions for coor-dinated operation especially at the distribution-level. This paper introduces a community-based trans active coordination mecha-nism designed to incentivize customers for providing localized and system-level services reflected through real-time prices. The work presents a bidding approach for communities, representing collectives of customers, to formulate their price-responsiveness for retail energy coordination, thereby emphasizing a community-centric model. By sending bidding curves to a third-party, the mechanism enables customers with DER assets to actively participate in localized coordination with the Load Serving Entity (LSE), thereby supplementing each other's and even the utility's needs through a shared energy economy. The proposed transactive mechanism is implemented leveraging a co-simulation framework that integrates a distribution grid simulator with control agents for performance evaluation. Simulation-based evaluation on a real distribution system use-case, in collaboration with a local utility, demonstrate the potential of the mechanism to reduce costs by 12% for communities with DERs like solar photovoltaic (PV) and battery energy storage systems (BESS).},
+	author = {Theisen, John R. and Bose, Anjan and Mukherjee, Monish and Burgess, Dan and Wilhelm, Kenneth and Diedesch, Michael},
+	booktitle = {2024 IEEE Texas Power and Energy Conference (TPEC)},
+	doi = {10.1109/TPEC60005.2024.10472237},
+	keywords = {Photovoltaic systems;Performance evaluation;Reactive power;Costs;Simulation;Pricing;Real-time systems;Community-based coordination;grid-edge sys-tems;retail market;shared energy economy;transactive energy; co-simulation; HELICS},
+	month = {Feb},
+	pages = {1-6},
+	title = {Community-Based Transactive Coordination Mechanism for Enabling Grid-Edge Systems},
+	year = {2024}
+}
+
+
+@article{Bharati:2023aa,
+	abstract = {In the recent years, there has been an increase in distributed inverter-based resources (D-IBRs) in the system that is impacting the grid performance. Dynamic transmission and distribution (T&D) co-simulation is an effective method to evaluate the impact of D-IBRs on the system response, however, implementation is a challenge. This article innovatively achieves accurate T&D model coordination with inclusion of dynamic models of power electronic controls. It also demonstrates that D-IBRs operating with grid-forming (GFM) controls with frequency support capability can aid in primary frequency regulation in a low-inertia power system. The article discusses the fundamentals of dynamic T&D co-simulation to analyze the primary frequency response on the IEEE 39-Bus transmission system coupled to IEEE 123-Bus distribution system with D-IBRs with GFM controls. To demonstrate scalability, a large system (286383 T&D buses) is co-simulated: IEEE 39-bus transmission system with all load buses coupled to a total of 2328 parallel IEEE 123-Bus distribution feeders containing a mix of D-IBRs is considered. The article also discusses the use of parallel computation used for distribution system solutions enabled in the scalable multi-timescale T&D co-simulation framework along with computation time comparisons between the large and small system simulations with GFM inverter dynamics.},
+	author = {Bharati, Alok Kumar and Ajjarapu, Venkataramana and Du, Wei and Liu, Yuan},
+	doi = {10.1109/JSYST.2022.3218117},
+	issn = {1937-9234},
+	journal = {IEEE Systems Journal},
+	keywords = {PNNL,HELICS,Transient simulation},
+	month = {March},
+	number = {1},
+	pages = {1071-1082},
+	title = {Role of Distributed Inverter-Based-Resources in Bulk Grid Primary Frequency Response Through HELICS Based SMTD Co-Simulation},
+	url = {https://ieeexplore.ieee.org/document/9966492},
+	volume = {17},
+	year = {2023}
+}
+
+
+@article{Panossian:2023aa,
+	abstract = {This work describes the Grid-Enhanced, Mobility-Integrated Network Infrastructures for Extreme Fast Charging (GEMINI) architecture for the co-simulation of distribution and transportation systems to evaluate EV charging impacts on electric distribution systems of a large metropolitan area and the surrounding rural regions with high fidelity. The current co-simulation is applied to Oakland and Alameda, California, and in future work will be extended to the full San Francisco Bay Area. It uses the HELICS co-simulation framework to enable parallel instances of vetted grid and transportation software programs to interact at every model timestep, allowing high-fidelity simulations at a large scale. This enables not only the impacts of electrified transportation systems across a larger interconnected collection of distribution feeders to be evaluated, but also the feedbacks between the two systems, such as through control systems, to be captured and compared. The findings are that with moderate passenger EV adoption rates, inverter controls combined with some distribution system hardware upgrades can maintain grid voltages within ANSI C.84 range A limits of 0.95 to 1.05 p.u. without smart charging. However, EV charging control may be required for higher levels of charging or to reduce grid upgrades, and this will be explored in future work.},
+	article-number = {2189},
+	author = {Panossian, Nadia V. and Laarabi, Haitam and Moffat, Keith and Chang, Heather and Palmintier, Bryan and Meintz, Andrew and Lipman, Timothy E. and Waraich, Rashid A.},
+	doi = {10.3390/en16052189},
+	issn = {1996-1073},
+	journal = {Energies},
+	keywords = {HELICS, electric vehicle charging, electric vehicles},
+	number = {5},
+	title = {Architecture for Co-Simulation of Transportation and Distribution Systems with Electric Vehicle Charging at Scale in the San Francisco Bay Area},
+	url = {https://www.mdpi.com/1996-1073/16/5/2189},
+	volume = {16},
+	year = {2023}
+}
+
+
+@mastersthesis{Lardier:2020aa,
+	address = {Montreal, Canada},
+	author = {Lardier, William},
+	keywords = {HELICS, OMNeT++, co-simulation, communication system},
+	month = {Nov},
+	school = {Concordia University},
+	title = {ASGARDS-H: Enabling Advanced Smart Grid Cyber-Physical Attacks, Risk and Data Studies with HELICS},
+	url = {https://spectrum.library.concordia.ca/id/eprint/987690/1/Lardier_MASc_S2021.pdf},
+	year = {2020}
+}
