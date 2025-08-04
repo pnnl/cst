@@ -13,14 +13,14 @@ authors:
     equal-contrib: true
     affiliation: 1
   - name: Nathan Gray
-    orcid: 
+    orcid: 0009-0008-0234-7207
     equal-contrib: true
     affiliation: 1
   - name: Fred Rutz
-    orcid: 
+    orcid: 0009-0002-6352-5480
     affiliation: 1
   - name: Wen Bo
-    orcid: 
+    orcid: 0009-0001-9644-5797
     affiliation: 1
 affiliations:
  - name: Pacific Northwest National Laboratory
