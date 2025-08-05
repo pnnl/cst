@@ -1,9 +1,7 @@
+myst-parser
+recommonmark
 sphinx
 sphinx-autobuild
-recommonmark
-javasphinx
 sphinx-jsonschema
 sphinx_rtd_theme
 sphinxcontrib-bibtex
-urllib3
-myst-parser

@@ -17,9 +17,9 @@ class MyFederateMatch(FederateConfig):
         super().__init__(name, **kwargs)
 
         fmt = {
-            "blank": { "fed": "", "keys": ["", ""], "indices": []},
-            "pypower": {"fed": "pypower"},
-            "gld_7": {"fed": "gld_7"}
+            "blank": { "from_fed": "sub_7", "keys": ["", ""], "indices": []},
+            "pypower": {"from_fed": "sub_7", "to_fed": "pypower"},
+            "gld_7": {"from_fed": "sub_7", "to_fed": "gld_7"}
         }
         gld_fmt = MyFederateMatch.get_names("test.glm")
         self.outputs["substation1"] = HelicsPubGroup("unresponsive_mw", "double", fmt["blank"])
@@ -58,8 +58,8 @@ class MyFederateMatch(FederateConfig):
         if not success:
             print(f'{path} not found or file not supported; exiting')
         fmt = {
-            "hvac": { "fed": "", "keys": ["@list@/", ""], "indices": []},
-            "billing": { "fed": "", "keys": ["@list@/", ""], "indices": []}
+            "hvac": { "from_fed": "", "keys": ["@list@/", ""], "indices": []},
+            "billing": { "from_fed": "", "keys": ["@list@/", ""], "indices": []}
         }
         for name, attr in glm.house.items():
             if 'ELECTRIC' in attr["cooling_system_type"]:
@@ -73,26 +73,34 @@ class MyFederate(FederateConfig):
         super().__init__(name, **kwargs)
 
         fmt = {
-            "blank": { "fed": "",
+            "blank": { "from_fed": "sub_7",
                        "keys": ["", ""],
                        "indices": []},
-            "hvac": { "fed": "",
+            "hvac": { "from_fed": "sub_7",
                       "keys": ["Fdr1_Houses_@@_hse_##/", ""],
                       "indices": [["A",1,501], ["B",1,501], ["C",1,501]]},
-            "billing": { "fed": "",
+            "billing": { "from_fed": "sub_7",
                          "keys": ["Fdr1_Houses_@@_hse_##/Fdr1_Houses_@@_mhse_##/", ""],
                          "indices": [["A",1,501], ["B",1,501], ["C",1,501]]},
-            "lmp": { "fed": "pypower",
-                     "keys": ["/", ""],
+            "lmp": { "output_fed": True,
+                     "from_fed": "sub_7",
+                     "to_fed": "pypower",
+                     "keys": ["", ""],
                      "indices": []},
-            "load": { "fed": "gld_7",
-                      "keys": ["/", ""],
+            "load": { "output_fed": True,
+                      "from_fed": "sub_7",
+                      "to_fed": "gld_7",
+                      "keys": ["", ""],
                       "indices": []},
-            "house": { "fed": "gld_7",
-                       "keys": ["/Fdr1_Houses_@@_hse_##/", ""],
+            "house": { "output_fed": True,
+                       "from_fed": "sub_7",
+                       "to_fed": "gld_7",
+                       "keys": ["Fdr1_Houses_@@_hse_##/", ""],
                        "indices": [["A", 1, 501], ["B", 1, 501], ["C", 1, 501]]},
-            "meter": { "fed": "gld_7",
-                       "keys": ["/Fdr1_Houses_@@_mhse_##/", ""],
+            "meter": { "output_fed": True,
+                       "from_fed": "sub_7",
+                       "to_fed": "gld_7",
+                       "keys": ["Fdr1_Houses_@@_mhse_##/", ""],
                        "indices": [["A", 1, 501], ["B", 1, 501], ["C", 1, 501]]},
         }
 

@@ -16,15 +16,22 @@ from cosim_toolbox.federation import FederationConfig
 from cosim_toolbox.dockerRunner import DockerRunner
 
 fmt = {
-    "blank": {"fed": "",
-              "keys": ["", ""],
-              "indices": []},
-    "bt": {"fed": "Battery",
-           "keys": ["/", ""],
+    "bt": {"from_fed": "Battery",
+           "keys": ["", ""],
            "indices": []},
-    "ev": {"fed": "EVehicle",
-           "keys": ["/", ""],
-           "indices": []}
+    "ev": {"output_fed": True,
+           "from_fed": "Battery",
+           "to_fed": "EVehicle",
+           "keys": ["", ""],
+           "indices": []},
+    "ev1": {"from_fed": "EVehicle",
+            "keys": ["", ""],
+            "indices": []},
+    "bt1": {"output_fed": True,
+            "from_fed": "EVehicle",
+            "to_fed": "Battery",
+            "keys": ["", ""],
+            "indices": []},
 }
 
 class MyFederate1(FederateConfig):
@@ -39,13 +46,13 @@ class MyFederate1(FederateConfig):
 class MyFederate2(FederateConfig):
     def __init__(self, name: str, **kwargs):
         super().__init__(name, **kwargs)
-        self.outputs["voltage1"] = HelicsPubGroup("EV_voltage", "double", fmt["ev"], unit="V", globl=True)
-        self.inputs["current1"] = HelicsSubGroup("EV_current", "double", fmt["bt"], unit="A")
+        self.outputs["voltage1"] = HelicsPubGroup("EV_voltage", "double", fmt["ev1"], unit="V", globl=True)
+        self.inputs["current1"] = HelicsSubGroup("EV_current", "double", fmt["bt1"], unit="A")
 
         self.config("federate_type", "value")
         self.helics.collect(Collect.NO)
 
-def main():
+def  define_format():
     remote = False
     with_docker = False
     federation = FederationConfig("MyScenario", "MySchema", "MyFederation", with_docker)
@@ -74,4 +81,4 @@ def main():
         DockerRunner.define_sh(federation.scenario_name)
 
 if __name__ == "__main__":
-    main()
+    define_format()

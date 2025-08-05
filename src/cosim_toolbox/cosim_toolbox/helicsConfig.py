@@ -13,16 +13,26 @@ from enum import Enum
 import json
 
 
+class Group(Enum):
+    SUB = 'sub'
+    PUB = 'pub'
+    INP = 'inp'
+    EPT = 'ept'
+
 class Collect(Enum):
     YES = 'yes'
     NO = 'no'
     MAYBE = 'maybe'
 
 class HelicsFormatter:
-    def __init__(self, name:str, key_format: dict):
+    def __init__(self, name: str, key_format: dict, group: Group):
+        self.seperator = "/"
         self.name = name
-        self.fed = key_format["fed"]
+        self.fed = key_format["from_fed"]
+        if "output_fed" in key_format:
+             self.fed = key_format["to_fed"]
         self.format = False
+        self.group = group
         self.vars = []
         if "keys" in key_format:
             self.keys = key_format["keys"]
@@ -33,6 +43,12 @@ class HelicsFormatter:
     def format_variables(self):
         variables = []
         if self.format:
+            global_fed = ""
+            if self.group == Group.SUB:
+                global_fed = self.fed + self.seperator
+            if "global" in self.diction:
+                if self.diction["global"]:
+                    global_fed = self.fed + self.seperator
             # Multiples
             if "@@" in self.keys[0] and "##" in self.keys[0]:
                 for k in self.indices:
@@ -44,7 +60,7 @@ class HelicsFormatter:
                         key = key.replace("##", str(j))
                         obj = obj.replace("##", str(j))
                         var = self.diction.copy()
-                        var["key"] = self.fed + key + self.name
+                        var["key"] = global_fed + key + self.name
                         if len(obj) > 0:
                             var["info"] = {"object": obj, "property": self.name}
                         variables.append(var)
@@ -55,7 +71,7 @@ class HelicsFormatter:
                     key = key.replace("@list@", k)
                     obj = obj.replace("@list@", k)
                     var = self.diction.copy()
-                    var["key"] = self.fed + key + self.name
+                    var["key"] = global_fed + key + self.name
                     if len(obj) > 0:
                         var["info"] = {"object": obj, "property": self.name}
                     variables.append(var)
@@ -67,9 +83,9 @@ class HelicsFormatter:
                     obj = obj.replace("@@", k[0])
                     var = self.diction.copy()
                     if k[1]:
-                        var["key"] = self.fed + key
+                        var["key"] = global_fed + key
                     else:
-                        var["key"] = self.fed + key + self.name
+                        var["key"] = global_fed + key + self.name
                     if len(obj) > 0:
                         var["info"] = {"object": obj, "property": self.name}
                     variables.append(var)
@@ -82,10 +98,9 @@ class HelicsFormatter:
                         obj = obj.replace("##", str(j))
                         var = self.diction.copy()
                         if k[2]:
-                            var["key"] = self.fed + key
+                            var["key"] = global_fed + key
                         else:
-                            var["key"] = self.fed + key + self.name
-                        var["key"] = self.fed + key + self.name
+                            var["key"] = global_fed + key + self.name
                         if len(obj) > 0:
                             var["info"] = {"object": obj, "property": self.name}
                         variables.append(var)
@@ -94,57 +109,32 @@ class HelicsFormatter:
                 key = self.keys[0]
                 obj = self.keys[1]
                 var = self.diction.copy()
-                var["key"] = self.fed + key + self.name
+                var["key"] = global_fed + key + self.name
                 if len(obj) > 0:
                     var["info"] = {"object": obj, "property": self.name}
                 variables.append(var)
         self.vars = variables
 
-class HelicsPubGroup(HelicsFormatter):
-    def __init__(self, name: str, data_type: str, key_format: dict, **kwargs):
-        super().__init__(name, key_format)
-        self.diction = {"type": data_type}
-        # rename 'glob' to 'global' because of 'global' keyword can not be used in kwargs
-        if "globl" in kwargs:
-            kwargs["global"] = kwargs["globl"]
-            kwargs.pop("globl")
-        self.diction.update(kwargs)
-        for attr_name, attr in self.diction.items():
-            HelicsMsg.verify(HelicsMsg.pub_var, attr_name, attr)
-        self.format_variables()
-
-class HelicsSubGroup(HelicsFormatter):
-    def __init__(self, name: str, data_type: str, key_format: dict=None, **kwargs):
-        super().__init__(name, key_format)
-        self.diction = {"type": data_type}
-        self.diction.update(kwargs)
-        for attr_name, attr  in self.diction.items():
-            HelicsMsg.verify(HelicsMsg.sub_var, attr_name, attr)
-        self.format_variables()
-
-class HelicsEndPtGroup:
-    def __init__(self, name: str, key_format: dict, destination: str, des_format: dict, **kwargs):
+class HelicsEndpointFormatter:
+    def __init__(self, name: str, key_format: dict, destination: str, des_format: dict, group: Group):
+        self.seperator = "/"
         self.name = name
         self.destination = destination
-        self.fed = key_format["fed"]
+        self.fed = key_format["from_fed"]
         self.keys = key_format["keys"]
         self.indices = key_format["indices"]
-        self.fed1 = des_format["fed"]
+        self.fed1 = des_format["to_fed"]
         self.keys1 = des_format["keys"]
         self.indices1 = des_format["indices"]
-        self.diction = {}
         self.vars = []
-        # rename 'globl' to 'global' because of 'global' keyword can not be used in kwargs
-        if "globl" in kwargs:
-            kwargs["global"] = kwargs["globl"]
-            kwargs.pop("globl")
-        self.diction.update(kwargs)
-        for attr_name, attr in self.diction.items():
-            HelicsMsg.verify(HelicsMsg.end_pts, attr_name, attr)
-        self.format_endpoints()
+        self.diction = None
 
     def format_endpoints(self):
         variables = []
+        global_fed = ""
+        if "global" in self.diction:
+            if self.diction["global"]:
+                global_fed = self.fed + self.seperator
         # Multiples
         if "@@" in self.keys[0] and "##" in self.keys[0]:
             pass
@@ -159,14 +149,49 @@ class HelicsEndPtGroup:
             des = self.keys1[0]
             d_obj = self.keys1[1]
             var = self.diction.copy()
-            var["name"] = self.fed + src + self.name
-            var["destination"] = self.fed1 + des + self.destination
+            var["name"] = global_fed + src + self.name
+            var["destination"] = self.fed1 + self.seperator + des + self.destination
             if len(s_obj) > 0:
                 var["info"] = {"object": s_obj, "property": self.name}
             if len(d_obj) > 0:
                 var["info"] = {"object": d_obj, "property": self.destination}
             variables.append(var)
         self.vars = variables
+
+class HelicsPubGroup(HelicsFormatter):
+    def __init__(self, name: str, data_type: str, key_format: dict, **kwargs):
+        super().__init__(name, key_format, Group.PUB)
+        self.diction = {"type": data_type}
+        # rename 'globl' to 'global' because of 'global' keyword can not be used in kwargs
+        if "globl" in kwargs:
+            kwargs["global"] = kwargs["globl"]
+            kwargs.pop("globl")
+        self.diction.update(kwargs)
+        for attr_name, attr in self.diction.items():
+            HelicsMsg.verify(HelicsMsg.pub_var, attr_name, attr)
+        self.format_variables()
+
+class HelicsSubGroup(HelicsFormatter):
+    def __init__(self, name: str, data_type: str, key_format: dict=None, **kwargs):
+        super().__init__(name, key_format, Group.SUB)
+        self.diction = {"type": data_type}
+        self.diction.update(kwargs)
+        for attr_name, attr in self.diction.items():
+            HelicsMsg.verify(HelicsMsg.sub_var, attr_name, attr)
+        self.format_variables()
+
+class HelicsEndPtGroup(HelicsEndpointFormatter):
+    def __init__(self, name: str, key_format: dict, destination: str, des_format: dict, **kwargs):
+        super().__init__(name, key_format, destination, des_format, Group.EPT)
+        self.diction = {}
+        # rename 'globl' to 'global' because of 'global' keyword can not be used in kwargs
+        if "globl" in kwargs:
+            kwargs["global"] = kwargs["globl"]
+            kwargs.pop("globl")
+        self.diction.update(kwargs)
+        for attr_name, attr in self.diction.items():
+            HelicsMsg.verify(HelicsMsg.end_pts, attr_name, attr)
+        self.format_endpoints()
 
 class HelicsMsg:
     """Provides a data structure for building up the HELICS configuration
@@ -560,57 +585,3 @@ class HelicsMsg:
             for v in pub_msg:
                 if varfilter in pub_msg[v].key:
                     self.subs_n(pub_msg[v].key, pub_msg[v].type)
-
-
-"""
-# filter, scale, index, regex
-# define filter for
-
-# https://mepas.pnnl.gov/FramesV1/model.stm
-# https://mepas.pnnl.gov/ACC/protocol.htm
-
-What can we learn from these cases 
-tesp_case.py
-prep_substation_dsot.py
-
-FNCS published only output 
-
-input->module->output(input)->module 
-input->module->boundary->module 
-
-Onus on module(federate) developer to read/find(subscribe) inputs 
-then manipulate the inputs and publish the outputs.
-
-gui works well because humans are matching machines and can understand context.
-
-Can we infer context, given some filter, when we want to find and subscribe published outputs.
-
-Develop a language to published 'key' into output boundary and then be able to find automagically.
-
-The output should unique and contain 'key' or 'info' for find and match.
-
-In dsot gridlabd indices are: 
-      gld_1 = federate
-      R4_12_47_1 = feeder
-      _tn_1 = transformer
-      _Low = income
-      _hse_1 = house
-      #Tair = property
-
-      "key": "R4_12_47_1_tn_1_Low_hse_1#Tair",
-      "info": {
-        "object": "R4_12_47_1_tn_1_Low_hse_1",
-        "property": "air_temperature" }
-
-      key: feeder
-      {R4_12_47_1,sd}  
-
-in energyplus indices
-      eplus_1 = federate
-      EMS Cooling Controlled Load = property
-
-      agent_1 = federate
-      cooling_setpoint_delta = property
-
-
-"""
