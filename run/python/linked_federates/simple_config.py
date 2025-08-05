@@ -18,21 +18,20 @@ class MyFederate(FederateConfig):
         super().__init__(name, **kwargs)
 
         fmt = {
-            "blank": {"fed": "",
-                      "keys": ["", ""],
-                      "indices": []},
-            "bt": {"fed": "Battery",
-                   "keys": ["/", ""],
+            "bt": {"from_fed": "Battery",
+                   "keys": ["", ""],
                    "indices": []},
-            "ev": {"fed": "EVehicle",
-                   "keys": ["/", ""],
+            "ev": {"output_fed": True,
+                   "from_fed": "Battery",
+                   "to_fed": "EVehicle",
+                   "keys": ["", ""],
                    "indices": []}
         }
 
         self.outputs["current1"] = HelicsPubGroup("current", "double", fmt["bt"], unit="A", globl=True, tags={"logger": Collect.YES.value})
         self.outputs["current2"] = HelicsPubGroup("current2", "integer", fmt["bt"], unit="A", globl=True, tags={"logger": Collect.NO.value})
-        self.outputs["current3"] = HelicsPubGroup("current3", "boolean", fmt["blank"], unit="A")
-        self.outputs["current4"] = HelicsPubGroup("current4", "string", fmt["blank"], unit="A")
+        self.outputs["current3"] = HelicsPubGroup("current3", "boolean", fmt["bt"], unit="A")
+        self.outputs["current4"] = HelicsPubGroup("current4", "string", fmt["bt"], unit="A")
         self.outputs["current5"] = HelicsPubGroup("current5", "complex", fmt["bt"], unit="A", globl=True, tags={"logger": Collect.MAYBE.value})
         self.outputs["current6"] = HelicsPubGroup("current6", "vector", fmt["bt"], unit="A", globl=True, tags={"logger": Collect.NO.value})
 

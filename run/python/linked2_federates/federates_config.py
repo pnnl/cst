@@ -62,8 +62,8 @@ def get_names(path: str) -> dict:
     if not success:
         print(f'{path} not found or file not supported; exiting')
     fmt = {
-        "house": {"from_fed": "gld_7", "fed": "", "keys": ["@list@#", "@list@"], "indices": []},
-        "meter": {"from_fed": "gld_7", "fed": "", "keys": ["@list@#", "@list@"], "indices": []},
+        "house": {"from_fed": "gld_7", "fed": "", "keys": ["@list@/", "@list@"], "indices": []},
+        "meter": {"from_fed": "gld_7", "fed": "", "keys": ["@list@/", "@list@"], "indices": []},
         "hvac": {"from_fed": "sub_7", "fed": "", "keys": ["@list@/", ""], "indices": []},
         "billing": {"from_fed": "sub_7", "fed": "", "keys": ["@list@/", ""], "indices": []}
     }
@@ -83,58 +83,53 @@ def define_federation_list():
 
     # gridlabd
     load = {"src": {"from_fed": names[0],
-                    "fed": "",
                     "keys": ["", "network_node"],
                     "indices": []},
             "des": [{"to_fed": names[1],
-                     "fed": names[0]}]}
+                     "from_fed": names[0]}]}
     house = {"src": gld_fmt["house"],
              "des": [{"to_fed": names[1],
-                      "fed": names[0] }]}
+                      "from_fed": names[0] }]}
     meter = {"src": gld_fmt["meter"],
              "des": [{"to_fed": names[1],
-                      "fed": names[0] }]}
+                      "from_fed": names[0] }]}
     # substation
     hvac = {"src": gld_fmt["hvac"],
             "des": [{"to_fed": names[0],
-                     "fed": names[1],
+                     "from_fed": names[1],
                      "info": True}]}
     billing = {"src": gld_fmt["billing"],
                "des": [{"to_fed": names[0],
-                        "fed": names[1],
+                        "from_fed": names[1],
                         "info": True}]}
     bid = {"src": {"from_fed": names[1],
-                   "fed": "",
                    "keys": ["", ""],
                    "indices": []},
            "des": [{"to_fed": names[2],
-                    "fed": names[1],
-                    "keys": ["/", ""],
+                    "from_fed": names[1],
+                    "keys": ["", ""],
                     "indices": []}]}
     # pypower
     lmp = {"src": {"from_fed": names[2],
-                   "fed": "",
                    "keys": ["", ""],
                    "indices": []},
            "des": [{"to_fed": names[1],
-                    "fed": names[2],
-                    "keys": ["/", ""],
+                    "from_fed": names[2],
+                    "keys": ["", ""],
                     "indices": []}]}
     voltage = {"src": {"from_fed": names[2],
-                       "fed": "",
                        "keys": ["", ""],
                        "indices": []},
                "des": [{"to_fed": names[0],
-                        "fed": names[2],
-                        "keys": ["/@@", "network_node"],
+                        "from_fed": names[2],
+                        "keys": ["@@", "network_node"],
                         "indices": [["three_phase_voltage_7", True]]
                         }]}
     # weather
-    weather = {"src": {"from_fed": names[3],
-                       "fed": ""},
+    weather = {"src": {"from_fed": names[3]},
                "des": [{"to_fed": names[0],
-                        "fed": names[3],
-                        "keys": ["/#", "localWeather"],
+                        "from_fed": names[3],
+                        "keys": ["#", "localWeather"],
                         "indices": []}]}
 
     federation = FederationConfig("MyTestScenario", "MyTestSchema", "MyTestFederation", with_docker)
@@ -201,83 +196,74 @@ def define_federation():
 
     # gridlabd
     load = {"src": {"from_fed": names[0],
-                    "fed": "",
                     "keys": ["", "network_node"],
                     "indices": []},
             "des": [{"to_fed": names[1],
-                     "fed": names[0],
-                     "keys": ["/", ""],
+                     "from_fed": names[0],
+                     "keys": ["", ""],
                      "indices": []
                      }]}
     house = {"src": {"from_fed": names[0],
-                     "fed": "",
-                     "keys": ["Fdr1_Houses_@@_hse_###", "Fdr1_Houses_@@_hse_##"],
+                     "keys": ["Fdr1_Houses_@@_hse_##/", "Fdr1_Houses_@@_hse_##"],
                      "indices": [["A", 1, 501], ["B", 1, 501], ["C", 1, 501]]},
              "des": [{"to_fed": names[1],
-                      "fed": names[0],
-                      "keys": ["/Fdr1_Houses_@@_hse_###", ""],
+                      "from_fed": names[0],
+                      "keys": ["Fdr1_Houses_@@_hse_##/", ""],
                       "indices": [["A", 1, 501], ["B", 1, 501], ["C", 1, 501]]
                       }]}
     meter = {"src": {"from_fed": names[0],
-                     "fed": "",
-                     "keys": ["Fdr1_Houses_@@_mhse_###", "Fdr1_Houses_@@_mhse_##"],
+                     "keys": ["Fdr1_Houses_@@_mhse_##/", "Fdr1_Houses_@@_mhse_##"],
                      "indices": [["A", 1, 501], ["B", 1, 501], ["C", 1, 501]]},
              "des": [{"to_fed": names[1],
-                      "fed": names[0],
-                      "keys": ["/Fdr1_Houses_@@_mhse_###", ""],
+                      "from_fed": names[0],
+                      "keys": ["Fdr1_Houses_@@_mhse_##/", ""],
                       "indices": [["A", 1, 501], ["B", 1, 501], ["C", 1, 501]]
                       }]}
     # substation
     hvac = {"src": {"from_fed": names[1],
-                    "fed": "",
                     "keys": ["Fdr1_Houses_@@_hse_##/", ""],
                     "indices": [["A", 1, 501], ["B", 1, 501], ["C", 1, 501]]},
             "des": [{"to_fed": names[0],
-                     "fed": names[1],
-                     "keys": ["/Fdr1_Houses_@@_hse_##/", "Fdr1_Houses_@@_hse_##"],
+                     "from_fed": names[1],
+                     "keys": ["Fdr1_Houses_@@_hse_##/", "Fdr1_Houses_@@_hse_##"],
                      "indices": [["A", 1, 501], ["B", 1, 501], ["C", 1, 501]]
                      }]}
     billing = {"src": {"from_fed": names[1],
-                       "fed": "",
                        "keys": ["Fdr1_Houses_@@_hse_##/Fdr1_Houses_@@_mhse_##/", ""],
                        "indices": [["A", 1, 501], ["B", 1, 501], ["C", 1, 501]]},
                "des": [{"to_fed": names[0],
-                        "fed": names[1],
-                        "keys": ["/Fdr1_Houses_@@_hse_##/Fdr1_Houses_@@_mhse_##/", "Fdr1_Houses_@@_mhse_##"],
+                        "from_fed": names[1],
+                        "keys": ["Fdr1_Houses_@@_hse_##/Fdr1_Houses_@@_mhse_##/", "Fdr1_Houses_@@_mhse_##"],
                         "indices": [["A", 1, 501], ["B", 1, 501], ["C", 1, 501]]
                         }]}
     bid = {"src": {"from_fed": names[1],
-                   "fed": "",
                    "keys": ["", ""],
                    "indices": []},
            "des": [{"to_fed": names[2],
-                    "fed": names[1],
-                    "keys": ["/", ""],
+                    "from_fed": names[1],
+                    "keys": ["", ""],
                     "indices": []}]}
     # pypower
     lmp = {"src": {"from_fed": names[2],
-                   "fed": "",
                    "keys": ["", ""],
                    "indices": []},
            "des": [{"to_fed": names[1],
-                    "fed": names[2],
-                    "keys": ["/", ""],
+                    "from_fed": names[2],
+                    "keys": ["", ""],
                     "indices": []}]}
     voltage = {"src": {"from_fed": names[2],
-                       "fed": "",
                        "keys": ["", ""],
                        "indices": []},
                "des": [{"to_fed": names[0],
-                        "fed": names[2],
-                        "keys": ["/@@", "network_node"],
+                        "from_fed": names[2],
+                        "keys": ["@@", "network_node"],
                         "indices": [["three_phase_voltage_7", True]]
                         }]}
     # weather
-    weather = {"src": {"from_fed": names[3],
-                       "fed": ""},
+    weather = {"src": {"from_fed": names[3]},
                "des": [{"to_fed": names[0],
-                        "fed": names[3],
-                        "keys": ["/#", "localWeather"],
+                        "from_fed": names[3],
+                        "keys": ["#", "localWeather"],
                         "indices": []}]}
 
     federation = FederationConfig("MyTestScenario", "MyTestSchema", "MyTestFederation", with_docker)

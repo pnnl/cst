@@ -10,11 +10,12 @@ JULIA_TEST_SCRIPT := src/cosim_toolbox/tests/test_my_module.jl
 # default target, when make executed without arguments
 all: venv
 
-$(VENV)/bin/activate: src/cosim_toolbox/requirements.txt
+$(VENV)/bin/activate:
 	@echo "Creating Python virtual environment at ./venv/..."
 	@python3.12 -m venv $(VENV)
 	@echo "Installing requirements..."
-	@./$(PIP) install -r src/cosim_toolbox/requirements.txt
+	@./$(PIP) install -r requirements.txt
+	@./$(PIP) install src/cosim_toolbox/.
 
 # venv is a shortcut target
 venv: $(VENV)/bin/activate
@@ -30,11 +31,15 @@ run: venv
 clean:
 	@echo "Deleting venv, *.pyc, and test coverage data..."
 	@rm -rf $(VENV)
-	@rm -rf .coverage coverage.xml results.xml .pytest_cache htmlcov
+	@rm -rf .coverage coverage.xml results.xml .pytest_cache htmlcov docs/_build
 	@find . -type f -name '*.pyc' -delete
 
 test-julia:
 	$(JULIA) --project=src/cosim_toolbox $(JULIA_TEST_SCRIPT)
+
+docs:
+	@echo "Creating HTML "read the docs" website"
+	@. $(VENV)/bin/activate; cd ./docs; make html
 
 test:
 	@echo "Running tests with coverage report..."
@@ -49,4 +54,4 @@ integration-test:
 		src/cosim_toolbox/integration_tests/test_readerDB.py \
 		src/cosim_toolbox/integration_tests/test_dbConfigs.py
 
-.PHONY: all venv run clean test test-julia coverage integration-test
+.PHONY: all venv run clean docs test test-julia coverage integration-test

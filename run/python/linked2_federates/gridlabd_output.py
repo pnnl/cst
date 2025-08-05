@@ -16,11 +16,11 @@ class MyFederateMatch(FederateConfig):
         super().__init__(name, **kwargs)
 
         fmt = {
-            "load": { "fed": "", "keys": ["", "network_node"], "indices": []},
-            "weather": {"fed": "localWeather", "keys": ["/#", "localWeather"], "indices": []},
-            "voltage": {"fed": "pypower", "keys": ["/@@", "network_node"],
+            "load": { "from_fed": "gld_7", "keys": ["", "network_node"], "indices": []},
+            "weather": {"output_fed": True, "from_fed": "gld_7", "to_fed": "localWeather", "keys": ["#", "localWeather"], "indices": []},
+            "voltage": {"output_fed": True, "from_fed": "gld_7", "to_fed": "pypower", "keys": ["@@", "network_node"],
                         "indices": [["three_phase_voltage_7", True]]},
-            "sub_7": {"fed": "sub_7"}
+            "sub_7": {"from_fed": "gld_7", "to_fed": "sub_7"}
         }
         gld_fmt = self.get_names("test.glm")
         self.outputs["gridlabd1"] = HelicsPubGroup("distribution_load", "complex", fmt["load"])
@@ -58,8 +58,8 @@ class MyFederateMatch(FederateConfig):
         if not success:
             print(f'{path} not found or file not supported; exiting')
         fmt = {
-            "house": { "fed": "", "keys": ["@list@#", "@list@"], "indices": []},
-            "meter": { "fed": "", "keys": ["@list@#", "@list@"], "indices": []}
+            "house": { "from_fed": "gld_7", "keys": ["@list@/", "@list@"], "indices": []},
+            "meter": { "from_fed": "gld_7", "keys": ["@list@/", "@list@"], "indices": []}
         }
         for name, attr in glm.house.items():
             if 'ELECTRIC' in attr["cooling_system_type"]:
@@ -73,26 +73,34 @@ class MyFederate(FederateConfig):
         super().__init__(name, **kwargs)
 
         fmt = {
-            "load": { "fed": "",
+            "load": { "from_fed": "gld_7",
                       "keys": ["", "network_node"],
                       "indices": []},
-            "house": { "fed": "",
+            "house": { "from_fed": "gld_7",
                        "keys": ["Fdr1_Houses_@@_hse_##/", "Fdr1_Houses_@@_hse_##"],
                        "indices": [["A",1,501], ["B",1,501], ["C",1,501]]},
-            "meter": { "fed": "",
+            "meter": { "from_fed": "gld_7",
                        "keys": ["Fdr1_Houses_@@_mhse_##/", "Fdr1_Houses_@@_mhse_##"],
                        "indices": [["A",1,501], ["B",1,501], ["C",1,501]]},
-            "voltage": { "fed": "pypower",
-                         "keys": ["/@@", "network_node"],
+            "voltage": { "output_fed": True,
+                         "from_fed": "gld_7",
+                         "to_fed": "pypower",
+                         "keys": ["@@", "network_node"],
                          "indices": [["three_phase_voltage_7", True]]},
-            "hvac": { "fed": "sub_7",
-                      "keys": ["/Fdr1_Houses_@@_hse_##/", "Fdr1_Houses_@@_hse_##"],
+            "hvac": { "output_fed": True,
+                      "from_fed": "gld_7",
+                      "to_fed": "sub_7",
+                      "keys": ["Fdr1_Houses_@@_hse_##/", "Fdr1_Houses_@@_hse_##"],
                       "indices": [["A",1,501], ["B",1,501], ["C",1,501]]},
-            "billing": { "fed": "sub_7",
-                         "keys": ["/Fdr1_Houses_@@_hse_##/Fdr1_Houses_@@_mhse_##/", "Fdr1_Houses_@@_mhse_##"],
+            "billing": { "output_fed": True,
+                         "from_fed": "gld_7",
+                         "to_fed": "sub_7",
+                         "keys": ["Fdr1_Houses_@@_hse_##/Fdr1_Houses_@@_mhse_##/", "Fdr1_Houses_@@_mhse_##"],
                          "indices": [["A",1,501], ["B",1,501], ["C",1,501]]},
-            "weather": { "fed": "localWeather",
-                         "keys": ["/#", "localWeather"],
+            "weather": { "output_fed": True,
+                         "from_fed": "gld_7",
+                         "to_fed": "localWeather",
+                         "keys": ["#", "localWeather"],
                          "indices": []}
         }
         self.outputs["gridlabd1"] = HelicsPubGroup("distribution_load", "complex", fmt["load"])

@@ -99,7 +99,7 @@ class FederateConfig:
             for i in group.vars:
                 self.helics.end_point(i)
         # uncomment for debugging
-        # self.helics.write_file(self.name + ".json")
+        self.helics.write_file(self.name + ".json")
 
 class FederationConfig:
 
@@ -129,7 +129,7 @@ class FederationConfig:
             src_type = data_type
             if "datatype" in src_format:
                 src_type = src_format["datatype"]
-            pub_group = HelicsPubGroup(name, src_type, src_format)
+            pub_group = HelicsPubGroup(name, src_type, src_format, **kwargs)
             from_config.outputs[from_config.unique()] = pub_group
             if "des" in key_format:
                 for des_format in key_format["des"]:
@@ -137,7 +137,11 @@ class FederationConfig:
                     des_type = data_type
                     if "datatype" in des_format:
                         des_type = des_format["datatype"]
-                    sub_group = HelicsSubGroup(name, des_type, des_format)
+                    if "globl" in kwargs:
+                        kwargs.pop("globl")
+                    if "tags" in kwargs:
+                        kwargs.pop("tags")
+                    sub_group = HelicsSubGroup(name, des_type, des_format, **kwargs)
                     to_config.inputs[to_config.unique()] = sub_group
                     if "keys" not in des_format:
                         self.add_group_subs(pub_group, sub_group, des_format)
@@ -206,7 +210,7 @@ class FederationConfig:
             parts = pub["key"].split("/")
             property_name = parts[-1]
             sub = sub_group.diction.copy()
-            sub["key"] = des_format["fed"] + "/" + pub["key"]
+            sub["key"] = des_format["to_fed"] + "/" + pub["key"]
             if "info" in des_format:
                 obj = parts[len(parts) - 2]
                 sub["info"] = { "object": obj, "property": property_name }

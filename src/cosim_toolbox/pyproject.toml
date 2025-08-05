@@ -19,7 +19,7 @@ keywords = ["power system", "transactive", "energy"]
 requires-python = ">=3.10"
 dependencies = [
     "helics~=3.6.1",
-    "pandas~=2.2.3",
+    "pandas~=2.3.1",
     "psycopg2-binary~=2.9.10",
     "pymongo~=4.13.2"
 ]

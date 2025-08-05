@@ -6,7 +6,7 @@
 import os
 
 
-t_inc = os.path.expandvars('$CST_ROOT/doc/references/cosim_toolboxs.inc')
+t_inc = os.path.expandvars('$CST_ROOT/docs/references/cosim_toolbox.inc')
 t_api = os.path.expandvars('$CST_ROOT/src/cosim_toolbox/cosim_toolbox')
 
 root = os.path.split(t_api)
