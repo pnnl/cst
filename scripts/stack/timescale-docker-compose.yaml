@@ -95,7 +95,7 @@ services:
       - sim_net
 
   mongoexpress:
-    image: mongo-express:1.0.2-20-alpine3
+    image: mongo-express:1.0.2-20-alpine3.19
     container_name: ${CONTAINER_NAME:-mongoexpress}
     ports:
       - "8081:8081"
