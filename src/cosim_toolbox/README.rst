@@ -34,7 +34,7 @@ Development Work Flow for cosim_toolbox
 * Any user gets the changes with 'pip install cosim_toolbox --upgrade'
 * Use 'pip show cosim_toolbox' to verify the version and location on your computer
 
-Using COSimulation Toolbox
+Using Co-Simulation Toolbox
 ==========
 
 This is a developer's platform for electric power grid research.  See 
@@ -69,14 +69,9 @@ License & Copyright
 - Copyright (c) 2017-2023 Battelle Memorial Institute
 
 .. _Docker: https://www.docker.com
-.. _EnergyPlus: https://energyplus.net
 .. _GridLAB-D: http://gridlab-d.shoutwiki.com
-.. _Matplotlib: https://www.matplotlib.org
-.. _MATPOWER: https://www.matpower.org
 .. _NetworkX: https://www.networkx.org
 .. _NumPy: https://www.numpy.org
 .. _Pandas: https://pandas.pydata.org
 .. _pip: https://pip.pypa.io/en/stable
-.. _PYPOWER: https://github.com/rwl/PYPOWER
 .. _Python: https://www.python.org
-.. _SciPy: https://www.scipy.org
