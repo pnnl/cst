@@ -69,7 +69,7 @@ def  define_format():
         f2.config("image", "cosim-cst:latest")
     f2.config("command", f"python3 simple_federate.py {f2.name} {federation.scenario_name}")
 
-    federation.define_scenario("2023-12-07T15:31:27", "2023-12-08T15:31:27")
+    federation.write_config("2023-12-07T15:31:27", "2023-12-08T15:31:27")
 
     if with_docker:
         DockerRunner.define_yaml(federation.scenario_name)
