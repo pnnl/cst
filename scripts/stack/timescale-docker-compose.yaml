@@ -95,15 +95,15 @@ services:
       - sim_net
 
   mongoexpress:
-    image: mongo-express:1.0.2-20-alpine3.19
+    image: mongo-express
     container_name: ${CONTAINER_NAME:-mongoexpress}
     ports:
       - "8081:8081"
     depends_on:
       - mongodb
     environment:
-      ME_CONFIG_MONGODB_AUTH_USERNAME: "${MONGODB_INITDB_ROOT_USERNAME}"
-      ME_CONFIG_MONGODB_AUTH_PASSWORD: "${MONGODB_INITDB_ROOT_PASSWORD}"
+      ME_CONFIG_MONGODB_AUTH_USERNAME: "${CST_USER}"
+      ME_CONFIG_MONGODB_AUTH_PASSWORD: "${CST_USER}"
       ME_CONFIG_MONGODB_SERVER: mongodb
       ME_CONFIG_MONGODB_ENABLE_ADMIN: false
       ME_CONFIG_MONGODB_AUTH_DATABASE: "${CST_DB}"
