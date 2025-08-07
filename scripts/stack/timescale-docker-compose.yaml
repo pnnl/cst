@@ -94,13 +94,38 @@ services:
     networks:
       - sim_net
 
+  mongoexpress:
+    image: mongo-express:1.0.2-20-alpine3.19
+    container_name: ${CONTAINER_NAME:-mongoexpress}
+    ports:
+      - "8081:8081"
+    depends_on:
+      - mongodb
+    environment:
+      ME_CONFIG_MONGODB_AUTH_USERNAME: "${MONGODB_INITDB_ROOT_USERNAME}"
+      ME_CONFIG_MONGODB_AUTH_PASSWORD: "${MONGODB_INITDB_ROOT_PASSWORD}"
+      ME_CONFIG_MONGODB_SERVER: mongodb
+      ME_CONFIG_MONGODB_ENABLE_ADMIN: false
+      ME_CONFIG_MONGODB_AUTH_DATABASE: "${CST_DB}"
+    networks:
+      - sim_net
+
   grafana:
     image: grafana/grafana:10.2.4-ubuntu
     container_name: ${CONTAINER_NAME:-grafana}
+    restart: unless-stopped
+    environment:
+      - GF_LOG_LEVEL=info
+      - CST_HOST=${CST_HOST}
+      - POSTGRES_PORT=${POSTGRES_PORT}
     ports:
       - "3000:3000"
     networks:
       - sim_net
+    volumes:
+      - ${STACK_DIR}/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ${STACK_DIR}/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+#      - ${STACK_DIR}/grafana/dashboards:/etc/grafana/dashboards
 
 volumes:
   cst_mongo: null
