@@ -1,4 +1,6 @@
 #!/bin/bash
+# Copyright (C) 2021-2023 Battelle Memorial Institute
+# file: test_helics_java.sh
 
 if [[ -z ${INSTDIR} ]]; then
   echo "Edit cosim.env in the CoSimulation Toolbox directory"
