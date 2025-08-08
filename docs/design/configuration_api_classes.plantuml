@@ -1,0 +1,53 @@
+@startuml
+
+class HELICSHandle{
+    type: str
+    unit: str
+    connection_required: bool 
+    alias: str
+    info: Dict 
+}
+
+class HELICSPub{
+    name: str
+    targets: str
+}
+
+class HELICSInput{
+    name: str
+}
+
+class HELICSsub{
+}
+
+class HELICSEndpoint{
+    name: str
+}
+
+class DataTransfer{
+    transfer_group_name: str
+    output_fed_name: str
+    output: HELICSPub
+    input_fed_name: str
+    input: HELICSSub
+}
+
+class HELICSFederateGeneralConfig{
+    all_the_non_data_transfer_helics_parameters: list
+}
+
+class HELICSFederateConfig{
+    
+}
+
+class Federation{
+    data_transfers: list
+    transfer_topolgy: networkx
+    federate_configs: list
+    federate_general_configs: list
+    create_federate_configs(): list
+    create_transfer_topology(by_group: bool=True): networkx_obj
+    add_federate_config()
+}
+
+@enduml
