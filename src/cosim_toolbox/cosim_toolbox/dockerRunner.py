@@ -131,6 +131,7 @@ class DockerRunner:
     @staticmethod
     def run_remote_yaml(scenario_name: str, path: str = "/run/python/test_federation") -> None:
         """Runs the docker-compose.yaml on a remote compute node
+            TODO: Test, 'path' have not been set in examples at this point
 
         Args:
             scenario_name (str): Name of the scenario run by this docker-compose.yaml
