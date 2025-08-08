@@ -14,7 +14,8 @@ maintainers = [
 ]
 description = "Python support for the CoSimulation Toolbox"
 readme = "README.rst"
-license = {file = "LICENSE"}
+license = "BSD-2-Clause"
+license-files = ["LICEN[S]E"]
 keywords = ["power system", "transactive", "energy"]
 requires-python = ">=3.10"
 dependencies = [
@@ -29,7 +30,6 @@ classifiers = [
     "Intended Audience :: Developers",
     "Intended Audience :: Education",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: BSD License",
     "Natural Language :: English",
     "Operating System :: OS Independent",
     "Programming Language :: Python",

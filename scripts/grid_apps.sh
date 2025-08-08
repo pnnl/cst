@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (c) 2021-2023 Battelle Memorial Institute
+# Copyright (c) 2022-2025 Battelle Memorial Institute
 # file: grid_apps.sh
 
 if [[ -z ${LOCAL_ENV} ]]; then

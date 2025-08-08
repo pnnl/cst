@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (C) 2021-2023 Battelle Memorial Institute
+# Copyright (C) 20221-2023 Battelle Memorial Institute
 # file: build_c.sh
 
 if [[ -z ${INSTDIR} ]]; then

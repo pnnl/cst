@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (C) 2021-2023 Battelle Memorial Institute
+# Copyright (c) 2022-2025 Battelle Memorial Institute
 # file: runcosim.sh
 
 if [[ -z ${CST_ROOT} ]]; then
