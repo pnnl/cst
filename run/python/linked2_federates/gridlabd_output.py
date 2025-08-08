@@ -58,8 +58,8 @@ class MyFederateMatch(FederateConfig):
         if not success:
             print(f'{path} not found or file not supported; exiting')
         fmt = {
-            "house": { "from_fed": "gld_7", "keys": ["@list@/", "@list@"], "indices": []},
-            "meter": { "from_fed": "gld_7", "keys": ["@list@/", "@list@"], "indices": []}
+            "house": { "from_fed": "gld_7", "keys": ["@list@", "@list@"], "indices": []},
+            "meter": { "from_fed": "gld_7", "keys": ["@list@", "@list@"], "indices": []}
         }
         for name, attr in glm.house.items():
             if 'ELECTRIC' in attr["cooling_system_type"]:
@@ -77,10 +77,10 @@ class MyFederate(FederateConfig):
                       "keys": ["", "network_node"],
                       "indices": []},
             "house": { "from_fed": "gld_7",
-                       "keys": ["Fdr1_Houses_@@_hse_##/", "Fdr1_Houses_@@_hse_##"],
+                       "keys": ["Fdr1_Houses_@@_hse_##", "Fdr1_Houses_@@_hse_##"],
                        "indices": [["A",1,501], ["B",1,501], ["C",1,501]]},
             "meter": { "from_fed": "gld_7",
-                       "keys": ["Fdr1_Houses_@@_mhse_##/", "Fdr1_Houses_@@_mhse_##"],
+                       "keys": ["Fdr1_Houses_@@_mhse_##", "Fdr1_Houses_@@_mhse_##"],
                        "indices": [["A",1,501], ["B",1,501], ["C",1,501]]},
             "voltage": { "output_fed": True,
                          "from_fed": "gld_7",
@@ -90,12 +90,12 @@ class MyFederate(FederateConfig):
             "hvac": { "output_fed": True,
                       "from_fed": "gld_7",
                       "to_fed": "sub_7",
-                      "keys": ["Fdr1_Houses_@@_hse_##/", "Fdr1_Houses_@@_hse_##"],
+                      "keys": ["Fdr1_Houses_@@_hse_##", "Fdr1_Houses_@@_hse_##"],
                       "indices": [["A",1,501], ["B",1,501], ["C",1,501]]},
             "billing": { "output_fed": True,
                          "from_fed": "gld_7",
                          "to_fed": "sub_7",
-                         "keys": ["Fdr1_Houses_@@_hse_##/Fdr1_Houses_@@_mhse_##/", "Fdr1_Houses_@@_mhse_##"],
+                         "keys": ["Fdr1_Houses_@@_hse_##/Fdr1_Houses_@@_mhse_##", "Fdr1_Houses_@@_mhse_##"],
                          "indices": [["A",1,501], ["B",1,501], ["C",1,501]]},
             "weather": { "output_fed": True,
                          "from_fed": "gld_7",

@@ -62,10 +62,10 @@ def get_names(path: str) -> dict:
     if not success:
         print(f'{path} not found or file not supported; exiting')
     fmt = {
-        "house": {"from_fed": "gld_7", "fed": "", "keys": ["@list@/", "@list@"], "indices": []},
-        "meter": {"from_fed": "gld_7", "fed": "", "keys": ["@list@/", "@list@"], "indices": []},
-        "hvac": {"from_fed": "sub_7", "fed": "", "keys": ["@list@/", ""], "indices": []},
-        "billing": {"from_fed": "sub_7", "fed": "", "keys": ["@list@/", ""], "indices": []}
+        "house": {"from_fed": "gld_7", "fed": "", "keys": ["@list@", "@list@"], "indices": []},
+        "meter": {"from_fed": "gld_7", "fed": "", "keys": ["@list@", "@list@"], "indices": []},
+        "hvac": {"from_fed": "sub_7", "fed": "", "keys": ["@list@", ""], "indices": []},
+        "billing": {"from_fed": "sub_7", "fed": "", "keys": ["@list@", ""], "indices": []}
     }
     for name, attr in glm.house.items():
         if 'ELECTRIC' in attr["cooling_system_type"]:
@@ -204,36 +204,36 @@ def define_federation():
                      "indices": []
                      }]}
     house = {"src": {"from_fed": names[0],
-                     "keys": ["Fdr1_Houses_@@_hse_##/", "Fdr1_Houses_@@_hse_##"],
+                     "keys": ["Fdr1_Houses_@@_hse_##", "Fdr1_Houses_@@_hse_##"],
                      "indices": [["A", 1, 501], ["B", 1, 501], ["C", 1, 501]]},
              "des": [{"to_fed": names[1],
                       "from_fed": names[0],
-                      "keys": ["Fdr1_Houses_@@_hse_##/", ""],
+                      "keys": ["Fdr1_Houses_@@_hse_##", ""],
                       "indices": [["A", 1, 501], ["B", 1, 501], ["C", 1, 501]]
                       }]}
     meter = {"src": {"from_fed": names[0],
-                     "keys": ["Fdr1_Houses_@@_mhse_##/", "Fdr1_Houses_@@_mhse_##"],
+                     "keys": ["Fdr1_Houses_@@_mhse_##", "Fdr1_Houses_@@_mhse_##"],
                      "indices": [["A", 1, 501], ["B", 1, 501], ["C", 1, 501]]},
              "des": [{"to_fed": names[1],
                       "from_fed": names[0],
-                      "keys": ["Fdr1_Houses_@@_mhse_##/", ""],
+                      "keys": ["Fdr1_Houses_@@_mhse_##", ""],
                       "indices": [["A", 1, 501], ["B", 1, 501], ["C", 1, 501]]
                       }]}
     # substation
     hvac = {"src": {"from_fed": names[1],
-                    "keys": ["Fdr1_Houses_@@_hse_##/", ""],
+                    "keys": ["Fdr1_Houses_@@_hse_##", ""],
                     "indices": [["A", 1, 501], ["B", 1, 501], ["C", 1, 501]]},
             "des": [{"to_fed": names[0],
                      "from_fed": names[1],
-                     "keys": ["Fdr1_Houses_@@_hse_##/", "Fdr1_Houses_@@_hse_##"],
+                     "keys": ["Fdr1_Houses_@@_hse_##", "Fdr1_Houses_@@_hse_##"],
                      "indices": [["A", 1, 501], ["B", 1, 501], ["C", 1, 501]]
                      }]}
     billing = {"src": {"from_fed": names[1],
-                       "keys": ["Fdr1_Houses_@@_hse_##/Fdr1_Houses_@@_mhse_##/", ""],
+                       "keys": ["Fdr1_Houses_@@_hse_##/Fdr1_Houses_@@_mhse_##", ""],
                        "indices": [["A", 1, 501], ["B", 1, 501], ["C", 1, 501]]},
                "des": [{"to_fed": names[0],
                         "from_fed": names[1],
-                        "keys": ["Fdr1_Houses_@@_hse_##/Fdr1_Houses_@@_mhse_##/", "Fdr1_Houses_@@_mhse_##"],
+                        "keys": ["Fdr1_Houses_@@_hse_##/Fdr1_Houses_@@_mhse_##", "Fdr1_Houses_@@_mhse_##"],
                         "indices": [["A", 1, 501], ["B", 1, 501], ["C", 1, 501]]
                         }]}
     bid = {"src": {"from_fed": names[1],
