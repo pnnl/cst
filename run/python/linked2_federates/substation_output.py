@@ -58,8 +58,8 @@ class MyFederateMatch(FederateConfig):
         if not success:
             print(f'{path} not found or file not supported; exiting')
         fmt = {
-            "hvac": { "from_fed": "", "keys": ["@list@/", ""], "indices": []},
-            "billing": { "from_fed": "", "keys": ["@list@/", ""], "indices": []}
+            "hvac": { "from_fed": "", "keys": ["@list@", ""], "indices": []},
+            "billing": { "from_fed": "", "keys": ["@list@", ""], "indices": []}
         }
         for name, attr in glm.house.items():
             if 'ELECTRIC' in attr["cooling_system_type"]:
@@ -77,10 +77,10 @@ class MyFederate(FederateConfig):
                        "keys": ["", ""],
                        "indices": []},
             "hvac": { "from_fed": "sub_7",
-                      "keys": ["Fdr1_Houses_@@_hse_##/", ""],
+                      "keys": ["Fdr1_Houses_@@_hse_##", ""],
                       "indices": [["A",1,501], ["B",1,501], ["C",1,501]]},
             "billing": { "from_fed": "sub_7",
-                         "keys": ["Fdr1_Houses_@@_hse_##/Fdr1_Houses_@@_mhse_##/", ""],
+                         "keys": ["Fdr1_Houses_@@_hse_##/Fdr1_Houses_@@_mhse_##", ""],
                          "indices": [["A",1,501], ["B",1,501], ["C",1,501]]},
             "lmp": { "output_fed": True,
                      "from_fed": "sub_7",
@@ -95,12 +95,12 @@ class MyFederate(FederateConfig):
             "house": { "output_fed": True,
                        "from_fed": "sub_7",
                        "to_fed": "gld_7",
-                       "keys": ["Fdr1_Houses_@@_hse_##/", ""],
+                       "keys": ["Fdr1_Houses_@@_hse_##", ""],
                        "indices": [["A", 1, 501], ["B", 1, 501], ["C", 1, 501]]},
             "meter": { "output_fed": True,
                        "from_fed": "sub_7",
                        "to_fed": "gld_7",
-                       "keys": ["Fdr1_Houses_@@_mhse_##/", ""],
+                       "keys": ["Fdr1_Houses_@@_mhse_##", ""],
                        "indices": [["A", 1, 501], ["B", 1, 501], ["C", 1, 501]]},
         }
 
