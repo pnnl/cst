@@ -196,16 +196,16 @@ class TestBaseMetadataManager:
         # Don't connect
         
         # Operations should fail when not connected
-        assert manager.write("test", "item", sample_federation_data) is False
+        assert not manager.write("test", "item", sample_federation_data)
         assert manager.read("test", "item") is None
         assert manager.list_items("test") == []
     
     def test_context_manager(self, sample_federation_data):
         """Test context manager functionality."""
         with MockMetadataManager("test") as manager:
-            assert manager.is_connected is True
+            assert manager.is_connected
             success = manager.write("test", "item", sample_federation_data)
-            assert success is True
+            assert success
         
         # Should be disconnected after context
-        assert manager.is_connected is False
+        assert not manager.is_connected
