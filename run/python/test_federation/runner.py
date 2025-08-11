@@ -109,7 +109,7 @@ class Runner:
 
 def main():
     remote = False
-    with_docker = True
+    with_docker = False
     r = Runner("test_scenario", "test_schema", "test_federation", with_docker)
     r.define_scenario()
     print(r.db.get_collection_document_names(env.cst_scenarios))

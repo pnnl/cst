@@ -1,0 +1,86 @@
+{
+  "name": "EVehicle",
+  "log_level": "warning",
+  "period": 60,
+  "terminate_on_error": true,
+  "tags": {
+    "logger": "no"
+  },
+  "publications": [
+    {
+      "key": "voltage",
+      "type": "double",
+      "unit": "V"
+    },
+    {
+      "key": "voltage2",
+      "type": "integer",
+      "unit": "V"
+    },
+    {
+      "key": "EVehicle/voltage3",
+      "type": "boolean",
+      "unit": "V",
+      "global": true,
+      "tags": {
+        "logger": "no"
+      }
+    },
+    {
+      "key": "voltage4",
+      "type": "string",
+      "unit": "V"
+    },
+    {
+      "key": "voltage5",
+      "type": "complex",
+      "unit": "V"
+    },
+    {
+      "key": "voltage6",
+      "type": "vector",
+      "unit": "V"
+    }
+  ],
+  "subscriptions": [
+    {
+      "key": "Battery/current",
+      "type": "double",
+      "unit": "A"
+    },
+    {
+      "key": "Battery/current2",
+      "type": "integer",
+      "unit": "A"
+    },
+    {
+      "key": "Battery/current3",
+      "type": "boolean",
+      "unit": "A"
+    },
+    {
+      "key": "Battery/current4",
+      "type": "string",
+      "unit": "A"
+    },
+    {
+      "key": "Battery/current5",
+      "type": "complex",
+      "unit": "A"
+    },
+    {
+      "key": "Battery/current6",
+      "type": "vector",
+      "unit": "A"
+    }
+  ],
+  "endpoints": [
+    {
+      "name": "voltage1",
+      "destination": "Battery/current1",
+      "tags": {
+        "logger": "yes"
+      }
+    }
+  ]
+}

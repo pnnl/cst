@@ -1,0 +1,64 @@
+{
+  "federation": {
+    "Battery": {
+      "logger": false,
+      "image": "",
+      "command": "python3 simple_federate.py Battery MyScenario",
+      "federate_type": "value",
+      "HELICS_config": {
+        "name": "Battery",
+        "log_level": "warning",
+        "period": 60,
+        "terminate_on_error": true,
+        "tags": {
+          "logger": "no"
+        },
+        "publications": [
+          {
+            "type": "double",
+            "unit": "A",
+            "global": true,
+            "key": "Battery/EV_current"
+          }
+        ],
+        "subscriptions": [
+          {
+            "type": "double",
+            "unit": "V",
+            "key": "EVehicle/EV_voltage"
+          }
+        ]
+      }
+    },
+    "EVehicle": {
+      "logger": false,
+      "image": "",
+      "command": "python3 simple_federate.py EVehicle MyScenario",
+      "federate_type": "value",
+      "HELICS_config": {
+        "name": "EVehicle",
+        "log_level": "warning",
+        "period": 60,
+        "terminate_on_error": true,
+        "tags": {
+          "logger": "no"
+        },
+        "publications": [
+          {
+            "type": "double",
+            "unit": "V",
+            "global": true,
+            "key": "EVehicle/EV_voltage"
+          }
+        ],
+        "subscriptions": [
+          {
+            "type": "double",
+            "unit": "A",
+            "key": "Battery/EV_current"
+          }
+        ]
+      }
+    }
+  }
+}

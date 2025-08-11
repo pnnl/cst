@@ -1,0 +1,59 @@
+services:
+  helics:
+    image: "cosim-cst:latest"
+    environment:
+      CST_HOST: "penny.pnl.gov"
+      LOCAL_USER: "worker"
+      POSTGRES_HOST: "penny.pnl.gov"
+      MONGO_HOST: "mongodb://penny.pnl.gov"
+      MONGO_PORT: "27017"
+    user: worker
+    working_dir: /home/worker/case
+    volumes:
+      - .:/home/worker/case
+      - ../../../data:/home/worker/tesp/data
+    networks:
+      cst_net:
+        ipv4_address: 10.5.0.2
+    command: /bin/bash -c "helics_broker --ipv4 -f 2 --loglevel=warning --name=broker"
+  Battery:
+    image: "cosim-cst:latest"
+    environment:
+      CST_HOST: "penny.pnl.gov"
+      LOCAL_USER: "worker"
+      POSTGRES_HOST: "penny.pnl.gov"
+      MONGO_HOST: "mongodb://penny.pnl.gov"
+      MONGO_PORT: "27017"
+    user: worker
+    working_dir: /home/worker/case
+    volumes:
+      - .:/home/worker/case
+      - ../../../data:/home/worker/tesp/data
+    networks:
+      cst_net:
+        ipv4_address: 10.5.0.3
+    command: /bin/bash -c "python3 simple_federate.py Battery test_scenario"
+  EVehicle:
+    image: "cosim-cst:latest"
+    environment:
+      CST_HOST: "penny.pnl.gov"
+      LOCAL_USER: "worker"
+      POSTGRES_HOST: "penny.pnl.gov"
+      MONGO_HOST: "mongodb://penny.pnl.gov"
+      MONGO_PORT: "27017"
+    user: worker
+    working_dir: /home/worker/case
+    volumes:
+      - .:/home/worker/case
+      - ../../../data:/home/worker/tesp/data
+    networks:
+      cst_net:
+        ipv4_address: 10.5.0.4
+    command: /bin/bash -c "python3 simple_federate2.py EVehicle test_scenario"
+networks:
+  cst_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.5.0.0/16
+          gateway: 10.5.0.1

@@ -1,0 +1,64 @@
+{
+  "federation": {
+    "Battery": {
+      "logger": false,
+      "image": "cosim-cst:latest",
+      "command": "python3 simple_federate.py Battery MyScenario",
+      "federate_type": "value",
+      "HELICS_config": {
+        "name": "Battery",
+        "core_type": "zmq",
+        "log_level": "warning",
+        "period": 60,
+        "uninterruptible": false,
+        "terminate_on_error": true,
+        "wait_for_current_time_update": true,
+        "publications": [
+          {
+            "global": true,
+            "key": "Battery/EV1_current",
+            "type": "double",
+            "unit": "A"
+          }
+        ],
+        "subscriptions": [
+          {
+            "key": "EVehicle/EV1_voltage",
+            "type": "double",
+            "unit": "V"
+          }
+        ]
+      }
+    },
+    "EVehicle": {
+      "logger": false,
+      "image": "cosim-cst:latest",
+      "command": "python3 simple_federate.py EVehicle MyScenario",
+      "federate_type": "value",
+      "HELICS_config": {
+        "name": "EVehicle",
+        "core_type": "zmq",
+        "log_level": "warning",
+        "period": 60,
+        "uninterruptible": false,
+        "terminate_on_error": true,
+        "wait_for_current_time_update": true,
+        "publications": [
+          {
+            "global": true,
+            "key": "EVehicle/EV1_voltage",
+            "type": "double",
+            "unit": "V"
+          }
+        ],
+        "subscriptions": [
+          {
+            "key": "Battery/EV1_current",
+            "type": "double",
+            "unit": "A"
+          }
+        ]
+      }
+    }
+  }
+}
