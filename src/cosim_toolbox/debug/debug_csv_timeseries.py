@@ -1,7 +1,7 @@
 import pytest
 from datetime import datetime, timedelta
 from cosim_toolbox.metadata_factory import create_metadata_manager
-from cosim_toolbox.timeseries_factory import create_timeseries_manager
+from data_management.timeseries_factory import create_timeseries_manager
 from cosim_toolbox.data_management import TSRecord
 from pathlib import Path
 from datetime import datetime

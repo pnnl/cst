@@ -3,7 +3,7 @@ Tests for updated timeseries factory with PostgreSQL support.
 """
 
 import pytest
-from cosim_toolbox.timeseries_factory import (
+from data_management.timeseries_factory import (
     create_timeseries_manager,
     create_csv_manager,
     create_postgresql_manager,

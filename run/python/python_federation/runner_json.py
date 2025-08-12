@@ -13,8 +13,8 @@ from cosim_toolbox.helicsConfig import HelicsPubGroup
 from cosim_toolbox.helicsConfig import HelicsSubGroup
 from cosim_toolbox.federation import FederateConfig
 from cosim_toolbox.federation import FederationConfig
-from cosim_toolbox.dockerRunner import DockerRunner
-from cosim_toolbox.json_metadata import JSONMetadataManager
+# from cosim_toolbox.dockerRunner import DockerRunner
+from data_management import JSONMetadataManager
 
 fmt = {
     "blank": {"fed": "", "keys": ["", ""], "indices": []},

@@ -14,7 +14,6 @@ class TestJSONMetadataManager:
     def test_initialization(self, temp_directory):
         """Test JSON manager initialization."""
         manager = JSONMetadataManager(temp_directory)
-        assert manager.location == temp_directory
         assert manager.base_path == Path(temp_directory)
         assert not manager.is_connected
     

@@ -59,7 +59,6 @@ def create_timeseries_manager(backend: str, location: str, **kwargs) -> TSDataMa
                     database=database,
                     user=user or "postgres",
                     password=password or "",
-                    **kwargs
                 )
             else:
                 raise ValueError(f"Invalid PostgreSQL connection string: {location}")
@@ -72,7 +71,6 @@ def create_timeseries_manager(backend: str, location: str, **kwargs) -> TSDataMa
                 user=kwargs.get("user", "postgres"),
                 password=kwargs.get("password", ""),
                 schema_name=kwargs.get("schema_name", "public"),
-                **kwargs
             )
     else:
         raise ValueError(f"Unknown backend: {backend}. Supported: csv, postgresql")
