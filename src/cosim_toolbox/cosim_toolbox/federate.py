@@ -7,15 +7,25 @@ Copper.
 @author: Trevor Hardy
 trevor.hardy@pnnl.gov
 """
+
 import datetime
 import json
 import logging
-
+from pathlib import Path
 import helics as h
 
 import cosim_toolbox as env
-from cosim_toolbox.dbConfigs import DBConfigs
-from cosim_toolbox.dbResults import DBResults
+
+# from cosim_toolbox.dbConfigs import DBConfigs
+from data_management import create_metadata_manager, MetadataManager
+from data_management import (
+    create_metadata_manager,
+    MetadataManager,
+    create_timeseries_manager,
+    TimeSeriesManager,
+    TSRecord,
+)
+# from cosim_toolbox.dbResults import DBResults
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler())
@@ -69,9 +79,32 @@ class Federate:
         federation (dict): Dictionary with all federate configuration information
     """
 
-    def __init__(self, fed_name="", use_mdb=True, use_pdb=True, **kwargs):
+    def __init__(
+        self,
+        fed_name="",
+        use_mdb=True,
+        use_pdb=True,
+        metadata_config: dict = dict(),
+        timeseries_config: dict = dict(),
+        metadata_location: str = None,
+        timeseries_location: str = None,
+        **kwargs,
+    ):
         self.hfed: h.HelicsFederate = None
-        self.mddb: DBConfigs = None
+        self.metadata_manager: MetadataManager = None
+        self.timeseries_manager: TimeSeriesManager = None
+        self.metadata_config = metadata_config
+        self.timeseries_config = timeseries_config
+        if metadata_config is None:
+            self.metadata_config = env.cst_meta_db
+        if timeseries_config is None:
+            self.timeseries_config = self.timeseries_config
+
+        if metadata_location is not None:
+            self.metadata_config["host"] = metadata_location
+        if timeseries_location is not None:
+            self.timeseries_config["host"] = timeseries_location
+
         self.config: dict = None
         self.scenario: dict = None
         self.scenario_name: str = None
@@ -94,18 +127,14 @@ class Federate:
         self.debug = True
         self.use_mdb = use_mdb
         self._use_timescale = False
-
+        self.metadata_location = metadata_location
         # following for datalogger
-        self.dl: DBResults = None
+        self.timeseries_location = timeseries_location
+        self._use_timescale = False  # This will be passed to the manager
         self._s = None
         self._ep = None
         self._count = 0
-        self._commit_cnt = 0
-        self._commit_qry = ""
-        self.interval = 100000
         self.fed_collect = "maybe"
-        self.path_csv = ""
-        self.output_csv = None
         self.use_pdb = use_pdb
 
         # Initialize the structure of the interface dictionaries
@@ -117,92 +146,11 @@ class Federate:
 
     @property
     def use_timescale(self):
-        self._use_timescale = self.dl.use_timescale
         return self._use_timescale
 
     @use_timescale.setter
     def use_timescale(self, value: bool):
-        self.dl.use_timescale = value
-        self._use_timescale = self.dl.use_timescale
-
-    def connect_to_metadataDB(self, uri: str, db_name: str) -> None:
-        """Connects to the Copper dbConfigs
-
-        The metadata database (dbConfigs) contains the HELICS configuration
-        JSON along with other pieces of useful configuration or federation
-        management data. This method connects to that database and makes it
-        available for other methods in this class.
-
-        Args:
-            uri (str): URI for Mongo database
-            db_name (str): Name for Mongo database
-        """
-        self.mddb = DBConfigs(uri, db_name)
-        self.scenario = self.mddb.get_dict(env.cst_scenarios, None, self.scenario_name)
-        self.federation_name = self.scenario["federation"]
-
-        self.federation = self.mddb.get_dict(env.cst_federations, None, self.federation_name)
-        self.federation = self.federation["federation"]
-
-    def connect_to_metadataJSON(self) -> None:
-        """Connects to the Copper json file
-
-        The Copper json file contains the HELICS configuration
-        JSON along with other pieces of useful configuration or federation
-        management data. This method connects to that database and makes it
-        available for other methods in this class.
-
-        """
-        with open(self.scenario_name + ".json", "r") as scenario:
-            self.scenario = json.load(scenario)
-        self.federation_name = self.scenario["federation"]
-
-        with open(self.federation_name + ".json", "r") as federation:
-            self.federation = json.load(federation)
-
-    def connect_to_dataDB(self):
-        self.dl = DBResults()
-        self.dl.open_database_connections()
-        # self.dl.check_version()
-
-        if not self.dl.schema_exist(self.scheme_name):
-            try:
-                self.dl.create_schema(self.scheme_name)
-            except Exception as ex:
-                self.dl.data_db.rollback()
-                logger.exception(f"Rolling back: create schema!")
-                return
-            if not self.dl.table_exist(self.scheme_name, 'hdt_double'):
-                try:
-                    self.dl.make_logger_database(self.scheme_name)
-                    self.dl.remove_scenario(self.scheme_name, self.scenario_name)
-                except Exception as ex:
-                    self.dl.data_db.rollback()
-                    logger.exception(f"Rolling back: make tables for schema!")
-
-    def connect_to_dataCSV(self):
-        if self.output_csv is None:
-            out_path = f"{self.path_csv}{self.federate_name}_outputs.csv"
-            try:
-                self.output_csv = open(out_path, "w")
-            except Exception as ex:
-                logger.exception(f"{ex}\nUnable to open output file: {out_path}")
-
-    def close_metadata(self):
-        if self.use_mdb:
-            logger.debug(f"Closing mongo database connection")
-            del self.mddb
-
-    def close_data(self):
-        if self.use_pdb:
-            logger.debug(f"Closing postgres database connection")
-            self.commit_to_logger()
-            self.dl.close_database_connections(True)
-            logger.debug(f"Commit count: {self._commit_cnt}")
-            del self.dl
-        else:
-            if self.output_csv is not None:
-                self.output_csv.close()
+        self._use_timescale = value
 
     def set_metadata(self) -> None:
         """Sets instance attributes to enable HELICS config query of metadataDB
@@ -219,13 +167,13 @@ class Federate:
         # setting max in seconds
         ep = datetime.datetime(1970, 1, 1)
         # %:z in version  python 3.12, for now, no time offsets (zones)
-        s = datetime.datetime.strptime(self.start, '%Y-%m-%dT%H:%M:%S')
-        e = datetime.datetime.strptime(self.stop, '%Y-%m-%dT%H:%M:%S')
+        s = datetime.datetime.strptime(self.start, "%Y-%m-%dT%H:%M:%S")
+        e = datetime.datetime.strptime(self.stop, "%Y-%m-%dT%H:%M:%S")
         s_idx = (s - ep).total_seconds()
         e_idx = (e - ep).total_seconds()
         self.stop_time = int((e_idx - s_idx))
-        self.no_t_start = self.start.replace('T',' ')
-        self._s = datetime.datetime.strptime(self.start, '%Y-%m-%dT%H:%M:%S')
+        self.no_t_start = self.start.replace("T", " ")
+        self._s = datetime.datetime.strptime(self.start, "%Y-%m-%dT%H:%M:%S")
 
         # setting up data logging
         self.scheme_name = self.scenario["schema"]
@@ -267,9 +215,45 @@ class Federate:
             raise NameError("scenario_name is None")
         self.scenario_name = scenario_name
         if self.use_mdb:
-            self.connect_to_metadataDB(env.cst_mongo, env.cst_mongo_db)
+            self.metadata_manager = create_metadata_manager(
+                backend="mongo",
+                location=self.metadata_config.get("host", "localhost"),
+                database=self.metadata_config.get("dbname", "copper"),
+                user=self.metadata_config.get("user", "worker"),
+                password=self.metadata_config.get("password", "worker"),
+                port=self.metadata_config.get("port", "27017"),
+            )
         else:
-            self.connect_to_metadataJSON()
+            self.metadata_manager = create_metadata_manager(
+                backend="json", location=self.metadata_location
+            )
+
+        with self.metadata_manager as mgr:
+            self.scenario = mgr.read_scenario(self.scenario_name)
+            if not self.scenario:
+                raise ValueError(
+                    f"Scenario '{self.scenario_name}' not found in metadata store."
+                )
+
+            self.federation_name = self.scenario.get("federation")
+            if not self.federation_name:
+                raise ValueError(
+                    f"Scenario '{self.scenario_name}' does not specify a 'federation'."
+                )
+
+            federation_doc = mgr.read_federation(self.federation_name)
+            if not federation_doc:
+                raise ValueError(
+                    f"Federation '{self.federation_name}' not found in metadata store."
+                )
+
+            # The actual federation definition is nested one level down
+            self.federation = federation_doc.get("federation")
+            if not self.federation:
+                raise ValueError(
+                    f"Federation document '{self.federation_name}' does not contain a 'federation' key."
+                )
+
         self.set_metadata()
         self.connect_to_helics_config()
 
@@ -287,22 +271,52 @@ class Federate:
         if "inputs" in self.config.keys():
             for put in self.config["inputs"]:
                 self.inputs[put["name"]] = put
-                self.data_from_federation["inputs"][put['key']] = None
+                self.data_from_federation["inputs"][put["key"]] = None
         if "endpoints" in self.config.keys():
             for ep in self.config["endpoints"]:
                 self.endpoints[ep["name"]] = ep
-                self.data_to_federation["endpoints"][ep['name']] = None
+                self.data_to_federation["endpoints"][ep["name"]] = None
                 if "destination" in ep:
-                    self.data_from_federation["endpoints"][ep['destination']] = None
+                    self.data_from_federation["endpoints"][ep["destination"]] = None
                 else:
-                    self.data_from_federation["endpoints"][ep['name']] = None
+                    self.data_from_federation["endpoints"][ep["name"]] = None
+
+        analysis_name = self.scenario.get("schema")  # Use 'schema' key as analysis name
+        if not analysis_name:
+            raise ValueError(
+                "Scenario metadata must contain a 'schema' key to define the analysis name."
+            )
 
         if self.use_pdb:
-            self.connect_to_dataDB()
+            # Use the new factory to create a PostgreSQL manager
+            # The 'use_timescale' property is now a direct argument
+            self.timeseries_manager = create_timeseries_manager(
+                backend="postgresql",
+                location=self.timeseries_config.get("host", "localhost"),
+                database=self.timeseries_config.get("dbname", "copper"),
+                user=self.timeseries_config.get("user", "worker"),
+                password=self.timeseries_config.get("password", "worker"),
+                port=self.timeseries_config.get("port", "5432"),
+                schema_name=analysis_name,
+                use_timescale=self.use_timescale,
+            )
         else:
-            self.connect_to_dataCSV()
+            # Use the new factory to create a CSV file manager
+            if self.timeseries_location is None:
+                raise ValueError(
+                    "When 'use_pdb=False', a path must be provided via the 'timeseries_location' argument."
+                )
+            self.timeseries_manager = create_timeseries_manager(
+                backend="csv",
+                location=self.timeseries_location,
+                analysis_name=analysis_name,
+            )
+
+        # Connect to the timeseries backend
+        self.timeseries_manager.connect()
 
         self.create_helics_fed()
+        logger.info(f"Created federate for {self.hfed.name}")
 
     def create_helics_fed(self) -> None:
         """Creates the HELICS federate object
@@ -321,10 +335,14 @@ class Federate:
         elif self.federate_type == "message":
             self.hfed = h.helicsCreateMessageFederateFromConfig(json.dumps(self.config))
         elif self.federate_type == "combo":
-            self.hfed = h.helicsCreateCombinationFederateFromConfig(json.dumps(self.config))
+            self.hfed = h.helicsCreateCombinationFederateFromConfig(
+                json.dumps(self.config)
+            )
         else:
-            raise ValueError(f"Federate type \'{self.federate_type}\'"
-                             f" not allowed; must be 'value', 'message', or 'combo'.")
+            raise ValueError(
+                f"Federate type '{self.federate_type}'"
+                f" not allowed; must be 'value', 'message', or 'combo'."
+            )
 
     def on_start(self):
         pass
@@ -424,7 +442,7 @@ class Federate:
         """
         self.granted_time = self.hfed.request_time(requested_time)
         return self.granted_time
-    
+
     def reset_data_to_federation(self) -> None:
         """Sets all values in dictionary of values being sent out
         via publications and endpoints in the data_to_federation
@@ -443,7 +461,6 @@ class Federate:
 
         for key in self.data_to_federation["endpoints"].keys():
             self.data_to_federation["endpoints"][key] = None
-
 
     def get_data_from_federation(self) -> None:
         """Collects inputs from federation and stores them
@@ -470,7 +487,7 @@ class Federate:
                 key = put.name
                 logger.debug(f"Input idx: {idx} key: {key} put: {put}")
 
-            d_type = self.inputs[key]['type'].lower()
+            d_type = self.inputs[key]["type"].lower()
             if d_type == "double":
                 self.data_from_federation["inputs"][key] = put.double
             elif d_type == "integer":
@@ -498,7 +515,9 @@ class Federate:
             for message in range(0, ep.n_pending_messages):
                 data = ep.get_message()
                 if ep.default_destination in self.data_from_federation["endpoints"]:
-                    self.data_from_federation["endpoints"][ep.default_destination].append(data)
+                    self.data_from_federation["endpoints"][
+                        ep.default_destination
+                    ].append(data)
                 else:
                     self.data_from_federation["endpoints"][ep.name].append(data)
                 logger.info(f"Message: {idx} endpoint: {ep}, data: {data}")
@@ -515,7 +534,9 @@ class Federate:
         sub-classing and/or overloading.
         """
         if not self.debug:
-            raise NotImplementedError("Subclass from Federate and write code to update internal model")
+            raise NotImplementedError(
+                "Subclass from Federate and write code to update internal model"
+            )
         # Doing something silly for testing purposes
         # Get a value from an arbitrary input; I hope it is a number
         if len(self.data_from_federation["inputs"].keys()) >= 1:
@@ -560,7 +581,7 @@ class Federate:
 
         Args:
             reset (bool, optional): When set erases published value which
-            prevents re-publication of the value until manually set to a 
+            prevents re-publication of the value until manually set to a
             non-`None` value. Any entry in this dictionary that is `None` is
             not sent out via HELICS. Defaults to False.
         """
@@ -570,7 +591,9 @@ class Federate:
             if value is not None:
                 pub = self.hfed.get_publication_by_name(key)
                 pub.publish(value)
-                logger.debug(f" {self.federate_name} publication: {key}, value: {value}")
+                logger.debug(
+                    f" {self.federate_name} publication: {key}, value: {value}"
+                )
 
                 # data logger
                 _pub = self.pubs[key]
@@ -578,13 +601,11 @@ class Federate:
                 item_collect = "maybe"
                 if _pub.get("tags"):
                     item_collect = _pub["tags"].get("logger", item_collect)
-                if self.fed_collect == "no":
-                    if item_collect == "yes":
-                        self.write_to_logger(table, self.federate_name, key, value)
-                else:  # self.fed_collect == "yes" or "maybe"
-                    if item_collect == "yes" or item_collect == "maybe":
-                        self.write_to_logger(table, self.federate_name, key, value)
-                
+
+                if item_collect == "yes" or (
+                    self.fed_collect != "no" and item_collect != "no"
+                ):
+                    self.write_to_logger(table, self.federate_name, key, value)
                 if reset:
                     self.data_to_federation["publications"][key] = None
 
@@ -600,60 +621,39 @@ class Federate:
                     item_collect = "maybe"
                     if _endpts.get("tags"):
                         item_collect = _endpts["tags"].get("logger", item_collect)
-                    if self.fed_collect == "no":
-                        if item_collect == "yes":
-                            self.write_to_logger("hdt_endpoint", key, ep.default_destination, msg)
-                    else:  # self.fed_collect == "yes" or "maybe"
-                        if item_collect == "yes" or item_collect == "maybe":
-                            self.write_to_logger("hdt_endpoint", key, ep.default_destination, msg)
-
-                logger.debug(f" {self.federate_name} endpoint: {key}, default destination: {ep.default_destination}, messages: {messages}")
+                    if item_collect == "yes" or (
+                        self.fed_collect != "no" and item_collect != "no"
+                    ):
+                        self.write_to_logger(
+                            "hdt_endpoint", key, ep.default_destination, msg
+                        )
+                logger.debug(
+                    f" {self.federate_name} endpoint: {key}, default destination: {ep.default_destination}, messages: {messages}"
+                )
 
                 if reset:
                     self.data_to_federation["endpoints"][key] = None
 
-    def commit_to_logger(self):
-        if self._commit_qry != "":
-            try:
-                with self.dl.data_db.cursor() as cur:
-                    cur.execute(self._commit_qry)
-                self.dl.data_db.commit()
-                self._count = 0
-                self._commit_cnt += 1
-                self._commit_qry = ""
-            except Exception as ex:
-                logger.error(f"Bad query\n {ex}")
-
-    def query_to_logger(self, query):
-        if query != "":
-            self._count += len(query)
-            self._commit_qry += query
-            # simple implementation of to commit every self.interval bytes or so
-            if self._count > self.interval:
-                self.commit_to_logger()
-
     def write_to_logger(self, table, name, key, value):
-        # print(f"{table} : {name} : {key} : {value}", flush=True)
-        t = self.granted_time
-        d = datetime.timedelta(seconds=int(self.granted_time))
-        if self.use_pdb:
-            query = (f"INSERT INTO {self.scheme_name}.{table} "
-                   "(real_time, sim_time, scenario, federate, data_name, data_value)"
-                   f" VALUES( to_timestamp('{self.no_t_start}','YYYY-MM-DD HH24:MI:SS') + interval '1s' * "
-                   f"{self.granted_time}, {self.granted_time}, "
-                   f"'{self.scenario_name}', '{name}', '{key}', ")
-            if (type(value) is str) or (type(value) is complex) or (type(value) is list):
-                query += f"'{value}'); "
-            else:
-                query += f"{value}); "
-            # add to logger database
-            self.query_to_logger(query)
-        else:
-            real_time = datetime.datetime.strftime(self._s + d, '%Y-%m-%dT%H:%M:%S')
-            val_string = (f"{real_time}, {t}, "
-                          f"{self.scenario_name}, {name}, {key}, {value}\n")
-            # add to logger output csv
-            self.output_csv.write(val_string)
+        # The 'table' argument is no longer needed as the manager handles types.
+        if self.timeseries_manager:
+            # Construct the real_time timestamp
+            # Note: This logic assumes granted_time is in seconds.
+            time_delta = datetime.timedelta(seconds=int(self.granted_time))
+            real_time = self._s + time_delta
+
+            # Create a TSRecord object
+            record = TSRecord(
+                real_time=real_time,
+                sim_time=float(self.granted_time),
+                scenario=self.scenario_name,
+                federate=name,
+                data_name=key,
+                data_value=value,
+            )
+
+            # Add the record to the manager's buffer
+            self.timeseries_manager.add_record(record)
 
     def destroy_federate(self) -> None:
         """Removes HELICS federate from federation
@@ -666,10 +666,13 @@ class Federate:
         at more or less the same wall-clock time.
         """
 
-        logger.debug(f'{h.helicsFederateGetName(self.hfed)} being destroyed, '
-                     f'max time = {h.HELICS_TIME_MAXTIME}')
-        self.close_data()
-        self.close_metadata()
+        logger.debug(
+            f"{h.helicsFederateGetName(self.hfed)} being destroyed, "
+            f"max time = {h.HELICS_TIME_MAXTIME}"
+        )
+        if self.timeseries_manager:
+            self.timeseries_manager.flush()
+            self.timeseries_manager.disconnect()
         h.helicsFederateClearMessages(self.hfed)
         # TODO: there is a bug for h.helicsFederateRequestTime
         # requested_time = int(h.helicsFederateRequestTime)
@@ -679,14 +682,13 @@ class Federate:
         h.helicsFederateDisconnect(self.hfed)
         h.helicsFederateFree(self.hfed)
         # h.helicsCloseLibrary()
-        logger.debug(f'Federate {h.helicsFederateGetName(self.hfed)} finalized')
+        logger.debug(f"Federate {h.helicsFederateGetName(self.hfed)} finalized")
 
     @property
     def current_time(self):
         if self.hfed is not None:
             return self.hfed.current_time
         raise RuntimeError("Federate not yet created. Cannot get current time.")
-
 
     def run(self, scenario_name: str) -> None:
         self.create_federate(scenario_name)

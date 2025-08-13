@@ -346,32 +346,30 @@ class PostgreSQLTimeSeriesManager(TSDataManager):
         if df.empty: return {"min_time": 0.0, "max_time": 0.0}
         return {"min_time": float(df["sim_time"].min()), "max_time": float(df["sim_time"].max())}
 
-    # The following code is dissabled because it is untested and potentially dangerous
+    def _delete_by_column(self, column_name: str, value: str) -> bool:
+        if not self._is_connected:
+            logger.error("PostgreSQL manager not connected.")
+            return False
+        try:
+            tables = self.reader.list_data_types()
+            with self.conn_helper.connection.cursor() as cursor:
+                for table in tables:
+                    query = sql.SQL("DELETE FROM {}.{} WHERE {} = %s").format(
+                        sql.Identifier(self.conn_helper.schema_name),
+                        sql.Identifier(table),
+                        sql.Identifier(column_name)
+                    )
+                    cursor.execute(query, (value,))
+            self.conn_helper.connection.commit()
+            logger.debug(f"Deleted data where {column_name} = '{value}'")
+            return True
+        except psycopg2.Error as e:
+            logger.error(f"Failed to delete data where {column_name} = '{value}': {e}")
+            self.conn_helper.connection.rollback()
+            return False
 
-    # def _delete_by_column(self, column_name: str, value: str) -> bool:
-    #     if not self._is_connected:
-    #         logger.error("PostgreSQL manager not connected.")
-    #         return False
-    #     try:
-    #         tables = self.reader.list_data_types()
-    #         with self.conn_helper.connection.cursor() as cursor:
-    #             for table in tables:
-    #                 query = sql.SQL("DELETE FROM {}.{} WHERE {} = %s").format(
-    #                     sql.Identifier(self.conn_helper.schema_name),
-    #                     sql.Identifier(table),
-    #                     sql.Identifier(column_name)
-    #                 )
-    #                 cursor.execute(query, (value,))
-    #         self.conn_helper.connection.commit()
-    #         logger.debug(f"Deleted data where {column_name} = '{value}'")
-    #         return True
-    #     except psycopg2.Error as e:
-    #         logger.error(f"Failed to delete data where {column_name} = '{value}': {e}")
-    #         self.conn_helper.connection.rollback()
-    #         return False
+    def delete_scenario_data(self, scenario_name: str) -> bool:
+        return self._delete_by_column("scenario", scenario_name)
 
-    # def delete_scenario_data(self, scenario_name: str) -> bool:
-    #     return self._delete_by_column("scenario", scenario_name)
-
-    # def delete_federate_data(self, federate_name: str) -> bool:
-    #     return self._delete_by_column("federate", federate_name)
+    def delete_federate_data(self, federate_name: str) -> bool:
+        return self._delete_by_column("federate", federate_name)

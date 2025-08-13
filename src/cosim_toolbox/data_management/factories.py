@@ -39,6 +39,6 @@ def create_metadata_manager(backend: str, location: str, **kwargs) -> MetadataMa
         return JSONMetadataManager(location=location, **kwargs)
     elif backend in ("mongo", "mongodb"):
         from .mongo_metadata import MongoMetadataManager
-        return MongoMetadataManager(uri=location, **kwargs)
+        return MongoMetadataManager(location=location, **kwargs)
     else:
         raise ValueError(f"Unknown metadata backend: {backend}. Supported: json, mongo")

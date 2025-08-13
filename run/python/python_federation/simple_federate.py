@@ -7,8 +7,9 @@ Copper.
 @author:
 mitch.pelton@pnnl.gov
 """
-import sys
 
+import sys
+from pathlib import Path
 from cosim_toolbox.federate import Federate
 
 
@@ -23,7 +24,9 @@ class SimpleFederate(Federate):
         sub-classing and overloading.
         """
         if not self.debug:
-            raise NotImplementedError("Subclass from Federate and write code to update internal model")
+            raise NotImplementedError(
+                "Subclass from Federate and write code to update internal model"
+            )
 
         for key in self.data_from_federation["inputs"]:
             print(self.data_from_federation["inputs"][key])
@@ -41,6 +44,16 @@ class SimpleFederate(Federate):
 
 
 if __name__ == "__main__":
+    metadata_location="penny.pnl.gov"
+    timeseries_location="penny.pnl.gov"
+    # metadata_location=Path(__file__).parent / "config"
+    # timeseries_location=Path(__file__).parent / "data"
     if sys.argv.__len__() > 2:
-        test_fed = SimpleFederate(sys.argv[1])
+        test_fed = SimpleFederate(
+            sys.argv[1],
+            use_mdb=True,
+            use_pdb=True,
+            metadata_location=metadata_location,
+            timeseries_location=timeseries_location,
+        )
         test_fed.run(sys.argv[2])
