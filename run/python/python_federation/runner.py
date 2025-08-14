@@ -1,0 +1,95 @@
+"""
+Created on 12/14/2023
+
+Data logger class that defines the basic operations of Python-based logger federate in
+Copper.
+
+@author:
+mitch.pelton@pnnl.gov
+"""
+import cosim_toolbox as env
+from cosim_toolbox.dbConfigs import DBConfigs
+from cosim_toolbox.helicsConfig import HelicsMsg
+from cosim_toolbox.dockerRunner import DockerRunner
+
+
+class Runner:
+
+    def __init__(self, scenario_name, schema_name, federation_name, docker=False):
+        self.scenario_name = scenario_name
+        self.schema_name = schema_name
+        self.federation_name = federation_name
+        self.docker = docker
+        self.db = DBConfigs(env.cst_mongo, env.cst_mongo_db)
+
+    def define_scenario(self):
+        names = ["Battery", "EVehicle"]
+        t1 = HelicsMsg(names[0], period=60)
+        if self.docker:
+            t1.config("broker_address", "10.5.0.2")
+        t1.config("log_level", "warning")
+        t1.config("terminate_on_error", True)
+#        t1.config("wait_for_current_time_update", True)
+        t1.pubs_e(names[0] + "/EV1_current", "double", "A", True)
+        t1.subs_e(names[1] + "/EV1_voltage", "double", "V")
+        t1 = {
+            "logger": False,
+            "image": "cosim-cst:latest",
+            "command": f"python3 simple_federate.py {names[0]} {self.scenario_name}",
+            "federate_type": "value",
+            "HELICS_config": t1.write_json()
+        }
+
+        t2 = HelicsMsg(names[1], period=60)
+        if self.docker:
+            t2.config("broker_address", "10.5.0.2")
+        t2.config("log_level", "warning")
+        t2.config("terminate_on_error", True)
+#        t2.config("wait_for_current_time_update", True)
+        t2.subs_e(names[0] + "/EV1_current", "double", "A")
+        t2.pubs_e(names[1] + "/EV1_voltage", "double", "V", True)
+        t2 = {
+            "logger": False,
+            "image": "cosim-cst:latest",
+            "command": f"python3 simple_federate.py {names[1]} {self.scenario_name}",
+            "federate_type": "value",
+            "HELICS_config": t2.write_json()
+        }
+        diction = {
+            "federation": {
+                names[0]: t1,
+                names[1]: t2
+            }
+        }
+        # print(diction)
+
+        self.db.remove_document(env.cst_federations, None, self.federation_name)
+        self.db.add_dict(env.cst_federations, self.federation_name, diction)
+        # print(env.cst_federations, self.db.get_collection_document_names(env.cst_federations))
+
+        scenario = self.db.scenario(self.schema_name,
+                                    self.federation_name,
+                                    "2023-12-07T15:31:27",
+                                    "2023-12-08T15:31:27",
+                                    self.docker)
+        self.db.remove_document(env.cst_scenarios, None, self.scenario_name)
+        self.db.add_dict(env.cst_scenarios, self.scenario_name, scenario)
+        # print(env.cst_scenarios, self.db.get_collection_document_names(env.cst_scenarios))
+
+
+def main():
+    remote = False
+    with_docker = False
+    r = Runner("MyScenario", "MySchema", "MyFederation", with_docker)
+    r.define_scenario()
+    if with_docker:
+        DockerRunner.define_yaml(r.scenario_name)
+        if remote:
+            DockerRunner.run_remote_yaml(r.scenario_name)
+        else:
+            DockerRunner.run_yaml(r.scenario_name)
+    else:
+        DockerRunner.define_sh(r.scenario_name)
+
+if __name__ == "__main__":
+    main()

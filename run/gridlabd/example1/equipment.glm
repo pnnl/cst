@@ -1,0 +1,33 @@
+object line_configuration {
+	name "lc_ohl_ABCN";
+	spacing "OH_3PH_VERT_1C_ABCN";
+	conductor_A "cond_oh_aac-1-0-awg-poppy";
+	conductor_B "cond_oh_aac-1-0-awg-poppy";
+	conductor_C "cond_oh_aac-1-0-awg-poppy";
+	conductor_N "cond_oh_aac-1-0-awg-poppy";
+}
+
+object line_spacing {
+	name "OH_3PH_VERT_1C_ABCN";
+	distance_AB 4.000000127999996;
+	distance_AC 8.000000256;
+	distance_AN 18.607794661377802;
+	distance_BC 4.0000001280000035;
+	distance_BN 14.637281636697443;
+	distance_CN 10.688779505256905;
+	distance_AE 47.000001504;
+	distance_BE 43.000001376;
+	distance_CE 39.000001248;
+	distance_NE 28.500000912;
+}
+
+object overhead_line_conductor {
+	name "cond_oh_aac-1-0-awg-poppy";
+	resistance 0.8764771414599999;
+	geometric_mean_radius 0.0111001643972;
+	diameter 0.36850413600000004;
+	rating.summer.continuous 216.0;
+	rating.summer.emergency 216.0;
+	rating.winter.continuous 216.0;
+	rating.winter.emergency 216.0;
+}

@@ -1,0 +1,109 @@
+<mxfile host="65bd71144e">
+    <diagram id="t3LKLqEtbccrNYtRNrDR" name="Page-1">
+        <mxGraphModel dx="10884" dy="1268" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="10000" pageHeight="10000" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="2" value="TimeSeriesDB" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" parent="1" vertex="1">
+                    <mxGeometry x="-9910" y="20" width="440" height="300" as="geometry"/>
+                </mxCell>
+                <mxCell id="3" value="+ database: TimeSeriesDatabase&#10;+ username: str&#10;+ password: str" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="2" vertex="1">
+                    <mxGeometry y="26" width="440" height="114" as="geometry"/>
+                </mxCell>
+                <mxCell id="4" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" parent="2" vertex="1">
+                    <mxGeometry y="140" width="440" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="5" value="+ connect_to_database(self): &#10;+ add_case(self, case: str): void&#10;+ query(self, query:TSDBQuery): TSDBResult&#10;+ get_case_data(self, case: str, datatype: HELICS_DATA_TYPE): TSDBResult&#10;+ get_case_data(self, case: str, federates: str, publication: str) (setting any of &#10;           these inputs to None treats them as a wildcard, *)&#10;+ get_case_timestamps(self, case: str): TSDBResult&#10;+ delete_case(self, case: str): void&#10;&#10;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="2" vertex="1">
+                    <mxGeometry y="148" width="440" height="152" as="geometry"/>
+                </mxCell>
+                <mxCell id="6" value="TSDBQuery" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" parent="1" vertex="1">
+                    <mxGeometry x="-9450" y="20" width="250" height="250" as="geometry">
+                        <mxRectangle x="110" y="60" width="120" height="30" as="alternateBounds"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="7" value="+ select_datatypes: [HELICS_DATA_TYPE] &#10;+ select_cases: [str]&#10;+ select_federates: [str]&#10;+ select_publications: [str]" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="6" vertex="1">
+                    <mxGeometry y="26" width="250" height="144" as="geometry"/>
+                </mxCell>
+                <mxCell id="8" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" parent="6" vertex="1">
+                    <mxGeometry y="170" width="250" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="9" value="+" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontStyle=0" parent="6" vertex="1">
+                    <mxGeometry y="178" width="250" height="72" as="geometry"/>
+                </mxCell>
+                <mxCell id="10" value="MetadataDB" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" parent="1" vertex="1">
+                    <mxGeometry x="-9890" y="410" width="480" height="360" as="geometry"/>
+                </mxCell>
+                <mxCell id="11" value="- _cst_name: string&#10;+ db: Database&#10;+ client: MongoClient&#10;+ collections = []&#10;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="10" vertex="1">
+                    <mxGeometry y="26" width="480" height="114" as="geometry"/>
+                </mxCell>
+                <mxCell id="12" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" parent="10" vertex="1">
+                    <mxGeometry y="140" width="480" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="13" value="- _connect_to_database(self): client&#10;- _check_unique_doc_name(self, collection_name: str, new_name: str): bool&#10;+ add_collection(self, name: str):&#10;+ add_dict(self, collection_name: str, dict_name: str, dict: dict): MetadataObjectID: str&#10;+ add_file(self, name: str, file_path: str): MetadataObjectID: str&#10;+ update_dict(self, collection_name: str, MetadataObjectID: str, name: str, dict: dict)&#10;+ get_dict(self, MetadataObjectID: str, name: str): dict&#10;+ get_file_by(self, MetadataObjectID, name): file_handle&#10;+ update_collection_names(self): void&#10;+ get_collection_document_names(self): dict&#10;+ remove_document(self, collection_name: str, dict_name: str)&#10;+ remove_collection(self collection_name: str)&#10;&#10; &#10;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="10" vertex="1">
+                    <mxGeometry y="148" width="480" height="212" as="geometry"/>
+                </mxCell>
+                <mxCell id="14" value="Cu supports operations on the database directly just getting the database object and using the Python language binding in the script of your choice." style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;" parent="1" vertex="1">
+                    <mxGeometry x="-9400" y="530" width="160" height="140" as="geometry"/>
+                </mxCell>
+                <mxCell id="15" value="LoggerFed" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" parent="1" vertex="1">
+                    <mxGeometry x="-9120" y="50" width="410" height="300" as="geometry"/>
+                </mxCell>
+                <mxCell id="16" value="+ logged_publications: list of Pub&#10;+ logged_endpoints: list of Endpoint&#10;+ database: TimeSeriesDatabase&#10;+ schema: DatabaseSchema" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="15" vertex="1">
+                    <mxGeometry y="26" width="410" height="114" as="geometry"/>
+                </mxCell>
+                <mxCell id="17" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" parent="15" vertex="1">
+                    <mxGeometry y="140" width="410" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="18" value="+ connect_to_database(self): &#10;+ add_table(self, name: str, columns: list)&#10;+ add_publication(self, pub: Publication)&#10;+ cosimulation()&#10;+ delete_table(self, table_name: str)&#10;+ delete_column(self, table_name: str, column_name: str)&#10;+ table_to_df(self, table: name): df: Dataframe" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="15" vertex="1">
+                    <mxGeometry y="148" width="410" height="152" as="geometry"/>
+                </mxCell>
+                <mxCell id="44" value="TSDBResult" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" parent="1" vertex="1">
+                    <mxGeometry x="-9390" y="290" width="250" height="116" as="geometry">
+                        <mxRectangle x="110" y="60" width="120" height="30" as="alternateBounds"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="45" value="+ results: dict{col1:[], col2:[], col3:[]...}" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="44" vertex="1">
+                    <mxGeometry y="26" width="250" height="44" as="geometry"/>
+                </mxCell>
+                <mxCell id="46" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" parent="44" vertex="1">
+                    <mxGeometry y="70" width="250" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="47" value="+" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontStyle=0" parent="44" vertex="1">
+                    <mxGeometry y="78" width="250" height="38" as="geometry"/>
+                </mxCell>
+                <mxCell id="48" value="Federate" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" parent="1" vertex="1">
+                    <mxGeometry x="-9720" y="820" width="530" height="448" as="geometry">
+                        <mxRectangle x="110" y="60" width="120" height="30" as="alternateBounds"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="49" value="+ name: str&#10;+ fed: HelicsFederate (defined by PyHELICS)&#10;+ federate_type: HELICS_FEDERATE_TYPE&#10;+ input_arguments: dict&#10;+ metadataDB: MetadataDB&#10;+ helics_inputs: input_dict&#10;+ pub_dict: dict" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="48" vertex="1">
+                    <mxGeometry y="26" width="530" height="184" as="geometry"/>
+                </mxCell>
+                <mxCell id="50" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" parent="48" vertex="1">
+                    <mxGeometry y="210" width="530" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="51" value="+ create_federate(self): self.fed&#10;- _get_configuration_from metadataDB(self.name: str, metadataDB: MetadataDB)&#10;+ destroy_fed(self): void&#10;+ advance_sim_time(time: float)&#10;+ update_model()&#10;+ get_data_from_federation(self.fed): self.helics_inputs&#10;+ send_data_to_federation(self.fed, pub_dict)&#10;&#10;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontStyle=0" parent="48" vertex="1">
+                    <mxGeometry y="218" width="530" height="230" as="geometry"/>
+                </mxCell>
+                <mxCell id="56" value="&amp;lt;&amp;lt;enumeration&amp;gt;&amp;gt;&lt;br&gt;&lt;span style=&quot;font-weight: 700;&quot;&gt;HELICS_FEDERATE_TYPE&lt;/span&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=40;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="-8940" y="410" width="200" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="57" value="HELICS_VALUE_FEDERATE&lt;br&gt;HELICS_MESSAGE_FEDERATE&lt;br&gt;HELICS_COMBO_FEDERATE" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="56" vertex="1">
+                    <mxGeometry y="40" width="200" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="80" value="The PyHELICS Pythonic API provides LOTS of federate management funcationality we don't need to replicate here. There are easy ways to do all the common federate things and if we need something that isn't there, we can add it." style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;" parent="1" vertex="1">
+                    <mxGeometry x="-9900" y="860" width="160" height="170" as="geometry"/>
+                </mxCell>
+                <mxCell id="85" value="Do we want to do like GridLAB-D and provide an explicit mapping between HELICS interfaces and internal variables and data strucutres? For simple data types this seems tractable and good but or data types with complex structures this would be hard. If we could do this we could write generic functions for exchanging data with the federation" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;" parent="1" vertex="1">
+                    <mxGeometry x="-9900" y="1080" width="160" height="200" as="geometry"/>
+                </mxCell>
+                <mxCell id="90" value="input_dict&amp;nbsp; and pub_dict are dictionaries where the keys are the HELICS publication names and the values are the values received or to be published, respectively" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;" parent="1" vertex="1">
+                    <mxGeometry x="-9160" y="1050" width="160" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="91" value="update_model is user-written code&amp;nbsp;" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;" parent="1" vertex="1">
+                    <mxGeometry x="-9160" y="1200" width="160" height="60" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

@@ -1,0 +1,13 @@
+# Test coverage
+.coverage
+coverage.xml
+results.xml
+htmlcov/
+**/.pytest_cache/
+venv/
+**/__pycache__/
+**/*.log
+.idea/
+docs/_build/
+docs/_static/
+docs/_template/

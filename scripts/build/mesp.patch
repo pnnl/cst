@@ -1,0 +1,2096 @@
+diff --git a/examples/mini_project/benchmark_abm.py b/examples/mini_project/benchmark_abm.py
+index 5c5b6d6..40c41c6 100644
+--- a/examples/mini_project/benchmark_abm.py
++++ b/examples/mini_project/benchmark_abm.py
+@@ -1,160 +1,163 @@
+-import logging
+-from Federate import Federate
+-import matplotlib.pyplot as plt
+-from Simulation import Simulation
+-import helics as h
+-import random
+-import time
+-import os
+ import csv
+-import pandas as pd
++import os
+ import statistics
+-import psutil
+-import sys
+-import win32file
++
++import matplotlib.pyplot as plt
++
+ from runner import run_with_abm, run_with_agents
+ 
+-def parse_results(output_path, dir_list):
+-    agent_dict = {}
+-    for dir in dir_list:
+-        dir_path = os.path.join(output_path, dir)
++
++def parse_results(out_path, dir_list):
++    _agent_dict = {}
++    for _dir in dir_list:
++        dir_path = os.path.join(out_path, _dir)
+         # grab num.agents
+-        num_agents = int(dir.split("_")[1])
++        _num_agents = int(_dir.split("_")[1])
+         if not os.path.exists(os.path.join(dir_path, "Grids", "time_step.csv")):
+             continue
+         time_step = []
+         with open(os.path.join(dir_path, "Grids", "time_step.csv"), "r") as read_obj:
+-             time_step = list(csv.reader(read_obj))
+- 
++            time_step = list(csv.reader(read_obj))
++
+         diff_list = []
+         for i in range(1, len(time_step)):
+-            if float(time_step[i][0]) == -1000: 
++            if float(time_step[i][0]) == -1000:
+                 break
+-            diff_list.append(float(time_step[i][0]) - float(time_step[i-1][0]))
+-        if num_agents in agent_dict:
+-            agent_dict.update({num_agents: agent_dict[num_agents] + [statistics.mean(diff_list)]})
++            diff_list.append(float(time_step[i][0]) - float(time_step[i - 1][0]))
++        if _num_agents in _agent_dict:
++            _agent_dict.update({_num_agents: _agent_dict[_num_agents] + [statistics.mean(diff_list)]})
+         else:
+-            agent_dict.update({num_agents: [statistics.mean(diff_list)]})
+-    agent_dict = {num_agents: statistics.mean(agent_dict[num_agents]) for num_agents in agent_dict}
++            _agent_dict.update({_num_agents: [statistics.mean(diff_list)]})
++    _agent_dict = {_num_agents: statistics.mean(_agent_dict[_num_agents]) for _num_agents in _agent_dict}
++
++    return _agent_dict
+ 
+-    return agent_dict
+ 
+ def parse_overall_results(file_path):
+-    time_dict = {}
++    _time_dict = {}
+     with open(file_path, "r") as res:
+         run_list = list(csv.reader(res))
+         run_list.pop(0)
+         for run in run_list:
+             agent = True if run[0] == "agents" else False
+-            num_agents = int(run[1])
+-            if num_agents in time_dict:
++            _num_agents = int(run[1])
++            if _num_agents in _time_dict:
+                 if agent:
+-                    time_dict[num_agents][0].append(float(run[3]))
++                    _time_dict[_num_agents][0].append(float(run[3]))
+                 else:
+-                    time_dict[num_agents][1].append(float(run[3]))
++                    _time_dict[_num_agents][1].append(float(run[3]))
+             else:
+                 if agent:
+-                    time_dict.update({num_agents: [[float(run[3])], []]})
++                    _time_dict.update({_num_agents: [[float(run[3])], []]})
+                 else:
+-                    time_dict.update({num_agents: [[], [float(run[3])]]})
+-    for key in time_dict:
+-        if time_dict[key][0] == []:
+-            time_dict[key][0] = [0]
+-        if time_dict[key][1] == []:
+-            time_dict[key][1] = [0]
+-        time_dict[key] = [statistics.mean(time_dict[key][0]), statistics.mean(time_dict[key][1])]
+-    return time_dict
+-                
++                    _time_dict.update({_num_agents: [[], [float(run[3])]]})
++    for _key in _time_dict:
++        if not _time_dict[_key][0]:
++            _time_dict[_key][0] = [0]
++        if not _time_dict[_key][1]:
++            _time_dict[_key][1] = [0]
++        _time_dict[_key] = [statistics.mean(_time_dict[_key][0]), statistics.mean(_time_dict[_key][1])]
++    return _time_dict
++
++
+ if __name__ == "__main__":
+     # define parameters to test with
+     agent_type = ["agents", "abm"]
+-    thread = True # true for multi-threading, false for multi-processing
++    thread = True  # true for multi-threading, false for multiprocessing
+     num_agent_list = [1, 10, 50, 100, 200, 300, 400, 500, 600]
+     run_nums = 5
+-    
++
+     # run tests for abm
+-    with open(os.path.join(os.path.dirname(__file__),'data_timing_output.csv'), 'w', newline='') as file:
++    with open(os.path.join(os.path.dirname(__file__), 'data_timing_output.csv'), 'w', newline='') as file:
+         writer = csv.writer(file)
+         field = ["agent type", "num agents", "run num", "time", "threads v. processes"]
+-        writer.writerow(field) # first time running
++        writer.writerow(field)  # first time running
+         for num_agents in num_agent_list:
+             for num in range(run_nums):
+                 total_abm_time = run_with_abm(num_agents, num, thread)
+-                writer.writerow(["abm", f"{num_agents}", f"{num}", f"{total_abm_time}", f"{'threads' if thread else 'processes'}"])
+-                
++                writer.writerow(["abm", f"{num_agents}", f"{num}", f"{total_abm_time}",
++                                 f"{'threads' if thread else 'processes'}"])
++
+     # run tests for agent
+     for num_agents in num_agent_list:
+-        for num in range(run_nums): 
+-            with open(os.path.join(os.path.dirname(__file__),'data_timing_output.csv'), 'a', newline='') as file:
++        for num in range(run_nums):
++            with open(os.path.join(os.path.dirname(__file__), 'data_timing_output.csv'), 'a', newline='') as file:
+                 writer = csv.writer(file)
+                 total_agent_time = run_with_agents(num_agents, num, thread)
+-                writer.writerow(["agents", f"{num_agents}", f"{num}", f"{total_agent_time}", f"{'threads' if thread else 'processes'}"])
+-                
+-    
++                writer.writerow(["agents", f"{num_agents}", f"{num}", f"{total_agent_time}",
++                                 f"{'threads' if thread else 'processes'}"])
++
+     # grab outputs for average simulation step for all results and place in dict
+     base_dir, tail = os.path.split(__file__)
+     output_path = os.path.join(base_dir, "output_files")
+     for dirpath, dirnames, filenames in os.walk(output_path):
+         # grab abm results and agent results
+-        abm_dict = parse_results(output_path, [x for x in dirnames if x.split("_")[0]=="abm"])
+-        agent_dict = parse_results(output_path, [x for x in dirnames if x.split("_")[0]=="agents"])
+-        
++        abm_dict = parse_results(output_path, [x for x in dirnames if x.split("_")[0] == "abm"])
++        agent_dict = parse_results(output_path, [x for x in dirnames if x.split("_")[0] == "agents"])
++
+         # build collective dictionary
+         both_dict = {}
+         for key in [key for key in abm_dict if key in agent_dict]:
+             both_dict.update({key: [agent_dict[key], abm_dict[key]]})
+-            
++
+         # build additional abm dictionary
+         additional_abm = {key: abm_dict[key] for key in abm_dict if key not in agent_dict}
+-        
++
+         break
+-    
++
+     # create data dictionary for overall co-simulation time
+-    time_dict = parse_overall_results(os.path.join(os.path.dirname(__file__), 'output_files','data_timing_output.csv'))
+-    
++    time_dict = parse_overall_results(os.path.join(os.path.dirname(__file__), 'output_files', 'data_timing_output.csv'))
++
+     # line graph for average step time for abm and agents
+-    tnrfont = {'fontname':'Times New Roman'}
+-    fig, ax = plt.subplots(1,1)
++    tnrfont = {'fontname': 'Times New Roman'}
++    fig, ax = plt.subplots(1, 1)
+     # bau Vermont
+-    plt.subplot(1,1,1)
++    plt.subplot(1, 1, 1)
+     sorted_keys = sorted(both_dict.keys())
+     sorted_both = {key: both_dict[key] for key in sorted_keys}
+-    line1, = plt.plot(sorted_both.keys(), [sorted_both[x][0] for x in sorted_both.keys()], label="agent", color='m', linestyle = '-')
+-    line2, = plt.plot(list(sorted_both.keys()), [sorted_both[x][1] for x in sorted_both.keys()], label = "abm", color = 'g', linestyle = '-')
+-    plt.title(f"Average Simulation Step Time Vs. Number of Agents, using {'threads' if thread else 'processes'}", **tnrfont)
++    line1, = plt.plot(sorted_both.keys(), [sorted_both[x][0] for x in sorted_both.keys()],
++                      label="agent", color='m', linestyle='-')
++    line2, = plt.plot(list(sorted_both.keys()), [sorted_both[x][1] for x in sorted_both.keys()],
++                      label="abm", color='g', linestyle='-')
++    plt.title(f"Average Simulation Step Time Vs. Number of Agents, using {'threads' if thread else 'processes'}",
++              **tnrfont)
+     plt.xlabel("Number of Agents", fontsize=10, **tnrfont)
+     plt.ylabel("Average Simulation Step (s)", fontsize=10, **tnrfont)
+-    fig.legend([line1, line2], ["agent", "abm"], loc = "lower right")
++    fig.legend([line1, line2], ["agent", "abm"], loc="lower right")
+     fig.tight_layout()
+     plt.show()
+-    
++
+     # build line graph for abm additional time steps
+-    tnrfont = {'fontname':'Times New Roman'}
+-    fig, ax = plt.subplots(1,1)
++    tnrfont = {'fontname': 'Times New Roman'}
++    fig, ax = plt.subplots(1, 1)
+     # bau Vermont
+-    plt.subplot(1,1,1)
++    plt.subplot(1, 1, 1)
+     sorted_keys = sorted(additional_abm.keys())
+-    sorted_data = {key:additional_abm[key] for key in sorted_keys}
+-    line2, = plt.plot(list(sorted_keys), [sorted_data[x] for x in sorted_data.keys()], label = "abm", color = 'g', linestyle = '-')
++    sorted_data = {key: additional_abm[key] for key in sorted_keys}
++    line2, = plt.plot(list(sorted_keys), [sorted_data[x] for x in sorted_data.keys()], label="abm", color='g',
++                      linestyle='-')
+     plt.title("Average Simulation Step Time Vs. Number of Agents, Additional ABM", **tnrfont)
+     plt.xlabel("Number of Agents", fontsize=10, **tnrfont)
+     plt.ylabel("Average Simulation Step (s)", fontsize=10, **tnrfont)
+-    fig.legend([line2], ["abm"], loc = "lower right")
++    fig.legend([line2], ["abm"], loc="lower right")
+     fig.tight_layout()
+     plt.show()
+-    
++
+     # build line graph for abm total simulation time
+-    tnrfont = {'fontname':'Times New Roman'}
+-    fig, ax = plt.subplots(1,1)
++    tnrfont = {'fontname': 'Times New Roman'}
++    fig, ax = plt.subplots(1, 1)
+     # bau Vermont
+-    plt.subplot(1,1,1)
+-    sorted_keys = sorted([x for x in time_dict.keys() if x <10])
++    plt.subplot(1, 1, 1)
++    sorted_keys = sorted([x for x in time_dict.keys() if x < 10])
+     sorted_data = {key: time_dict[key] for key in sorted_keys}
+-    line1, = plt.plot(list(sorted_keys), [sorted_data[x][0] for x in sorted_data.keys()], label = "agent", color = 'm', linestyle = '-')
+-    line2, = plt.plot(list(sorted_keys), [sorted_data[x][1] for x in sorted_data.keys()], label = "abm", color = 'g', linestyle = '-')
+-    plt.title(f"Average Total Simulation Time Vs. Number of Agents, using {'threads' if thread else 'processes'}", **tnrfont)
++    line1, = plt.plot(list(sorted_keys), [sorted_data[x][0] for x in sorted_data.keys()], label="agent", color='m',
++                      linestyle='-')
++    line2, = plt.plot(list(sorted_keys), [sorted_data[x][1] for x in sorted_data.keys()], label="abm", color='g',
++                      linestyle='-')
++    plt.title(f"Average Total Simulation Time Vs. Number of Agents, using {'threads' if thread else 'processes'}",
++              **tnrfont)
+     plt.xlabel("Number of Agents", fontsize=10, **tnrfont)
+     plt.ylabel("Average Total Simulation Time (s)", fontsize=10, **tnrfont)
+-    fig.legend([line1, line2], [ "agent", "abm"], loc = "lower right")
++    fig.legend([line1, line2], ["agent", "abm"], loc="lower right")
+     fig.tight_layout()
+-    plt.show()
+\ No newline at end of file
++    plt.show()
+diff --git a/examples/mini_project/runner.py b/examples/mini_project/runner.py
+index 79281f4..d4cb0f0 100644
+--- a/examples/mini_project/runner.py
++++ b/examples/mini_project/runner.py
+@@ -1,12 +1,7 @@
+-import logging
+-import helics as h
+-from Federate import Federate
+-import matplotlib.pyplot as plt
+-from Simulation import Simulation
+ import random
+ import time
+-import pandas as pd
+-import sys
++
++from Simulation import Simulation
+ 
+ """
+ This runner is a simple example for the MESP. It incorporates a 5-agent ABM, two utility agents, and a grid component.
+@@ -24,147 +19,155 @@ If the demand on electricity is larger than this value, the grid reports 'infeas
+ The simulation runs for 24 time steps.
+ """
+ 
++
+ def agent_step(model_input, agent_properties, granted_time):
+     # switch based on lowest price
+-    rand_electric = float(random.randint(-10,10) / 100)
+-    rand_gas = float(random.randint(-10,10) / 100)
+-    if type(model_input['Electric_utility/electric_price']) != float:
++    rand_electric = float(random.randint(-10, 10) / 100)
++    rand_gas = float(random.randint(-10, 10) / 100)
++    if not isinstance(model_input['Electric_utility/electric_price'], float):
+         model_input['Electric_utility/electric_price'] = 0.5
+-    if type(model_input['Gas_utility/gas_price']) != float:
++    if not isinstance(model_input['Gas_utility/gas_price'], float):
+         model_input['Gas_utility/gas_price'] = 0.5
+     if model_input['Electric_utility/electric_price'] + rand_electric < model_input['Gas_utility/gas_price'] + rand_gas:
+         agent_properties["source"] = "electric"
+     else:
+         agent_properties["source"] = "gas"
+-    
++
+     # update hourly gas and electric use
+     if agent_properties["source"] == "electric":
+-        agent_properties["hourly_electricity"] = agent_properties["electric_list"][int(granted_time)] 
++        agent_properties["hourly_electricity"] = agent_properties["electric_list"][int(granted_time)]
+         agent_properties["hourly_gas"] = 0
+     else:
+-        agent_properties["hourly_gas"] = agent_properties["gas_list"][int(granted_time)]        
++        agent_properties["hourly_gas"] = agent_properties["gas_list"][int(granted_time)]
+         agent_properties["hourly_electricity"] = 0
+-        
++
+     return agent_properties
+ 
++
+ def electric_utility_step(input_features, features, granted_time):
+     # calculate price
+-    if type(input_features["hourly_electricity"]) != int:
++    if not isinstance(input_features["hourly_electricity"], int):
+         input_features["hourly_electricity"] = 0
+     price = max(0.25, float(input_features["hourly_electricity"] / features["electricity_max"]))
+-    
++
+     # update feature dictionary
+     features["electric_price"] = price
+-    
++
+     return features
+ 
++
+ def electric_utility_abm_step(input_features, features, granted_time):
+     # calculate price
+-    if type(input_features["Households/hourly_electricity"]) != int:
++    if not isinstance(input_features["Households/hourly_electricity"], int):
+         input_features["Households/hourly_electricity"] = 0
+     price = max(0.25, float(input_features["Households/hourly_electricity"] / features["electricity_max"]))
+-    
++
+     # update feature dictionary
+     features["electric_price"] = price
+-    
++
+     return features
+ 
++
+ def gas_utility_step(input_features, features, granted_time):
+     # calculate price
+-    if type(input_features["hourly_gas"]) != int:
++    if not isinstance(input_features["hourly_gas"], int):
+         input_features["hourly_gas"] = 0
+     price = max(0.3, float(input_features["hourly_gas"] / features["gas_max"]))
+-    
++
+     # update feature dictionary
+     features["gas_price"] = price
+-    
++
+     return features
+ 
++
+ def gas_utility_abm_step(input_features, features, granted_time):
+     # calculate price
+-    if type(input_features["Households/hourly_gas"]) != int:
++    if not isinstance(input_features["Households/hourly_gas"], int):
+         input_features["Households/hourly_gas"] = 0
+     price = max(0.3, float(input_features["Households/hourly_gas"] / features["gas_max"]))
+-    
++
+     # update feature dictionary
+     features["gas_price"] = price
+-    
++
+     return features
+ 
++
+ def grid_step(input_features, features, granted_time):
+     # update feasibility
+-    if type(input_features["hourly_electricity"]) != int:
++    if not isinstance(input_features["hourly_electricity"], int):
+         input_features["hourly_electricity"] = 0
+     if input_features["hourly_electricity"] > features["electricity_max"]:
+         features["feasible"] = False
+     else:
+-        features["feasible"] = True   
+-        
++        features["feasible"] = True
++
+     features["time_step"] = time.time()
+     return features
+ 
++
+ def grid_abm_step(input_features, features, granted_time):
+     # update feasibility
+-    if type(input_features["Households/hourly_electricity"]) != int:
++    if not isinstance(input_features["Households/hourly_electricity"], int):
+         input_features["Households/hourly_electricity"] = 0
+     if input_features["Households/hourly_electricity"] > features["electricity_max"]:
+         features["feasible"] = False
+     else:
+-        features["feasible"] = True  
+-        
++        features["feasible"] = True
++
+     features["time_step"] = time.time()
+     return features
+ 
++
+ def run_with_abm(num_agents, run_num=0, thread=True):
+     # random seed used for creating agent features
+     random.seed(0)
+     # ---------------------------------------------------------
+     # STEP 1: Create simulation objects with their own features
+     # ---------------------------------------------------------
+-    
++
+     # create simulation object
+     sim = Simulation(4, f"abm_{num_agents}_mini_project_{run_num}")
+-    
++
+     # create ABM and add features
+     abm = sim.create_abm("households", agent_step)
+     abm.add_feature({"hourly_electricity": 0, "hourly_gas": 0})
+     for i in range(num_agents):
+-        feat_dict = {"source": "gas", "electric_list": random.sample(range(1,100), 24),
+-                     "gas_list": random.sample(range(1,100), 24), "hourly_electricity": 0, "hourly_gas": 0}
++        feat_dict = {"source": "gas", "electric_list": random.sample(range(1, 100), 24),
++                     "gas_list": random.sample(range(1, 100), 24), "hourly_electricity": 0, "hourly_gas": 0}
+         abm.add_agent_features(feat_dict)
+-    
++
+     # create electric utility and add features
+     electric_utility = sim.create_agent("electric_utility", step_function=electric_utility_abm_step)
+     electric_utility.add_feature({"electricity_max": 100, "electric_price": 0.2})
+-    
++
+     # create gas utility and add features
+     gas_utility = sim.create_agent("gas_utility", step_function=gas_utility_abm_step)
+     gas_utility.add_feature({"gas_max": 100, "gas_price": 0.3})
+-    
++
+     # create grid object and add features
+     grid = sim.create_grid("electric_grid", step_function=grid_abm_step)
+     grid.add_feature({"electricity_max": 100, "feasible": True, "time_step": 0})
+-    
++
+     # ---------------------------------------------------------
+     # STEP 2: Create connections between federates
+     # ---------------------------------------------------------
+-    
++
+     # Households subscribe to prices from utilities    
+     sim.set_publication_subscription(electric_utility, abm, "electric_price", "double")
+     sim.set_publication_subscription(gas_utility, abm, "gas_price", "double")
+-    
++
+     # Household outputs electricity and gas use
+     sim.set_publication_to_multiple_subscriptions(abm, [grid, electric_utility], "hourly_electricity", "int")
+     sim.set_publication_subscription(abm, gas_utility, "hourly_gas", "int")
+-    
+-   # Track hour electricity and gas over all households, source of power for households, and grid feasibility
++
++    # Track hour electricity and gas over all households, source of power for households, and grid feasibility
+     sim.logger.add_abm_output_feature("hourly_electricity")
+     sim.logger.add_abm_output_feature("hourly_gas")
+     sim.logger.add_agent_output_feature("gas_price")
+     sim.logger.add_agent_output_feature("electric_price")
+     sim.logger.add_grid_output_feature("feasible")
+     sim.logger.add_grid_output_feature("time_step")
+-    
++
+     # ---------------------------------------------------------
+     # STEP 3: Run co-simulation
+     # ---------------------------------------------------------
+@@ -172,45 +175,47 @@ def run_with_abm(num_agents, run_num=0, thread=True):
+     sim.begin_simulation(5, thread)
+     end_time = time.time()
+     return end_time - start_time
+-    
++
++
+ def run_with_agents(num_agents, run_num=0, thread=True):
+     # random seed used for creating agent features
+     random.seed(0)
+     # ---------------------------------------------------------
+     # STEP 1: Create simulation objects with their own features
+     # ---------------------------------------------------------
+-    
++
+     # create simulation object
+-    sim = Simulation(num_agents + 3, f"agents_{num_agents}_mini_project_{run_num}_{'threads' if thread else 'processes'}")
+-    
++    sim = Simulation(num_agents + 3,
++                     f"agents_{num_agents}_mini_project_{run_num}_{'threads' if thread else 'processes'}")
++
+     # create agents and add features
+     agent_list = []
+     for i in range(num_agents):
+         agent = sim.create_agent(f"agent_{i}", agent_step)
+-        agent.add_feature({"source": "gas", "electric_list": random.sample(range(1,100), 24),
+-                     "gas_list": random.sample(range(1,100), 24), "hourly_electricity": 0, "hourly_gas": 0})
++        agent.add_feature({"source": "gas", "electric_list": random.sample(range(1, 100), 24),
++                           "gas_list": random.sample(range(1, 100), 24), "hourly_electricity": 0, "hourly_gas": 0})
+         agent_list.append(agent)
+-    
++
+     # create electric utility and add features
+     electric_utility = sim.create_agent("electric_utility", step_function=electric_utility_step)
+     electric_utility.add_feature({"electricity_max": 100, "electric_price": 0.2})
+-    
++
+     # create gas utility and add features
+     gas_utility = sim.create_agent("gas_utility", step_function=gas_utility_step)
+     gas_utility.add_feature({"gas_max": 100, "gas_price": 0.3})
+-    
++
+     # create grid object and add features
+     grid = sim.create_grid("electric_grid", step_function=grid_step)
+     grid.add_feature({"electricity_max": 100, "feasible": True, "time_step": 0})
+-    
++
+     # ---------------------------------------------------------
+     # STEP 2: Create connections between federates
+     # ---------------------------------------------------------
+-    
++
+     # Households subscribe to prices from utilities    
+     sim.set_publication_to_multiple_subscriptions(electric_utility, agent_list, "electric_price", "double")
+     sim.set_publication_to_multiple_subscriptions(gas_utility, agent_list, "gas_price", "double")
+-    
++
+     # Household outputs electricity and gas use
+     sim.set_multiple_publication_to_input(agent_list, grid, "hourly_electricity", "int")
+     sim.set_multi_input_handling(grid, "hourly_electricity", "helics_multi_input_sum_operation")
+@@ -218,15 +223,15 @@ def run_with_agents(num_agents, run_num=0, thread=True):
+     sim.set_multi_input_handling(electric_utility, "hourly_electricity", "helics_multi_input_sum_operation")
+     sim.set_multiple_publication_to_input(agent_list, gas_utility, "hourly_gas", "int")
+     sim.set_multi_input_handling(gas_utility, "hourly_gas", "helics_multi_input_sum_operation")
+-    
+-   # Track hour electricity and gas over all households, source of power for households, and grid feasibility
++
++    # Track hour electricity and gas over all households, source of power for households, and grid feasibility
+     sim.logger.add_agent_output_feature("hourly_electricity")
+     sim.logger.add_agent_output_feature("hourly_gas")
+     sim.logger.add_agent_output_feature("gas_price")
+     sim.logger.add_agent_output_feature("electric_price")
+     sim.logger.add_grid_output_feature("feasible")
+     sim.logger.add_grid_output_feature("time_step")
+-    
++
+     # ---------------------------------------------------------
+     # STEP 3: Run co-simulation
+     # ---------------------------------------------------------
+@@ -235,11 +240,6 @@ def run_with_agents(num_agents, run_num=0, thread=True):
+     end_time = time.time()
+     return end_time - start_time
+ 
++
+ if __name__ == "__main__":
+     run_with_abm(4)
+-    
+-   
+-
+-    
+-    
+-    
+\ No newline at end of file
+diff --git a/prototype/install_julia_packages.jl b/prototype/install_julia_packages.jl
+index b137e45..2bb3a5b 100644
+--- a/prototype/install_julia_packages.jl
++++ b/prototype/install_julia_packages.jl
+@@ -4,11 +4,11 @@
+ 
+ using Pkg
+ Pkg.add("Agents")
+-Pkg.add("LightGraphs")
++#Pkg.add("LightGraphs")
+ Pkg.add("Random")
+ Pkg.add("HELICS")
+ Pkg.add("PyCall")
+-Pkg.add("StringEncodings")
++#Pkg.add("StringEncodings")
+ Pkg.add("DataFrames")
+-Pkg.add("Pandas")
++#Pkg.add("Pandas")
+ Pkg.add("XLSX")
+\ No newline at end of file
+diff --git a/prototype/src/ABM.jl b/prototype/src/ABM.jl
+index f5d4381..192cfc0 100644
+--- a/prototype/src/ABM.jl
++++ b/prototype/src/ABM.jl
+@@ -1,19 +1,19 @@
+ using Agents
+-using LightGraphs
++# using LightGraphs
+ using Random
+ using HELICS
+ using PyCall
+ using XLSX
+-using StringEncodings
++# using StringEncodings
+ using DataFrames
+-import Pandas
+-import Base.Threads.@threads
++# import Pandas
++# import Base.Threads.@threads
+ 
+ 
+ """
+ The ABM.jl contains all functions to run an agent-based model that is connected to a HELICS co-simulation. 
+ The 'Model Structs' section gives the agent types, one for each model space type.
+-The 'Initializaton' section contains functions that prepare the ABM to run a simulation.
++The 'Initialization' section contains functions that prepare the ABM to run a simulation.
+ The 'Cosimulation' section contains functions that are used during the co-simulation and connect to the MESP co-simulation.
+ The 'Federate Functions' section contains functions used to build a HelicsFederate and send/receive values.
+ The 'Helper Functions' sections stores the methods used to export the ABM data.
+@@ -53,13 +53,14 @@ end
+ #                              Initialization 
+ # ----------------------------------------------------------------------
+ """Add ABM to HELICS co-simulation and begin.
+-The function creates a federate for the ABM and connects to the co-simulation.
++The function creates federate instance for the ABM and connects to the co-simulation.
+ Creates model and builds agents.
+ Runs co-simulation.
+ 
+ :param input_dict: dictionary that holds information on model features, federate information, and agent dictionaries.
+ """
+ function cosimulation(input_dict::Dict)
++    println("got here 1")
+     # create list to store errors
+     error_list = []
+     # verify model_properties contains necessary keys
+@@ -67,6 +68,7 @@ function cosimulation(input_dict::Dict)
+         push!(error_list, "model_properties not found in input.")
+     end
+     necessary_inputs = ["features", "input_features", "update_interval"]
++    println("got here 2")
+     for input in necessary_inputs
+         if input ∉ keys(input_dict["model_properties"])
+         push!(error_list, "input $(input) not in model_properties")
+@@ -90,6 +92,7 @@ function cosimulation(input_dict::Dict)
+         push!(error_list, "the following error was raised while creating the ABM federate: $(sprint(showerror, e))")
+         return error_list
+     end
++    println("got here 3")
+ 
+ 
+     #create model space
+@@ -98,6 +101,7 @@ function cosimulation(input_dict::Dict)
+     else
+         space_dict = input_dict["space_dict"]
+     end
++    println("got here 4")
+     space, space_name = create_space(space_dict)
+ 
+     model = Nothing
+@@ -113,6 +117,7 @@ function cosimulation(input_dict::Dict)
+         destroy_federate(model_properties["fed"])
+         return Nothing, Nothing, error_list
+     end
++    println("got here 5")
+ 
+     try
+         adata, mdata = run!(model, dummystep, model_step, input_dict["max_time"]; adata=[collect_agent_data], mdata=[collect_model_data])
+@@ -132,7 +137,8 @@ function cosimulation(input_dict::Dict)
+         destroy_federate(model_properties["fed"])
+         return Nothing, Nothing, error_list
+     end
+-    
++    println("got here 6")
++
+ end
+ 
+ """
+@@ -148,7 +154,7 @@ Create the ABM and add all the agents with the inputted feature dictionaries.
+ """
+ function initialize_abm(agent_features, space_name, space, model_properties,  num_agents, seed)
+     # create an ABM, including general model properties
+-    # TODO: incorporate additional schedulers to arrage order of steps
++    # TODO: incorporate additional schedulers to arrange order of steps
+     properties = model_properties
+     rng = Random.Xoshiro(seed)
+ 
+@@ -222,7 +228,7 @@ function create_space(space_dict)
+         return GridSpace(space_dict["dim_length"]), "GridSpace"
+     end
+ 
+-    # create continous space
++    # create continuous space
+     if space_dict["space_type"] == "ContinuousSpace"
+         if "dim" ∉ keys(space_dict) || "extend" ∉ keys(space_dict)
+             throw(ErrorException("invalid inputs for ContinuousSpace. dim and extend required."))
+@@ -245,20 +251,27 @@ Raises error if any features have been deleted.
+ :param agent: agent object
+ :param model: ABM object
+ """
+- function agent_step(agent, model)
++function agent_step(agent, model)
+     # run agent step and update agent properties
+     pre_agent_features = keys(agent.properties)
+     agent.properties = model.properties["agent_step"]( agent.properties, model.properties["input_features"], model.properties["granted_time"])
+-    diff = [x for x ∈ pre_agent_features if x ∉ keys(agent.properties)]
++#     diff = [x for x ∈ pre_agent_features if x ∉ keys(agent.properties) ]
++    diff =[]
++    for x ∈ pre_agent_features
++       if x ∉ keys(agent.properties)
++            diff.append(x)
++       end
++    end
+     if length(diff) > 0
+         throw(ErrorException("features $diff deleted by step function"))
+     end
+ end
+ 
++
+ """
+ Steps through a co-simulation step. Using the model's HELICS federate, grabs inputs and subscriptions,
+ takes a model step (either runs the function passed in by the user or, if no function found, iterates
+-through all agents), aggregates and publishes all values, and reuests a time update.
++through all agents), aggregates and publishes all values, and requests a time update.
+ 
+ :param model: ABM object
+ """
+@@ -353,7 +366,7 @@ Creates a helics federate object.
+ 
+ :param fed_name: name of federate
+ :param input_names: dictionary of inputs {input_name -> input type}
+-:param input_publication_src: dicitonary of publications for each input {input_name -> [publication names]}
++:param input_publication_src: dictionary of publications for each input {input_name -> [publication names]}
+ :param input_handling_option: dictionary of handling option for each input {input_name -> handling_option}
+ :param sub_names: dictionary of subscriptions {sub_name -> sub_type}
+ :param pub_names: dictionary of publications {pub_name -> pub_type}
+@@ -409,7 +422,7 @@ function create_federate(fed_name::String, input_names::Dict{Any, Any}, input_pu
+         # register inputs {input_name: input_object}
+         for name in keys(input_names)
+             x = translate_helics_data_type(input_names[name])
+-            inp = HELICS.helicsFederateRegisterInput(fed, name, s)
++            inp = HELICS.helicsFederateRegisterInput(fed, name, x)
+             input_dict[name] = inp
+         end
+ 
+diff --git a/prototype/src/ABM.py b/prototype/src/ABM.py
+index ebf5e6e..2146c88 100644
+--- a/prototype/src/ABM.py
++++ b/prototype/src/ABM.py
+@@ -5,7 +5,6 @@ from julia.api import Julia
+ jl = Julia(compiled_modules=False)
+ 
+ from julia import Main
+-
+ from Federate import Federate
+ 
+ sys_path, tail = os.path.split(__file__)
+diff --git a/prototype/src/Agent.py b/prototype/src/Agent.py
+index 0c55a6f..13d4958 100644
+--- a/prototype/src/Agent.py
++++ b/prototype/src/Agent.py
+@@ -1,7 +1,6 @@
+-
+ import logging
+-from Federate import Federate
+ 
++from Federate import Federate
+ 
+ logger = logging.getLogger("agent")
+ logger.addHandler(logging.StreamHandler())
+@@ -10,7 +9,8 @@ logger.setLevel(logging.DEBUG)
+ 
+ class Agent(Federate):
+     """
+-    A class used to model an agent or entity in the MESP co-simulation. The Agent class inherits from the Federate class.
++    A class used to model an agent or entity in the MESP co-simulation.
++    The Agent class inherits from the Federate class.
+     
+     Attributes:
+     group_name (str): name for agent group (optional)
+@@ -20,6 +20,7 @@ class Agent(Federate):
+     set_group: assign agent to a group
+ 
+     """
++
+     def __init__(self, name: str, step_function, group_name=""):
+         super().__init__(name, step_function)
+         self.group_name: str = group_name  # name of agent group
+diff --git a/prototype/src/EH_functions.py b/prototype/src/EH_functions.py
+index 8a0e0a9..0711b68 100644
+--- a/prototype/src/EH_functions.py
++++ b/prototype/src/EH_functions.py
+@@ -1,18 +1,16 @@
+-import helics as h
+ import logging
+-import sys
+-import time
+ import random
+ 
+ logger = logging.getLogger(__name__)
+ logger.addHandler(logging.StreamHandler())
+ logger.setLevel(logging.DEBUG)
+ 
+-#---------------------------------------------------------------------------------------
++
++# ---------------------------------------------------------------------------------------
+ #                                   Agent functions
+-#---------------------------------------------------------------------------------------
+-def agent_step(input_dict:dict[str,], feature_dict:dict[str,], timestep:float)->dict[str,]:
+-    '''
++# ---------------------------------------------------------------------------------------
++def agent_step(input_dict: dict, feature_dict: dict, timestep: float) -> dict:
++    """
+     Agent updates electric load, gas load, and aqi at each timestep. At specific time steps,
+     Agent re-evaluates whether to switch to electric heating.
+     Input dictionary or feature dictionary must include the following features:
+@@ -23,9 +21,9 @@ def agent_step(input_dict:dict[str,], feature_dict:dict[str,], timestep:float)->
+     :param feature_dict: features specific to agent.
+     :param timestep: current timestep in simulation.
+     :return: feature_dict: updated feature_dict that reflects electric heating decision.
+-    '''
++    """
+     # grab necessary features
+-    features = {"decision_timesteps":None, "electric": None, "load_profile":None, "annual_gas":None}
++    features = {"decision_timesteps": None, "electric": None, "load_profile": None, "annual_gas": None}
+     for feat in features.keys():
+         if feat in input_dict.keys():
+             features[feat] = input_dict[feat]
+@@ -36,30 +34,33 @@ def agent_step(input_dict:dict[str,], feature_dict:dict[str,], timestep:float)->
+ 
+     # update electric load based on whether agent has switched to electric
+     if features["electric"]:
+-        feature_dict.update({"electric_load": features["load_profile"][0][timestep] + features["load_profile"][1][timestep]})
++        feature_dict.update(
++            {"electric_load": features["load_profile"][0][timestep] + features["load_profile"][1][timestep]})
+     else:
+-        feature_dict.update({"electric_load": features["load_profile"][0][timestep]})
++        feature_dict.update(
++            {"electric_load": features["load_profile"][0][timestep]})
+ 
+     # update gas load based on whether agent has switched to electric
+     if features["electric"]:
+-        feature_dict.update({"gas_load": features["load_profile"][0][timestep] / sum(features["load_profile"][0]) *
+-                                        features["annual_gas"]})
++        feature_dict.update(
++            {"gas_load": (features["load_profile"][0][timestep] / sum(features["load_profile"][0]) *
++                          features["annual_gas"])})
+     else:
+-        feature_dict.update({"gas_load": (features["load_profile"][0][timestep] + features["load_profile"][1][timestep])
+-                                         / (sum(features["load_profile"][0]) + sum(features["load_profile"][1])) *
+-                                         features["annual_gas"]})
+-
++        feature_dict.update(
++            {"gas_load": ((features["load_profile"][0][timestep] + features["load_profile"][1][timestep]) /
++                          (sum(features["load_profile"][0]) + sum(features["load_profile"][1])) *
++                          features["annual_gas"])})
+ 
+     # at certain timesteps, re-evaluate decision to switch
+     if timestep in features["decision_timesteps"]:
+-        feature_dict = agent_decision_maker(input_dict,feature_dict,timestep)
++        feature_dict = agent_decision_maker(input_dict, feature_dict, timestep)
+     # TODO: input random seed
+ 
+     return feature_dict
+ 
+ 
+-def agent_decision_maker(input_dict:dict[str,], feature_dict:dict[str,], timestep:float)->dict[str,]:
+-    '''
++def agent_decision_maker(input_dict: dict, feature_dict: dict, timestep: float) -> dict:
++    """
+     Agent (building) decides whether to switch to electric heating.
+     Input dictionary or feature dictionary must include the following features:
+      - {"load_profile": list[[base_load], [delta]]} -- hourly electricity use (base use, electrified features)
+@@ -79,11 +80,11 @@ def agent_decision_maker(input_dict:dict[str,], feature_dict:dict[str,], timeste
+     :param feature_dict: features specific to the agent that will be used / updated by the decision maker.
+     :param timestep: current timestep in the simulation
+     :return feature_dict: updated feature_dict that reflects electric heating decision.
+-    '''
++    """
+ 
+     # grab necessary features
+-    features = {"gas_price":None, "electrification_cost":None, "electricity_price":None, "income":None,
+-                "preference":None, "electric": None, "load_profile":None, "annual_gas":None}
++    features = {"gas_price": None, "electrification_cost": None, "electricity_price": None, "income": None,
++                "preference": None, "electric": None, "load_profile": None, "annual_gas": None}
+     for feat in features.keys():
+         if feat in input_dict.keys():
+             features[feat] = input_dict[feat]
+@@ -93,9 +94,9 @@ def agent_decision_maker(input_dict:dict[str,], feature_dict:dict[str,], timeste
+             return feature_dict
+ 
+     # state decision variables
+-    MIN_INCOME = 60000 #minimum income required to switch
+-    MONTH_OUTLOOK = random.randint(48,120) #how far out in the future the agent budgets (4-10 years)
+-    AGENT_INCENTIVE = random.randint(0,10)*100 + features["preference"]
++    MIN_INCOME = 60000  # minimum income required to switch
++    MONTH_OUTLOOK = random.randint(48, 120)  # how far out in the future the agent budgets (4-10 years)
++    AGENT_INCENTIVE = random.randint(0, 10) * 100 + features["preference"]
+ 
+     # if agent has already switched, they cannot switch back
+     if feature_dict["electric"]:
+@@ -107,21 +108,22 @@ def agent_decision_maker(input_dict:dict[str,], feature_dict:dict[str,], timeste
+ 
+     # calculate the average monthly electric cost if they were to switch, accounting for the cost of switching over
+     month_total_load = 0
+-    for i in range(int(timestep)-365, int(timestep)+365):
++    for i in range(int(timestep) - 365, int(timestep) + 365):
+         if i < 0:
+             continue
+         if i > len(features["load_profile"][1]):
+             continue
+         month_total_load += features["load_profile"][1][i]  # use load delta instead of base load
+     # avg_load_profile = average hourly cost of additional features if features are electrified
+-    avg_electric_load= month_total_load / 730
+-    monthly_electric = 730*features["electricity_price"]*avg_electric_load+features["electrification_cost"]/MONTH_OUTLOOK
++    avg_electric_load = month_total_load / 730
++    monthly_electric = 730 * features["electricity_price"] * avg_electric_load + features[
++        "electrification_cost"] / MONTH_OUTLOOK
+ 
+     # calculate the average monthly gas cost, given their gas use and the current price of gas
+     # TODO: only sum over the current year of electricity, not all the data
+     # avg_gas_load = average hourly cost of additional features if features are run on gas
+     avg_gas_load = avg_electric_load * features["annual_gas"] / sum(features["load_profile"][1])
+-    monthly_gas = 730*features["gas_price"]*avg_gas_load
++    monthly_gas = 730 * features["gas_price"] * avg_gas_load
+ 
+     # calculate difference between electric and gas
+     # TODO ticket MSPSA-100 figure out how to calculate gas usage
+@@ -133,20 +135,21 @@ def agent_decision_maker(input_dict:dict[str,], feature_dict:dict[str,], timeste
+ 
+     return feature_dict
+ 
+-#---------------------------------------------------------------------------------------
++
++# ---------------------------------------------------------------------------------------
+ #                                   Policy functions
+-#---------------------------------------------------------------------------------------
+-def policy_step(input_dict,feature_dict, timestep) -> dict[str,]:
+-    '''
++# ---------------------------------------------------------------------------------------
++def policy_step(input_dict, feature_dict, timestep) -> dict:
++    """
+     Calls the specific policy methods for this timestep.
+ 
+-    :param input_features: input features from the cosimulation.
++    :param input_dict: input features from the cosimulation.
+     :param feature_dict: features specific to the policy object.
+     :param timestep: current timestep in the cosimulation.
+     :return: updated feature dictionary
+-    '''
++    """
+     # grab necessary features
+-    features = {"timesteps":None}
++    features = {"timesteps": None}
+     for feat in features.keys():
+         if feat in input_dict.keys():
+             features[feat] = input_dict[feat]
+@@ -167,8 +170,9 @@ def policy_step(input_dict,feature_dict, timestep) -> dict[str,]:
+ 
+     return feature_dict
+ 
++
+ def adjust_electric_hourly_price(input_dict, feature_dict, timestep):
+-    '''
++    """
+     Policy that adjusts the hourly price of electricity based on the amount of houses that have switched
+     from natural gas and the desired amount of electric houses at this time step.
+     Price cannot go below absolute minimum.
+@@ -177,12 +181,12 @@ def adjust_electric_hourly_price(input_dict, feature_dict, timestep):
+     :param feature_dict: stores features for the policy object {feature_name:feature_value}
+     :param timestep: timestep in the co-simulation
+     :return: updated feature dictionary containing new hourly price
+-    '''
++    """
+     raise NotImplementedError
+ 
+ 
+ def adjust_electric_switching_price(input_dict, feature_dict, timestep):
+-    '''
++    """
+     Policy that adjusts the cost of switching to electric heating based on the amount of houses that have
+     switched from natural gas and the desired amount of electric houses at this time step.
+     Price cannot go below absolute minimum.
+@@ -191,12 +195,10 @@ def adjust_electric_switching_price(input_dict, feature_dict, timestep):
+     :param feature_dict: stores features for the policy object {feature_name: feature_value}
+     :param timestep: timestep in the co-simulation
+     :return: updates feature dictionary containing the new cost of switching
+-    '''
++    """
+     raise NotImplementedError
+ 
+ 
+-def test_func(input_dict, feature_dict,granted_time):
++def test_func(input_dict, feature_dict, granted_time):
+     print("in test func")
+     return feature_dict
+-
+-
+diff --git a/prototype/src/Federate.py b/prototype/src/Federate.py
+index 2c383a4..496de36 100644
+--- a/prototype/src/Federate.py
++++ b/prototype/src/Federate.py
+@@ -1,5 +1,6 @@
+-import helics as h
+ import logging
++
++import helics as h
+ import numpy as np
+ 
+ logger = logging.getLogger(__name__)
+@@ -7,7 +8,7 @@ logger.addHandler(logging.StreamHandler())
+ logger.setLevel(logging.ERROR)
+ 
+ 
+-def send_output_message_dict(feat_dict: dict[str, ], simulation_step: int, time_step: float) -> str:
++def send_output_message_dict(feat_dict: dict, simulation_step: int, time_step: float) -> str:
+     """
+     Takes in dictionary and converts to message string.
+ 
+@@ -28,7 +29,7 @@ def send_output_message_dict(feat_dict: dict[str, ], simulation_step: int, time_
+         # create string from dict element and append to dict_str
+         for elem in feat_dict.keys():
+             temp_str = f"{elem}: {feat_dict.get(elem)}\n"
+-            dict_str = dict_str+temp_str
++            dict_str = dict_str + temp_str
+         return dict_str
+     except AttributeError:
+         return ""
+@@ -43,11 +44,11 @@ class Federate:
+     Attributes:
+     name (str): name of federate object
+     step_function (function): python step function that the federate will execute at each time step in the co-simulation
+-    features (dict[str,]): dictionary of all federate-specific features and their values
+-    input_features (dict[str,]): dictionary of all inputs received from another federate in the simulation
++    features (dict): dictionary of all federate-specific features and their values
++    input_features (dict): dictionary of all inputs received from another federate in the simulation
+     fed (HelicsFederate): HELICS federate object used to connect to the co-simulation broker
+     error_list (list[str]): holds errors initializing the federate and running the co-simulation
+-    fed_flags (dict): dictionary of customizeable flags for the HelicsFederate object
++    fed_flags (dict): dictionary of customizable flags for the HelicsFederate object
+     ep_dict (dict): stores HelicsFederate object endpoints
+     input_dict (dict): stores HelicsFederate object inputs
+     pub_dict (dict): stores HelicsFederate object publications
+@@ -60,12 +61,12 @@ class Federate:
+     get_step_function: get federate step function
+     get_features: get dictionary of federate features
+     get_feature_value: get value of a federate feature
+-    get_feature_keys: get lsit of federate features
++    get_feature_keys: get list of federate features
+     get_input_features: get features received from elsewhere in co-simulation
+     get_feature_dict_by_names: get sub-dictionary of federate features
+     get_fed_flags: get fed flag dictionary
+     set_step_function: set the federate step function
+-    add_feature: add federeate feature
++    add_feature: add federate feature
+     add_input_feature: add federate input feature
+     __set_default_flags: set default federate flags
+     set_fed_flag: add a fed flag
+@@ -83,29 +84,27 @@ class Federate:
+     get_endpoint: return endpoint
+     get_input: return input
+     get_input_data_type: return data type for an input
+-    build_helics_federate: create a HelicsFederate object and add all connections (publications, susbcriptions, endpoints, inputs)
++    build_helics_federate: create a HelicsFederate object and add all connections (publications, subscriptions, endpoints, inputs)
+     cosimulation: run a co-simulation
+     destroy_federate: destroy a HelicsFederate and free its space
+     """
++
+     def __init__(self, name: str, step_function):
+         # TODO: agent/grid/logger/policy should be able to instantiate fed_flags & other features from init
+         self.name: str = name.capitalize()  # name of object and federate
+         self.step_function = step_function  # decision-making function at each step
+-        self.features: dict[str, ] = {}  # dictionary of all object features and their values
+-        self.input_features: dict[str, ] = {}  # dict of all features to receive from other co-simulation objects
++        self.features: dict = {}  # dictionary of all object features and their values
++        self.input_features: dict = {}  # dict of all features to receive from other co-simulation objects
+         self.fed = None  # helics federate associated with  object
+-        self.error_list: list[str] = []  # holds initialization errors
+-        self.fed_flags: dict[str, ] = {}  # dictionary of customizable flags for the federate object
++        self.error_list: list = []  # holds initialization errors
++        self.fed_flags: dict = {}  # dictionary of customizable flags for the federate object
+         self.fed_flags = self.__set_default_flags()
+         self.ep_dict = {}
+         self.input_dict = {}
+-        self.pub_dict= {}
++        self.pub_dict = {}
+         self.sub_dict = {}
+         self.input_publication_dict = {}
+         self.input_handling_option_dict = {}
+-        
+-        
+-
+ 
+     # getter methods
+     def get_name(self) -> str:
+@@ -143,7 +142,7 @@ class Federate:
+             return None
+         return self.features.get(feat)
+ 
+-    def get_feature_keys(self) -> list[str]:
++    def get_feature_keys(self) -> list:
+         """
+         get list of federate feature keys
+         
+@@ -151,7 +150,7 @@ class Federate:
+         """
+         return list(self.features.keys())
+ 
+-    def get_input_features(self) -> dict[str,]:
++    def get_input_features(self) -> dict:
+         """
+         get input features to federate
+         
+@@ -159,7 +158,7 @@ class Federate:
+         """
+         return self.input_features
+ 
+-    def get_feature_dict_by_names(self, names: list[str]) -> dict:
++    def get_feature_dict_by_names(self, names: list) -> dict:
+         """
+         Returns a dict containing the features whose names are in the inputted list.
+ 
+@@ -189,7 +188,7 @@ class Federate:
+         """
+         self.step_function = func
+ 
+-    def add_feature(self, feat: dict[str,]):
++    def add_feature(self, feat: dict):
+         """
+         Add feature(s) to object feature dictionary.
+         
+@@ -199,7 +198,7 @@ class Federate:
+         self.features.update(feat)
+         return self.features
+ 
+-    def add_input_feature(self, input_dict: dict[str, ]) -> dict[str,]:
++    def add_input_feature(self, input_dict: dict) -> dict:
+         """
+         Add feature(s) to object input dictionary.
+ 
+@@ -210,7 +209,7 @@ class Federate:
+         return self.input_features
+ 
+     # federate methods
+-    def __set_default_flags(self) -> dict[str,]:
++    def __set_default_flags(self) -> dict:
+         """
+         Sets default federate flags for co-simulation.
+         
+@@ -225,7 +224,7 @@ class Federate:
+         self.set_fed_flag(flag_dict)
+         return self.fed_flags
+ 
+-    def set_fed_flag(self, feats: dict[str,]):
++    def set_fed_flag(self, feats: dict):
+         """
+         Sets values for the flags to be passed to the federate object.
+ 
+@@ -355,13 +354,13 @@ class Federate:
+             return None
+         else:
+             return self.fed
+-        
++
+     def add_subscription(self, subscription_name: str, subscription_type: str):
+         """ 
+         Add subscription information to be later added to the HELICS federate.
+         
+         :param subscription_name: name of subscription
+-        :param subscription_type: type of input to subscription
++        :param subscription_type: type of input to subscribe
+         :return: subscription dictionary
+         """
+         # add subscription to dictionary: {subscription_name: subscription_type}
+@@ -389,7 +388,7 @@ class Federate:
+         Add publication information to later be added to the HELICS federate.
+         
+         :param publication_name: name of publication
+-        :param publciation_type: type of data to publish
++        :param publication_type: type of data to publish
+         :return: publication dictionary
+         """
+         # add publication to dictionary {publication name: helics type}
+@@ -444,7 +443,7 @@ class Federate:
+         Add input information to later be added to Helics federate.
+         
+         :param input_name: name of input
+-        :param inpt_type: type of data received by input
++        :param input_type: type of data to be received
+         :return: input dictionary
+         """
+         # add input to dictionary: {input_name: helics_type}
+@@ -566,9 +565,8 @@ class Federate:
+         """
+         if inp_name not in self.input_dict.keys():
+             return None
+-        input = self.input_dict[inp_name]
+-        return input
+-    
++        return self.input_dict[inp_name]
++
+     def build_helics_federate(self):
+         """ 
+         Build a HELICS federate object and add all connections.
+@@ -576,7 +574,7 @@ class Federate:
+         :return: HELICS federate with all connections
+         """
+         self.fed = self.create_federate()
+-        
++
+         for sub_name in self.sub_dict:
+             try:
+                 sub = h.helicsFederateRegisterSubscription(self.fed, sub_name)
+@@ -584,8 +582,8 @@ class Federate:
+                 self.sub_dict.update({sub_name: sub})
+             except AttributeError as e:
+                 self.error_list.append(f"Error registering subscription {sub_name}: "
+-                                        f"{str(e)}")
+-        
++                                       f"{str(e)}")
++
+         for pub_name in self.pub_dict:
+             try:
+                 helics_type = h.HelicsDataType(h.helicsGetDataType(self.pub_dict[pub_name]))
+@@ -593,8 +591,8 @@ class Federate:
+                 self.pub_dict.update({pub_name: pub})
+             except AttributeError as e:
+                 self.error_list.append(f"Error registering publication {pub_name}: "
+-                                        f"{str(e)}")
+-            
++                                       f"{str(e)}")
++
+         for inp_name in self.input_dict:
+             try:
+                 helics_type = h.HelicsDataType(h.helicsGetDataType(self.input_dict[inp_name]))
+@@ -602,8 +600,8 @@ class Federate:
+                 self.input_dict.update({inp_name: inp})
+             except AttributeError as e:
+                 self.error_list.append(f"Error registering input {inp_name}: "
+-                                        f"{str(e)}")
+-            
++                                       f"{str(e)}")
++
+         for inp_pub in self.input_publication_dict:
+             inp = self.get_input(inp_pub)
+             for pub_src in self.input_publication_dict[inp_pub]:
+@@ -611,8 +609,8 @@ class Federate:
+                     h.helicsInputAddTarget(inp, pub_src)
+                 except AttributeError as e:
+                     self.error_list.append(f"Error registering publication to input: "
+-                                             f"{str(e)}")
+-            
++                                           f"{str(e)}")
++
+         for inp_handling in self.input_handling_option_dict:
+             inp = self.get_input(inp_handling)
+             try:
+@@ -629,14 +627,14 @@ class Federate:
+                 self.ep_dict.update({ep_name: ep})
+             except AttributeError as e:
+                 self.error_list.append(f"Error registering endpoint {ep_name}: "
+-                                    f"{str(e)}")
+-        
++                                       f"{str(e)}")
++
+         return
+ 
+     def cosimulation(self, max_time: float):
+         """
+         Create federate object, run helics co-simulation.
+-        During the co-simulation, a federate:
++        During the co-simulation, federate:
+             1) unpacks values from other federates in co-simulation
+             2) runs step function and updates feature dictionary
+             3) publishes features from publication dictionary
+@@ -666,7 +664,6 @@ class Federate:
+ 
+             # runs step function
+             self.features = self.step_function(self.input_features, self.features, granted_time)
+-            
+ 
+             # publish values
+             for pub in self.pub_dict.keys():
+@@ -694,7 +691,7 @@ class Federate:
+     def destroy_federate(self):
+         """
+         As part of ending a HELICS co-simulation it is good housekeeping to
+-        formally destroy a federate. Doing so informs the rest of the
++        formally destroy federate instance. Doing so informs the rest of the
+         federation that it is no longer a part of the co-simulation and they
+         should proceed without it (if applicable). Generally this is done
+         when the co-simulation is complete and all federates end execution
+@@ -710,5 +707,3 @@ class Federate:
+         h.helicsFederateFree(self.fed)
+         # h.helicsCloseLibrary()
+         logger.debug(f'Federate {h.helicsFederateGetName(self.fed)} finalized')
+-
+-   
+\ No newline at end of file
+diff --git a/prototype/src/Grid.py b/prototype/src/Grid.py
+index 1afea30..82870f7 100644
+--- a/prototype/src/Grid.py
++++ b/prototype/src/Grid.py
+@@ -1,17 +1,16 @@
+-import helics as h
+ import logging
+-import sys
+-import time
++
+ from Federate import Federate
+ 
+ logger = logging.getLogger(__name__)
+ logger.addHandler(logging.StreamHandler())
+ logger.setLevel(logging.DEBUG)
+ 
++
+ class Grid(Federate):
+     """
+     A class used to model a grid component in a MESP co-simulation. The Grid class inherits from the Federate class.
+     """
+-    def __init__(self, name:str,  step_function=None):
+-        super().__init__(name,step_function)
+ 
++    def __init__(self, name: str, step_function=None):
++        super().__init__(name, step_function)
+diff --git a/prototype/src/Logger.py b/prototype/src/Logger.py
+index dd52710..3d099d5 100644
+--- a/prototype/src/Logger.py
++++ b/prototype/src/Logger.py
+@@ -1,20 +1,21 @@
+-import os.path
+-import sys
+-import helics as h
+-import logging
+ import csv
++import logging
+ import math
++import os.path
++
++import helics as h
++
++from ABM import ABM
+ from Agent import Agent
+ from Federate import Federate
+ from Grid import Grid
+-from ABM import ABM
+ 
+ log = logging.getLogger(__name__)
+ log.addHandler(logging.StreamHandler())
+ log.setLevel(logging.DEBUG)
+ 
+ 
+-def parse_input_message_dict(msg: str) -> dict[str, ]:
++def parse_input_message_dict(msg: str) -> dict:
+     """
+     Parses an input message into a dictionary.
+ 
+@@ -67,12 +68,13 @@ class Logger(Federate):
+     co_simulation: run the HELICS co-simulation, tracking and storing information from the other federates throughout
+     unpack_message_update_table: parse a message from a HelicsFederate and store it in an output table
+     """
++
+     def __init__(self, run_name=None):
+         self.name = "Logger"  # name of logger agent and federate
+         super().__init__(self.name, step_function=None)
+-        self.agent_output_features: list[str] = []
+-        self.grid_output_features: list[str] = []
+-        self.abm_output_features: list[str] = []
++        self.agent_output_features: list = []
++        self.grid_output_features: list = []
++        self.abm_output_features: list = []
+         self.run_name = run_name  # name of current run, where data will be stored
+         self.logger_agent_list = []
+         self.logger_grid_list = []
+@@ -92,9 +94,9 @@ class Logger(Federate):
+         """
+         Return agent on agent list with given name. Return none if no agent is found 
+         
+-        :param obj_list: list to search for object
+-        :param obj_name: object to search for
+-        :return: object with inputted name
++        :param obj_list: list to search
++        :param obj_name: name to search for
++        :return: object with object name
+         """
+         for obj in obj_list:
+             if obj.get_name() == obj_name:
+@@ -102,23 +104,23 @@ class Logger(Federate):
+ 
+         return None
+ 
+-    def get_agent_output_features(self) -> list[str]:
++    def get_agent_output_features(self) -> list:
+         """
+         Get list of agent features to track
+         
+         :return: list of features to output from simulation
+         """
+         return self.agent_output_features
+-    
+-    def get_grid_output_features(self) -> list[str]:
++
++    def get_grid_output_features(self) -> list:
+         """
+         Get list of grid features to track
+         
+         :return: list of features to output from simulation
+         """
+         return self.grid_output_features
+-    
+-    def get_abm_output_features(self) -> list[str]:
++
++    def get_abm_output_features(self) -> list:
+         """
+         Get list of abm features to track
+         
+@@ -136,7 +138,7 @@ class Logger(Federate):
+         """
+         self.agent_output_features.append(feat)
+         return self.agent_output_features
+-    
++
+     def add_grid_output_feature(self, feat: str):
+         """
+         Adds a feature to the list of features that will be output to the simulation.
+@@ -146,7 +148,7 @@ class Logger(Federate):
+         """
+         self.grid_output_features.append(feat)
+         return self.grid_output_features
+-    
++
+     def add_abm_output_feature(self, feat: str):
+         """
+         Adds a feature to the list of features that will be output to the simulation.
+@@ -156,24 +158,24 @@ class Logger(Federate):
+         """
+         self.abm_output_features.append(feat)
+         return self.abm_output_features
+-    
+-    def add_agent(self, agent:Agent):
++
++    def add_agent(self, agent: Agent):
+         """
+         Add agent to list of agents to track.
+ 
+         :param agent: agent to track
+         """
+         self.logger_agent_list.append(agent)
+-        
+-    def add_grid(self, grid:Grid):
++
++    def add_grid(self, grid: Grid):
+         """
+         Add grid to list of grids to track.
+ 
+         :param grid: grid to track
+         """
+         self.logger_grid_list.append(grid)
+-        
+-    def add_abm(self, abm:ABM):
++
++    def add_abm(self, abm: ABM):
+         """ 
+         Add abm to track
+         
+@@ -182,7 +184,7 @@ class Logger(Federate):
+         self.logger_abm = abm
+ 
+     # simulation methods
+-    def prepare_output_files(self, agent_list: list[Agent], grid_list: list[Grid] = None, abm=None):
++    def prepare_output_files(self, agent_list: list, grid_list: list = None, abm=None):
+         """
+         Create file structure for output files. Each output feature will have its own
+         csv file to store each agent's output at each time step.
+@@ -195,16 +197,17 @@ class Logger(Federate):
+         # TODO: create more efficient structure for storing output data (not array / csv file)
+         if self.run_name is None:
+             self.run_name = "unnamed_run"
+-        if not os.path.exists(f"{os.path.join(sys.path[0],'output_files')}"):
+-            os.mkdir(f"{os.path.join(sys.path[0],'output_files')}")
+-        if not os.path.exists(f"{os.path.join(sys.path[0],'output_files', self.run_name)}"):
+-            os.mkdir(f"{os.path.join(sys.path[0],'output_files', self.run_name)}")
+-        if not os.path.exists(f"{os.path.join(sys.path[0],'output_files', self.run_name, 'Agents')}"):
+-            os.mkdir(f"{os.path.join(sys.path[0],'output_files', self.run_name, 'Agents')}")
+-        if not os.path.exists(f"{os.path.join(sys.path[0],'output_files', self.run_name, 'Grids')}"):
+-            os.mkdir(f"{os.path.join(sys.path[0],'output_files', self.run_name, 'Grids')}")
+-        if not os.path.exists(f"{os.path.join(sys.path[0],'output_files', self.run_name, 'ABM')}"):
+-            os.mkdir(f"{os.path.join(sys.path[0],'output_files', self.run_name, 'ABM')}")
++        out_path = f"{os.path.join(os.getcwd(), 'output_files')}"
++        if not os.path.exists(out_path):
++            os.mkdir(out_path)
++        if not os.path.exists(f"{os.path.join(out_path, self.run_name)}"):
++            os.mkdir(f"{os.path.join(out_path, self.run_name)}")
++        if not os.path.exists(f"{os.path.join(out_path, self.run_name, 'Agents')}"):
++            os.mkdir(f"{os.path.join(out_path, self.run_name, 'Agents')}")
++        if not os.path.exists(f"{os.path.join(out_path, self.run_name, 'Grids')}"):
++            os.mkdir(f"{os.path.join(out_path, self.run_name, 'Grids')}")
++        if not os.path.exists(f"{os.path.join(out_path, self.run_name, 'ABM')}"):
++            os.mkdir(f"{os.path.join(out_path, self.run_name, 'ABM')}")
+ 
+         self.logger_agent_list = agent_list
+         if grid_list is not None:
+@@ -214,11 +217,11 @@ class Logger(Federate):
+     def cosimulation(self, max_time: float):
+         """
+         Create federate object, run helics co-simulation.
+-        During the co-simulation, a federate:
++        During the co-simulation, a federate instance:
+             1) unpacks values from other federates in co-simulation
+             2) updates data table with new values
+             3) step forward in time
+-        After the co-simulation, a federate outputs the data to csv files in a folder named run_name
++        After the co-simulation, a federate instance outputs the data to csv files in a folder named run_name
+ 
+         :param max_time: maximum allowed time in the co-simulation
+         """
+@@ -227,18 +230,18 @@ class Logger(Federate):
+         num_steps = math.ceil(max_time * self.fed_flags["period"])
+         agent_data_tables = {}
+         for feature in self.agent_output_features:
+-            table = [[-1000 for i in range(0, len(self.logger_agent_list))] for j in range(0, num_steps)]
++            table = [[-1000 for i in range(0, len(self.logger_agent_list))] for _ in range(0, num_steps)]
+             agent_data_tables.update({feature: table})
+         grid_data_tables = {}
+         for feature in self.grid_output_features:
+-            table = [[-1000 for i in range(0, len(self.logger_grid_list))] for j in range(0, num_steps)]
+-            grid_data_tables.update({feature: table}) 
++            table = [[-1000 for i in range(0, len(self.logger_grid_list))] for _ in range(0, num_steps)]
++            grid_data_tables.update({feature: table})
+         abm_data_tables = {}
+         for feature in self.abm_output_features:
+-            table = [[-1000] for j in range(0, num_steps)]
+-            abm_data_tables.update({feature: table}) 
++            table = [[-1000] for _ in range(0, num_steps)]
++            abm_data_tables.update({feature: table})
+ 
+-        # begin cosimulation
++            # begin cosimulation
+         self.build_helics_federate()
+         self.logger_agent_list.sort(key=Agent.get_name)
+         self.logger_grid_list.sort(key=Grid.get_name)
+@@ -259,35 +262,38 @@ class Logger(Federate):
+             # unpack messages from abm
+             if self.logger_abm is not None:
+                 abm_data_tables = self.unpack_message_update_table(self.ep_dict["abm_input"],
+-                                                                    self.abm_output_features,
+-                                                                    abm_data_tables, [self.logger_abm], max_time)
+-                    
++                                                                   self.abm_output_features,
++                                                                   abm_data_tables, [self.logger_abm], max_time)
+ 
+             # increment to next step in co-simulation
+             simulation_step += 1
+             requested_time = granted_time + update_interval
+-            granted_time = h.helicsFederateRequestTime(self.fed, requested_time)    
++            granted_time = h.helicsFederateRequestTime(self.fed, requested_time)
+             log.debug(f'{h.helicsFederateGetName(self.fed)} granted time {granted_time}')
+ 
+         # after simulation destroy federate
+         super().destroy_federate()
+ 
++        out_path = f"{os.path.join(os.getcwd(), 'output_files')}"
+         # write out to csv file
+         for feature in self.agent_output_features:
+-            with open(f"{os.path.join(sys.path[0],'output_files', self.run_name, 'Agents', feature+'.csv')}", "w", newline="") as f:
++            with open(f"{os.path.join(out_path, self.run_name, 'Agents', feature + '.csv')}", "w",
++                      newline="") as f:
+                 writer = csv.writer(f)
+                 writer.writerows(agent_data_tables[feature])
+         for feature in self.grid_output_features:
+-            with open(f"{os.path.join(sys.path[0],'output_files', self.run_name, 'Grids', feature+'.csv')}", "w", newline="") as f:
++            with open(f"{os.path.join(out_path, self.run_name, 'Grids', feature + '.csv')}", "w",
++                      newline="") as f:
+                 writer = csv.writer(f)
+                 writer.writerows(grid_data_tables[feature])
+         for feature in self.abm_output_features:
+-            with open(f"{os.path.join(sys.path[0],'output_files', self.run_name, 'ABM', feature+'.csv')}", "w", newline="") as f:
++            with open(f"{os.path.join(out_path, self.run_name, 'ABM', feature + '.csv')}", "w",
++                      newline="") as f:
+                 writer = csv.writer(f)
+                 writer.writerows(abm_data_tables[feature])
+ 
+     def unpack_message_update_table(self, input_ep: h.HelicsEndpoint, output_features: list, data_tables: dict,
+-                                    obj_list: list, max_time: int):
++                                    obj_list: list, max_time: float):
+         """ 
+         Checks an endpoint for a message, grabs the message as a string and converts it into a dictionary,
+         adds the information to the table that stores the output for the object.
+@@ -321,5 +327,5 @@ class Logger(Federate):
+                     continue
+                 data_table[row][col] = msg_dict[key]
+                 data_tables[key] = data_table
+-                
++
+         return data_tables
+diff --git a/prototype/src/Policy.py b/prototype/src/Policy.py
+index 680599a..49af543 100644
+--- a/prototype/src/Policy.py
++++ b/prototype/src/Policy.py
+@@ -1,21 +1,16 @@
+-import helics as h
+ import logging
+-import sys
+-import time
++
+ from Federate import Federate
+-from EH_functions import policy_step
+ 
+ logger = logging.getLogger(__name__)
+ logger.addHandler(logging.StreamHandler())
+ logger.setLevel(logging.DEBUG)
+ 
++
+ class Policy(Federate):
+     """
+     A class used to model a policy in a MESP co-simulation. The Policy class inherits from the Federate class.
+     """
+-    def __init__(self, name:str,step_function = None):
+-        super().__init__(name, step_function)
+-
+-
+-
+ 
++    def __init__(self, name: str, step_function=None):
++        super().__init__(name, step_function)
+diff --git a/prototype/src/Simulation.py b/prototype/src/Simulation.py
+index 40f7aec..9585a07 100644
+--- a/prototype/src/Simulation.py
++++ b/prototype/src/Simulation.py
+@@ -1,15 +1,16 @@
+-import helics as h
+ import logging
+ import multiprocessing as mp
++import os
+ import threading
++
++import helics as h
++
++from ABM import ABM
+ from Agent import Agent
+-from Logger import Logger
++from Federate import Federate
+ from Grid import Grid
++from Logger import Logger
+ from Policy import Policy
+-from Federate import Federate
+-from ABM import ABM
+-import sys
+-import os
+ 
+ logger = logging.getLogger(__name__)
+ logger.addHandler(logging.StreamHandler())
+@@ -20,7 +21,7 @@ class Simulation:
+     """
+     A class used to create, manage, and execute a MESP co-simulation. The simulation class stores all
+     simulation components and creates the connections between each HelicsFederate in the co-simulation.
+-    
++
+     Attributes:
+     num_components (int): number of components that will partake in the co-simulation
+     run_name (str): name of the co-simulation run
+@@ -33,7 +34,7 @@ class Simulation:
+     broker (HelicsBroker): HELICS broker that all federates will connect to during the co-simulation
+     address (str): broker address
+     logger (Logger): Logger object associated with the co-simulation
+-    
++
+     Methods:
+     get_agent_list: get list of co-simulation agents
+     get_grid_list: get list of co-simulation grids
+@@ -57,7 +58,7 @@ class Simulation:
+     set_publication_subscription: create a pub-sub connection between two components
+     set_publication_input: create a pub-input connection between two components
+     set_multi_input_handling: set the multi-input-handling option for an input
+-    set_publication_to_multiple_subscriptions: create a publication that multiple federates subcsribe to
++    set_publication_to_multiple_subscriptions: create a publication that multiple federates subscribe to
+     set_publication_to_multiple_inputs: create a publication that multiple inputs subscribe to
+     set_multiple_publication_to_input: create an input with multiple publications attached
+     abm_is_connected: determine whether an abm is connected to the co-simulation
+@@ -65,40 +66,41 @@ class Simulation:
+     __create_broker: create HelicsBroker for the co-simulation
+     begin_cosimulation: begin the co-simulation, spinning off a process for each component
+     """
++
+     def __init__(self, num_components, run_name: str = "unnamed_run"):
+-        self.agent_list: list[Agent] = []  # list of agents
+-        self.grid_list: list[Grid] = []  # list of grid objects
+-        self.policy_list: list[Policy] = [] # list of policy objects
++        self.agent_list: list = []  # list of agents
++        self.grid_list: list = []  # list of grid objects
++        self.policy_list: list = []  # list of policy objects
+         self.num_components = num_components
+         self.abm = None
+         self.run_name = run_name
+         self.type_list = [Federate, Agent, Grid, Logger, Policy, ABM]
+-        self.error_list: list[str] = []  # invalid publications/inputs, un-added federates
++        self.error_list: list = []  # invalid publications/inputs, un-added federates
+         self.broker = None
+         self.address = self.__create_broker()
+         self.logger: Logger = self.__set_logger()  # logger object
+ 
+     # agent methods
+-    def get_agent_list(self) -> list[Agent]:
++    def get_agent_list(self) -> list:
+         """
+         Get list of agents in co-simulation.
+-        
++
+         :return: list of agents in the co-simulation
+         """
+         return self.agent_list
+ 
+-    def get_grid_list(self) -> list[Grid]:
++    def get_grid_list(self) -> list:
+         """
+         Get list of grids in co-simulation.
+-        
++
+         :return: list of grids in the co-simulation
+         """
+         return self.grid_list
+-    
+-    def get_policy_list(self) -> list[Grid]:
++
++    def get_policy_list(self) -> list:
+         """
+         Get list of policies in co-simulation.
+-        
++
+         :return: list of policies in the co-simulation
+         """
+         return self.policy_list
+@@ -106,7 +108,7 @@ class Simulation:
+     def get_agent(self, agent_name: str):
+         """
+         Return agent on agent list with given name. Return none if no agent is found
+-        
++
+         :param agent_name: name of agent to return
+         :return: agent with inputted name
+         """
+@@ -119,7 +121,7 @@ class Simulation:
+     def get_grid(self, grid_name: str):
+         """
+         Return grid on grid list with given name. Return none if no grid is found
+-        
++
+         :param grid_name: name of agent to return
+         :return: grid with inputted name
+         """
+@@ -128,11 +130,11 @@ class Simulation:
+                 return grid
+ 
+         return None
+-    
++
+     def get_policy(self, pol_name: str):
+         """
+         Return policy on policy list with given name. Return none if no policy is found
+-        
++
+         :param pol_name: name of policy to return
+         :return: policy with inputted name
+         """
+@@ -142,10 +144,10 @@ class Simulation:
+ 
+         return None
+ 
+-    def get_agents_from_group(self, group_name: str) -> list[Agent]:
++    def get_agents_from_group(self, group_name: str) -> list:
+         """
+-        Get list of agents in the same agent group. 
+-        
++        Get list of agents in the same agent group.
++
+         :param group_name: group to collect agents from
+         :return: agents in the inputted group
+         """
+@@ -155,13 +157,13 @@ class Simulation:
+                 agents.append(ag)
+         return agents
+ 
+-    def get_agents_with_feature_value(self, feature: str, value) -> list[Agent]:
++    def get_agents_with_feature_value(self, feature: str, value) -> list:
+         """
+         Returns list of all simulation agents who have the desired value for the inputted feature.
+ 
+         :param feature: feature name, which will be the key in the agent feature dictionary.
+         :param value: desired value for the above feature.
+-        :return: list of agents who possess the value ex) feature_dict = [...,{feature:value},...]
++        :return: list of agents who possess the value in feature_dict = [...,{feature:value},...]
+         """
+         agent_list = []
+         # check the feature list of every agent in the simulation
+@@ -182,7 +184,7 @@ class Simulation:
+         :return: newly created agent
+         """
+         try:
+-            if type(name) != str:
++            if not isinstance(name, str):
+                 raise AttributeError(f"agent name must be string (attempted name: {name}).")
+             if name == "":
+                 raise AttributeError(f"agent name cannot be empty string.")
+@@ -205,8 +207,8 @@ class Simulation:
+         if agent.get_name() in self.__get_names(self.agent_list):
+             raise AttributeError(f"Attempt to add two grids of the name {agent.get_name()} to the simulation.")
+         self.agent_list.append(agent)
+-        
+-    def create_grid(self, name: str, step_function=None) -> Agent:
++
++    def create_grid(self, name: str, step_function=None) -> Grid:
+         """
+          Creates grid object and adds to simulation.
+ 
+@@ -215,7 +217,7 @@ class Simulation:
+         :return: newly created grid
+         """
+         try:
+-            if type(name) != str:
++            if not isinstance(name, str):
+                 raise AttributeError(f"grid name must be string (attempted name: {name}).")
+             if name == "":
+                 raise AttributeError(f"grid name cannot be empty string.")
+@@ -232,14 +234,14 @@ class Simulation:
+         """
+         Add grid to the grid list
+ 
+-        :param agent: grid to add
++        :param grid: grid to add
+         """
+         # ensure every grid has a different name
+         if grid.get_name() in self.__get_names(self.grid_list):
+             raise AttributeError(f"Attempt to add two grids of the name {grid.get_name()} to the simulation.")
+         self.grid_list.append(grid)
+-        
+-    def create_policy(self, name: str, step_function=None) -> Agent:
++
++    def create_policy(self, name: str, step_function=None) -> Policy:
+         """
+          Creates policy object and adds to simulation.
+ 
+@@ -248,7 +250,7 @@ class Simulation:
+         :return: newly created policy
+         """
+         try:
+-            if type(name) != str:
++            if not isinstance(name, str):
+                 raise AttributeError(f"policy name must be string (attempted name: {name}).")
+             if name == "":
+                 raise AttributeError(f"policy name cannot be empty string.")
+@@ -277,7 +279,7 @@ class Simulation:
+         """
+         get list of names in a list of objects
+ 
+-        :param item_list: list of items (i.e. Agents, Grids, etc)
++        :param item_list: list of items (i.e. Agents, Grids, etc...)
+         :return list of names
+         """
+         name_list = []
+@@ -285,7 +287,7 @@ class Simulation:
+             name_list.append(item.get_name())
+         return name_list
+ 
+-    def create_agent_group_from_agent(self, base_agent: Agent, num_agents: int, group_name: str) -> list[Agent]:
++    def create_agent_group_from_agent(self, base_agent: Agent, num_agents: int, group_name: str) -> list:
+         """
+         Creates multiple agents with the same properties as the base agent.
+         New agents will be named after the base agent, with an enumeration ex. base_name_1
+@@ -299,7 +301,7 @@ class Simulation:
+         try:
+             if num_agents < 1:
+                 raise AttributeError(f" {base_agent.get_name()}: number of agents in group must be greater than 0.")
+-            if type(base_agent) != Agent:
++            if not isinstance(base_agent, Agent):
+                 raise AttributeError(f":  base_agent is not of type Agent (input is of type {type(base_agent)}).")
+             # set base agent into new group
+             base_agent.set_group(group_name)
+@@ -324,15 +326,15 @@ class Simulation:
+     def get_logger(self) -> Logger:
+         """
+         Get logger associated with simulation class.
+-        
++
+         :return: simulation Logger object
+         """
+         return self.logger
+ 
+     def __set_logger(self):
+-        """ 
++        """
+         Create a logger object and add to simulation.
+-        
++
+         :return: logger object
+         """
+         self.logger = Logger(run_name=self.run_name)
+@@ -345,16 +347,17 @@ class Simulation:
+     def create_abm(self, abm_name: str, agent_step_function=None, model_step_function=None):
+         """
+         Creates an ABM and assigns it to the simulation.
+-    
++
+         :param abm_name: name of the ABM (also the name of the ABM federate)
+-        :param step_function: agent_step function
++        :param agent_step_function:
++        :param model_step_function:
+         :return: newly created ABM
+         """
+         # TODO: can multiple ABMs exist in the simulation?
+         if self.abm is not None:
+             return
+-    
+-        self.abm = ABM(abm_name, agent_step_function = agent_step_function, model_step_function = model_step_function)
++
++        self.abm = ABM(abm_name, agent_step_function=agent_step_function, model_step_function=model_step_function)
+         self.abm.set_fed_flag({"core_init_string": f"--federates=1 --broker={self.address}"})
+         return self.abm
+ 
+@@ -385,13 +388,12 @@ class Simulation:
+                                    f"from source {source.get_name()}.")
+             return None
+ 
+-
+         # add to destination subscription
+         pub_name = f'{source.get_name()}/{feature_name}'
+         sub = destination.get_subscription(pub_name)
+         if sub is None:
+             destination.add_subscription(pub_name, feature_type)
+-            
++
+         # add to destination input features
+         destination.add_input_feature({pub_name: None})
+ 
+@@ -439,7 +441,7 @@ class Simulation:
+             data_type = destination.get_input_data_type(feature_name)
+             if data_type != feature_type:
+                 self.error_list.append(f"Attempt to add publication of type {feature_type} "
+-                                           f"to input of type {data_type}.")
++                                       f"to input of type {data_type}.")
+                 return None
+ 
+         # add to source publication
+@@ -481,14 +483,14 @@ class Simulation:
+         inp = obj.get_input(feature)
+         if inp is None:
+             self.error_list.append(f" Attempt to configure handling option on nonexistent input {feature}."
+-                                     " Create input before configuring handle option.")
++                                   " Create input before configuring handle option.")
+             return None
+ 
+         # update handle option
+         obj.set_handling_option(feature, option_val)
+         return inp
+ 
+-    def set_publication_to_multiple_subscriptions(self, source: Federate, destinations: list[Federate],
++    def set_publication_to_multiple_subscriptions(self, source: Federate, destinations: list,
+                                                   feature_name, feature_type):
+         """
+         Sets every object in the destinations list to subscribe to the source publication.
+@@ -502,7 +504,7 @@ class Simulation:
+             self.set_publication_subscription(
+                 source, dst, feature_name, feature_type)
+ 
+-    def set_publication_to_multiple_inputs(self, source: Federate, destinations: list[Federate],
++    def set_publication_to_multiple_inputs(self, source: Federate, destinations: list,
+                                            feature_name, feature_type):
+         """
+         Sets every object in the destinations list to track the source publication.
+@@ -516,7 +518,7 @@ class Simulation:
+         for dst in destinations:
+             self.set_publication_input(source, dst, feature_name, feature_type)
+ 
+-    def set_multiple_publication_to_input(self, sources: list[Federate], destination: Federate,
++    def set_multiple_publication_to_input(self, sources: list, destination: Federate,
+                                           feature_name, feature_type):
+         """
+         Sets the destination to track publication from every source in source list.
+@@ -534,7 +536,7 @@ class Simulation:
+     def abm_is_connected(self) -> int:
+         """
+         Determine whether an abm is connected to the simulation.
+-        
++
+         return: 1 if abm is connected to simulation, 0 otherwise
+         """
+         if self.abm is not None:
+@@ -562,7 +564,7 @@ class Simulation:
+         for grid in self.grid_list:
+             if len(grid.error_list) > 0:
+                 error_list = error_list + [f"Grid {grid.get_name()} - {x}" for x in grid.error_list]
+-                
++
+         # loop through all policy objects
+         for pol in self.policy_list:
+             if len(pol.error_list) > 0:
+@@ -576,8 +578,8 @@ class Simulation:
+         # check logger
+         if len(self.logger.error_list) > 0:
+             error_list = error_list + [f"Logger {self.logger.get_name()} - {x}" for x in self.logger.error_list]
+-        return error_list  
+-    
++        return error_list
++
+     def __create_broker(self):
+         """
+         Create a HELICS Broker that each HelicsFederate will connect to in the co-simulation
+@@ -593,11 +595,10 @@ class Simulation:
+             return None
+         address = h.helicsBrokerGetAddress(self.broker)
+         return address
+-        
+-        
++
+     def begin_simulation(self, max_time: float, thread=True):
+         """
+-        Begins the simulation. Creates a federate for each agent, and calls the cosimulation method.
++        Begins the simulation. Creates federate instance for each agent, and calls the cosimulation method.
+ 
+         :param max_time: simulation end time
+         :param thread: True if using multithreading, false if using multiprocessing
+@@ -605,30 +606,30 @@ class Simulation:
+ 
+         # create endpoint dict for logger
+         self.logger.prepare_output_files(self.agent_list, self.grid_list, self.abm)
+-        
+ 
+         # add connections between logger and agent
+         self.logger.add_endpoint("agent_input")
+         for obj in self.agent_list:
+-            obj.add_endpoint(f"logger", "Logger/agent_input") 
+-        
+-        # add connections between logger and grid
++            obj.add_endpoint(f"logger", "Logger/agent_input")
++
++            # add connections between logger and grid
+         self.logger.add_endpoint("grid_input")
+         for obj in self.grid_list:
+-            obj.add_endpoint(f"logger", "Logger/grid_input") 
+-            
+-        # add connections between logger and policy
++            obj.add_endpoint(f"logger", "Logger/grid_input")
++
++            # add connections between logger and policy
+         self.logger.add_endpoint("policy_input")
+         for obj in self.policy_list:
+             obj.add_endpoint("logger", "Logger/policy_input")
+-            
++
+         # add connections between logger and abm
++        out_path = f"{os.path.join(os.getcwd(), 'output_files')}"
+         if self.abm is not None:
+             self.logger.add_abm(self.abm)
+             self.logger.add_endpoint("abm_input")
+             self.abm.add_endpoint(f"logger", "Logger/abm_input")
+-            self.abm.set_output_file_path(f"{os.path.join(sys.path[0], 'output_files', self.run_name, 'ABM')}")
+-            
++            self.abm.set_output_file_path(f"{os.path.join(out_path, self.run_name, 'ABM')}")
++
+         # verify no errors were generated in setup. If so, print and return
+         errors = self.__detect_errors()
+         if len(errors) > 0:
+@@ -639,7 +640,6 @@ class Simulation:
+ 
+         processes = []
+         threads = []
+-        
+ 
+         # create process for abm
+         if self.abm is not None:
+diff --git a/prototype/tests/unit/tests_logger.py b/prototype/tests/unit/tests_logger.py
+index 128d005..6bd83be 100644
+--- a/prototype/tests/unit/tests_logger.py
++++ b/prototype/tests/unit/tests_logger.py
+@@ -77,7 +77,7 @@ class MockCosimulation:
+     @staticmethod
+     def mock_read_csv(file_type, file_name):
+         data_table = []
+-        with open(f"{os.path.join(sys.path[0],'output_files','test_run',file_type,file_name+'.csv')}", 'r') as f:
++        with open(f"{os.path.join(os.getcwd(),'test_run',file_type,file_name+'.csv')}", 'r') as f:
+             reader = csv.reader(f)
+             for row in reader:
+                 data_table.append(row)
+@@ -203,21 +203,21 @@ class TestPrepareOutputFiles(unittest.TestCase):
+         # Make a directory with directory path given
+         self.logger.prepare_output_files(self.agent_list)
+ 
+-        made_directory = os.path.exists(f"{os.path.join(sys.path[0], 'output_files', self.logger.run_name)}")
++        made_directory = os.path.exists(f"{os.path.join(os.getcwd(), 'output_files', self.logger.run_name)}")
+         self.assertEqual(made_directory, True)
+ 
+     def test_os_path_not_exists_regular_run_agents(self):
+         # Make a directory with directory path given
+         self.logger.prepare_output_files(self.agent_list)
+ 
+-        made_directory = os.path.exists(f"{os.path.join(sys.path[0], 'output_files', self.logger.run_name, 'Agents')}")
++        made_directory = os.path.exists(f"{os.path.join(os.getcwd(), 'output_files', self.logger.run_name, 'Agents')}")
+         self.assertEqual(made_directory, True)
+ 
+     def test_os_path_not_exists_regular_run_grids(self):
+         # Make a directory with directory path given
+         self.logger.prepare_output_files([], self.grid_list)
+ 
+-        made_directory = os.path.exists(f"{os.path.join(sys.path[0], 'output_files', self.logger.run_name, 'Grids')}")
++        made_directory = os.path.exists(f"{os.path.join(os.getcwd(), 'output_files', self.logger.run_name, 'Grids')}")
+         self.assertEqual(made_directory, True)
+ 
+     def test_agent_list_logger_update(self):
