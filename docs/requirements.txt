@@ -1,7 +1,0 @@
-myst-parser
-recommonmark
-sphinx
-sphinx-autobuild
-sphinx-jsonschema
-sphinx_rtd_theme
-sphinxcontrib-bibtex
