@@ -37,7 +37,7 @@ class HELICSFederateGeneralConfig{
 }
 
 class HELICSFederateConfig{
-    
+    all_the_helics_federate_config_info_as_class_attributes
 }
 
 class Federation{

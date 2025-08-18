@@ -19,4 +19,6 @@ The `transfer topology` attribute holds a networkx object of the data transfer t
 The `federate_general_configs` is a list of `HELICSFederateGeneralConfig` objects. These objects hold all the HELICS configuration parameters that are unrelated to data transfers (_e.g._ federate name, core type, uninterruptible flag). These parameters apply to the federate as a whole and thus are defined independently. Elements are added to this list with the `add_federate_config()` API of this class.
 
 ### `federate_configs`
-The `federate_configs` parameter is a list of the `HELICSFederateConfig` objects used to define the federation. (This is distinct from the `Federate` class which is an implementation of a generic HELICS federate with minimal coding and knowledge of the HELICS APIs.) T
+The `federate_configs` parameter is a list of the `HELICSFederateConfig` objects used to define the federation. (This is distinct from the `Federate` class which is an implementation of a generic HELICS federate with minimal coding and knowledge of the HELICS APIs.) Using a CST writer instance, any number of `HELICSFederateConfig` objects can be converted into valid HELICS configuration dictionaries, stored either on disk as JSON files or in the metadata database, using the `create_helics_configs()` class method.
+
+## Creating 
