@@ -3,10 +3,6 @@ VENV := venv
 PYTHON := $(VENV)/bin/python3.12
 PIP := $(VENV)/bin/pip
 
-JULIA := julia
-JULIA_PROJECT_PATH := src/cosim_toolbox
-JULIA_TEST_SCRIPT := src/cosim_toolbox/tests/test_my_module.jl
-
 # default target, when make executed without arguments
 all: venv
 
@@ -20,11 +16,6 @@ $(VENV)/bin/activate:
 # venv is a shortcut target
 venv: $(VENV)/bin/activate
 
-# Target to create a Julia project environment and install dependencies
-venv-julia:
-	@echo "Creating Julia project environment and installing dependencies..."
-	@$(JULIA) --project=$(JULIA_PROJECT_PATH) -e 'using Pkg; Pkg.activate("."); Pkg.add("Test"); Pkg.add("Coverage");'
-
 run: venv
 	.$(PYTHON) app.py
 
@@ -33,9 +24,6 @@ clean:
 	@rm -rf $(VENV)
 	@rm -rf .coverage coverage.xml results.xml .pytest_cache htmlcov docs/_build
 	@find . -type f -name '*.pyc' -delete
-
-test-julia:
-	$(JULIA) --project=src/cosim_toolbox $(JULIA_TEST_SCRIPT)
 
 docs:
 	@echo "Creating HTML "read the docs" website"
@@ -54,4 +42,4 @@ integration-test:
 		src/cosim_toolbox/integration_tests/test_readerDB.py \
 		src/cosim_toolbox/integration_tests/test_dbConfigs.py
 
-.PHONY: all venv run clean docs test test-julia coverage integration-test
+.PHONY: all venv run clean docs test coverage integration-test

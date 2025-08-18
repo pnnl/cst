@@ -54,7 +54,8 @@ class DBConfigs:
         if self.client is not None:
             self.client.close()
 
-    def _open_file(self, file_path: str, mode: str = 'r') -> typing.IO:
+    @staticmethod
+    def _open_file(file_path: str, mode: str = 'r') -> None | typing.IO:
         """Utility function to open file with reasonable error handling.
 
         Args:
@@ -71,7 +72,8 @@ class DBConfigs:
         else:
             return fh
 
-    def _connect_to_database(self, uri: str = None, db: str = None) -> tuple:
+    @staticmethod
+    def _connect_to_database(uri: str = None, db: str = None) -> tuple:
         """Sets up connection to server port for mongodb
 
         Args:
@@ -179,8 +181,7 @@ class DBConfigs:
                     path = os.path.join(path, name)
                 fh = self._open_file(path, 'wb')
                 fh.write(db_file)
-            else:
-                return db_file
+            return db_file
 
     def remove_collection(self, collection_name: str):
         """

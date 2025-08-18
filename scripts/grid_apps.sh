@@ -1,14 +1,14 @@
 #!/bin/bash
 
-# Copyright (c) 2021-2023 Battelle Memorial Institute
+# Copyright (c) 2022-2025 Battelle Memorial Institute
 # file: grid_apps.sh
 
-if [[ -z ${INSTDIR} ]]; then
+if [[ -z ${LOCAL_ENV} ]]; then
   echo
   echo "To build a local environment:"
-  echo "  Edit cosim.env in the CoSimulation Toolbox directory"
+  echo "  Edit build.env in the scripts/build directory"
   echo "  Define LOCAL_ENV other than a blank in that file"
-  echo "  Run 'source cosim.env' in that same directory"
+  echo "  Run 'source build.env' in that same directory"
   echo "  Run './scripts/grid_apps.sh [git login] [git email]' in that same directory"
   echo
   exit
@@ -43,7 +43,7 @@ fi
 if [[ -z "$binary_flag" ]]; then
   # Ask the user if the flag is not set via command arguments
   while true; do
-      read -p "Do you wish to build the binaries? (Yy/Nn)" yn
+      read -r -p "Do you wish to build the binaries? (Yy/Nn)" yn
       case $yn in
           [Yy]* ) binaries="develop"; break;;
           [Nn]* ) binaries="copy"; break;;
@@ -205,4 +205,4 @@ fi
 
 # Compile all relevant executables
 cd "${BUILD_DIR}" || exit
-./build_c.sh $binaries
+./build_c.sh "$binaries"

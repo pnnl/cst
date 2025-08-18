@@ -62,10 +62,10 @@ def get_names(path: str) -> dict:
     if not success:
         print(f'{path} not found or file not supported; exiting')
     fmt = {
-        "house": {"from_fed": "gld_7", "fed": "", "keys": ["@list@/", "@list@"], "indices": []},
-        "meter": {"from_fed": "gld_7", "fed": "", "keys": ["@list@/", "@list@"], "indices": []},
-        "hvac": {"from_fed": "sub_7", "fed": "", "keys": ["@list@/", ""], "indices": []},
-        "billing": {"from_fed": "sub_7", "fed": "", "keys": ["@list@/", ""], "indices": []}
+        "house": {"from_fed": "gld_7", "fed": "", "keys": ["@list@", "@list@"], "indices": []},
+        "meter": {"from_fed": "gld_7", "fed": "", "keys": ["@list@", "@list@"], "indices": []},
+        "hvac": {"from_fed": "sub_7", "fed": "", "keys": ["@list@", ""], "indices": []},
+        "billing": {"from_fed": "sub_7", "fed": "", "keys": ["@list@", ""], "indices": []}
     }
     for name, attr in glm.house.items():
         if 'ELECTRIC' in attr["cooling_system_type"]:
@@ -132,7 +132,7 @@ def define_federation_list():
                         "keys": ["#", "localWeather"],
                         "indices": []}]}
 
-    federation = FederationConfig("MyTestScenario", "MyTestSchema", "MyTestFederation", with_docker)
+    federation = FederationConfig("MyLink2Scenario", "MyLink2Schema", "MyLink2Federation", with_docker)
     f1 = federation.add_federate_config(FederateConfig(names[0], period=15))
     f2 = federation.add_federate_config(FederateConfig(names[1], period=15))
     f3 = federation.add_federate_config(FederateConfig(names[2], period=15))
@@ -187,8 +187,8 @@ def define_federation_list():
     f4.config("prefix", "export WEATHER_CONFIG=test_weather.json")
     f4.config("command", f"python3 -c \"import tesp_support.weather.weather_agent as tesp;tesp.startWeatherAgent('weather.dat')\"")
 
-    federation.define_scenario("2023-12-07T15:31:27", "2023-12-08T15:31:27")
-    DockerRunner.define_sh("MyTestScenario")
+    federation.write_config("2023-12-07T15:31:27", "2023-12-08T15:31:27")
+    DockerRunner.define_sh("MyLink2Scenario")
 
 def define_federation():
     with_docker = False
@@ -204,36 +204,36 @@ def define_federation():
                      "indices": []
                      }]}
     house = {"src": {"from_fed": names[0],
-                     "keys": ["Fdr1_Houses_@@_hse_##/", "Fdr1_Houses_@@_hse_##"],
+                     "keys": ["Fdr1_Houses_@@_hse_##", "Fdr1_Houses_@@_hse_##"],
                      "indices": [["A", 1, 501], ["B", 1, 501], ["C", 1, 501]]},
              "des": [{"to_fed": names[1],
                       "from_fed": names[0],
-                      "keys": ["Fdr1_Houses_@@_hse_##/", ""],
+                      "keys": ["Fdr1_Houses_@@_hse_##", ""],
                       "indices": [["A", 1, 501], ["B", 1, 501], ["C", 1, 501]]
                       }]}
     meter = {"src": {"from_fed": names[0],
-                     "keys": ["Fdr1_Houses_@@_mhse_##/", "Fdr1_Houses_@@_mhse_##"],
+                     "keys": ["Fdr1_Houses_@@_mhse_##", "Fdr1_Houses_@@_mhse_##"],
                      "indices": [["A", 1, 501], ["B", 1, 501], ["C", 1, 501]]},
              "des": [{"to_fed": names[1],
                       "from_fed": names[0],
-                      "keys": ["Fdr1_Houses_@@_mhse_##/", ""],
+                      "keys": ["Fdr1_Houses_@@_mhse_##", ""],
                       "indices": [["A", 1, 501], ["B", 1, 501], ["C", 1, 501]]
                       }]}
     # substation
     hvac = {"src": {"from_fed": names[1],
-                    "keys": ["Fdr1_Houses_@@_hse_##/", ""],
+                    "keys": ["Fdr1_Houses_@@_hse_##", ""],
                     "indices": [["A", 1, 501], ["B", 1, 501], ["C", 1, 501]]},
             "des": [{"to_fed": names[0],
                      "from_fed": names[1],
-                     "keys": ["Fdr1_Houses_@@_hse_##/", "Fdr1_Houses_@@_hse_##"],
+                     "keys": ["Fdr1_Houses_@@_hse_##", "Fdr1_Houses_@@_hse_##"],
                      "indices": [["A", 1, 501], ["B", 1, 501], ["C", 1, 501]]
                      }]}
     billing = {"src": {"from_fed": names[1],
-                       "keys": ["Fdr1_Houses_@@_hse_##/Fdr1_Houses_@@_mhse_##/", ""],
+                       "keys": ["Fdr1_Houses_@@_hse_##/Fdr1_Houses_@@_mhse_##", ""],
                        "indices": [["A", 1, 501], ["B", 1, 501], ["C", 1, 501]]},
                "des": [{"to_fed": names[0],
                         "from_fed": names[1],
-                        "keys": ["Fdr1_Houses_@@_hse_##/Fdr1_Houses_@@_mhse_##/", "Fdr1_Houses_@@_mhse_##"],
+                        "keys": ["Fdr1_Houses_@@_hse_##/Fdr1_Houses_@@_mhse_##", "Fdr1_Houses_@@_mhse_##"],
                         "indices": [["A", 1, 501], ["B", 1, 501], ["C", 1, 501]]
                         }]}
     bid = {"src": {"from_fed": names[1],
@@ -266,7 +266,7 @@ def define_federation():
                         "keys": ["#", "localWeather"],
                         "indices": []}]}
 
-    federation = FederationConfig("MyTestScenario", "MyTestSchema", "MyTestFederation", with_docker)
+    federation = FederationConfig("MyLink2Scenario", "MyLink2Schema", "MyLink2Federation", with_docker)
     f1 = federation.add_federate_config(FederateConfig(names[0], period=15))
     f2 = federation.add_federate_config(FederateConfig(names[1], period=15))
     f3 = federation.add_federate_config(FederateConfig(names[2], period=15))
@@ -320,13 +320,13 @@ def define_federation():
     f4.config("prefix", "export WEATHER_CONFIG=test_weather.json")
     f4.config("command", f"python3 -c \"import tesp_support.weather.weather_agent as tesp;tesp.startWeatherAgent('weather.dat')\"")
 
-    federation.define_scenario("2023-12-07T15:31:27", "2023-12-08T15:31:27")
-    DockerRunner.define_sh("MyTestScenario")
+    federation.write_config("2023-12-07T15:31:27", "2023-12-08T15:31:27")
+    DockerRunner.define_sh("MyLink2Scenario")
 
 def define_match():
     with_docker = False
     names = ["gld_7", "sub_7", "pypower", "localWeather"]
-    federation = FederationConfig("MyTestScenario", "MyTestSchema", "MyTestFederation", with_docker)
+    federation = FederationConfig("MyLink2Scenario", "MyLink2Schema", "MyLink2Federation", with_docker)
 
     federation.add_federate_config(gridlabd_output.MyFederateMatch(names[0], period=15))
     federation.add_federate_config(substation_output.MyFederateMatch(names[1], period=15))
@@ -342,13 +342,13 @@ def define_match():
     missing = federation.check_subs()
     print("subs-> ", missing)
 
-    federation.define_scenario("2023-12-07T15:31:27", "2023-12-08T15:31:27")
-    DockerRunner.define_sh("MyTestScenario")
+    federation.write_config("2023-12-07T15:31:27", "2023-12-08T15:31:27")
+    DockerRunner.define_sh("MyLink2Scenario")
 
 def define_format():
     with_docker = False
     names = ["gld_7", "sub_7", "pypower", "localWeather"]
-    federation = FederationConfig("MyTestScenario", "MyTestSchema", "MyTestFederation", with_docker)
+    federation = FederationConfig("MyLink2Scenario", "MyLink2Schema", "MyLink2Federation", with_docker)
 
     federation.add_federate_config(gridlabd_output.MyFederate(names[0], period=15))
     federation.add_federate_config(substation_output.MyFederate(names[1], period=15))
@@ -361,8 +361,8 @@ def define_format():
     missing = federation.check_subs()
     print("subs-> ", missing)
 
-    federation.define_scenario("2023-12-07T15:31:27", "2023-12-08T15:31:27")
-    DockerRunner.define_sh("MyTestScenario")
+    federation.write_config("2023-12-07T15:31:27", "2023-12-08T15:31:27")
+    DockerRunner.define_sh("MyLink2Scenario")
 
 if __name__ == "__main__":
     # define_format()

@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Copyright (C) 2021-2023 Battelle Memorial Institute
+# file: stamp.sh
+
 if [[ -z ${INSTDIR} ]]; then
   echo "Edit cosim.env in the CoSimulation Toolbox directory"
   echo "Run 'source cosim.env' in that same directory"

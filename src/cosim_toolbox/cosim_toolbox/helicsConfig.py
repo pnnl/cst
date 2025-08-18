@@ -60,7 +60,7 @@ class HelicsFormatter:
                         key = key.replace("##", str(j))
                         obj = obj.replace("##", str(j))
                         var = self.diction.copy()
-                        var["key"] = global_fed + key + self.name
+                        var["key"] = global_fed + key + self.seperator + self.name
                         if len(obj) > 0:
                             var["info"] = {"object": obj, "property": self.name}
                         variables.append(var)
@@ -71,7 +71,7 @@ class HelicsFormatter:
                     key = key.replace("@list@", k)
                     obj = obj.replace("@list@", k)
                     var = self.diction.copy()
-                    var["key"] = global_fed + key + self.name
+                    var["key"] = global_fed + key + self.seperator + self.name
                     if len(obj) > 0:
                         var["info"] = {"object": obj, "property": self.name}
                     variables.append(var)
@@ -85,7 +85,7 @@ class HelicsFormatter:
                     if k[1]:
                         var["key"] = global_fed + key
                     else:
-                        var["key"] = global_fed + key + self.name
+                        var["key"] = global_fed + key + self.seperator + self.name
                     if len(obj) > 0:
                         var["info"] = {"object": obj, "property": self.name}
                     variables.append(var)
@@ -100,7 +100,7 @@ class HelicsFormatter:
                         if k[2]:
                             var["key"] = global_fed + key
                         else:
-                            var["key"] = global_fed + key + self.name
+                            var["key"] = global_fed + key + self.seperator + self.name
                         if len(obj) > 0:
                             var["info"] = {"object": obj, "property": self.name}
                         variables.append(var)

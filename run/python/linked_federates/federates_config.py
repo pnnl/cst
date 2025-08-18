@@ -38,7 +38,7 @@ def define_federation():
                  "indices": []}]
     }
 
-    federation = FederationConfig("MyTestScenario", "MyTestSchema", "MyTestFederation", with_docker)
+    federation = FederationConfig("MyLinkScenario", "MyLinkSchema", "MyLinkFederation", with_docker)
     f1 = federation.add_federate_config(FederateConfig(names[0], period=30))
     f2 = federation.add_federate_config(FederateConfig(names[1], period=60))
 
@@ -73,7 +73,7 @@ def define_federation():
     f1.config("command", f"python3 simple_federate.py {f1.name} {federation.scenario_name}")
     f2.config("command", f"python3 simple_federate2.py {f2.name} {federation.scenario_name}")
 
-    federation.define_scenario("2023-12-07T15:31:27", "2023-12-08T15:31:27")
+    federation.write_config("2023-12-07T15:31:27", "2023-12-08T15:31:27")
 
     if with_docker:
         DockerRunner.define_yaml(federation.scenario_name)
@@ -89,7 +89,7 @@ def define_format():
     remote = False
     with_docker = False
     names = ["Battery", "EVehicle"]
-    federation = fed.FederationConfig("MyTestScenario", "MyTestSchema", "MyTestFederation", with_docker)
+    federation = fed.FederationConfig("MyLinkScenario", "MyLinkSchema", "MyLinkFederation", with_docker)
 
     f1 = federation.add_federate_config(simple_config.MyFederate(names[0], period=30))
     f2 = federation.add_federate_config(simple_config2.MyFederate(names[1], period=60))
@@ -101,7 +101,7 @@ def define_format():
     f1.config("command", f"python3 simple_federate.py {f1.name} {federation.scenario_name}")
     f2.config("command", f"python3 simple_federate2.py {f2.name} {federation.scenario_name}")
 
-    federation.define_scenario("2023-12-07T15:31:27", "2023-12-08T15:31:27")
+    federation.write_config("2023-12-07T15:31:27", "2023-12-08T15:31:27")
 
     if with_docker:
         DockerRunner.define_yaml(federation.scenario_name)
