@@ -1,51 +1,14 @@
-## Overview
-This is the internal PNNL repository for the development of Copper (to be renamed before public release). 
+# CoSim Toolbox Overview
 
-Copper is a layer in the E-COMP software stack about HELICS that is intended to provide easy ways to install simulation tools needed by E-COMP, configure the tools for use in a particular use case analysis, run the analysis and post-process the data. Though Copper is use-case agnostic and is being developed by E-COMP, it is expected to be useful by all users of HELICS and will be distributed as a stand-alone product apart from any particular E-COMP-related use cases and analysis.
+CoSim Toolbox (CST) is a suite of Dockerized tools and libraries that make it easier to build, run, and analyze HELICS-based co-simulations. Some of these applications are web-based services (_e.g._ databases for storing configuration and simulation data) and some of these are simulation tools themselves. Additionally, CST provides a Python HELICS federate class that makes writing a HELICs federate easier and provides access to some CST functionality with no additional coding.
 
-## Set up development environment
+# Major Features
+CoSim Toolbox has the following key features:
 
-### Prerequisite
-You will need to install the following tools:
-* python 3.10.x
-* make
-* docker
+- **Cross-platform installation via Docker** - All CST-supported tools and libraries are avaiable via Docker images. This allows HELICS co-simulations to be run on Linux, macOS, and Windows and makes for an easy installation. Additionally, any simulator with HELICS support can join a CST co-simulation, even if it is not able to be run in Docker.
+- **Co-Simulation Time-Series Data Logging** - CST has a configurable data logger that collects any user-specified data provided via HELICS into a database. This makes data collection from the co-simulation simple and through the use of CST-provided APIs, make accessing the logged data possible by any user that can reach the database without having to learn a query language.
+- **Co-Simulation Configuration Management** - To assist to managing the configuration of the federates and the co-simulation in general, CST provides a centralized database and a data model for storing and retrieving configuration information. Federates that use the CST federate class are able to retrieve their HELICS configuration directly from the database. CST also provides APIs for reading and writing to this database without learning a database query language.
+- **Co-Simulation Monitoring** - CST has integrated a tool that allows monitoring of the data collected by the logging functionality during the running of the co-simulation.
+- **CST federate class** - CST provides a Python Federate class that is both a template for how a basic HELICS federate operates as well as incorporating the the HELICS API calls so that for basic federates, no knowledge of HELICS APIs are required to write the federate. And being class-based, users are able to sub-class and overload any of the methods to provide specific functionality not implemented in the basic Federate class.
 
-For Windows users, it is recommended to use Windows Subsystem for Linux (WSL).
-
-Prerequisite installation for MacOS, Windows, and Linux is out of scope of this instruction. If you have specific question, please contact the team. 
-
-### Create venv
-This is to create Python virtual environment dedicated to the local development. The environment will have required dependencies installed automatically.
-
-Before creating venv, if you are working with VPN or inside PNNL network, you need to set proxy for pip to work via the following command:
-```
-export HTTPS_PROXY=http://proxy01.pnl.gov:3128
-export https_proxy=http://proxy01.pnl.gov:3128
-```
-
-Create venv with requirements installed:
-```commandline
-make venv
-source venv/bin/activate    # Activate the virtual environment
-```
-`source venv/bin/activate` activates this virtual environment, so that Python commands you run in your shell use this environment's Python interpreter and installed packages, rather than your system-wide Python installation.
-
-After activating venv, command like `python` and `pip` will be using this virtual environment.
-
-Note that `make` can be run without activating venv since it internally uses the virtual environment automatically.
-
-IDE, PyCharm or VSC, can also utilize this virtual environment to set up the development environment with all required package dependencies installed.
-
-### Run unit tests
-```commandline
-make test
-```
-The unit test run will also generate the code coverage report in both XML and HTML. XML report will be used by the pipeline.
-
-
-### Clean up
-The clean-up will delete venv, *.pyc, and coverage files and folders.
-```commandline
-make clean
-```
+The time-series data logging, configuration management, and monitoring are considered "persistent services" that can be installed and run locally on the user's computer via Docker or can be installed in a centralized location for a group or team to use collectively. The former can be useful for initial development or where data is meant to be kept private. The later is useful when working on a team with centralized computation infrastructure for both data-sharing or co-simulation performance reasons.
