@@ -17,8 +17,8 @@ ENV BUILD_DIR=$CST_HOME/build
 # COMPILE exports
 ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
 ENV PYHELICS_INSTALL=$INSTDIR
-ENV GLPATH=$INSTDIR/lib/gridlabd:$INSTDIR/share/gridlabd
-ENV CPLUS_INCLUDE_PATH=/usr/include/hdf5/serial:$INSTDIR/include
+#ENV GLPATH=$INSTDIR/lib/gridlabd:$INSTDIR/share/gridlabd
+#ENV CPLUS_INCLUDE_PATH=/usr/include/hdf5/serial:$INSTDIR/include
 #ENV FNCS_INCLUDE_DIR=$INSTDIR/include
 #ENV FNCS_LIBRARY=$INSTDIR/lib
 ENV LD_LIBRARY_PATH=$INSTDIR/lib
@@ -32,7 +32,7 @@ ENV PATH=$JAVA_HOME:$INSTDIR/bin:$CST_HOME/.local/bin:$PATH
 #ENV PATH=$PATH:$TESPDIR/scripts/helpers
 
 # PSST exports
-ENV PSST_SOLVER=cbc
+ENV PSST_SOLVER=ipopt
 # 'PSST_SOLVER path' -- one of "cbc", "ipopt", "/ibm/cplex/bin/x86-64_linux/cplexamp"
 ENV PSST_WARNING=ignore
 # 'PSST_WARNING action' -- one of "error", "ignore", "always", "default", "module", or "once"
@@ -71,9 +71,9 @@ RUN echo "===== Building CoSimulation Toolbox - Build =====" && \
   echo "++++++++++++++ HELICS" && \
   git clone -b main https://github.com/GMLC-TDC/HELICS-src && \
   ${BUILD_DIR}/patch.sh HELICS-src HELICS-src && \
-  echo "++++++++++++++ GRIDLAB" && \
-  git clone -b develop https://github.com/gridlab-d/gridlab-d.git && \
-  ${BUILD_DIR}/patch.sh gridlab-d gridlab-d && \
+#  echo "++++++++++++++ GRIDLAB" && \
+#  git clone -b develop https://github.com/gridlab-d/gridlab-d.git && \
+#  ${BUILD_DIR}/patch.sh gridlab-d gridlab-d && \
 #  echo "++++++++++++++ ENERGYPLUS" && \
 #  git clone -b fncs_9.3.0 https://github.com/FNCS/EnergyPlus.git && \
 #  ${BUILD_DIR}/patch.sh EnergyPlus EnergyPlus && \
@@ -83,8 +83,8 @@ RUN echo "===== Building CoSimulation Toolbox - Build =====" && \
 #  echo "++++++++++++++ HELICS-NS-3" && \
 #  git clone -b main https://github.com/GMLC-TDC/helics-ns3 ns-3-dev/contrib/helics && \
 #  ${BUILD_DIR}/patch.sh ns-3-dev/contrib/helics helics-ns3 && \
-  echo "++++++++++++++ KLU SOLVER" && \
-  unzip -q ${BUILD_DIR}/KLU_DLL.zip -d ./KLU_DLL && \
+#  echo "++++++++++++++ KLU SOLVER" && \
+#  unzip -q ${BUILD_DIR}/KLU_DLL.zip -d ./KLU_DLL && \
   echo "++++++++++++++  Compiling and Installing grid software is starting!  ++++++++++++++" && \
   cd ${BUILD_DIR} || exit && \
 #  echo "Compiling and Installing FNCS..." && \
@@ -93,16 +93,16 @@ RUN echo "===== Building CoSimulation Toolbox - Build =====" && \
 #  ./fncs_j_b.sh clean > fncs_j.log 2>&1 && \
   echo "Compiling and Installing HELICS..." && \
   ./HELICS-src_b.sh clean > HELICS-src.log 2>&1 && \
-  echo "Compiling and Installing KLU..." && \
-  ./KLU_DLL_b.sh clean > KLU_DLL.log 2>&1 && \
-  echo "Compiling and Installing Gridlabd..." && \
-  ./gridlab-d_b.sh clean > gridlab-d.log 2>&1 && \
+#  echo "Compiling and Installing KLU..." && \
+#  ./KLU_DLL_b.sh clean > KLU_DLL.log 2>&1 && \
+#  echo "Compiling and Installing Gridlabd..." && \
+#  ./gridlab-d_b.sh clean > gridlab-d.log 2>&1 && \
 #  echo "Compiling and Installing EnergyPlus..." && \
 #  ./EnergyPlus_b.sh clean > EnergyPlus.log 2>&1 && \
 #  echo "Compiling and Installing NS-3..." && \
 #  ./ns-3-dev_b.sh clean > ns-3-dev.log 2>&1 && \
-#  echo "Compiling and Installing Ipopt with ASL and Mumps..." && \
-#  ./ipopt_b.sh clean > ipopt.log 2>&1 && \
+  echo "Compiling and Installing Ipopt with ASL and Mumps..." && \
+  ./ipopt_b.sh clean > ipopt.log 2>&1 && \
 #  echo "Compiling and Installing TESP EnergyPlus agents and TMY converter..." && \
 #  ./tesp_b.sh clean > tesp.log 2>&1 && \
   echo "Remove all repositories..." && \
@@ -111,12 +111,12 @@ RUN echo "===== Building CoSimulation Toolbox - Build =====" && \
 #  rm -r AMES-V5.0 && \
 #  rm -r fncs && \
   rm -r HELICS-src && \
-  rm -r KLU_DLL && \
-  rm -r gridlab-d && \
+#  rm -r KLU_DLL && \
+#  rm -r gridlab-d && \
 #  rm -r EnergyPlus && \
 #  rm -r ns-3-dev && \
-#  rm -r Ipopt && \
-#  rm -r ThirdParty-ASL && \
-#  rm -r ThirdParty-Mumps && \
+  rm -r Ipopt && \
+  rm -r ThirdParty-ASL && \
+  rm -r ThirdParty-Mumps && \
   echo "${CST_USER}" | sudo -S ldconfig && \
   ${BUILD_DIR}/versions.sh

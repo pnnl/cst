@@ -400,7 +400,7 @@ def mytest1():
     db.add_collection(env.cst_scenarios)
     db.add_collection(env.cst_federations)
 
-    t1 = HelicsMsg("Battery", 30)
+    t1 = HelicsMsg("Battery", period=30)
     t1.config("core_type", "zmq")
     t1.config("log_level", "warning")
     t1.config("period", 60)
@@ -449,7 +449,7 @@ def mytest2():
     db.add_collection(env.cst_scenarios)
     db.add_collection(env.cst_federations)
 
-    t1 = HelicsMsg("Battery", 30)
+    t1 = HelicsMsg("Battery", period=30)
     t1.config("core_type", "zmq")
     t1.config("log_level", "warning")
     t1.config("period", 60)
@@ -465,7 +465,7 @@ def mytest2():
         "HELICS_config": t1.write_json()
     }
 
-    t2 = HelicsMsg("EVehicle", 30)
+    t2 = HelicsMsg("EVehicle", period=30)
     t2.config("core_type", "zmq")
     t2.config("log_level", "warning")
     t2.config("period", 60)

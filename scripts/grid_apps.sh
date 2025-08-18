@@ -14,7 +14,7 @@ if [[ -z ${INSTDIR} ]]; then
   exit
 fi
 
-# You should get familiar with the command line to have good success with CoSimulation Toolboxbox
+# You should get familiar with the command line to have good success with CoSimulation Toolbox
 # As such, you may want to run in remote shh terminal.
 # Here is to how to install and configured ssh server
 #   sudo apt-get -y install openssh-server
@@ -89,7 +89,7 @@ coinor-libcbc-dev \
 coinor-libipopt-dev \
 liblapack-dev \
 libmetis-dev \
-python3-venv \
+python3.12-venv \
 python3-pip \
 python3-tk \
 python3-pil.imagetk

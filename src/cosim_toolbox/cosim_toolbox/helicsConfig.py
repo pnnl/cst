@@ -13,48 +13,227 @@ from enum import Enum
 import json
 
 
+class Group(Enum):
+    SUB = 'sub'
+    PUB = 'pub'
+    INP = 'inp'
+    EPT = 'ept'
+
 class Collect(Enum):
     YES = 'yes'
     NO = 'no'
     MAYBE = 'maybe'
 
+class HelicsFormatter:
+    def __init__(self, name: str, key_format: dict, group: Group):
+        self.seperator = "/"
+        self.name = name
+        self.fed = key_format["from_fed"]
+        if "output_fed" in key_format:
+             self.fed = key_format["to_fed"]
+        self.format = False
+        self.group = group
+        self.vars = []
+        if "keys" in key_format:
+            self.keys = key_format["keys"]
+            self.indices = key_format["indices"]
+            self.format = True
+        self.diction = None
 
-class HelicsMsg():
+    def format_variables(self):
+        variables = []
+        if self.format:
+            global_fed = ""
+            if self.group == Group.SUB:
+                global_fed = self.fed + self.seperator
+            if "global" in self.diction:
+                if self.diction["global"]:
+                    global_fed = self.fed + self.seperator
+            # Multiples
+            if "@@" in self.keys[0] and "##" in self.keys[0]:
+                for k in self.indices:
+                    for j in range(k[1], k[2]):
+                        key:str = self.keys[0]
+                        obj:str = self.keys[1]
+                        key = key.replace("@@", k[0])
+                        obj = obj.replace("@@", k[0])
+                        key = key.replace("##", str(j))
+                        obj = obj.replace("##", str(j))
+                        var = self.diction.copy()
+                        var["key"] = global_fed + key + self.name
+                        if len(obj) > 0:
+                            var["info"] = {"object": obj, "property": self.name}
+                        variables.append(var)
+            elif "@list@" in self.keys[0]:
+                for k in self.indices:
+                    key:str = self.keys[0]
+                    obj:str = self.keys[1]
+                    key = key.replace("@list@", k)
+                    obj = obj.replace("@list@", k)
+                    var = self.diction.copy()
+                    var["key"] = global_fed + key + self.name
+                    if len(obj) > 0:
+                        var["info"] = {"object": obj, "property": self.name}
+                    variables.append(var)
+            elif "@@" in self.keys[0]:
+                for k in self.indices:
+                    key:str = self.keys[0]
+                    obj:str = self.keys[1]
+                    key = key.replace("@@", k[0])
+                    obj = obj.replace("@@", k[0])
+                    var = self.diction.copy()
+                    if k[1]:
+                        var["key"] = global_fed + key
+                    else:
+                        var["key"] = global_fed + key + self.name
+                    if len(obj) > 0:
+                        var["info"] = {"object": obj, "property": self.name}
+                    variables.append(var)
+            elif "##" in self.keys[0]:
+                for k in self.indices:
+                    for j in range(k[0], k[1]):
+                        key:str = self.keys[0]
+                        obj:str = self.keys[1]
+                        key = key.replace("##", str(j))
+                        obj = obj.replace("##", str(j))
+                        var = self.diction.copy()
+                        if k[2]:
+                            var["key"] = global_fed + key
+                        else:
+                            var["key"] = global_fed + key + self.name
+                        if len(obj) > 0:
+                            var["info"] = {"object": obj, "property": self.name}
+                        variables.append(var)
+            else:
+            # Single
+                key = self.keys[0]
+                obj = self.keys[1]
+                var = self.diction.copy()
+                var["key"] = global_fed + key + self.name
+                if len(obj) > 0:
+                    var["info"] = {"object": obj, "property": self.name}
+                variables.append(var)
+        self.vars = variables
+
+class HelicsEndpointFormatter:
+    def __init__(self, name: str, key_format: dict, destination: str, des_format: dict, group: Group):
+        self.seperator = "/"
+        self.name = name
+        self.destination = destination
+        self.fed = key_format["from_fed"]
+        self.keys = key_format["keys"]
+        self.indices = key_format["indices"]
+        self.fed1 = des_format["to_fed"]
+        self.keys1 = des_format["keys"]
+        self.indices1 = des_format["indices"]
+        self.vars = []
+        self.diction = None
+
+    def format_endpoints(self):
+        variables = []
+        global_fed = ""
+        if "global" in self.diction:
+            if self.diction["global"]:
+                global_fed = self.fed + self.seperator
+        # Multiples
+        if "@@" in self.keys[0] and "##" in self.keys[0]:
+            pass
+        elif "@@" in self.keys[0]:
+            pass
+        elif "##" in self.keys[0]:
+            pass
+        else:
+        # Single
+            src = self.keys[0]
+            s_obj = self.keys[1]
+            des = self.keys1[0]
+            d_obj = self.keys1[1]
+            var = self.diction.copy()
+            var["name"] = global_fed + src + self.name
+            var["destination"] = self.fed1 + self.seperator + des + self.destination
+            if len(s_obj) > 0:
+                var["info"] = {"object": s_obj, "property": self.name}
+            if len(d_obj) > 0:
+                var["info"] = {"object": d_obj, "property": self.destination}
+            variables.append(var)
+        self.vars = variables
+
+class HelicsPubGroup(HelicsFormatter):
+    def __init__(self, name: str, data_type: str, key_format: dict, **kwargs):
+        super().__init__(name, key_format, Group.PUB)
+        self.diction = {"type": data_type}
+        # rename 'globl' to 'global' because of 'global' keyword can not be used in kwargs
+        if "globl" in kwargs:
+            kwargs["global"] = kwargs["globl"]
+            kwargs.pop("globl")
+        self.diction.update(kwargs)
+        for attr_name, attr in self.diction.items():
+            HelicsMsg.verify(HelicsMsg.pub_var, attr_name, attr)
+        self.format_variables()
+
+class HelicsSubGroup(HelicsFormatter):
+    def __init__(self, name: str, data_type: str, key_format: dict=None, **kwargs):
+        super().__init__(name, key_format, Group.SUB)
+        self.diction = {"type": data_type}
+        self.diction.update(kwargs)
+        for attr_name, attr in self.diction.items():
+            HelicsMsg.verify(HelicsMsg.sub_var, attr_name, attr)
+        self.format_variables()
+
+class HelicsEndPtGroup(HelicsEndpointFormatter):
+    def __init__(self, name: str, key_format: dict, destination: str, des_format: dict, **kwargs):
+        super().__init__(name, key_format, destination, des_format, Group.EPT)
+        self.diction = {}
+        # rename 'globl' to 'global' because of 'global' keyword can not be used in kwargs
+        if "globl" in kwargs:
+            kwargs["global"] = kwargs["globl"]
+            kwargs.pop("globl")
+        self.diction.update(kwargs)
+        for attr_name, attr in self.diction.items():
+            HelicsMsg.verify(HelicsMsg.end_pts, attr_name, attr)
+        self.format_endpoints()
+
+class HelicsMsg:
     """Provides a data structure for building up the HELICS configuration
     definitions for publications and subscriptions.
     """
-
     config_var = {
         # General
-        "name": "federate name",
+        "name": "",
         "core_type": "zmq",
-        "core_name": "core name",
+        "core_name": "",
         "core_init_string": "",
-        "broker_key": "",
         "autobroker": False,
-        "connection_required": False,
-        "connection_optional": True,
-        "strict_input_type_checking": False,
+        "broker_init_string": "",
         "terminate_on_error": False,
         "source_only": False,
         "observer": False,
-        "dynamic": False,
+        "reentrant":False,
+        "broker_key": "",
+        # general for pub, subs, inputs
         "only_update_on_change": False,
         "only_transmit_on_change": False,
+        "tolerance": 0.0,
+        # "default": based on type
+        "connection_required": False,
+        "connection_optional": True,
+        "default_global": False,
+        "strict_input_type_checking": False,
         # Logging
-        "logfile": "output.log",
-        "log_level": "warning",
+        "tags": {},
+        "log_file": "",
+        "log_level": "none",
         "force_logging_flush": False,
         "file_log_level": "",
         "console_log_level": "",
         "dump_log": False,
-        "logbuffer": 10,
+        "log_buffer": 10,
         # Timing
         "ignore_time_mismatch_warnings": False,
         "uninterruptible": False,
-        "period": 0,
+        "period": 1,
         "offset": 0,
-        "time_delta": 0,
+        "time_delta": 1,
         "minTimeDelta": 0,
         "input_delay": 0,
         "output_delay": 0,
@@ -67,30 +246,32 @@ class HelicsMsg():
         "wait_for_current_time_update": False,
         "restrictive_time_policy": False,
         "slow_responding": False,
+        "event_triggered": False,
         # Iteration
         "rollback": False,
-        "max_iterations": 10,
+        "max_iterations": 50,
         "forward_compute": False,
         # other
-        "indexgroup": 5,
+        "indexgroup": 0,
         # Network
-        "interfaceNetwork": "local",
-        "brokeraddress": "127.0.0.1",
         "reuse_address": False,
-        "noack": False,
-        "maxsize": 4096,
-        "maxcount": 256,
-        "networkretries": 5,
-        "osport": False,
-        "brokerinit": "",
-        "server_mode": "",
-        "interface": "(local IP address)",
-        "port": 1234,
-        "brokerport": 22608,
-        "localport": 8080,
-        "portstart": 22608,
+        "noack_connect": False,
+        "max_size": 4096,
+        "max_count": 256,
+        "network_retries": 5,
         "encrypted": False,
         "encryption_config": "encryption_config.json",
+        "use_os_port": False,
+        "client": False,
+        "server": False,
+        "local_interface": "",
+        "broker_address": "127.0.0.1",
+        "broker_port": 22608,
+        "broker_name": "",
+        "local_port": 8080,
+        "port_start": 22608,
+        "force": False,
+        # Connections
         "publications": [],
         "subscriptions": [],
         "inputs": [],
@@ -98,86 +279,98 @@ class HelicsMsg():
         "filters": [],
         "translators": []}
     var_attr = {
-        "key": "key name",
+        "key": "",
         "type": "",
-        "unit": "m",
-        "global": False,
+        "unit": "",
         "connection_optional": True,
         "connection_required": False,
-        "tolerance": -1,
+        "tolerance": 0,
+        # "default": based on type,
         # for targets can be singular or plural, if an array must use plural form
-        "targets": "",
+        "targets": [],
         # indication the publication should buffer data
         "buffer_data": False,
         "strict_input_type_checking": False,
         "alias": "",
         "ignore_unit_mismatch": False,
+        "only_update_on_change": False,
+        "only_transmit_on_change": False,
         "info": {}}
     pub_var = dict(var_attr)
     pub_var.update({
-        "only_transmit_on_change": False,
+        "global": False,
         "tags": {}})
     sub_var = dict(var_attr)
-    sub_var.update({
-        "only_update_on_change": False,
-        "require": False,
-        "default": any})
+    sub_var.update({})
     inp_var = dict(var_attr)
     inp_var.update({
+        "global": False,
         "connections": 1,
         "input_priority_location": 0,
-        "clear_priority_list": "possible to have this as a config option?",
+        # possible to have this as a config option
+        "clear_priority_list": False,
         "single_connection_only": False,
-        "multiple_connections_allowed": False,
-        "multi_input_handling_method": "average",
-        # for targets can be singular or plural, if an array must use plural form
-        "targets": ["pub1", "pub2"],
-        "default": 5.5})
+        "multiple_connections_allowed": True,
+        "multi_input_handling_method": "none"})
     end_pts = {
-        "name": "endpoint key name",
-        "type": "endpoint type",
-        "global": True,
-        "destination": "default endpoint destination",
-        "target": "default endpoint destination",
+        "name": "",
+        "type": "",
+        # endpoint destination "federate/name"
+        "destination": "",
+        # target is same as destination
+        "target": "",
         "alias": "",
+        "global": False,
         "subscriptions": "",
         "filters": "",
-        "info": "",
+        "info": {},
         "tags": {}
     }
     filters = {
-        "name": "filter name",
-        "source_targets": "endpoint name",
-        "destination_targets": "endpoint name",
-        "info": "",
+        "name": "",
+        # use singular for *_targets, use multiples for *Targets
+        "source_targets": "",
+        "destination_targets": "",
+        "sourceTargets": list,
+        "destinationTargets": list,
+        "info": {},
         "operation": "randomdelay",
         "properties": {
             "name": "delay",
             "value": 600}
     }
     translators = {
-        "name": "translator name",
-        # can use singular form if only a single target
-        "source_target": "publication name",
-        "destination_targets": "endpoint name",
-        "info": "",
-        "type": "JSON"}
+        "name": "",
+        "type": "",
+        # use singular for *_targets, use multiples for *Targets
+        "source_targets": "",
+        "destination_targets": "",
+        "sourceTargets": list,
+        "destinationTargets": list,
+        "info": {}}
 
-    def __init__(self, name: str, period: float):
-        # change logging to debug, warning, error
+    def __init__(self, name: str, **kwargs):
+        self.name = name
+
+        # Helics attributes for json
+        self._cnfg = {}
+        self.config("name", name)
+        # change log_level to debug, warning, error
+        self.config("log_level", "warning")
+
+        self._cnfg.update(kwargs)
+        for attr_name, attr in self._cnfg.items():
+            HelicsMsg.verify(HelicsMsg.config_var, attr_name, attr)
+
         self._pubs = []
         self._subs = []
         self._inputs = []
         self._endpoints = []
         self._filters = []
         self._translators = []
-        self._cnfg = {
-            "name": name,
-            "period": period,
-            "logging": "warning"}
 
     def write_json(self) -> dict:
-        """Adds publications and subscriptions to this objects
+        """Adds publications and subscriptions to the objects
         "_cnfg" (configuration) attribute and returns it as a
         dictionary.
 
@@ -193,7 +386,7 @@ class HelicsMsg():
         return self._cnfg
 
     def write_file(self, _fn: str) -> None:
-        """Adds publications and subscriptions to this objects
+        """Adds publications and subscriptions to the objects
         "_cnfg" (configuration) attribute and writes it to the
         specified file.
 
@@ -211,11 +404,13 @@ class HelicsMsg():
             if type(diction[name]) == type(value):
                 if diction[name] != value:
                     return True
+                else:
+                    print(f"The value: '{value}' is the default for '{name}', and does not have to be coded")
+                    return True
             else:
                 raise ValueError(f"Diction type \'{type(value)}\' not allowed for {name}")
         else:
             raise ValueError(f"Diction flag \'{name}\' not allowed")
-        return False
 
     def config(self, _n: str, _v: any) -> dict:
         """Adds key specified by first parameter with value specified
@@ -223,7 +418,7 @@ class HelicsMsg():
         this object
 
         Args:
-            _n (str): Key under which new attribute will added
+            _n (str): Key under which new attribute will be added
             _v (any): Value added to dictionary
 
         Returns:
@@ -234,12 +429,15 @@ class HelicsMsg():
         return self._cnfg
 
     def collect(self, collect: Collect) -> None:
-        """_summary_
+        """Todo
 
         Args:
             collect (Collect): _description_
         """
-        self._cnfg["tags"] = {"logger": collect.value}
+        self.config("tags", {"logger": collect.value})
+
+    def get_pubs(self):
+        return self._pubs
 
     def publication(self, diction: dict, _c: Collect = None) -> None:
         if type(_c) is Collect: diction["tags"] = {"logger": _c.value}
@@ -302,9 +500,12 @@ class HelicsMsg():
             Defaults to None.
         """
         # for object and property is for internal code interface for EnergyPlus
-        diction = {"key": _k, "type": _t, "unit": _u, "global": True}
+        diction = {"key": _k, "type": _t, "unit": _u}
         if type(_g) is bool: diction["global"] = _g
         self.publication(diction, _c)
+
+    def get_subs(self):
+        return self._subs
 
     def subscription(self, diction: dict) -> None:
         for name in diction.keys():
@@ -358,12 +559,17 @@ class HelicsMsg():
             Defaults to None.
         """
         # for object and property is for internal code interface for EnergyPlus
-        diction = {"key": _k, "type": _t, "unit": _u, "global": True}
-        if type(_r) is bool: diction["require"] = _r
+        diction = {"key": _k, "type": _t, "unit": _u}
+        if type(_r) is bool: diction["connection_required"] = _r
         self.subscription(diction)
 
     def end_point(self, diction: dict, _c: Collect = None) -> None:
-        if type(_c) is Collect: diction["tags"] = {"logger": _c.value}
+        if type(_c) is Collect:
+            diction["tags"] = {"logger": _c.value}
+        # rename 'key' to 'name'
+        if "key" in diction:
+            diction["name"] = diction["key"]
+            diction.pop("key")
         for name in diction.keys():
             HelicsMsg.verify(self.end_pts, name, diction[name])
         self._endpoints.append(diction)
@@ -379,57 +585,3 @@ class HelicsMsg():
             for v in pub_msg:
                 if varfilter in pub_msg[v].key:
                     self.subs_n(pub_msg[v].key, pub_msg[v].type)
-
-
-"""
-# filter, scale, index, regex
-# define filter for
-
-# https://mepas.pnnl.gov/FramesV1/model.stm
-# https://mepas.pnnl.gov/ACC/protocol.htm
-
-What can we learn from these cases 
-tesp_case.py
-prep_substation_dsot.py
-
-FNCS published only output 
-
-input->module->output(input)->module 
-input->module->boundary->module 
-
-Onus on module(federate) developer to read/find(subscribe) inputs 
-then manipulate the inputs and publish the outputs.
-
-gui works well because humans are matching machines and can understand context.
-
-Can we infer context, given some filter, when we want to find and subscribe published outputs.
-
-Develop a language to published 'key' into output boundary and then be able to find automagically.
-
-The output should unique and contain 'key' or 'info' for find and match.
-
-In dsot gridlabd indices are: 
-      gld_1 = federate
-      R4_12_47_1 = feeder
-      _tn_1 = transformer
-      _Low = income
-      _hse_1 = house
-      #Tair = property
-
-      "key": "R4_12_47_1_tn_1_Low_hse_1#Tair",
-      "info": {
-        "object": "R4_12_47_1_tn_1_Low_hse_1",
-        "property": "air_temperature" }
-
-      key: feeder
-      {R4_12_47_1,sd}  
-
-in energyplus indices
-      eplus_1 = federate
-      EMS Cooling Controlled Load = property
-
-      agent_1 = federate
-      cooling_setpoint_delta = property
-
-
-"""

@@ -48,13 +48,13 @@ class Configurator(DBConfigs):
         with open(config_file, "r") as f:
             federate_config = json.load(f)
         if broker_address is not None:
-            federate_config["brokeraddress"] = broker_address
+            federate_config["broker_address"] = broker_address
         else:
-            federate_config["brokeraddress"] = "localhost"
+            federate_config["broker_address"] = "localhost"
         name = federate_config["name"]
         federate_type = self._get_federate_type(federate_config)
         self.federation_config["federation"][name] = {
-                "image": "cosim-python:latest",
+                "image": "cosim-cst:latest",
                 "command": PYTHON_CMD_PREFIX + script_path,
                 "federate_type": federate_type,
                 "HELICS_config": federate_config
@@ -64,11 +64,11 @@ class Configurator(DBConfigs):
         with open(config_file, "r") as f:
             federate_config = json.load(f)
         if broker_address is not None:
-            federate_config["brokeraddress"] = broker_address
+            federate_config["broker_address"] = broker_address
         name = federate_config["name"]
         federate_type = self._get_federate_type(federate_config)
         self.federation_config["federation"][name] = {
-                "image": "cosim-python:latest",
+                "image": "cosim-cst:latest",
                 "command": PYTHON_CMD_PREFIX + "gridlabd_federate.py",
                 "model_path": model_path,
                 "federate_type": federate_type,

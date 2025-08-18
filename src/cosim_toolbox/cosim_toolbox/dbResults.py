@@ -156,14 +156,25 @@ class DBResults:
             cur.execute(query)
             self.data_db.commit()
 
-    def schema_exist(self, scheme_name: str) -> None:
+    def schema_exist(self, scheme_name: str) -> bool:
+        """Checks to see if the specified schema exist in the database
+
+        Args:
+            scheme_name (str): schema name whose existence is being checked
+
+        Returns:
+            bool: specified schema exist or not
+        """
+        exist = False
         with self.data_db.cursor() as cur:
             cur.execute("select * from information_schema.tables "
                         "where table_schema=%s",
                         (scheme_name,))
-            if bool(cur.rowcount):  return
+            if cur.rowcount > 0:
+                exist = True
+        return exist
 
-    def table_exist(self, analysis_name: str, table_name: str) -> None:
+    def table_exist(self, analysis_name: str, table_name: str) -> bool:
         """Checks to see if the specified tables exist in the specified analysis
 
         Args:
@@ -171,13 +182,16 @@ class DBResults:
             table_name (str): Table name whose existence is being checked
 
         Returns:
-            _type_: _description_
+            bool: specified tables exist or not
         """
+        exist = False
         with self.data_db.cursor() as cur:
             cur.execute("select * from information_schema.tables "
                         "where table_schema=%s and table_name=%s",
                         (analysis_name,table_name))
-            if bool(cur.rowcount):  return
+            if cur.rowcount > 0:
+                exist = True
+        return exist
 
     def make_logger_database(self, analysis_name: str) -> None:
         """_summary_

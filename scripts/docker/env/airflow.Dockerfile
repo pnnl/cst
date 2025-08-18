@@ -1,5 +1,5 @@
 # Build runtime image
-FROM apache/airflow:2.7.3-python3.10 AS cosim-airflow
+FROM apache/airflow:2.10.3-python3.12 AS cosim-airflow
 
 ENV LOCAL_UID=$LOCAL_UID
 ENV LOCAL_USER=$LOCAL_USER
