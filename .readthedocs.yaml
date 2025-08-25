@@ -6,9 +6,6 @@ build:
   os: ubuntu-22.04
   tools:
     python: "3.12"
-  jobs:
-    pre_install:
-      - bash ./scripts/docs/plantuml_server_install.sh
 
 sphinx:
   configuration: docs/conf.py
