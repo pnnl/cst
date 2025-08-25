@@ -15,7 +15,7 @@ As a reference, the class diagram and sequence diagram is shown below that shows
 ## Class Diagram
 ```{eval-rst}
 .. uml::
-    @startuml
+
     class Federate {
         hfed: h.HelicsFederate
         mddb: DBConfigs
@@ -48,7 +48,6 @@ As a reference, the class diagram and sequence diagram is shown below that shows
         use_pdb:bool
         connect_to_metdataDB()
     }
-    @enduml
 ```
 
 **TODO** Update diagram
