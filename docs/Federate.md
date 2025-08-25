@@ -13,7 +13,8 @@ As a reference, the class diagram and sequence diagram is shown below that shows
 - `destroy_federate()` - Cleans up after the completetion of the co-simulation
 
 ## Class Diagram
-```plantuml id="myDiag" format="png" classes="uml Federate class" alt="CST Federate class diagram" title="CST Federate Class Diagram" width="300px" height="300px"
+```eval_rst
+.. uml::
 class Federate {
     hfed: h.HelicsFederate
     mddb: DBConfigs
