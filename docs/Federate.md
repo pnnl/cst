@@ -13,7 +13,7 @@ As a reference, the class diagram and sequence diagram is shown below that shows
 - `destroy_federate()` - Cleans up after the completetion of the co-simulation
 
 ## Class Diagram
-```eval_rst
+```{eval-rst}
 .. uml::
 class Federate {
     hfed: h.HelicsFederate
