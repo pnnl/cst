@@ -1,5 +1,9 @@
 # CoSim Toolbox Federate Class
-To aid in making new Python-based federates and to provide a common integration point for some of the CoSim Toolbox (CST) functionality, a [Federate class](../src/cosim_toolbox/cosim_toolbox/federate.py) has been created. The class has been defined in such a way that, for many simple federates, it will be largely useable as-is, though some degree of customization is always required. Like all programming with classes, to customize the Federate class code, it is expected that the developer will sub-class the CST Federate class and then overload the necessary functions. In some cases you'll want to call the Federate class code first and then add customization, in other cases you'll want to scrap all of a particular method and do your own thing. Its common that some of the customization will involve doing something different with HELICS and thus learning more about HELICS and its APIs.
+To aid in making of new Python-based federates and to provide a common integration point for some of the CoSim Toolbox (CST) functionality, a [Federate class](../src/cosim_toolbox/cosim_toolbox/federate.py) has been created. The class has been defined in such a way that, for many simple federates, it will be largely useable as-is, though some degree of customization is always required. Like all programming with classes, to customize the Federate class code, it is expected that the developer will sub-class the CST Federate class and then overload the necessary functions. In some cases you'll want to call the Federate class code first and then add customization, in other cases you'll want to scrap all of a particular method and do your own thing. Its common that some of the customization will involve doing something different with HELICS and thus learning more about HELICS and its APIs.
+
+:::seealso
+If you're new to classes and sub-classing has you confused, there are a lot of resources online for getting you up to speed. Here's a [website pretty comprehensively covering it](https://www.pythontutorial.net/python-oop/) and a [YouTube playlist](https://www.youtube.com/watch?v=ZDa-Z5JzLYM&list=PL-osiE80TeTsqhIuOqKhwlXsIBIdSeYtc) doing the same.
+:::
 
 As a reference, the class diagram and sequence diagram is shown below that shows the methods of the class and their default use. As shown in the sequence diagram, there are only four methods that need to be called by the code that is creating the CST federate:
 
@@ -8,8 +12,41 @@ As a reference, the class diagram and sequence diagram is shown below that shows
 - `run_cosim_loop()` - Runs the main co-simulation loop
 - `destroy_federate()` - Cleans up after the completetion of the co-simulation
 
-**TODO** Update diagram
-![Federate class diagram](images/federate_class_diagram.png "Federate class diagram")
+## Class Diagram
+```plantuml id="myDiag" format="png" classes="uml Federate class" alt="CST Federate class diagram" title="CST Federate Class Diagram" width="300px" height="300px"
+class Federate {
+    hfed: h.HelicsFederate
+    mddb: DBConfigs
+    config: dict
+    scenario: dict
+    scenario_name: str
+    federation: dict
+    federation_name: str
+    federate: dict
+    federate_type: str
+    federate_name: str
+    scheme_name: str
+    start: str
+    stop: str
+    no_t_start
+    period: float
+    stop_time: float
+    granted_time: float
+    next_requested_time: float
+    pubs: dict
+    inputs: dict
+    endpoints: dict
+    debug: dict
+    use_mdb: bool
+    dl: DBResults
+    interval: int
+    fed_collect: str
+    path_csv: str
+    output_csv: FileIO
+    use_pdb:bool
+    connect_to_metdataDB()
+}
+```
 
 **TODO** Update diagram
 ![Federate sequence diagram](images/federate_sequence_diagram.png "Federate sequence diagram")
