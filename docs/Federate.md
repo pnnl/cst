@@ -14,39 +14,40 @@ As a reference, the class diagram and sequence diagram is shown below that shows
 
 ## Class Diagram
 ```{eval-rst}
-.. uml::
+@startuml
 class Federate {
-    + hfed: h.HelicsFederate
-    + mddb: DBConfigs
-    + config: dict
-    + scenario: dict
-    + scenario_name: str
-    + federation: dict
-    + federation_name: str
-    + federate: dict
-    + federate_type: str
-    + federate_name: str
-    + scheme_name: str
-    + start: str
-    + stop: str
-    + no_t_start
-    + period: float
-    + stop_time: float
-    + granted_time: float
-    + next_requested_time: float
-    + pubs: dict
-    + inputs: dict
-    + endpoints: dict
-    + debug: dict
-    + use_mdb: bool
-    + dl: DBResults
-    + interval: int
-    + fed_collect: str
-    + path_csv: str
-    + output_csv: FileIO
-    + use_pdb:bool
-    + connect_to_metdataDB()
+    hfed: h.HelicsFederate
+    mddb: DBConfigs
+    config: dict
+    scenario: dict
+    scenario_name: str
+    federation: dict
+    federation_name: str
+    federate: dict
+    federate_type: str
+    federate_name: str
+    scheme_name: str
+    start: str
+    stop: str
+    no_t_start
+    period: float
+    stop_time: float
+    granted_time: float
+    next_requested_time: float
+    pubs: dict
+    inputs: dict
+    endpoints: dict
+    debug: dict
+    use_mdb: bool
+    dl: DBResults
+    interval: int
+    fed_collect: str
+    path_csv: str
+    output_csv: FileIO
+    use_pdb:bool
+    connect_to_metdataDB()
 }
+@enduml
 ```
 
 **TODO** Update diagram
