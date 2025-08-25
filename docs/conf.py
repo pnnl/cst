@@ -179,6 +179,7 @@ on_rtd = os.environ.get('READTHEDOCS') == 'True'
 if on_rtd:
     plantuml = 'java -Djava.awt.headless=true -jar /usr/share/plantuml/plantuml.jar'
 else:
-    plantuml = f'java -jar {os.path.join(os.path.dirname(__file__), "utils", "plantuml-bsd-1.2025.4.jar")}'
+    plantuml = 'java -jar %s' % os.path.join(os.path.dirname(__file__), "utils", "plantuml-bsd-1.2025.4.jar")
+    plantuml.strip()
 
 plantuml_output_format = 'png'

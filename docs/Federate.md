@@ -16,7 +16,7 @@ As a reference, the class diagram and sequence diagram is shown below that shows
 ```{eval-rst}
 .. uml:: ./design/uml/federate_cd.plantuml
 ```
-
+## Sequence Diagram
 **TODO** Update diagram
 ![Federate sequence diagram](images/federate_sequence_diagram.png "Federate sequence diagram")
 
