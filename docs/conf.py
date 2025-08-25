@@ -47,7 +47,8 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.todo',
               'sphinx-jsonschema',
               'sphinxcontrib.bibtex',
-              'myst_parser'
+              'myst_parser',
+              'plantweb.directive'
               ]
 
 # This project uses the MyST parser for converting .md to .rst
