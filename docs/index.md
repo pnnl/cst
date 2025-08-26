@@ -33,10 +33,10 @@ This site provides the documentation on CoSim Toolbox. The major components of t
    
    Installation
    Terminology
-   UseCaseDevelopment
    Federate
    TimeSeriesDB
    MetadataDB
+   UseCaseDevelopment
    examples/index
 
 ```

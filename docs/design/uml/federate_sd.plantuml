@@ -1,0 +1,32 @@
+
+@startuml
+
+
+actor main
+actor federate
+
+main -> federate: <<create>>
+main -> federate: create_federate()
+activate federate
+federate -> federate: connect_to_metadataDB()
+federate -> federate: connect_to_helics_config()
+federate -> federate: create_helics_fed()
+deactivate federate
+
+main -> federate: run_cosim_loop()
+activate federate
+federate -> federate: enter_initialization()
+federate -> federate: enter_executing_mode()
+federate -> federate: simulate_next_step()
+activate federate #DarkBlue
+federate -> federate: calculate_next_requested_time()
+federate -> federate: request_time()
+federate -> federate: get_data_from_federation()
+federate -> federate: update_internal_model()
+federate -> federate: send_data_to_federation()
+deactivate federate
+deactivate federate
+main -> federate: destroy_federate
+
+
+@enduml
