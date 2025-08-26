@@ -3,7 +3,7 @@ Tests for MongoDB metadata manager.
 """
 
 import pytest
-from cosim_toolbox.mongo_metadata import MongoMetadataManager
+from data_management.mongo_metadata import MongoMetadataManager
 
 
 @pytest.mark.mongo
@@ -22,15 +22,14 @@ class TestMongoMetadataManager:
     
     def test_initialization(self, mongo_uri, test_db_name):
         """Test MongoDB manager initialization."""
-        manager = MongoMetadataManager(mongo_uri, test_db_name)
-        assert manager.location == mongo_uri
-        assert manager.uri == mongo_uri
-        assert manager.db_name == test_db_name
+        manager = MongoMetadataManager(location=mongo_uri, database=test_db_name)
+        assert manager.helper.uri == mongo_uri
+        assert manager.helper.db_name == test_db_name
         assert not manager.is_connected
     
     def test_connection(self, mongo_uri, test_db_name):
         """Test MongoDB connection."""
-        manager = MongoMetadataManager(mongo_uri, test_db_name)
+        manager = MongoMetadataManager(location=mongo_uri, database=test_db_name)
         
         try:
             success = manager.connect()
@@ -50,7 +49,7 @@ class TestMongoMetadataManager:
     
     def test_write_read_federation(self, mongo_uri, test_db_name, sample_federation_data):
         """Test writing and reading federation data."""
-        manager = MongoMetadataManager(mongo_uri, test_db_name)
+        manager = MongoMetadataManager(location=mongo_uri, database=test_db_name)
         
         try:
             with manager:
@@ -69,7 +68,7 @@ class TestMongoMetadataManager:
     
     def test_write_read_scenario(self, mongo_uri, test_db_name, sample_scenario_data):
         """Test writing and reading scenario data."""
-        manager = MongoMetadataManager(mongo_uri, test_db_name)
+        manager = MongoMetadataManager(location=mongo_uri, database=test_db_name)
         
         try:
             with manager:
@@ -86,7 +85,7 @@ class TestMongoMetadataManager:
     
     def test_write_read_custom(self, mongo_uri, test_db_name, sample_custom_data):
         """Test writing and reading custom data."""
-        manager = MongoMetadataManager(mongo_uri, test_db_name)
+        manager = MongoMetadataManager(location=mongo_uri, database=test_db_name)
         
         try:
             with manager:
@@ -103,7 +102,7 @@ class TestMongoMetadataManager:
     
     def test_overwrite_protection(self, mongo_uri, test_db_name, sample_federation_data):
         """Test overwrite protection."""
-        manager = MongoMetadataManager(mongo_uri, test_db_name)
+        manager = MongoMetadataManager(location=mongo_uri, database=test_db_name)
         
         try:
             with manager:
@@ -134,7 +133,7 @@ class TestMongoMetadataManager:
     
     def test_list_operations(self, mongo_uri, test_db_name, sample_federation_data):
         """Test listing operations."""
-        manager = MongoMetadataManager(mongo_uri, test_db_name)
+        manager = MongoMetadataManager(location=mongo_uri, database=test_db_name)
         
         try:
             with manager:
@@ -168,7 +167,7 @@ class TestMongoMetadataManager:
     
     def test_delete_operations(self, mongo_uri, test_db_name, sample_federation_data):
         """Test delete operations."""
-        manager = MongoMetadataManager(mongo_uri, test_db_name)
+        manager = MongoMetadataManager(location=mongo_uri, database=test_db_name)
         
         try:
             with manager:
@@ -199,7 +198,7 @@ class TestMongoMetadataManager:
     
     def test_invalid_collection_names(self, mongo_uri, test_db_name):
         """Test handling of invalid collection names."""
-        manager = MongoMetadataManager(mongo_uri, test_db_name)
+        manager = MongoMetadataManager(location=mongo_uri, database=test_db_name)
         
         try:
             with manager:

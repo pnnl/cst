@@ -4,15 +4,14 @@ Test script for JSON metadata management implementation.
 
 import tempfile
 import shutil
-import json
 from pathlib import Path
 
 # Add the source path so we can import our modules
 import sys
 sys.path.insert(0, 'src/cosim_toolbox')
 
-from cosim_toolbox.data_management import TSRecord
-from cosim_toolbox.json_metadata import JSONMetadataManager
+from data_management import TSRecord
+from data_management import JSONMetadataManager
 
 
 def test_basic_functionality():
@@ -137,10 +136,10 @@ def test_basic_functionality():
                 }
             }
             
-            success = manager.write_custom("test_parameters", "electrical_config", custom_data)
+            success = manager.write("test_parameters", "electrical_config", custom_data)
             print(f"Custom data write: {'✓' if success else '✗'}")
             
-            read_custom = manager.read_custom("test_parameters", "electrical_config")
+            read_custom = manager.read("test_parameters", "electrical_config")
             print(f"Custom data read: {'✓' if read_custom else '✗'}")
             
             # Test listing
@@ -154,7 +153,7 @@ def test_basic_functionality():
             print(f"Listed custom collections: {collections}")
             
             if collections:
-                items = manager.list_custom_items("test_parameters")
+                items = manager.list_items("test_parameters")
                 print(f"Items in 'test_parameters': {items}")
             
             # Test existence checks
@@ -162,7 +161,7 @@ def test_basic_functionality():
             print(f"Federation 'MyFederation' exists: {manager.exists_federation('MyFederation')}")
             print(f"Federation 'NonExistent' exists: {manager.exists_federation('NonExistent')}")
             print(f"Scenario 'MyScenario' exists: {manager.exists_scenario('MyScenario')}")
-            print(f"Custom data exists: {manager.exists_custom('test_parameters', 'electrical_config')}")
+            print(f"Custom data exists: {manager.exists('test_parameters', 'electrical_config')}")
             
             # Test file structure
             print("\n--- Verifying File Structure ---")

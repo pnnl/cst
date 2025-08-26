@@ -4,7 +4,7 @@ Performance tests for data management system.
 
 import pytest
 import time
-from cosim_toolbox.metadata_factory import create_metadata_manager
+from data_management import create_metadata_manager
 
 
 class TestPerformance:

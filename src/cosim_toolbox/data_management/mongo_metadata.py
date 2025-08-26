@@ -11,7 +11,7 @@ import re
 try:
     from pymongo import MongoClient
     from pymongo.database import Database
-    from pymongo.collection import Collection
+    from pymongo.collection import Collection, UpdateResult, InsertOneResult
     from pymongo.errors import (
         ConnectionFailure,
         ServerSelectionTimeoutError,
@@ -22,23 +22,22 @@ try:
 except ImportError:
     PYMONGO_AVAILABLE = False
 
-from .abstractions import (
+from data_management.abstractions import (
     MDDataWriter,
     MDDataReader,
     MDDataManager,
 )
-from .validation import validate_name, ValidationError, safe_name_log
+from data_management.validation import validate_name, ValidationError, safe_name_log
 
 logger = logging.getLogger(__name__)
 
 
-# +++ A dedicated helper class for managing the MongoDB connection +++
 class _MongoConnectionHelper:
     """Manages the connection state and logic for MongoDB."""
 
     def __init__(
         self,
-        host: str,
+        location: str,
         database: str,
         port: Optional[int] = None,  # Port can still be an override
         user: Optional[str] = None,
@@ -55,27 +54,23 @@ class _MongoConnectionHelper:
             r"^(mongodb(?:\+srv)?):\/\/(?:([^:]+):([^@]+)@)?([^:\/?]+)(?::(\d+))?(?:\/([^\?]+))?"
         )
 
-        match = uri_pattern.match(host)
-
+        match = uri_pattern.match(location)
         if match:
             # The location string is a full or partial URI
             protocol, uri_user, uri_pass, uri_host, uri_port, uri_db = match.groups()
-
             # Arguments passed to the function override what's in the URI string
             final_user = user or uri_user
             final_pass = password if password is not None else uri_pass
             final_host = uri_host
             final_port = port or (int(uri_port) if uri_port else None)
-            final_db = database or uri_db or "cst"
 
         else:
             # The location string is just a hostname
             protocol = "mongodb"
-            final_host = host
+            final_host = location
             final_user = user
             final_pass = password
             final_port = port
-            final_db = database
 
         # Assemble the final URI string
         auth_part = ""
@@ -85,13 +80,13 @@ class _MongoConnectionHelper:
             auth_part = f"{quote_plus(final_user)}:{quote_plus(final_pass)}@"
 
         port_part = f":{final_port}" if final_port else ""
-
+        
         self.uri = f"{protocol}://{auth_part}{final_host}{port_part}"
-        self.db_name = final_db
+        self.db_name = database
 
         self.client: Optional[MongoClient] = None
         self.db: Optional[Database] = None
-        self.cst_name_field = "cst_name"
+        self.cst_name_field = "cst_007"
 
     def connect(self) -> bool:
         """Establishes connection to the MongoDB server."""
@@ -99,7 +94,13 @@ class _MongoConnectionHelper:
             return True  # Already connected
         try:
             validate_name(self.db_name, context="database name")
-            self.client = MongoClient(self.uri + '/?authSource=' + self.db_name + '&authMechanism=SCRAM-SHA-1', serverSelectionTimeoutMS=5000)
+            self.client = MongoClient(
+                self.uri
+                + "/?authSource="
+                + self.db_name
+                + "&authMechanism=SCRAM-SHA-1",
+                serverSelectionTimeoutMS=5000,
+            )
             self.client.admin.command("ping")  # Test connection
             self.db = self.client[self.db_name]
             logger.info(f"MongoDB helper connected to: {self.uri}/{self.db_name}")
@@ -137,41 +138,41 @@ class _MongoConnectionHelper:
             return self.db[collection_type]
 
 
-# +++ Uses composition ("has-a" conn_helper) instead of inheritance +++
 class MongoMetadataWriter(MDDataWriter):
     """MongoDB-based metadata writer."""
 
     def __init__(
         self,
-        *,
-        host: Optional[str] = None,
+        *,  # Everything must be keyword
+        location: Optional[str] = None,
         port: Optional[int] = None,
         user: Optional[str] = None,
         password: Optional[str] = None,
         db_name: str = "cst",
-        conn_helper: Optional[_MongoConnectionHelper] = None,
+        helper: Optional[_MongoConnectionHelper] = None,
     ):
         """Initializes the Mongo writer for standalone or managed use."""
         super().__init__()
-        if conn_helper:
-            self.conn_helper = conn_helper
+        self.helper: _MongoConnectionHelper
+        if helper:
+            self.helper = helper
             self._owns_connection = False
-        elif host:
-            self.conn_helper = _MongoConnectionHelper(
-                host, db_name, port, user, password
+        elif location:
+            self.helper = _MongoConnectionHelper(
+                location, db_name, port, user, password
             )
             self._owns_connection = True
         else:
-            raise ValueError("Must provide either 'conn_helper' or a 'location'.")
+            raise ValueError("Must provide either 'helper' or a 'location'.")
 
     def connect(self) -> bool:
         """Connects to the database, creating the connection if owned."""
         if self._owns_connection:
-            if not self.conn_helper.connect():
+            if not self.helper.connect():
                 return False
 
         # In both cases, verify the connection exists before setting state
-        if self.conn_helper.client:
+        if self.helper.client:
             self._is_connected = True
             return True
         return False
@@ -179,7 +180,7 @@ class MongoMetadataWriter(MDDataWriter):
     def disconnect(self) -> None:
         """Disconnects from the database if the connection is owned."""
         if self._owns_connection:
-            self.conn_helper.disconnect()
+            self.helper.disconnect()
         self._is_connected = False
 
     def write_federation(
@@ -207,8 +208,8 @@ class MongoMetadataWriter(MDDataWriter):
             if not isinstance(data, dict):
                 raise ValidationError(f"Data must be a dictionary, got {type(data)}")
 
-            coll = self.conn_helper.get_collection(collection_type)
-            name_field = self.conn_helper.cst_name_field
+            coll = self.helper.get_collection(collection_type)
+            name_field = self.helper.cst_name_field
 
             query = {name_field: name}
             existing = coll.find_one(query)
@@ -220,7 +221,7 @@ class MongoMetadataWriter(MDDataWriter):
                 return False
 
             document = {**data, name_field: name}
-
+            result: UpdateResult | InsertOneResult
             if existing and overwrite:
                 result = coll.replace_one(query, document)
                 success = result.modified_count > 0 or result.matched_count > 0
@@ -254,43 +255,42 @@ class MongoMetadataWriter(MDDataWriter):
 class MongoMetadataReader(MDDataReader):
     """MongoDB-based metadata reader."""
 
-
-class MongoMetadataReader(MDDataReader):
     def __init__(
         self,
-        *,
-        host: Optional[str] = None,
+        *,  # Everything must be keyword
+        location: Optional[str] = None,
         port: Optional[int] = None,
         user: Optional[str] = None,
         password: Optional[str] = None,
         db_name: str = "cst",
-        conn_helper: Optional[_MongoConnectionHelper] = None,
+        helper: Optional[_MongoConnectionHelper] = None,
     ):
         """Initializes the Mongo reader for standalone or managed use."""
         super().__init__()
-        if conn_helper:
-            self.conn_helper = conn_helper
+        self.helper: _MongoConnectionHelper
+        if helper:
+            self.helper = helper
             self._owns_connection = False
-        elif host:
-            self.conn_helper = _MongoConnectionHelper(
-                host, db_name, port, user, password
+        elif location:
+            self.helper = _MongoConnectionHelper(
+                location, db_name, port, user, password
             )
             self._owns_connection = True
         else:
-            raise ValueError("Must provide either 'conn_helper' or a 'location'.")
+            raise ValueError("Must provide either 'helper' or a 'location'.")
 
     def connect(self) -> bool:
         if self._owns_connection:
-            if not self.conn_helper.connect():
+            if not self.helper.connect():
                 return False
-        if self.conn_helper.client:
+        if self.helper.client:
             self._is_connected = True
             return True
         return False
 
     def disconnect(self) -> None:
         if self._owns_connection:
-            self.conn_helper.disconnect()
+            self.helper.disconnect()
         self._is_connected = False
 
     def read_federation(self, name: str) -> Optional[Dict[str, Any]]:
@@ -305,8 +305,8 @@ class MongoMetadataReader(MDDataReader):
             return None
         try:
             validate_name(name, context=f"{collection_type.rstrip('s')}")
-            coll = self.conn_helper.get_collection(collection_type)
-            name_field = self.conn_helper.cst_name_field
+            coll = self.helper.get_collection(collection_type)
+            name_field = self.helper.cst_name_field
 
             document = coll.find_one({"cst_007": name})
 
@@ -331,9 +331,7 @@ class MongoMetadataReader(MDDataReader):
             logger.error(
                 f"Unexpected error reading {collection_type} '{safe_name_log(name)}': {e}"
             )
-            logger.error(
-                f"Available scenarios: {self.list_scenarios()}"
-            )
+            logger.error(f"Available scenarios: {self.list_scenarios()}")
             return None
 
     def list_federations(self) -> List[str]:
@@ -347,8 +345,8 @@ class MongoMetadataReader(MDDataReader):
             logger.error("MongoDB reader not connected.")
             return []
         try:
-            coll = self.conn_helper.get_collection(collection_type)
-            name_field = self.conn_helper.cst_name_field
+            coll = self.helper.get_collection(collection_type)
+            name_field = self.helper.cst_name_field
 
             names = [
                 doc[name_field]
@@ -364,11 +362,11 @@ class MongoMetadataReader(MDDataReader):
             return []
 
     def list_custom_collections(self) -> List[str]:
-        if not self.is_connected or not self.conn_helper.db:
+        if not self.is_connected or not self.helper.db:
             logger.error("MongoDB reader not connected.")
             return []
         try:
-            all_collections = self.conn_helper.db.list_collection_names()
+            all_collections = self.helper.db.list_collection_names()
             return sorted(
                 [
                     name
@@ -389,6 +387,7 @@ class MongoMetadataManager(MDDataManager):
 
     def __init__(
         self,
+        *,  # Everything must be keyword
         location: str,
         port: Optional[int] = None,
         user: Optional[str] = None,
@@ -397,14 +396,14 @@ class MongoMetadataManager(MDDataManager):
     ):
         super().__init__()
         # The manager creates ONE helper and shares it.
-        self.conn_helper = _MongoConnectionHelper(
+        self.helper: _MongoConnectionHelper = _MongoConnectionHelper(
             location, database, port, user, password
         )
-        self.writer = MongoMetadataWriter(conn_helper=self.conn_helper)
-        self.reader = MongoMetadataReader(conn_helper=self.conn_helper)
+        self.writer: MongoMetadataWriter = MongoMetadataWriter(helper=self.helper)
+        self.reader: MongoMetadataReader = MongoMetadataReader(helper=self.helper)
 
     def connect(self) -> bool:
-        if not self.conn_helper.connect():
+        if not self.helper.connect():
             return False
 
         # Connect the children (which will just set their internal state)
@@ -414,7 +413,7 @@ class MongoMetadataManager(MDDataManager):
         return True
 
     def disconnect(self) -> None:
-        self.conn_helper.disconnect()
+        self.helper.disconnect()
         self.writer.disconnect()
         self.reader.disconnect()
         self._is_connected = False
@@ -434,8 +433,8 @@ class MongoMetadataManager(MDDataManager):
             return False
         try:
             validate_name(name, context=f"{collection_type.rstrip('s')}")
-            coll = self.conn_helper.get_collection(collection_type)
-            result = coll.delete_one({self.conn_helper.cst_name_field: name})
+            coll = self.helper.get_collection(collection_type)
+            result = coll.delete_one({self.helper.cst_name_field: name})
 
             if result.deleted_count > 0:
                 logger.debug(
@@ -467,15 +466,23 @@ class MongoMetadataManager(MDDataManager):
     def exists(self, collection_type: str, name: str) -> bool:
         if not self._is_connected:
             return False
-        coll = self.conn_helper.get_collection(collection_type)
-        return coll.count_documents({self.conn_helper.cst_name_field: name}) > 0
+        coll = self.helper.get_collection(collection_type)
+        return coll.count_documents({self.helper.cst_name_field: name}) > 0
 
     def get_database_stats(self) -> Dict[str, Any]:
-        if not self._is_connected or not self.conn_helper.db:
+        if not self._is_connected or not self.helper.db:
             logger.error("MongoDB manager not connected")
             return {}
         try:
-            return self.conn_helper.db.command("dbstats")
+            return self.helper.db.command("dbstats")
         except Exception as e:
             logger.error(f"Failed to get database stats: {e}")
             return {}
+
+    @property
+    def location(self) -> str:
+        return self.reader.helper.uri
+    
+    @property
+    def database(self) -> str:
+        return self.reader.helper.db_name

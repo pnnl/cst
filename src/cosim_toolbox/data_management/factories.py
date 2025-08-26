@@ -1,12 +1,14 @@
 """
 Factory functions for creating data managers.
 """
-from typing import Any
 
 # Use relative imports within the module
-from .abstractions import TimeSeriesManager, MetadataManager
+from data_management.abstractions import TimeSeriesManager, MetadataManager
 
-def create_timeseries_manager(backend: str, location: str, **kwargs) -> TimeSeriesManager:
+
+def create_timeseries_manager(
+    backend: str, location: str, **kwargs
+) -> TimeSeriesManager:
     """
     Factory function to create appropriate time-series data manager.
     Args:
@@ -16,13 +18,17 @@ def create_timeseries_manager(backend: str, location: str, **kwargs) -> TimeSeri
     """
     backend = backend.lower()
     if backend == "csv":
-        from .csv_timeseries import CSVTimeSeriesManager
+        from data_management.csv_timeseries import CSVTimeSeriesManager
+
         return CSVTimeSeriesManager(location, **kwargs)
     elif backend in ("postgresql", "postgres"):
-        from .postgresql_timeseries import PostgreSQLTimeSeriesManager
-        return PostgreSQLTimeSeriesManager(host=location, **kwargs)
+        from data_management.postgresql_timeseries import PostgreSQLTimeSeriesManager
+
+        return PostgreSQLTimeSeriesManager(location=location, **kwargs)
     else:
-        raise ValueError(f"Unknown time-series backend: {backend}. Supported: csv, postgresql")
+        raise ValueError(
+            f"Unknown time-series backend: {backend}. Supported: csv, postgresql"
+        )
 
 
 def create_metadata_manager(backend: str, location: str, **kwargs) -> MetadataManager:
@@ -35,10 +41,12 @@ def create_metadata_manager(backend: str, location: str, **kwargs) -> MetadataMa
     """
     backend = backend.lower()
     if backend == "json":
-        from .json_metadata import JSONMetadataManager
+        from data_management.json_metadata import JSONMetadataManager
+
         return JSONMetadataManager(location=location, **kwargs)
     elif backend in ("mongo", "mongodb"):
-        from .mongo_metadata import MongoMetadataManager
+        from data_management.mongo_metadata import MongoMetadataManager
+
         return MongoMetadataManager(location=location, **kwargs)
     else:
         raise ValueError(f"Unknown metadata backend: {backend}. Supported: json, mongo")

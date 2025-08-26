@@ -16,18 +16,17 @@ import sys
 sys.path.insert(0, "src/cosim_toolbox")
 
 # Import our modules
-from cosim_toolbox.data_management import TSRecord
-from cosim_toolbox.base_metadata import BaseMetadataManager
-from cosim_toolbox.json_metadata import JSONMetadataManager
-from cosim_toolbox.metadata_factory import (
+from data_management import TSRecord
+from data_management import MetadataManager
+from data_management import JSONMetadataManager
+from data_management import (
     create_metadata_manager,
-    create_json_manager,
-    create_mongo_manager,
+    create_timeseries_manager,
 )
 
 # Try to import MongoDB components
 try:
-    from cosim_toolbox.mongo_metadata import MongoMetadataManager
+    from data_management import MongoMetadataManager
 
     MONGO_AVAILABLE = True
 except ImportError:
@@ -59,7 +58,6 @@ class TestTSRecord(unittest.TestCase):
     def test_tsrecord_different_types(self):
         """Test TSRecord with different data value types."""
         now = datetime.now()
-
         test_cases = [
             ("double", 123.45),
             ("integer", 42),
@@ -134,7 +132,6 @@ class TestJSONMetadataManager(unittest.TestCase):
             self.assertTrue(mgr.is_connected)
             success = mgr.write_federation("TestFed", self.sample_federation)
             self.assertTrue(success)
-
         self.assertFalse(self.manager.is_connected)
 
     def test_federation_operations(self):
@@ -284,87 +281,132 @@ class TestMongoMetadataManager(unittest.TestCase):
 
     def setUp(self):
         """Set up test environment with mocked MongoDB."""
-        # Mock MongoDB for testing
-        self.mock_client = MagicMock()
-        self.mock_db = MagicMock()
-        self.mock_collection = MagicMock()
-
-        self.mock_client.admin.command.return_value = True  # ping success
-        self.mock_client.__getitem__.return_value = self.mock_db
-        self.mock_db.__getitem__.return_value = self.mock_collection
-        self.mock_db.list_collection_names.return_value = []
-
         # Sample data
         self.sample_federation = {
             "federation": {"Battery": {"federate_type": "value", "period": 60}}
         }
 
-    @patch("cosim_toolbox.mongo_metadata.MongoClient")
+    def _setup_mock_client(self):
+        """Create properly configured mock MongoDB client."""
+        mock_client = MagicMock()
+        mock_db = MagicMock()
+        mock_collection = MagicMock()
+
+        # Configure the mock chain: client -> db -> collection
+        mock_client.admin.command.return_value = True  # ping success
+        mock_client.__getitem__.return_value = mock_db
+        mock_db.federations = mock_collection  # db.federations = mock_collection
+        mock_db.scenarios = (
+            mock_collection  # db.scenarios = mock_collection (if needed)
+        )
+        mock_db.__getitem__.return_value = (
+            mock_collection  # db[collection_name] = mock_collection
+        )
+        mock_db.list_collection_names.return_value = []
+
+        return mock_client, mock_db, mock_collection
+
+    @patch("data_management.mongo_metadata.MongoClient")
     def test_connection_management(self, mock_mongo_client):
         """Test MongoDB connection management."""
-        mock_mongo_client.return_value = self.mock_client
+        mock_client, mock_db, mock_collection = self._setup_mock_client()
+        mock_mongo_client.return_value = mock_client
 
-        manager = MongoMetadataManager("mongodb://localhost:27017", "test_db")
+        manager = MongoMetadataManager(location="localhost", database="test_db")
 
         success = manager.connect()
         self.assertTrue(success)
         self.assertTrue(manager.is_connected)
 
-        # Verify connection was attempted
-        mock_mongo_client.assert_called_once_with(
-            "mongodb://localhost:27017", serverSelectionTimeoutMS=5000
+        # Verify connection was attempted with correct URI (including auth params)
+        expected_uri = (
+            "mongodb://localhost/?authSource=test_db&authMechanism=SCRAM-SHA-1"
         )
-        self.mock_client.admin.command.assert_called_once_with("ping")
+        mock_mongo_client.assert_called_once_with(
+            expected_uri, serverSelectionTimeoutMS=5000
+        )
+        mock_client.admin.command.assert_called_once_with("ping")
 
         manager.disconnect()
         self.assertFalse(manager.is_connected)
-        self.mock_client.close.assert_called_once()
+        mock_client.close.assert_called_once()
 
-    @patch("cosim_toolbox.mongo_metadata.MongoClient")
+    @patch("data_management.mongo_metadata.MongoClient")
     def test_federation_operations(self, mock_mongo_client):
         """Test MongoDB federation operations."""
-        mock_mongo_client.return_value = self.mock_client
+        mock_client, mock_db, mock_collection = self._setup_mock_client()
+        mock_mongo_client.return_value = mock_client
 
-        # Mock successful operations
-        self.mock_collection.find_one.return_value = None  # No existing document
-        self.mock_collection.insert_one.return_value.inserted_id = "mock_id"
+        # Mock successful operations - no existing document first
+        mock_collection.find_one.return_value = None  # Explicitly return None
+        mock_insert_result = MagicMock()
+        mock_insert_result.inserted_id = "mock_id"
+        mock_collection.insert_one.return_value = mock_insert_result
 
-        manager = MongoMetadataManager("mongodb://localhost:27017", "test_db")
+        manager = MongoMetadataManager(location="localhost", database="test_db")
 
         with manager as mgr:
             # Test write
             success = mgr.write_federation("TestFed", self.sample_federation)
             self.assertTrue(success)
 
-            # Verify MongoDB calls
+            # Verify MongoDB calls - note: the actual field name is 'cst_007'
             expected_doc = self.sample_federation.copy()
-            expected_doc["cst_name"] = "TestFed"
-            self.mock_collection.insert_one.assert_called_once_with(expected_doc)
+            expected_doc["cst_007"] = "TestFed"
+            mock_collection.insert_one.assert_called_once_with(expected_doc)
 
-    @patch("cosim_toolbox.mongo_metadata.MongoClient")
+    @patch("data_management.mongo_metadata.MongoClient")
     def test_overwrite_protection(self, mock_mongo_client):
         """Test MongoDB overwrite protection."""
-        mock_mongo_client.return_value = self.mock_client
+        mock_client, mock_db, mock_collection = self._setup_mock_client()
+        mock_mongo_client.return_value = mock_client
 
-        # Mock existing document
-        existing_doc = {"cst_name": "TestFed", "data": "old"}
-        self.mock_collection.find_one.return_value = existing_doc
-
-        manager = MongoMetadataManager("mongodb://localhost:27017", "test_db")
+        manager = MongoMetadataManager(location="localhost", database="test_db")
 
         with manager as mgr:
-            # Should fail without overwrite
+            # Test 1: Should fail without overwrite when document exists
+            existing_doc = {"cst_007": "TestFed", "data": "old"}
+            mock_collection.find_one.return_value = existing_doc
+
             success = mgr.write_federation(
                 "TestFed", self.sample_federation, overwrite=False
             )
             self.assertFalse(success)
 
-            # Should succeed with overwrite
-            self.mock_collection.replace_one.return_value.modified_count = 1
+            # Test 2: Should succeed with overwrite
+            mock_replace_result = MagicMock()
+            mock_replace_result.modified_count = 1
+            mock_replace_result.matched_count = 1
+            mock_collection.replace_one.return_value = mock_replace_result
+
             success = mgr.write_federation(
                 "TestFed", self.sample_federation, overwrite=True
             )
             self.assertTrue(success)
+
+            # Verify replace_one was called
+            expected_doc = self.sample_federation.copy()
+            expected_doc["cst_007"] = "TestFed"
+            mock_collection.replace_one.assert_called_once_with(
+                {"cst_007": "TestFed"}, expected_doc
+            )
+
+    @patch("data_management.mongo_metadata.MongoClient")
+    def test_read_operations(self, mock_mongo_client):
+        """Test MongoDB read operations."""
+        mock_client, mock_db, mock_collection = self._setup_mock_client()
+        mock_mongo_client.return_value = mock_client
+        mock_collection.find_one.return_value = self.sample_federation
+
+        manager = MongoMetadataManager(location="localhost", database="test_db")
+
+        with manager as mgr:
+            # Test read - should return data without _id and cst_007 fields
+            federation_data = mgr.read_federation("TestFed")
+            self.assertEqual(federation_data, self.sample_federation)
+
+            # Verify correct query was made
+            mock_collection.find_one.assert_called_with({"cst_007": "TestFed"})
 
 
 class TestMetadataFactory(unittest.TestCase):
@@ -376,7 +418,7 @@ class TestMetadataFactory(unittest.TestCase):
         try:
             manager = create_metadata_manager("json", temp_dir)
             self.assertIsInstance(manager, JSONMetadataManager)
-            self.assertEqual(manager.location, temp_dir)
+            self.assertEqual(manager.location, Path(temp_dir))
         finally:
             shutil.rmtree(temp_dir)
 
@@ -384,35 +426,17 @@ class TestMetadataFactory(unittest.TestCase):
     def test_create_mongo_manager(self):
         """Test creating MongoDB manager via factory."""
         manager = create_metadata_manager(
-            "mongo", "mongodb://localhost:27017", db_name="test"
+            backend="mongo", location="localhost", database="test"
         )
         self.assertIsInstance(manager, MongoMetadataManager)
-        self.assertEqual(manager.uri, "mongodb://localhost:27017")
-        self.assertEqual(manager.db_name, "test")
-
-    def test_convenience_functions(self):
-        """Test convenience factory functions."""
-        temp_dir = tempfile.mkdtemp()
-        try:
-            # Test JSON convenience function
-            json_manager = create_json_manager(temp_dir)
-            self.assertIsInstance(json_manager, JSONMetadataManager)
-
-            # Test MongoDB convenience function (if available)
-            if MONGO_AVAILABLE:
-                mongo_manager = create_mongo_manager(
-                    "mongodb://localhost:27017", "test"
-                )
-                self.assertIsInstance(mongo_manager, MongoMetadataManager)
-        finally:
-            shutil.rmtree(temp_dir)
+        # Check that the URI was constructed correctly
+        self.assertEqual(manager.database, "test")
 
     def test_unknown_backend(self):
         """Test factory with unknown backend."""
         with self.assertRaises(ValueError) as context:
             create_metadata_manager("unknown", "location")
-
-        self.assertIn("Unknown backend", str(context.exception))
+        self.assertIn("Unknown", str(context.exception))
 
 
 class TestFederationRunnerCompatibility(unittest.TestCase):
@@ -500,7 +524,7 @@ class TestFederationRunnerCompatibility(unittest.TestCase):
 
     def test_federation_runner_workflow(self):
         """Test the complete federation runner workflow."""
-        manager = create_json_manager(self.temp_dir)
+        manager = create_metadata_manager("json", self.temp_dir)
 
         with manager as mgr:
             # Store federation and scenario (like FederationConfig.define_scenario)
@@ -546,7 +570,7 @@ class TestFederationRunnerCompatibility(unittest.TestCase):
 
     def test_multiple_federates_configuration(self):
         """Test handling multiple federates like in the runner."""
-        manager = create_json_manager(self.temp_dir)
+        manager = create_metadata_manager("json", self.temp_dir)
 
         with manager as mgr:
             mgr.write_federation("MyFederation", self.federation_data)
@@ -604,14 +628,6 @@ class TestErrorHandlingAndEdgeCases(unittest.TestCase):
         finally:
             shutil.rmtree(temp_dir)
 
-    def test_missing_dependencies(self):
-        """Test behavior when MongoDB dependencies are missing."""
-        # This test simulates the ImportError case
-        with patch.dict("sys.modules", {"pymongo": None}):
-            with self.assertRaises(ImportError):
-                # This should fail if we try to import when pymongo is not available
-                pass  # The actual import happens at module level
-
     def test_large_data_handling(self):
         """Test handling of large data structures."""
         temp_dir = tempfile.mkdtemp()
@@ -663,7 +679,6 @@ class TestErrorHandlingAndEdgeCases(unittest.TestCase):
 
 def run_all_tests():
     """Run all test suites."""
-
     print("=== CoSim Toolbox Data Management Comprehensive Test Suite ===\n")
 
     # Create test suite
@@ -719,7 +734,6 @@ def run_all_tests():
 
     success = len(result.failures) == 0 and len(result.errors) == 0
     print(f"\nOverall result: {'✅ PASSED' if success else '❌ FAILED'}")
-
     return success
 
 

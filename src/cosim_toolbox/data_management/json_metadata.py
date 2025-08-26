@@ -2,11 +2,12 @@
 JSON file-based metadata management for CoSim Toolbox.
 Refactored to use Composition over Inheritance for clarity and maintainability.
 """
+
 import json
 import logging
 import shutil
 from pathlib import Path
-from typing import Any, Dict, Optional, Union, List
+from typing import Any, Dict, Optional, Union, List, cast
 
 from .abstractions import (
     MDDataWriter,
@@ -18,14 +19,13 @@ from .validation import validate_name, ValidationError, safe_name_log
 logger = logging.getLogger(__name__)
 
 
-# +++ A dedicated helper class for shared path logic +++
 class _JSONPathHelper:
     """Manages file path logic for JSON metadata storage."""
 
     def __init__(self, location: Union[str, Path]):
-        self.base_path = Path(location)
-        self.federations_path = self.base_path / "federations"
-        self.scenarios_path = self.base_path / "scenarios"
+        self.location = Path(location)
+        self.federations_path = self.location / "federations"
+        self.scenarios_path = self.location / "scenarios"
 
     def get_file_path(self, collection_type: str, name: str) -> Path:
         """Get file path for a given collection type and name."""
@@ -34,10 +34,9 @@ class _JSONPathHelper:
         elif collection_type == "scenarios":
             return self.scenarios_path / f"{name}.json"
         else:
-            return self.base_path / collection_type / f"{name}.json"
+            return self.location / collection_type / f"{name}.json"
 
 
-# +++ Uses composition ("has-a" path_helper) instead of inheritance +++
 class JSONMetadataWriter(MDDataWriter):
     """JSON file-based metadata writer."""
 
@@ -45,7 +44,7 @@ class JSONMetadataWriter(MDDataWriter):
         self,
         *,
         location: Optional[Union[str, Path]] = None,
-        path_helper: Optional[_JSONPathHelper] = None,
+        helper: Optional[_JSONPathHelper] = None,
     ):
         """
         Initialize the JSON writer.
@@ -54,22 +53,23 @@ class JSONMetadataWriter(MDDataWriter):
             writer = JSONMetadataWriter(location="/path/to/data")
         For managed use (by JSONMetadataManager):
             helper = _JSONPathHelper(...)
-            writer = JSONMetadataWriter(path_helper=helper)
+            writer = JSONMetadataWriter(helper=helper)
         """
         super().__init__()
-        if not (location or path_helper):
-            raise ValueError("Either 'location' or 'path_helper' must be provided.")
-
-        self.path_helper = path_helper or _JSONPathHelper(location)
+        if not (location or helper):
+            raise ValueError("Either 'location' or 'helper' must be provided.")
+        location = cast(Union[str, Path], location)
+        self.helper: _JSONPathHelper
+        self.helper = helper or _JSONPathHelper(location)
 
     def connect(self) -> bool:
         """Create directory structure if it doesn't exist."""
         try:
-            self.path_helper.base_path.mkdir(parents=True, exist_ok=True)
-            self.path_helper.federations_path.mkdir(exist_ok=True)
-            self.path_helper.scenarios_path.mkdir(exist_ok=True)
+            self.helper.location.mkdir(parents=True, exist_ok=True)
+            self.helper.federations_path.mkdir(exist_ok=True)
+            self.helper.scenarios_path.mkdir(exist_ok=True)
             self._is_connected = True
-            logger.info(f"JSON metadata writer connected to: {self.path_helper.base_path}")
+            logger.info(f"JSON metadata writer connected to: {self.helper.location}")
             return True
         except Exception as e:
             logger.error(f"Failed to connect JSON writer: {e}")
@@ -80,13 +80,23 @@ class JSONMetadataWriter(MDDataWriter):
         self._is_connected = False
         logger.debug("JSON metadata writer disconnected")
 
-    def write_federation(self, name: str, federation_data: Dict[str, Any], overwrite: bool = False) -> bool:
+    def write_federation(
+        self, name: str, federation_data: Dict[str, Any], overwrite: bool = False
+    ) -> bool:
         return self.write("federations", name, federation_data, overwrite)
 
-    def write_scenario(self, name: str, scenario_data: Dict[str, Any], overwrite: bool = False) -> bool:
+    def write_scenario(
+        self, name: str, scenario_data: Dict[str, Any], overwrite: bool = False
+    ) -> bool:
         return self.write("scenarios", name, scenario_data, overwrite)
 
-    def write(self, collection_type: str, name: str, data: Dict[str, Any], overwrite: bool = False) -> bool:
+    def write(
+        self,
+        collection_type: str,
+        name: str,
+        data: Dict[str, Any],
+        overwrite: bool = False,
+    ) -> bool:
         if not self.is_connected:
             logger.error("JSON metadata writer not connected. Call connect() first.")
             return False
@@ -94,10 +104,12 @@ class JSONMetadataWriter(MDDataWriter):
             validate_name(name, context=f"{collection_type.rstrip('s')}")
             validate_name(collection_type, context="collection type")
 
-            file_path = self.path_helper.get_file_path(collection_type, name)
+            file_path = self.helper.get_file_path(collection_type, name)
 
             if file_path.exists() and not overwrite:
-                logger.error(f"{collection_type.title()} '{safe_name_log(name)}' already exists and overwrite=False")
+                logger.error(
+                    f"{collection_type.title()} '{safe_name_log(name)}' already exists and overwrite=False"
+                )
                 return False
 
             file_path.parent.mkdir(parents=True, exist_ok=True)
@@ -105,19 +117,29 @@ class JSONMetadataWriter(MDDataWriter):
             with open(file_path, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2, ensure_ascii=False, default=str)
 
-            logger.debug(f"{collection_type.title()} '{safe_name_log(name)}' written to {file_path}")
+            logger.debug(
+                f"{collection_type.title()} '{safe_name_log(name)}' written to {file_path}"
+            )
             return True
         except ValidationError as e:
-            logger.error(f"Validation error for {collection_type} '{safe_name_log(name)}': {e}")
+            logger.error(
+                f"Validation error for {collection_type} '{safe_name_log(name)}': {e}"
+            )
             return False
         except (OSError, IOError) as e:
-            logger.error(f"File I/O error writing {collection_type} '{safe_name_log(name)}': {e}")
+            logger.error(
+                f"File I/O error writing {collection_type} '{safe_name_log(name)}': {e}"
+            )
             return False
         except (TypeError, ValueError) as e:
-            logger.error(f"JSON serialization error for {collection_type} '{safe_name_log(name)}': {e}")
+            logger.error(
+                f"JSON serialization error for {collection_type} '{safe_name_log(name)}': {e}"
+            )
             return False
         except Exception as e:
-            logger.error(f"Unexpected error writing {collection_type} '{safe_name_log(name)}': {e}")
+            logger.error(
+                f"Unexpected error writing {collection_type} '{safe_name_log(name)}': {e}"
+            )
             return False
 
 
@@ -128,7 +150,7 @@ class JSONMetadataReader(MDDataReader):
         self,
         *,
         location: Optional[Union[str, Path]] = None,
-        path_helper: Optional[_JSONPathHelper] = None,
+        helper: Optional[_JSONPathHelper] = None,
     ):
         """
         Initialize the JSON reader.
@@ -137,21 +159,24 @@ class JSONMetadataReader(MDDataReader):
             reader = JSONMetadataReader(location="/path/to/data")
         For managed use (by JSONMetadataManager):
             helper = _JSONPathHelper(...)
-            reader = JSONMetadataReader(path_helper=helper)
+            reader = JSONMetadataReader(helper=helper)
         """
         super().__init__()
-        if not (location or path_helper):
-            raise ValueError("Either 'location' or 'path_helper' must be provided.")
-
-        self.path_helper = path_helper or _JSONPathHelper(location)
+        if not (location or helper):
+            raise ValueError("Either 'location' or 'helper' must be provided.")
+        location = cast(Union[str, Path], location)
+        self.helper: _JSONPathHelper
+        if helper is None:
+            helper = _JSONPathHelper(location)
+        self.helper = helper
 
     def connect(self) -> bool:
         """Verify that the directory structure exists."""
         try:
-            if not self.path_helper.base_path.exists():
-                logger.warning(f"Base path does not exist: {self.path_helper.base_path}")
+            if not self.helper.location.exists():
+                logger.warning(f"Base path does not exist: {self.helper.location}")
             self._is_connected = True
-            logger.info(f"JSON metadata reader connected to: {self.path_helper.base_path}")
+            logger.info(f"JSON metadata reader connected to: {self.helper.location}")
             return True
         except Exception as e:
             logger.error(f"Failed to connect JSON reader: {e}")
@@ -176,7 +201,7 @@ class JSONMetadataReader(MDDataReader):
             validate_name(name, context=f"{collection_type.rstrip('s')}")
             validate_name(collection_type, context="collection type")
 
-            file_path = self.path_helper.get_file_path(collection_type, name)
+            file_path = self.helper.get_file_path(collection_type, name)
 
             if not file_path.exists():
                 logger.debug(f"{collection_type.title()} file not found: {file_path}")
@@ -185,19 +210,29 @@ class JSONMetadataReader(MDDataReader):
             with open(file_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
 
-            logger.debug(f"{collection_type.title()} '{safe_name_log(name)}' read from {file_path}")
+            logger.debug(
+                f"{collection_type.title()} '{safe_name_log(name)}' read from {file_path}"
+            )
             return data
         except ValidationError as e:
-            logger.error(f"Validation error for {collection_type} '{safe_name_log(name)}': {e}")
+            logger.error(
+                f"Validation error for {collection_type} '{safe_name_log(name)}': {e}"
+            )
             return None
         except (OSError, IOError) as e:
-            logger.error(f"File I/O error reading {collection_type} '{safe_name_log(name)}': {e}")
+            logger.error(
+                f"File I/O error reading {collection_type} '{safe_name_log(name)}': {e}"
+            )
             return None
         except json.JSONDecodeError as e:
-            logger.error(f"JSON decode error for {collection_type} '{safe_name_log(name)}': {e}")
+            logger.error(
+                f"JSON decode error for {collection_type} '{safe_name_log(name)}': {e}"
+            )
             return None
         except Exception as e:
-            logger.error(f"Unexpected error reading {collection_type} '{safe_name_log(name)}': {e}")
+            logger.error(
+                f"Unexpected error reading {collection_type} '{safe_name_log(name)}': {e}"
+            )
             return None
 
     def list_federations(self) -> List[str]:
@@ -212,11 +247,11 @@ class JSONMetadataReader(MDDataReader):
             return []
         try:
             if collection_type == "federations":
-                path = self.path_helper.federations_path
+                path = self.helper.federations_path
             elif collection_type == "scenarios":
-                path = self.path_helper.scenarios_path
+                path = self.helper.scenarios_path
             else:
-                path = self.path_helper.base_path / collection_type
+                path = self.helper.location / collection_type
 
             if not path.exists():
                 logger.debug(f"Collection path does not exist: {path}")
@@ -245,13 +280,15 @@ class JSONMetadataReader(MDDataReader):
             logger.error("JSON metadata reader not connected.")
             return []
         try:
-            if not self.path_helper.base_path.exists():
+            if not self.helper.location.exists():
                 return []
-            
+
             collections = [
                 path.name
-                for path in self.path_helper.base_path.iterdir()
-                if path.is_dir() and path.name not in ["federations", "scenarios"] and self._is_valid_collection_name(path)
+                for path in self.helper.location.iterdir()
+                if path.is_dir()
+                and path.name not in ["federations", "scenarios"]
+                and self._is_valid_collection_name(path)
             ]
             return sorted(collections)
         except Exception as e:
@@ -281,9 +318,9 @@ class JSONMetadataManager(MDDataManager):
         """
         super().__init__()
         # The manager creates ONE helper and shares it with the reader/writer.
-        path_helper = _JSONPathHelper(location)
-        self.writer = JSONMetadataWriter(path_helper=path_helper)
-        self.reader = JSONMetadataReader(path_helper=path_helper)
+        self.helper: _JSONPathHelper = _JSONPathHelper(location)
+        self.writer: JSONMetadataWriter = JSONMetadataWriter(helper=self.helper)
+        self.reader: JSONMetadataReader = JSONMetadataReader(helper=self.helper)
 
     def connect(self) -> bool:
         """Establish connection for both reader and writer."""
@@ -316,44 +353,56 @@ class JSONMetadataManager(MDDataManager):
             validate_name(name, context=f"{collection_type.rstrip('s')}")
             validate_name(collection_type, context="collection type")
 
-            file_path = self.reader.path_helper.get_file_path(collection_type, name)
+            file_path = self.reader.helper.get_file_path(collection_type, name)
             if file_path.exists():
                 file_path.unlink()
-                logger.debug(f"{collection_type.title()} '{safe_name_log(name)}' deleted")
+                logger.debug(
+                    f"{collection_type.title()} '{safe_name_log(name)}' deleted"
+                )
                 return True
             else:
-                logger.warning(f"{collection_type.title()} '{safe_name_log(name)}' not found for deletion")
+                logger.warning(
+                    f"{collection_type.title()} '{safe_name_log(name)}' not found for deletion"
+                )
                 return False
         except ValidationError as e:
-            logger.error(f"Validation error for {collection_type} '{safe_name_log(name)}': {e}")
+            logger.error(
+                f"Validation error for {collection_type} '{safe_name_log(name)}': {e}"
+            )
             return False
         except (OSError, IOError) as e:
-            logger.error(f"File I/O error deleting {collection_type} '{safe_name_log(name)}': {e}")
+            logger.error(
+                f"File I/O error deleting {collection_type} '{safe_name_log(name)}': {e}"
+            )
             return False
         except Exception as e:
-            logger.error(f"Unexpected error deleting {collection_type} '{safe_name_log(name)}': {e}")
+            logger.error(
+                f"Unexpected error deleting {collection_type} '{safe_name_log(name)}': {e}"
+            )
             return False
 
     def exists_federation(self, name: str) -> bool:
-        return self.reader.path_helper.get_file_path("federations", name).exists()
+        return self.reader.helper.get_file_path("federations", name).exists()
 
     def exists_scenario(self, name: str) -> bool:
-        return self.reader.path_helper.get_file_path("scenarios", name).exists()
+        return self.reader.helper.get_file_path("scenarios", name).exists()
 
     def exists(self, collection_type: str, name: str) -> bool:
-        return self.reader.path_helper.get_file_path(collection_type, name).exists()
+        return self.reader.helper.get_file_path(collection_type, name).exists()
 
     def backup_collection(self, collection_type: str, backup_path: str) -> bool:
         try:
             if collection_type == "federations":
-                source_path = self.reader.path_helper.federations_path
+                source_path = self.reader.helper.federations_path
             elif collection_type == "scenarios":
-                source_path = self.reader.path_helper.scenarios_path
+                source_path = self.reader.helper.scenarios_path
             else:
-                source_path = self.reader.path_helper.base_path / collection_type
+                source_path = self.reader.helper.location / collection_type
 
             if not source_path.exists():
-                logger.warning(f"Collection {collection_type} does not exist, nothing to backup")
+                logger.warning(
+                    f"Collection {collection_type} does not exist, nothing to backup"
+                )
                 return True
 
             backup_dest = Path(backup_path)
@@ -366,13 +415,13 @@ class JSONMetadataManager(MDDataManager):
             return False
 
     @property
-    def base_path(self) -> Path:
-        return self.reader.path_helper.base_path
+    def location(self) -> Path:
+        return self.reader.helper.location
 
     @property
     def federations_path(self) -> Path:
-        return self.reader.path_helper.federations_path
+        return self.reader.helper.federations_path
 
     @property
     def scenarios_path(self) -> Path:
-        return self.reader.path_helper.scenarios_path
+        return self.reader.helper.scenarios_path

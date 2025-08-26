@@ -26,7 +26,7 @@ class TSRecord:
     data_name: str
     data_value: Any
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Validate data types if needed (currently disabled for performance)"""
         # Optional validation could be added here
         pass
@@ -39,9 +39,10 @@ class TSDataWriter(ABC):
     a consistent API across different storage backends.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initializes the base writer state."""
-        self._buffer = []
+        self.helper: object
+        self._buffer: list = []
         self._is_connected = False
 
     @abstractmethod
@@ -114,8 +115,9 @@ class TSDataReader(ABC):
     a consistent API across different storage backends.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initializes the base reader state."""
+        self.helper: object
         self._is_connected = False
 
     @abstractmethod
@@ -174,8 +176,9 @@ class MDDataWriter(ABC):
     a consistent API across different storage backends.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initializes the base writer state."""
+        self.helper: object
         self._is_connected = False
 
     @abstractmethod
@@ -260,8 +263,9 @@ class MDDataReader(ABC):
     a consistent API across different storage backends.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initializes the base reader state."""
+        self.helper: object
         self._is_connected = False
 
     @abstractmethod
@@ -359,8 +363,9 @@ class TSDataManager(ABC):
     Abstract base class for combined time-series data management.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         self._is_connected = False
+        self.helper: object
         self.writer: TSDataWriter
         self.reader: TSDataReader
 
@@ -407,8 +412,9 @@ class MDDataManager(ABC):
     Abstract base class for combined metadata management.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         self._is_connected = False
+        self.helper: object
         self.writer: MDDataWriter
         self.reader: MDDataReader
 
@@ -474,39 +480,5 @@ class MDDataManager(ABC):
         return self._is_connected
 
 
-# Type aliases for convenience
 MetadataManager = MDDataManager
 TimeSeriesManager = TSDataManager
-
-
-# Fixed factory functions that actually work
-def create_metadata_manager(backend: str, location: str, **kwargs) -> MetadataManager:
-    """
-    Factory function to create metadata managers.
-    Args:
-        backend (str): Backend type ("json", "mongo")
-        location (str): Storage location (path for JSON, URI for MongoDB)
-        **kwargs: Backend-specific options
-    Returns:
-        MetadataManager: Configured metadata manager
-    """
-    from .metadata_factory import create_metadata_manager as _create
-
-    return _create(backend, location, **kwargs)
-
-
-def create_timeseries_manager(
-    backend: str, location: str, **kwargs
-) -> TimeSeriesManager:
-    """
-    Factory function to create time-series managers.
-    Args:
-        backend (str): Backend type ("csv", "postgresql")
-        location (str): Storage location
-        **kwargs: Backend-specific options
-    Returns:
-        TimeSeriesManager: Configured time-series manager
-    """
-    from .timeseries_factory import create_timeseries_manager as _create
-
-    return _create(backend, location, **kwargs)

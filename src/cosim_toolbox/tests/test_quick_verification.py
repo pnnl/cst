@@ -10,8 +10,8 @@ import sys
 
 sys.path.insert(0, "src/cosim_toolbox")
 
-from cosim_toolbox.data_management import TSRecord
-from cosim_toolbox.metadata_factory import create_json_manager
+from data_management import TSRecord
+from data_management import create_metadata_manager
 
 
 def test_basic_functionality():
@@ -37,7 +37,7 @@ def test_basic_functionality():
     temp_dir = tempfile.mkdtemp()
 
     try:
-        manager = create_json_manager(temp_dir)
+        manager = create_metadata_manager("json", temp_dir)
         print(f"   ✅ JSON manager created for: {temp_dir}")
 
         # Test federation operations
@@ -84,7 +84,7 @@ def test_federation_runner_simulation():
     temp_dir = tempfile.mkdtemp()
 
     try:
-        manager = create_json_manager(temp_dir)
+        manager = create_metadata_manager("json", temp_dir)
 
         # Create federation data like runner2.py would
         federation_data = {

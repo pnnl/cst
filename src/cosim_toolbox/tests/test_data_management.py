@@ -1,10 +1,8 @@
 """
 Tests for core data management abstractions.
 """
-
-import pytest
 from datetime import datetime
-from cosim_toolbox.data_management import TSRecord
+from data_management import TSRecord
 
 
 class TestTSRecord:

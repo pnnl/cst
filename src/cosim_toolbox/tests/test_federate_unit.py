@@ -1,23 +1,19 @@
 """
-Created on 01/16/2024
-
+Created on 08/26/2025
 Unit tests for Python federate
-
-@author: Trevor Hardy
-trevor.hardy@pnnl.gov
+@author: Nathan Gray
+nathan.gray@pnnl.gov
 """
-import collections
-collections.Callable = collections.abc.Callable
 
+import unittest
 import logging
+from unittest.mock import patch
+from cosim_toolbox.federate import Federate
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler())
 logger.setLevel(logging.ERROR)
 
-from unittest.mock import patch
-import unittest
-from cosim_toolbox.federate import Federate
 
 class MockHelicsInput:
     def __init__(self):
@@ -44,8 +40,8 @@ class MockHelicsEndpoint:
 
 
 class MockHelicsFederate:
-
     def __init__(self):
+        self.name = "Battery"  # Add missing name attribute
         self.n_inputs = 1
         self.n_endpoints = 1
 
@@ -55,36 +51,57 @@ class MockHelicsFederate:
     def get_endpoint_by_index(self, idx):
         return MockHelicsEndpoint()
 
-class MockDBResults:
 
-    def __init__(self):
-        pass
+class MockTimeSeriesManager:
+    """Mock for the new time-series data manager"""
 
-    def open_database_connections(self):
+    def __init__(self, *args, **kwargs):
+        self.connected = False
+        self.buffer = []
+        self.connect_called = False
+        self.disconnect_called = False
+
+    def connect(self):
+        self.connected = True
+        self.connect_called = True
         return True
 
-    def schema_exist(self, scheme_name):
+    def disconnect(self):
+        self.connected = False
+        self.disconnect_called = True
+
+    def write_records(self, records):
+        self.buffer.extend(records)
         return True
 
-class MockDBConfigs:
-    cst_mongo = None
-    cst_mongo_db = None
-    cst_federations = "federations"
-    cst_scenarios = "scenarios"
+    def add_record(self, record):
+        self.buffer.append(record)
 
-    def __init__(self, uri, db_name):
-        self.uri = uri
-        self.db_name = db_name
-        self.config = ""
+    def flush(self):
+        return True
+
+    def __enter__(self):
+        self.connect()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.disconnect()
+
+
+class MockMetadataManager:
+    """Mock for the new metadata manager"""
+
+    def __init__(self, *args, **kwargs):
+        self.connected = False
+        self.connect_called = False
+        self.disconnect_called = False
         self.scenario_dict = {
             "federation": "test_federation",
             "start_time": "2023-12-07T15:31:27",
             "stop_time": "2023-12-07T15:32:27",
-            "schema": "test_schema"
+            "schema": "test_schema",
         }
-
         self.federation_dict = {
-            "cst_007": "BT1_EV1",
             "federation": {
                 "Battery": {
                     "image": "python/3.11.7-slim-bullseye",
@@ -104,7 +121,7 @@ class MockDBConfigs:
                                 "global": True,
                                 "key": "Battery/EV1_current",
                                 "type": "double",
-                                "unit": "A"
+                                "unit": "A",
                             }
                         ],
                         "subscriptions": [
@@ -112,115 +129,275 @@ class MockDBConfigs:
                                 "global": True,
                                 "key": "EVehicle/EV1_voltage",
                                 "type": "double",
-                                "unit": "V"
+                                "unit": "V",
                             }
                         ],
                         "endpoints": [
                             {
                                 "global": True,
                                 "name": "Battery/EV1_voltage",
-                                "destination": "EVehicle/EV1_current"
+                                "destination": "EVehicle/EV1_current",
                             }
-                        ]
-                    }
+                        ],
+                    },
                 }
             }
         }
 
-    def get_dict(self, test_scenario, object_id, dict_name):
-        if test_scenario == "scenarios":
-            return self.scenario_dict
-        if test_scenario == "federations":
-            return self.federation_dict
+    def connect(self):
+        self.connected = True
+        self.connect_called = True
+        return True
+
+    def disconnect(self):
+        self.connected = False
+        self.disconnect_called = True
+
+    def read_scenario(self, name):
+        return self.scenario_dict
+
+    def read_federation(self, name):
+        return self.federation_dict
+
+    def __enter__(self):
+        self.connect()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.disconnect()
 
 
-@patch('helics.helicsCreateCombinationFederateFromConfig')
-@patch('helics.helicsCreateMessageFederateFromConfig')
-@patch('helics.helicsCreateValueFederateFromConfig')
-@patch("cosim_toolbox.federate.DBConfigs")
-@patch("cosim_toolbox.federate.DBResults")
-@patch("cosim_toolbox.dbConfigs", MockDBConfigs)
-@patch("cosim_toolbox.dbResults", MockDBResults)
 class TestCreateFederate2(unittest.TestCase):
-
     def setUp(self):
         self.test_fed = Federate(fed_name="Battery")
-        self.mock_meta_db_instance = MockDBConfigs("fake_uri", "fake_db_name")
-        self.mock_data_db_instance = MockDBResults()
+        self.mock_metadata_manager = MockMetadataManager()
+        self.mock_timeseries_manager = MockTimeSeriesManager()
 
-    def test_create_federate(self,
-                             mock_data_db_class,
-                             mock_meta_db_class,
-                             mock_create_value_federate,
-                             mock_create_message_federate,
-                             mock_create_combo_federate):
-        
+    @patch("cosim_toolbox.federate.h.helicsCreateCombinationFederateFromConfig")
+    @patch("cosim_toolbox.federate.h.helicsCreateMessageFederateFromConfig")
+    @patch("cosim_toolbox.federate.h.helicsCreateValueFederateFromConfig")
+    @patch("cosim_toolbox.federate.create_timeseries_manager")
+    @patch("cosim_toolbox.federate.create_metadata_manager")
+    def test_create_federate(
+        self,
+        mock_create_metadata_manager,
+        mock_create_timeseries_manager,
+        mock_create_value_federate,
+        mock_create_message_federate,
+        mock_create_combo_federate,
+    ):
         # Setup mocks
         mock_create_metadata_manager.return_value = self.mock_metadata_manager
         mock_create_timeseries_manager.return_value = self.mock_timeseries_manager
-        
+        mock_helics_federate = MockHelicsFederate()
+
         # Test federate type value
-        self.mock_metadata_manager.federation_dict["federation"]["Battery"]["federate_type"] = "value"
+        mock_create_value_federate.return_value = mock_helics_federate
+        self.mock_metadata_manager.federation_dict["federation"]["Battery"][
+            "federate_type"
+        ] = "value"
         self.test_fed.create_federate("test_scenario")
         mock_create_value_federate.assert_called_once()
-        # self.test_fed.close_metadata()
-        # self.test_fed.close_data()
 
-        # federate type message
-        self.mock_meta_db_instance.federation_dict["federation"]["Battery"]["federate_type"] = "message"
+        # Reset mocks for next test
+        mock_create_value_federate.reset_mock()
+
+        # Test federate type message
+        mock_create_message_federate.return_value = mock_helics_federate
+        self.mock_metadata_manager.federation_dict["federation"]["Battery"][
+            "federate_type"
+        ] = "message"
         self.test_fed.create_federate("test_scenario")
         mock_create_message_federate.assert_called_once()
-        # self.test_fed.close_metadata()
-        # self.test_fed.close_data()
 
-        # federate type combo
-        self.mock_meta_db_instance.federation_dict["federation"]["Battery"]["federate_type"] = "combo"
+        # Reset mocks for next test
+        mock_create_message_federate.reset_mock()
+
+        # Test federate type combo
+        mock_create_combo_federate.return_value = mock_helics_federate
+        self.mock_metadata_manager.federation_dict["federation"]["Battery"][
+            "federate_type"
+        ] = "combo"
         self.test_fed.create_federate("test_scenario")
         mock_create_combo_federate.assert_called_once()
-        # self.test_fed.close_metadata()
-        # self.test_fed.close_data()
 
-        # federate type invalid
-        self.mock_meta_db_instance.federation_dict["federation"]["Battery"]["federate_type"] = "invalid"
+        # Test federate type invalid
+        self.mock_metadata_manager.federation_dict["federation"]["Battery"][
+            "federate_type"
+        ] = "invalid"
         with self.assertRaises(ValueError):
             self.test_fed.create_federate("test_scenario")
 
+        # Test federate attributes
         self.assertEqual(self.test_fed.period, 60)
         self.assertEqual(self.test_fed.stop_time, 60)
         self.assertEqual(len(self.test_fed.pubs), 1)
         self.assertEqual(len(self.test_fed.inputs), 1)
         self.assertEqual(len(self.test_fed.endpoints), 1)
 
+        # Test None scenario name
         with self.assertRaises(NameError):
             self.test_fed.create_federate(None)
 
-    def test_run_cosim_loop(self,
-                            mock_data_db_class,
-                            mock_meta_db_class,
-                            mock_create_value_federate,
-                            mock_create_message_federate,
-                            mock_create_combo_federate):
+    @patch("cosim_toolbox.federate.h.helicsCreateCombinationFederateFromConfig")
+    @patch("cosim_toolbox.federate.h.helicsCreateMessageFederateFromConfig")
+    @patch("cosim_toolbox.federate.h.helicsCreateValueFederateFromConfig")
+    @patch("cosim_toolbox.federate.create_timeseries_manager")
+    @patch("cosim_toolbox.federate.create_metadata_manager")
+    def test_run_cosim_loop(
+        self,
+        mock_create_metadata_manager,
+        mock_create_timeseries_manager,
+        mock_create_value_federate,
+        mock_create_message_federate,
+        mock_create_combo_federate,
+    ):
+        # Test without HELICS federate
         self.test_fed.hfed = None
         with self.assertRaises(ValueError):
             self.test_fed.run_cosim_loop()
 
-        mock_meta_db_class.return_value = self.mock_meta_db_instance
-
+        # Setup mocks
+        mock_create_metadata_manager.return_value = self.mock_metadata_manager
+        mock_create_timeseries_manager.return_value = self.mock_timeseries_manager
         mock_helics_federate = MockHelicsFederate()
         mock_create_value_federate.return_value = mock_helics_federate
 
-        # federate type value
-        self.mock_meta_db_instance.federation_dict["federation"]["Battery"]["federate_type"] = "value"
+        # Test with value federate
+        self.mock_metadata_manager.federation_dict["federation"]["Battery"][
+            "federate_type"
+        ] = "value"
         self.test_fed.create_federate("test_scenario")
+
+        # Test time calculation
         self.test_fed.granted_time = 100
         self.test_fed.time_step = 50
         self.test_fed.calculate_next_requested_time()
         self.assertEqual(self.test_fed.next_requested_time, 160)
 
+        # Test data collection from federation
         self.test_fed.get_data_from_federation()
-        expected_data_from_federation = {'endpoints': {'EVehicle/EV1_current': ['test_helics_message']},
-                                         'inputs': {'EVehicle/EV1_voltage': 11.13}}
-        self.assertEqual(self.test_fed.data_from_federation, expected_data_from_federation)
+        expected_data_from_federation = {
+            "endpoints": {"EVehicle/EV1_current": ["test_helics_message"]},
+            "inputs": {"EVehicle/EV1_voltage": 11.13},
+        }
+        self.assertEqual(
+            self.test_fed.data_from_federation, expected_data_from_federation
+        )
 
-        expected_data_to_federation = {'endpoints': {'Battery/EV1_voltage': None}, 'publications': {'Battery/EV1_current': None}}
+        # Test data structure for sending to federation
+        expected_data_to_federation = {
+            "endpoints": {"Battery/EV1_voltage": None},
+            "publications": {"Battery/EV1_current": None},
+        }
         self.assertEqual(self.test_fed.data_to_federation, expected_data_to_federation)
+
+    @patch("cosim_toolbox.federate.h.helicsCreateValueFederateFromConfig")
+    @patch("cosim_toolbox.federate.create_timeseries_manager")
+    @patch("cosim_toolbox.federate.create_metadata_manager")
+    def test_data_managers_integration(
+        self,
+        mock_create_metadata_manager,
+        mock_create_timeseries_manager,
+        mock_create_value_federate,
+    ):
+        """Test that the federate properly integrates with new data managers"""
+
+        # Setup mocks
+        mock_create_metadata_manager.return_value = self.mock_metadata_manager
+        mock_create_timeseries_manager.return_value = self.mock_timeseries_manager
+        mock_helics_federate = MockHelicsFederate()
+        mock_create_value_federate.return_value = mock_helics_federate
+
+        # Create federate
+        self.test_fed.create_federate("test_scenario")
+
+        # Verify metadata manager was created and used
+        mock_create_metadata_manager.assert_called_once()
+        # Check that connect was called (even though it's disconnected after context manager)
+        self.assertTrue(self.mock_metadata_manager.connect_called)
+        self.assertTrue(self.mock_metadata_manager.disconnect_called)
+
+        # Verify timeseries manager was created and connected
+        mock_create_timeseries_manager.assert_called_once()
+        self.assertTrue(self.mock_timeseries_manager.connect_called)
+        # Timeseries manager should still be connected after create_federate
+        self.assertTrue(self.mock_timeseries_manager.connected)
+
+        # Test that federate has access to both managers
+        self.assertIsNotNone(self.test_fed.metadata_manager)
+        self.assertIsNotNone(self.test_fed.timeseries_manager)
+
+    @patch("cosim_toolbox.federate.h.helicsCreateValueFederateFromConfig")
+    @patch("cosim_toolbox.federate.create_timeseries_manager")
+    @patch("cosim_toolbox.federate.create_metadata_manager")
+    def test_scenario_and_federation_reading(
+        self,
+        mock_create_metadata_manager,
+        mock_create_timeseries_manager,
+        mock_create_value_federate,
+    ):
+        """Test that scenario and federation data is properly read from new metadata system"""
+
+        # Setup mocks
+        mock_create_metadata_manager.return_value = self.mock_metadata_manager
+        mock_create_timeseries_manager.return_value = self.mock_timeseries_manager
+        mock_helics_federate = MockHelicsFederate()
+        mock_create_value_federate.return_value = mock_helics_federate
+
+        # Create federate
+        self.test_fed.create_federate("test_scenario")
+
+        # Verify scenario data was read correctly
+        self.assertEqual(self.test_fed.scenario_name, "test_scenario")
+        self.assertEqual(self.test_fed.start, "2023-12-07T15:31:27")
+        self.assertEqual(self.test_fed.stop, "2023-12-07T15:32:27")
+        self.assertEqual(self.test_fed.scheme_name, "test_schema")
+
+        # Verify federation data was read correctly
+        self.assertEqual(self.test_fed.federation_name, "test_federation")
+        self.assertEqual(self.test_fed.federate_type, "value")
+        self.assertEqual(self.test_fed.period, 60)
+
+    @patch("cosim_toolbox.federate.h.helicsCreateValueFederateFromConfig")
+    @patch("cosim_toolbox.federate.create_timeseries_manager")
+    @patch("cosim_toolbox.federate.create_metadata_manager")
+    def test_federate_initialization_options(
+        self,
+        mock_create_metadata_manager,
+        mock_create_timeseries_manager,
+        mock_create_value_federate,
+    ):
+        """Test federate initialization with different options"""
+
+        # Setup mocks
+        mock_create_metadata_manager.return_value = self.mock_metadata_manager
+        mock_create_timeseries_manager.return_value = self.mock_timeseries_manager
+        mock_helics_federate = MockHelicsFederate()
+        mock_create_value_federate.return_value = mock_helics_federate
+
+        # Test with use_mdb=False (should use JSON)
+        federate_json = Federate(fed_name="Battery", use_mdb=False)
+        federate_json.metadata_location = "/tmp/test"
+        federate_json.create_federate("test_scenario")
+
+        # Verify JSON metadata manager was requested
+        mock_create_metadata_manager.assert_called_with(
+            backend="json", location="/tmp/test"
+        )
+
+        # Reset mock
+        mock_create_metadata_manager.reset_mock()
+
+        # Test with use_mdb=True (should use MongoDB)
+        federate_mongo = Federate(fed_name="Battery", use_mdb=True)
+        federate_mongo.create_federate("test_scenario")
+
+        # Verify MongoDB metadata manager was requested
+        self.assertTrue(mock_create_metadata_manager.called)
+        call_kwargs = mock_create_metadata_manager.call_args[1]
+        self.assertEqual(call_kwargs["backend"], "mongo")
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -3,7 +3,7 @@ Integration tests for the complete data management system.
 """
 
 import pytest
-from cosim_toolbox.metadata_factory import create_metadata_manager
+from data_management import create_metadata_manager
 
 
 class TestIntegration:
@@ -62,7 +62,7 @@ class TestIntegration:
     @pytest.mark.mongo
     def test_federation_runner_workflow_mongo(self, sample_federation_data, sample_scenario_data):
         """Test the complete workflow using MongoDB."""
-        manager = create_metadata_manager("mongo", "mongodb://localhost:27017", db_name="test_integration")
+        manager = create_metadata_manager("mongo", "mongodb://localhost:27017", database="test_integration")
         
         try:
             with manager:
@@ -102,7 +102,7 @@ class TestIntegration:
         
         # Write to MongoDB (if available)
         try:
-            mongo_manager = create_metadata_manager("mongo", "mongodb://localhost:27017", db_name="test_compat")
+            mongo_manager = create_metadata_manager("mongo", "mongodb://localhost:27017", database="test_compat")
             
             with mongo_manager:
                 # Write the same data

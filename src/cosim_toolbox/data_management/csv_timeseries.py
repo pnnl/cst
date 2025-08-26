@@ -14,13 +14,13 @@ from typing import Any, Dict, List, Optional
 
 import pandas as pd
 
-from .abstractions import (
+from data_management.abstractions import (
     TSDataWriter,
     TSDataReader,
     TSDataManager,
     TSRecord,
 )
-from .validation import validate_name, ValidationError, safe_name_log
+from data_management.validation import validate_name, ValidationError, safe_name_log
 
 logger = logging.getLogger(__name__)
 
@@ -40,9 +40,9 @@ class _CSVHelper:
 
     def __init__(self, location: str, analysis_name: str):
         validate_name(analysis_name, context="analysis")
-        self.base_path = Path(location)
+        self.location = Path(location)
         self.analysis_name = analysis_name
-        self.analysis_path = self.base_path / self.analysis_name
+        self.analysis_path = self.location / self.analysis_name
 
     def get_file_path(self, federate_name: str, data_type: str) -> Path:
         """Get the file path for a specific federate and data type."""
@@ -121,6 +121,7 @@ class CSVTimeSeriesWriter(TSDataWriter):
             writer = CSVTimeSeriesWriter(helper=helper)
         """
         super().__init__()
+        self.helper: _CSVHelper
         if helper:
             self.helper = helper
         elif location:
@@ -147,9 +148,6 @@ class CSVTimeSeriesWriter(TSDataWriter):
             return True
         except (OSError, IOError) as e:
             logger.error(f"Failed to create directories for CSV writer: {e}")
-            return False
-        except Exception as e:
-            logger.error(f"Unexpected error connecting CSV writer: {e}")
             return False
 
     def disconnect(self) -> None:
@@ -220,6 +218,7 @@ class CSVTimeSeriesReader(TSDataReader):
             reader = CSVTimeSeriesReader(helper=helper)
         """
         super().__init__()
+        self.helper: _CSVHelper
         if helper:
             self.helper = helper
         elif location:
@@ -333,7 +332,7 @@ class CSVTimeSeriesReader(TSDataReader):
         """Get list of unique scenarios in the data."""
         if not self._is_connected or not self.helper.analysis_path.exists():
             return []
-        scenarios = set()
+        scenarios: set = set()
         for federate_path in self.helper.analysis_path.iterdir():
             if not federate_path.is_dir():
                 continue
@@ -367,9 +366,9 @@ class CSVTimeSeriesManager(TSDataManager):
         """Initialize CSV time-series manager."""
         super().__init__()
         # The manager creates ONE helper and shares it.
-        self.helper = _CSVHelper(location, analysis_name)
-        self.writer = CSVTimeSeriesWriter(helper=self.helper)
-        self.reader = CSVTimeSeriesReader(helper=self.helper)
+        self.helper: _CSVHelper = _CSVHelper(location, analysis_name)
+        self.writer: CSVTimeSeriesWriter = CSVTimeSeriesWriter(helper=self.helper)
+        self.reader: CSVTimeSeriesReader = CSVTimeSeriesReader(helper=self.helper)
 
     def connect(self) -> bool:
         """Establish connection for both reader and writer."""
@@ -441,6 +440,10 @@ class CSVTimeSeriesManager(TSDataManager):
             return False
 
     @property
+    def location(self) -> Path:
+        return self.reader.helper.location
+
+    @property
     def analysis_name(self) -> str:
         """Get the current analysis name."""
         return self.helper.analysis_name
@@ -450,4 +453,4 @@ class CSVTimeSeriesManager(TSDataManager):
         """Set the analysis name and update the shared helper."""
         validate_name(value, context="analysis")
         self.helper.analysis_name = value
-        self.helper.analysis_path = self.helper.base_path / value
+        self.helper.analysis_path = self.helper.location / value
