@@ -24,7 +24,7 @@ class TestSimpleFederation(unittest.TestCase):
 
         # this may fail if run/python/test_federation/runner.py not ran
         # integration_test.sh does run this in the pipeline
-        scenario = self.db.scenario('test_schema',
+        scenario = self.db.scenario('test_analysis',
                                     'test_federation',
                                     "2023-12-07T15:31:27",
                                     "2023-12-08T15:31:27",
@@ -37,9 +37,9 @@ class TestSimpleFederation(unittest.TestCase):
 
         # Check federation complete
         self._check_complete(interval=10, timeout=10 * 60)
-        self._verify_query(federate_name="Battery", data_name="Battery/current3", data_type="hdt_boolean")
+        self._verify_query(federate_name="Battery", data_name="current3", data_type="hdt_boolean")
         self._verify_query(federate_name="Battery", data_name="Battery/current", data_type="hdt_double")
-        self._verify_query(federate_name="EVehicle", data_name="EVehicle/voltage4", data_type="hdt_string")
+        self._verify_query(federate_name="EVehicle", data_name="voltage4", data_type="hdt_string")
         self.logger_data.close_database_connections()
 
     def _verify_query(self, federate_name: str, data_name: str, data_type: str):
@@ -65,7 +65,7 @@ class TestSimpleFederation(unittest.TestCase):
                 duration=0,
                 scenario_name="test_scenario",
                 federate_name="EVehicle",
-                data_name="EVehicle/voltage5",
+                data_name="voltage5",
                 data_type="hdt_complex",
             )
             if not df.empty:

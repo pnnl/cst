@@ -80,7 +80,7 @@ class Federate:
         self.federate: dict = None
         self.federate_type: str = None
         self.federate_name: str = fed_name
-        self.scheme_name: str = None
+        self.analysis_name: str = None
         self.start: str = None
         self.stop: str = None
         self.no_t_start = None
@@ -165,20 +165,20 @@ class Federate:
         self.dl.open_database_connections()
         # self.dl.check_version()
 
-        if not self.dl.schema_exist(self.scheme_name):
+        if not self.dl.analysis_exist(self.analysis_name):
             try:
-                self.dl.create_schema(self.scheme_name)
+                self.dl.create_analysis(self.analysis_name)
             except Exception as ex:
                 self.dl.data_db.rollback()
-                logger.exception(f"Rolling back: create schema!")
+                logger.exception(f"Rolling back: create analysis!")
                 return
-            if not self.dl.table_exist(self.scheme_name, 'hdt_double'):
+            if not self.dl.table_exist(self.analysis_name, 'hdt_double'):
                 try:
-                    self.dl.make_logger_database(self.scheme_name)
-                    self.dl.remove_scenario(self.scheme_name, self.scenario_name)
+                    self.dl.make_logger_database(self.analysis_name)
+                    self.dl.remove_scenario(self.analysis_name, self.scenario_name)
                 except Exception as ex:
                     self.dl.data_db.rollback()
-                    logger.exception(f"Rolling back: make tables for schema!")
+                    logger.exception(f"Rolling back: make tables for analysis!")
 
     def connect_to_dataCSV(self):
         if self.output_csv is None:
@@ -228,11 +228,11 @@ class Federate:
         self._s = datetime.datetime.strptime(self.start, '%Y-%m-%dT%H:%M:%S')
 
         # setting up data logging
-        self.scheme_name = self.scenario["schema"]
+        self.analysis_name = self.scenario["analysis"]
         if self.federation.get("tags"):
             self.fed_collect = self.federation["tags"].get("logger", self.fed_collect)
 
-    def connect_to_helics_config(self) -> None:
+    def get_helics_config(self) -> None:
         """Sets instance attributes to enable HELICS config query of dbConfigs
 
         HELICS configuration information is generally stored in the dbConfigs
@@ -271,7 +271,7 @@ class Federate:
         else:
             self.connect_to_metadataJSON()
         self.set_metadata()
-        self.connect_to_helics_config()
+        self.get_helics_config()
 
         # Provide internal copies of the HELICS interfaces for convenience during debugging.
         if "publications" in self.config.keys():
@@ -560,9 +560,9 @@ class Federate:
 
         Args:
             reset (bool, optional): When set erases published value which
-            prevents re-publication of the value until manually set to a 
-            non-`None` value. Any entry in this dictionary that is `None` is
-            not sent out via HELICS. Defaults to False.
+                prevents re-publication of the value until manually set to a
+                non-`None` value. Any entry in this dictionary that is `None` is
+                not sent out via HELICS. Defaults to False.
         """
 
         # Publications
@@ -637,7 +637,7 @@ class Federate:
         t = self.granted_time
         d = datetime.timedelta(seconds=int(self.granted_time))
         if self.use_pdb:
-            query = (f"INSERT INTO {self.scheme_name}.{table} "
+            query = (f"INSERT INTO {self.analysis_name}.{table} "
                    "(real_time, sim_time, scenario, federate, data_name, data_value)"
                    f" VALUES( to_timestamp('{self.no_t_start}','YYYY-MM-DD HH24:MI:SS') + interval '1s' * "
                    f"{self.granted_time}, {self.granted_time}, "

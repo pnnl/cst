@@ -30,7 +30,7 @@ The JSON/dictionary that is pulled in is stored in the `federation` attribute.
 #### `set_metadata()`
 Pulls in start and stop time strings in the configuration information and converts them to [Python datetime](TODO add link) data types. Also defines the analysis name and whether the CST Logger needs to collect its outputs for publication.
 
-#### `connect_to_helics_config()`
+#### `get_helics_config()`
 This method looks at the "federation" attribute to define a few HELICS-specific attributes of this federate: `name` (federate name), `federate_type` (HELICS federate type, _i.e._ value, message or combo), `period` (size of timestep), and `config` (comprehesive HELICS configuration)
 
 #### `connect_to_dataDB` or `connect_to_dataCSV()`
@@ -41,7 +41,7 @@ If the time-series database is being used (`use_pdb` set to `True`), a check is 
 If the output data is being written to a CSV file than that file is created and opened for writing.
 
 #### `create_helics_fed()`
-Calls the necessary HELICS API to create the HELICS federate object (stored as the `hfed` attribute) using the `config` attribute defined when `connect_to_helics_config()` was called. To make any HELICS API calls such as might be done when overloading other methods, this HELICS object must exist; overload this method with care to ensure said object is retained.
+Calls the necessary HELICS API to create the HELICS federate object (stored as the `hfed` attribute) using the `config` attribute defined when `get_helics_config()` was called. To make any HELICS API calls such as might be done when overloading other methods, this HELICS object must exist; overload this method with care to ensure said object is retained.
 
 
 ### `run_cosim_loop()`

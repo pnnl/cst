@@ -71,7 +71,7 @@ class DockerRunner:
 
         scenario_def = db.get_dict(env.cst_scenarios, None, scenario_name)
         federation_name = scenario_def["federation"]
-        schema_name = scenario_def["schema"]
+        analysis_name = scenario_def["analysis"]
         fed_def = db.get_dict(env.cst_federations, None, federation_name)["federation"]
 
         cosim_env = """      CST_HOST: \"""" + env.cst_host + """\"
@@ -102,8 +102,8 @@ class DockerRunner:
             cnt += 1
             params = [cosim_env,
                    f"python3 -c \"import cosim_toolbox.federateLogger as datalog; "
-                   f"datalog.main('FederateLogger', '{schema_name}', '{scenario_name}')\""]
-            yaml += DockerRunner._service("cst_logger", "cosim-cst:latest", params, cnt, depends=None)
+                   f"datalog.main('FederateLogger', '{analysis_name}', '{scenario_name}')\""]
+            yaml += DockerRunner._service("cst_logger", "cosim-python:latest", params, cnt, depends=None)
 
         yaml += DockerRunner._network()
 
@@ -160,7 +160,7 @@ class DockerRunner:
 
         scenario_def = db.get_dict(env.cst_scenarios, None, scenario_name)
         federation_name = scenario_def["federation"]
-        schema_name = scenario_def["schema"]
+        analysis_name = scenario_def["analysis"]
         fed_def = db.get_dict(env.cst_federations, None, federation_name)["federation"]
 
         cnt = 2
@@ -181,11 +181,11 @@ class DockerRunner:
         if add_logger:
             cnt += 1
             shell += f"(exec python3 -c \"import cosim_toolbox.federateLogger as datalog; " \
-                     f"datalog.main('FederateLogger', '{schema_name} ', '{scenario_name}')\" &> FederateLogger.log &)"
+                     f"datalog.main('FederateLogger', '{analysis_name} ', '{scenario_name}')\" &> FederateLogger.log &)"
 
         # Add helics broker federate
         shell = f"#!/bin/bash\n\n" \
-                f"(exec helics_broker -f {cnt-2} --loglevel=warning --name=broker &> broker.log &)\n" + shell
+                 f"(exec helics_broker -f {cnt-2} --loglevel=warning --name=broker &> broker.log &)\n" + shell
 
         op = open(f"{scenario_name}.sh", 'w')
         op.write(shell)

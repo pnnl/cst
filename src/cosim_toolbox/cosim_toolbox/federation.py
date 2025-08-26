@@ -98,13 +98,13 @@ class FederateConfig:
             for i in group.vars:
                 self.helics.end_point(i)
         # uncomment for debugging
-        self.helics.write_file(self.name + ".json")
+        # self.helics.write_file(self.name + ".json")
 
 class FederationConfig:
 
-    def __init__(self, scenario_name: str, schema_name: str, federation_name: str, docker: bool=False):
+    def __init__(self, scenario_name: str, analysis_name: str, federation_name: str, docker: bool=False):
         self.scenario_name = scenario_name
-        self.schema_name = schema_name   # analysis
+        self.analysis_name = analysis_name   # analysis
         self.federation_name = federation_name
         self.docker = docker
         self.address = 2
@@ -245,7 +245,7 @@ class FederationConfig:
         db.add_dict(env.cst_federations, self.federation_name, diction)
         # print(env.cst_federations, db.get_collection_document_names(env.cst_federations))
 
-        scenario = db.scenario(self.schema_name, self.federation_name, start, stop, self.docker)
+        scenario = db.scenario(self.analysis_name, self.federation_name, start, stop, self.docker)
         db.remove_document(env.cst_scenarios, None, self.scenario_name)
         db.add_dict(env.cst_scenarios, self.scenario_name, scenario)
         # print(env.cst_scenarios, db.get_collection_document_names(env.cst_scenarios))

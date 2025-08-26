@@ -14,7 +14,7 @@ class TestHelicsMsg(unittest.TestCase):
 
     def setUp(self):
         self.helics_msg = HelicsMsg("test_name", period=1)
-        self.federation = FederationConfig("MyTestScenario", "MyTestSchema", "MyTestFederation", False)
+        self.federation = FederationConfig("MyTestScenario", "MyTestAnalysis", "MyTestFederation", False)
 
     def test_init(self):
         self.assertEqual(self.helics_msg._cnfg["name"], "test_name")

@@ -36,11 +36,11 @@ class DBConfigs:
     Provides methods to read and write to the metadata database.
 
     TODO: Update method names so they don't refer to "dictionaries" or
-    "documents" but are instead using the CST terminology. We might need to
-    add some of these terms into the Mongo documents so that they can be
-    queried with the same parameters as we use in the time-series database.
-    Mongo has databases, collections, and documents. Postgres has databases,
-    schemes, and tables. Should these line up one-to-one?
+        "documents" but are instead using the CST terminology. We might need to
+        add some of these terms into the Mongo documents so that they can be
+        queried with the same parameters as we use in the time-series database.
+        Mongo has databases, collections, and documents. Postgres has databases,
+        analysiss, and tables. Should these line up one-to-one?
     """
     _cst_name = 'cst_007'
 
@@ -80,8 +80,6 @@ class DBConfigs:
             uri (str, optional): URI for MongoDB. Defaults to None.
             db (str, optional): Name of database in MongoDB to use.
             Defaults to None.
-
-        Returns:
 
         Returns:
             tuple: name of database as string and MongoDB client object
@@ -339,13 +337,13 @@ class DBConfigs:
         return result
 
     @staticmethod
-    def scenario(schema_name: str, federation_name: str, start: str, stop: str, docker: bool = False) -> dict:
+    def scenario(analysis_name: str, federation_name: str, start: str, stop: str, docker: bool = False) -> dict:
         """
         Creates a properly formatted CoSimulation Toolbox scenario document
         (dictionary), using the provided inputs.
         """
         return {
-            "schema": schema_name,
+            "analysis": analysis_name,
             "federation": federation_name,
             "start_time": start,
             "stop_time": stop,
@@ -357,9 +355,9 @@ class DBConfigs:
         self.add_dict(env.cst_federations, name, config)
 
     def store_scenario(self,
-            scenario_name: str, schema_name: str, federation_name: str,
+            scenario_name: str, analysis_name: str, federation_name: str,
             start: str, stop: str, docker: bool = False) -> None:
-        scenario = self.scenario(schema_name, federation_name, start, stop, docker)
+        scenario = self.scenario(analysis_name, federation_name, start, stop, docker)
         self.remove_dict(env.cst_scenarios, scenario_name)
         self.add_dict(env.cst_scenarios, scenario_name, scenario)
 
@@ -423,11 +421,11 @@ def mytest1():
     }
 
     scenario_name = "ME30"
-    schema_name = "Tesp"
+    analysis_name = "Tesp"
     federate_name = "BT1"
     db.add_dict(env.cst_federations, federate_name, diction)
 
-    scenario = db.scenario(schema_name, federate_name, "2023-12-07T15:31:27", "2023-12-08T15:31:27")
+    scenario = db.scenario(analysis_name, federate_name, "2023-12-07T15:31:27", "2023-12-08T15:31:27")
     db.add_dict(env.cst_scenarios, scenario_name, scenario)
 
     logger.info(db.get_collection_document_names(env.cst_scenarios))
@@ -489,16 +487,16 @@ def mytest2():
     }
 
     scenario_name = "TE30"
-    schema_name = "Tesp"
+    analysis_name = "Tesp"
     federate_name = "BT1_EV1"
     db.add_dict(env.cst_federations, federate_name, diction)
 
-    scenario = db.scenario(schema_name, federate_name, "2023-12-07T15:31:27", "2023-12-08T15:31:27")
+    scenario = db.scenario(analysis_name, federate_name, "2023-12-07T15:31:27", "2023-12-08T15:31:27")
     db.add_dict(env.cst_scenarios, scenario_name, scenario)
 
     scenario_name = "TE100"
     # seems to remember the scenario address, not the value so reinitialize
-    scenario = db.scenario(schema_name, federate_name, "2023-12-07T15:31:27", "2023-12-10T15:31:27", True)
+    scenario = db.scenario(analysis_name, federate_name, "2023-12-07T15:31:27", "2023-12-10T15:31:27", True)
     db.add_dict(env.cst_scenarios, scenario_name, scenario)
 
     logger.info(db.get_collection_document_names(env.cst_scenarios))

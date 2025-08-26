@@ -13,7 +13,7 @@ class ReadConfig:
         meta_db = DBConfigs(env.cst_mg_host, env.cst_mongo_db)
         # retrieve data from MongoDB
         self.scenario = meta_db.get_dict(env.cst_scenarios, None, scenario_name)
-        self.schema_name = self.scenario.get("schema")
+        self.analysis_name = self.scenario.get("analysis")
         self.federation_name = self.scenario.get("federation")
         self.start_time = self.scenario.get("start_time")
         self.stop_time = self.scenario.get("stop_time")

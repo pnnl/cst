@@ -32,7 +32,7 @@ class ScenarioReader:
         self.meta_db = DBConfigs(uri=env.cst_mg_host, db_name=env.cst_mongo_db)
         # retrieve data from MongoDB
         self.scenario = self.meta_db.get_dict(env.cst_scenarios, None, scenario_name)
-        self.schema_name = self.scenario.get("schema")
+        self.analysis_name = self.scenario.get("analysis")
         self.federation_name = self.scenario.get("federation")
         self.start_time = self.scenario.get("start_time")
         self.stop_time = self.scenario.get("stop_time")
@@ -118,9 +118,9 @@ class DataReader(DBResults):
             qry_string (string) - string representing the query to be used in pulling time series
             data from logger database
         """
-        scheme = self.get_scenario(scenario_name)
-        scheme_name = scheme["schema"]
-        qry_string = self.get_select_string(scheme_name, data_type)
+        analysis = self.get_scenario(scenario_name)
+        analysis_name = analysis["analysis"]
+        qry_string = self.get_select_string(analysis_name, data_type)
         time_string = self.get_time_select_string(start_time, duration)
         scenario_string = f"scenario='{scenario_name}'" if scenario_name is not None and scenario_name != "" else ""
         federate_string = ""
@@ -161,8 +161,8 @@ class DataReader(DBResults):
             data_type: ValueType | str = ValueType.DOUBLE):
         if isinstance(data_type, ValueType):
             data_type = data_type.value
-        data_name_list = self.get_data_name_list(self.scenario_reader.schema_name, data_type=data_type).to_numpy()
-        federate_list = self.get_federate_list(self.scenario_reader.schema_name, data_type=data_type).to_numpy()
+        data_name_list = self.get_data_name_list(self.scenario_reader.analysis_name, data_type=data_type).to_numpy()
+        federate_list = self.get_federate_list(self.scenario_reader.analysis_name, data_type=data_type).to_numpy()
         if data_name is not None and data_name not in data_name_list:
             logger.warning(f"data_name, {data_name}, not in {data_name_list}")
         if federate_name is not None and federate_name not in federate_list:
@@ -172,14 +172,14 @@ class DataReader(DBResults):
         return self.query_scenario_federate_times(start_time, duration, self.scenario_name, federate_name,
                                       data_name, data_type)
 
-    def get_maximum_data_value(self, scheme_name: str, federate_name: str, data_name: str, data_type: str):
-        if type(scheme_name) is not str:
+    def get_maximum_data_value(self, analysis_name: str, federate_name: str, data_name: str, data_type: str):
+        if type(analysis_name) is not str:
             return None
         if type(data_type) is not str:
             return None
         if type(federate_name) is not str:
             return None
-        qry_string = (f"SELECT MAX(CAST(data_value AS FLOAT)) FROM {scheme_name}.{data_type} "
+        qry_string = (f"SELECT MAX(CAST(data_value AS FLOAT)) FROM {analysis_name}.{data_type} "
                       f"WHERE scenario='{self.scenario_name}' AND federate='{federate_name}' AND data_name='{data_name}'")
         with self.data_db.cursor() as cur:
             cur.execute(qry_string)
@@ -188,14 +188,14 @@ class DataReader(DBResults):
             # dataframe = pd.DataFrame(data, columns=column_names)
             return data[0][0]
 
-    def get_maximum_sim_time(self, scheme_name: str, federate_name: str, data_name: str, data_type: str):
-        if type(scheme_name) is not str:
+    def get_maximum_sim_time(self, analysis_name: str, federate_name: str, data_name: str, data_type: str):
+        if type(analysis_name) is not str:
             return None
         if type(data_type) is not str:
             return None
         if type(federate_name) is not str:
             return None
-        qry_string = (f"SELECT MAX(CAST(sim_time AS FLOAT)) FROM {scheme_name}.{data_type} "
+        qry_string = (f"SELECT MAX(CAST(sim_time AS FLOAT)) FROM {analysis_name}.{data_type} "
                       f"WHERE scenario='{self.scenario_name}' AND federate='{federate_name}' AND data_name='{data_name}'")
         with self.data_db.cursor() as cur:
             cur.execute(qry_string)
@@ -204,14 +204,14 @@ class DataReader(DBResults):
             # dataframe = pd.DataFrame(data, columns=column_names)
             return data[0][0]
 
-    def get_length_data_value(self, scheme_name: str, federate_name: str, data_name: str, data_type: str):
-        if type(scheme_name) is not str:
+    def get_length_data_value(self, analysis_name: str, federate_name: str, data_name: str, data_type: str):
+        if type(analysis_name) is not str:
             return None
         if type(data_type) is not str:
             return None
         if type(federate_name) is not str:
             return None
-        qry_string = (f"SELECT COUNT(CAST(data_value AS FLOAT)) FROM {scheme_name}.{data_type} "
+        qry_string = (f"SELECT COUNT(CAST(data_value AS FLOAT)) FROM {analysis_name}.{data_type} "
                       f"WHERE scenario='{self.scenario_name}' AND federate='{federate_name}' AND data_name='{data_name}'")
         with self.data_db.cursor() as cur:
             cur.execute(qry_string)
@@ -220,34 +220,34 @@ class DataReader(DBResults):
             # dataframe = pd.DataFrame(data, columns=column_names)
             return data[0][0]
 
-    def get_length_of_schema(self, schema_name: str, data_type: str):
-        if type(schema_name) is not str:
+    def get_length_of_analysis(self, analysis_name: str, data_type: str):
+        if type(analysis_name) is not str:
             return None
-        qry_string = (f"SELECT COUNT(CAST(data_value AS FLOAT)) FROM {schema_name}.{data_type}")
+        qry_string = (f"SELECT COUNT(CAST(data_value AS FLOAT)) FROM {analysis_name}.{data_type}")
         with self.data_db.cursor() as cur:
             cur.execute(qry_string)
             data = cur.fetchall()
             return data[0][0]
 
-    def get_federate_subscription_list(self, scheme_name: str, federate_name: str, data_type: str) -> pd.DataFrame:
+    def get_federate_subscription_list(self, analysis_name: str, federate_name: str, data_type: str) -> pd.DataFrame:
         """This function queries the distinct list of data names from the database table
-        defined by scheme_name and data_type
+        defined by analysis_name and data_type
 
         Args:
-            scheme_name (string) - the name of the schema to filter the query results by
+            analysis_name (string) - the name of the analysis to filter the query results by
             data_type (string) - the id of the database table that will be queried. Must be
 
         Returns:
             dataframe (pandas dataframe object) - dataframe that contains the result records
             returned from the query of the database
         """
-        if type(scheme_name) is not str:
+        if type(analysis_name) is not str:
             return None
         if type(data_type) is not str:
             return None
         if type(federate_name) is not str:
             return None
-        qry_string = (f"SELECT DISTINCT data_name FROM {scheme_name}.{data_type} "
+        qry_string = (f"SELECT DISTINCT data_name FROM {analysis_name}.{data_type} "
                       f"WHERE scenario='{self.scenario_name}' AND federate='{federate_name}'")
         with self.data_db.cursor() as cur:
             cur.execute(qry_string)
@@ -256,8 +256,8 @@ class DataReader(DBResults):
             dataframe = pd.DataFrame(data, columns=column_names)
             return dataframe
 
-    def get_max_val_diff(self, scheme_name: str, federate_name: str, data_name: str, data_type: str, start_time:int=0):
-        if type(scheme_name) is not str:
+    def get_max_val_diff(self, analysis_name: str, federate_name: str, data_name: str, data_type: str, start_time:int=0):
+        if type(analysis_name) is not str:
             return None
         if type(data_type) is not str:
             return None
@@ -270,7 +270,7 @@ class DataReader(DBResults):
                 ORDER BY sim_time
             ) 
             AS diff
-            FROM {scheme_name}.{data_type}
+            FROM {analysis_name}.{data_type}
             WHERE scenario='{self.scenario_name}'
             AND federate='{federate_name}'
             AND data_name='{data_name}'
@@ -285,8 +285,8 @@ class DataReader(DBResults):
             # dataframe = pd.DataFrame(data, columns=column_names)
             return data[0][0]
 
-    def get_min_val_diff(self, scheme_name: str, federate_name: str, data_name: str, data_type: str, start_time:int=0):
-        if type(scheme_name) is not str:
+    def get_min_val_diff(self, analysis_name: str, federate_name: str, data_name: str, data_type: str, start_time:int=0):
+        if type(analysis_name) is not str:
             return None
         if type(data_type) is not str:
             return None
@@ -299,7 +299,7 @@ class DataReader(DBResults):
                 ORDER BY sim_time
             ) 
             AS diff
-            FROM {scheme_name}.{data_type}
+            FROM {analysis_name}.{data_type}
             WHERE scenario='{self.scenario_name}'
             AND federate='{federate_name}'
             AND data_name='{data_name}'
@@ -370,7 +370,7 @@ def validate_scenarios(cst_scalability: str):
     run_only = None
     # run_only = list(range(13, 14))
 
-    df = pd.DataFrame(data=[], columns=["scenario", "schema", "federate", "schema_rows", "selected_rows", "time"])
+    df = pd.DataFrame(data=[], columns=["scenario", "analysis", "federate", "analysis_rows", "selected_rows", "time"])
     for scenario_dir_path in cst_scalability.iterdir():
         if not scenario_dir_path.is_dir():
             continue
@@ -391,7 +391,7 @@ def validate_scenarios(cst_scalability: str):
             continue
         logger.info(f"{scenario_name} -> feds:{_f}, subs:{_s}, end_pts:{_e}, cst_log:{_d}, profile:{_p}")
         dr = DataReader(scenario_name)
-        schema_rows = dr.get_length_of_schema(schema_name=dr.scenario_reader.schema_name, data_type=ValueType.DOUBLE.value)
+        analysis_rows = dr.get_length_of_analysis(analysis_name=dr.scenario_reader.analysis_name, data_type=ValueType.DOUBLE.value)
         """
             We need to compare read times for Standard Postrgres using new federate.py vs TimescaleDB using new federate.py in the following way:
             1.	Reading all times for a given federate
@@ -406,22 +406,22 @@ def validate_scenarios(cst_scalability: str):
             df_sub_db = dr.get_results(federate_name=federate, data_type=ValueType.DOUBLE)
             toc = time.perf_counter()
             n_lines = df_sub_db.shape[0]
-            logger.info(f"{federate}: time to read-all {n_lines} records from {schema_rows} items in schema: {toc-tic}s")
-            data = [[scenario_name, dr.scenario_reader.schema_name, federate, schema_rows, n_lines, toc-tic]]
+            logger.info(f"{federate}: time to read-all {n_lines} records from {analysis_rows} items in analysis: {toc-tic}s")
+            data = [[scenario_name, dr.scenario_reader.analysis_name, federate, analysis_rows, n_lines, toc-tic]]
             df = pd.concat([df, pd.DataFrame(data, columns=df.columns)], ignore_index=True)
             # 2. Reading all federates for a given (non-exhaustive) time slice.
             tic = time.perf_counter()
             df_sub_db = dr.get_results(duration=300, data_type=ValueType.DOUBLE)
             toc = time.perf_counter()
             n_lines = df_sub_db.shape[0]
-            data = [[scenario_name, dr.scenario_reader.schema_name, "all", schema_rows, n_lines, toc-tic]]
+            data = [[scenario_name, dr.scenario_reader.analysis_name, "all", analysis_rows, n_lines, toc-tic]]
             df = pd.concat([df, pd.DataFrame(data, columns=df.columns)], ignore_index=True)
             # 3. Reading a given set of federates  for a non-exhaustive time slice.
             tic = time.perf_counter()
             df_sub_db = dr.get_results(duration=300, federate_name=["fed_0", "fed_1", "fed_2"], data_type=ValueType.DOUBLE)
             toc = time.perf_counter()
             n_lines = df_sub_db.shape[0]
-            data = [[scenario_name, dr.scenario_reader.schema_name, "3 feds", schema_rows, n_lines, toc-tic]]
+            data = [[scenario_name, dr.scenario_reader.analysis_name, "3 feds", analysis_rows, n_lines, toc-tic]]
             df = pd.concat([df, pd.DataFrame(data, columns=df.columns)], ignore_index=True)
     df.to_csv(f"{scale_test_name}_read_test5x.csv")
 

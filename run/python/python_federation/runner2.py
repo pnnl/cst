@@ -55,7 +55,7 @@ class MyFederate2(FederateConfig):
 def  define_format():
     remote = False
     with_docker = False
-    federation = FederationConfig("MyScenario", "MySchema", "MyFederation", with_docker)
+    federation = FederationConfig("MyScenario", "MyAnalysis", "MyFederation", with_docker)
 
     f1 = federation.add_federate_config(MyFederate1("Battery", period=60))
     f2 = federation.add_federate_config(MyFederate2("EVehicle", period=60))
