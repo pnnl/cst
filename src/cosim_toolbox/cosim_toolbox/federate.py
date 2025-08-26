@@ -541,15 +541,18 @@ class Federate:
             self.data_to_federation["publications"][pub.name] = dummy_value
 
     def send_data_to_federation(self, reset=False) -> None:
-        """Sends specified outputs to rest of HELICS federation
+        """
+        Sends specified outputs to rest of HELICS federation
 
         This method provides an easy way for users to send out any data
         to the rest of the federation. Users pass in a dict structured the same
         as the "data_from_federation" with sub-dicts for publications and
-        endpoints and keys inside those dicts for the name of the pub or
-        endpoint. The value for the keys is slightly different, though:
-            - pubs: value is the data to send
-            - endpoints: value is a dictionary as follows
+        endpoints and keys inside those dicts for the name of the pub or endpoint.
+        The value for the keys is slightly different, though:
+
+            pubs: value is the data to send
+            endpoints: value is a dictionary as follows::
+
                 {
                     "destination": <target endpoint name, may be an empty string>
                     "payload": <data to send>
@@ -560,9 +563,9 @@ class Federate:
 
         Args:
             reset (bool, optional): When set erases published value which
-            prevents re-publication of the value until manually set to a 
-            non-`None` value. Any entry in this dictionary that is `None` is
-            not sent out via HELICS. Defaults to False.
+                prevents re-publication of the value until manually set to a
+                non-`None` value. Any entry in this dictionary that is `None`
+                is not sent out via HELICS. Defaults to False.
         """
 
         # Publications

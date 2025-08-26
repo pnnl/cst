@@ -120,8 +120,7 @@ class DBConfigs:
 
     def add_file(self, file: str, conflict: str = 'fail', name: str = None) -> None:
         """
-        Gets file from disk and adds it to the dbConfigs for all federates
-        to use.
+        Gets file from disk and adds it to the dbConfigs for all federates to use.
 
         The "name" parameter is optional. If provided, the file will be
         stored by that name in the database. If omitted, the name of the
@@ -131,12 +130,13 @@ class DBConfigs:
         By default, this method will produce an error if the name of the
         file being added already exists in the file storage. This can
         behavior can be altered by specifying the "conflict" parameter
-        to a different value. Supported values are
-            "fail" - Produces an error if the file name being added
-                     already exists in the database
-            "overwrite" - New file overwrites the existing one
-            "add version" - New file is added as a version of
-                            the existing one.
+        to a different value. Supported values are:
+
+            fail: Produces an error if the file name being added already exists in the database.
+
+            overwrite: New file overwrites the existing one.
+
+            add version: New file is added as a version of the existing one.
         """
         if not name:
             path, file = os.path.split(file)

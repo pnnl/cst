@@ -152,8 +152,8 @@ class DataReader(DBResults):
             logger.warning(f"data_name, {data_name}, not in {data_name_list}")
         if federate_name is not None and federate_name not in federate_list:
             logger.warning(f"federate_name, {federate_name} not in {federate_list}")
-        if data_type not in self.hdt_type.keys():
-            logger.warning(f"data_type, {data_type} not in {list(self.hdt_type.keys())}")
+        if data_type not in self._hdt_type.keys():
+            logger.warning(f"data_type, {data_type} not in {list(self._hdt_type.keys())}")
         return self.query_scenario_federate_times(start_time, duration, self.scenario_name, federate_name,
                                       data_name, data_type)
 

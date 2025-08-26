@@ -22,7 +22,7 @@ class FederateConfig:
     # prefix for export and other commands for docker and sh
     # command for docker and sh
     # federate_type -> value | combo | message,
-    config_var = {
+    _config_var = {
         "name": "",
         "logger": True,
         "image": "None",
@@ -54,7 +54,8 @@ class FederateConfig:
         return guid
 
     def config(self, _n: str, _v: any) -> dict:
-        """Adds key specified by first parameter with value specified
+        """
+        Adds key specified by first parameter with value specified
         by the second parameter to the federate config ("_fed_cnfg")
         attribute of this object
 
@@ -65,7 +66,7 @@ class FederateConfig:
         Returns:
             dict: Dictionary to which the new value was added.
         """
-        if HelicsMsg.verify(self.config_var, _n, _v):
+        if HelicsMsg.verify(self._config_var, _n, _v):
             self._fed_cnfg[_n] = _v
         return self._fed_cnfg
 

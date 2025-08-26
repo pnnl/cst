@@ -37,7 +37,8 @@ class FederateLogger(Federate):
         # self.dl.drop_schema(self.scheme_name)
 
     def connect_to_helics_config(self) -> None:
-        """Sets a few class attributes related to HELICS configuration.
+        """
+        Sets a few class attributes related to HELICS configuration.
 
         Also determines which publications need to be pushed into the
         time-series database.
@@ -134,16 +135,16 @@ class FederateLogger(Federate):
         self.no_t_start = self.start.replace('T',' ')
 
     def update_internal_model(self) -> None:
-        """Takes latest published values or sent messages (endpoints) and
+        """
+        Takes latest published values or sent messages (endpoints) and
         pushes them back into the time-series database.
         """
-
         # Inputs
         query = ""
         for key in self.data_from_federation["inputs"]:
             qry = ""
             value = self.data_from_federation["inputs"][key]
-            for table in DBResults.hdt_type.keys():
+            for table in DBResults._hdt_type.keys():
                 if self.inputs[key]['type'].lower() in table.lower():
                     if len(self.fed_pubs):
                         for fed in self.fed_pubs:
