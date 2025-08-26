@@ -182,7 +182,7 @@ texinfo_documents = [
 #     plantuml = 'java -jar %s' % os.path.join(os.path.dirname(__file__), "utils", "plantuml-bsd-1.2025.4.jar")
 #     plantuml.strip()
 
-plantuml = 'java -jar %s' % os.path.join(os.path.dirname(__file__), "utils", "plantuml-bsd-1.2025.4.jar")
+plantuml = f'java -jar {os.path.join(os.path.dirname(__file__), "utils", "plantuml-bsd-1.2025.4.jar")}' 
 plantuml.strip()
 
 plantuml_output_format = 'png'
