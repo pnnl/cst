@@ -154,14 +154,13 @@ class TestCreateFederate2(unittest.TestCase):
                              mock_create_value_federate,
                              mock_create_message_federate,
                              mock_create_combo_federate):
-
-        mock_meta_db_class.return_value = self.mock_meta_db_instance
-        mock_data_db_class.return_value = self.mock_data_db_instance
-
-        # federate type value
-        self.test_fed.mddb = mock_meta_db_class.return_value
-        self.test_fed.dl = mock_data_db_class.return_value
-        self.mock_meta_db_instance.federation_dict["federation"]["Battery"]["federate_type"] = "value"
+        
+        # Setup mocks
+        mock_create_metadata_manager.return_value = self.mock_metadata_manager
+        mock_create_timeseries_manager.return_value = self.mock_timeseries_manager
+        
+        # Test federate type value
+        self.mock_metadata_manager.federation_dict["federation"]["Battery"]["federate_type"] = "value"
         self.test_fed.create_federate("test_scenario")
         mock_create_value_federate.assert_called_once()
         # self.test_fed.close_metadata()
