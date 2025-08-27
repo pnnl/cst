@@ -1,7 +1,7 @@
 # Copyright (c) 2022-2025 Battelle Memorial Institute
 # file: __init__.py
 """
-CoSimulation Toolbox package contains the python packages for the 'cosim_toolbox'
+CoSim Toolbox (CST) package contains the python packages for the 'cosim_toolbox'
 """
 from os import environ
 
