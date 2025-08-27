@@ -4,10 +4,10 @@ Created on 12/14/2023
 Provides underlying methods for interacting with the time-series database
 
 TODO: Should we rename this to something like "cst_ts_postgres.py" and the
-    class to "CSTTimeSeriesPostgres" as all the methods are Postgres specific?
-    I can image a more abstract class used for interacting with databases that
-    codifies the terminology (_e.g._ "analysis", "scenario") and this class
-    inherits from it and implements the methods in a Postgres-specific way.
+class to "CSTTimeSeriesPostgres" as all the methods are Postgres specific?
+I can image a more abstract class used for interacting with databases that
+codifies the terminology (_e.g._ "analysis", "scenario") and this class
+inherits from it and implements the methods in a Postgres-specific way.
 
 @authors:
 fred.rutz@pnnl.gov
@@ -27,14 +27,15 @@ from cosim_toolbox.readConfig import ReadConfig
 logger = logging.getLogger(__name__)
 
 # TODO: The databases referenced in these APIs should be "metadata"
-#   and "time_series" and should be updated across the codebase.
+# and "time_series" and should be updated across the codebase.
 
 class DBResults:
-    """Methods for writing to and reading from the time-series database. This
-    class does not provide HELICS federate functionality.
+    """
+    Methods for writing to and reading from the time-series database.
+    This class does not provide HELICS federate functionality.
 
     """
-    hdt_type = {'HDT_STRING': 'text',
+    _hdt_type = {'HDT_STRING': 'text',
                 'HDT_DOUBLE': 'double precision',
                 'HDT_INTEGER': 'bigint',
                 'HDT_COMPLEX': 'VARCHAR (255)',
@@ -53,13 +54,15 @@ class DBResults:
 
     @staticmethod
     def _connect_logger_database(connection: dict = None):
-        """This function defines the connection to the data database
+        """
+        This function defines the connection to the data database
         and opens a connection to the postgres database
 
+        Args:
+            connection (dict): dictionary object that provides access to the postgres database
+
         Returns:
-            psycopg2 connection object:
-            connection object that provides
-            access to the postgres database
+            psycopg2 connection object: connection object that provides access to the postgres database
         """
         if connection is None:
             connection = env.cst_data_db
@@ -75,8 +78,7 @@ class DBResults:
 
         Args:
             commit (bool, optional): Flag to indicate whether data should be
-                committed to the time-series DB prior to closing the connection.
-                Defaults to True.
+                committed to the time-series DB prior to closing the connection. Defaults to True.
         """
         if self.data_db:
             if commit:
@@ -85,11 +87,12 @@ class DBResults:
         self.data_db = None
 
     def open_database_connections(self, data_connection: dict = None) -> bool:
-        """Opens connections to the time-series and metadata databases
+        """
+        Opens connections to the time-series and metadata databases
 
         Args:
-            data_connection (dict, optional): Defines connection to time-series
-                database. Defaults to None.
+            data_connection (dict, optional): Defines connection to time-series database.
+                Defaults to None.
 
         Returns:
             bool: _description_
@@ -142,22 +145,23 @@ class DBResults:
             self.data_db.commit()
 
     def remove_scenario(self, analysis_name: str, scenario_name: str) -> None:
-        """Removes all data from the specified analysis_name with the specified
-        scenario_name
+        """
+        Removes all data from the specified analysis_name with the specified scenario_name
 
         Args:
             analysis_name (str): Analysis containing the data to be deleted
             scenario_name (str): Scenario to be removed from the analysis
         """
         query = ""
-        for key in self.hdt_type:
+        for key in self._hdt_type:
             query += f" DELETE FROM {analysis_name}.{key} WHERE scenario='{scenario_name}'; "
         with self.data_db.cursor() as cur:
             cur.execute(query)
             self.data_db.commit()
 
     def analysis_exist(self, analysis_name: str) -> bool:
-        """Checks to see if the specified analysis exist in the database
+        """
+        Checks to see if the specified analysis exist in the database
 
         Args:
             analysis_name (str): analysis name whose existence is being checked
@@ -175,7 +179,8 @@ class DBResults:
         return exist
 
     def table_exist(self, analysis_name: str, table_name: str) -> bool:
-        """Checks to see if the specified tables exist in the specified analysis
+        """
+        Checks to see if the specified tables exist in the specified analysis
 
         Args:
             analysis_name (str): Name of analysis where table may exist
@@ -197,12 +202,11 @@ class DBResults:
         """_summary_
 
         Args:
-            analysis_name (str): Name of analysis under which various
-                scenarios will be collected
+            analysis_name (str): Name of analysis under which various scenarios will be collected
         """
 
         query = ""
-        for key in self.hdt_type:
+        for key in self._hdt_type:
             query += ("CREATE TABLE IF NOT EXISTS "
                       f"{analysis_name}.{key} ("
                       "real_time timestamp with time zone NOT NULL, "
@@ -210,7 +214,7 @@ class DBResults:
                       "scenario VARCHAR (255) NOT NULL, "
                       "federate VARCHAR (255) NOT NULL, "
                       "data_name VARCHAR (255) NOT NULL, "
-                      f"data_value {self.hdt_type[key]} NOT NULL);")
+                      f"data_value {self._hdt_type[key]} NOT NULL);")
             if self.use_timescale:
                 query += f" SELECT create_hypertable('{analysis_name}.{key}', 'real_time');"
                 # query += f" CREATE INDEX ix_{analysis_name}_{key} ON {analysis_name}.{key} (scenario, real_time DESC);"
@@ -223,12 +227,12 @@ class DBResults:
             self.data_db.commit()
 
     def get_scenario(self, scenario_name: str) ->  None | ReadConfig:
-        """Gets the metadata associated with the specified scenario from the
+        """
+        Gets the metadata associated with the specified scenario from the
         metadata database.
 
         Args:
-            scenario_name (str): Name of scenario for which the metadata
-                is to be retrieved
+            scenario_name (str): Name of scenario for which the metadata is to be retrieved
 
         Returns:
             dict: scenario metadata requested
@@ -246,16 +250,16 @@ class DBResults:
 
     @staticmethod
     def get_select_string(analysis_name: str, data_type: str) ->  None | str:
-        """This method creates the SELECT portion of the query string
+        """
+        This method creates the SELECT portion of the query string
 
         Args:
-            analysis_name (string) - the name of the database to be queried
-            data_type (string) - the name of the database table to be queried
+            analysis_name (str): the name of the database to be queried
+            data_type (str): the name of the database table to be queried
 
         Returns:
-            qry_string (string):
-             string containing the select portion of the sql query
-            'SELECT * FROM analysis_name.data_type WHERE'
+            qry_string (str): containing the select portion of the
+            sql query "SELECT * FROM analysis_name.data_type WHERE"
         """
         if analysis_name is None or analysis_name == "":
             return None
@@ -270,17 +274,16 @@ class DBResults:
 
         Args:
             start_time (int): the lowest time step in seconds to start the filtering
-                If None is entered for the start_time the query will return only times that are
-                less than the duration entered
+                If None is entered for the start_time the query will
+                return only times that are less than the duration entered
             duration (int): the number of seconds to be queried
-                If None is entered for the duration the query will return only times that are greater
-                than the start time entered
+                If None is entered for the duration the query will
+                return only times that are greater than the start time entered
                 If None is entered for both the start_time and duration all times will be returned
 
         Returns:
-            qry_string (string):
-             string containing the time filter portion of the sql query
-            'sim_time>=start_time AND sim_time<= end_time'
+            qry_string (str): string containing the time filter portion of the
+            sql query 'sim_time>=start_time AND sim_time<= end_time'
         """
         if start_time is None and duration is None:
             return ""
@@ -298,36 +301,36 @@ class DBResults:
                          federate_name: str,
                          data_name: str,
                          data_type: str) ->  None | str:
-        """This method creates the query string to pull time series data from the
+        """
+        This method creates the query string to pull time series data from the
         logger database, and depends upon the keys identified by the user input arguments.
 
         Args:
-            start_time (int): the starting time step to query data for
-            duration (int): the duration in seconds to filter time data by
+            start_time (int): the starting time step to query data
+            duration (int): the duration in seconds to filter the time data.
                 If start_time and duration are entered as None then the query will return every
-                time step that is available for the entered scenario, federate, pub_key,
-                data_type combination.
+                time step that is available for the entered scenario, federate, pub_key, data_type combination.
                 If start_time is None and a duration has been entered then all time steps that are
-                less than the duration value will be returned
+                less than the duration value will be returned.
                 If a start_time is entered and duration is None, the query will return all time steps
-                greater than the starting time step
+                greater than the starting time step.
                 If a value is entered for the start_time and the duration, the query will return all time steps
-                that fall into the range of start_time to start_time + duration
-            scenario_name (string): the name of the scenario to filter the query results by. If
-                None is entered for the scenario_name the query will not use scenario_name as a filter
-            federate_name (string): the name of the Federate to filter the query results by. If
-                None is entered for the federate_name the query will not use federate_name as a filter
-            data_name (string): the name of the data to filter the query results by. If
-                None is entered for the data_name the query will not use data_name as a filter
-            data_type (string): the id of the database table that will be queried. Must be
-                one of the following options:
-                    [ hdt_boolean, hdt_complex, hdt_complex_vector, hdt_double, hdt_integer
+                that fall into the range of start_time to start_time + duration.
+            scenario_name (str): the name of the scenario to filter the query results by.
+                If None is entered for the scenario_name the query will not use scenario_name as a filter.
+            federate_name (str): the name of the Federate to filter the query results by.
+                If None is entered for the federate_name the query will not use federate_name as a filter.
+            data_name (str): the name of the data to filter the query results by.
+                If None is entered for the data_name the query will not use data_name as a filter.
+            data_type (str): the id of the database table that will be queried.
+                Must be one of the following options:
+
+                    [ hdt_boolean, hdt_complex, hdt_complex_vector, hdt_double, hdt_integer,
                     hdt_json, hdt_named_point, hdt_string, hdt_time, hdt_vector ]
 
         Returns:
-            qry_string (string):
-            string representing the query to be used in pulling time series
-            data from logger database
+            qry_string (str): string representing the query to be used in pulling
+            time series data from logger database
         """
         scenario = self.get_scenario(scenario_name)
         if scenario is None:
@@ -366,35 +369,35 @@ class DBResults:
                                       federate_name: str,
                                       data_name: str,
                                       data_type: str) ->  None | pd.DataFrame:
-        """This method queries time series data from the logger database and
+        """
+        This method queries time series data from the logger database and
         depends upon the keys identified by the user input arguments.
 
         Args:
-            start_time (integer): the starting time step to query data for
-            duration (integer): the duration in seconds to filter time data by
+            start_time (int): the starting time step to query data
+            duration (int): the duration in seconds to filter the time data
                 If start_time and duration are entered as None then the query will return every
-                time step that is available for the entered scenario, federate, pub_key,
-                data_type combination.
+                time step that is available for the entered scenario, federate, pub_key, data_type combination.
                 If start_time is None and a duration has been entered then all time steps that are
-                less than the duration value will be returned
+                less than the duration value will be returned.
                 If a start_time is entered and duration is None, the query will return all time steps
-                greater than the starting time step
+                greater than the starting time step.
                 If a value is entered for the start_time and the duration, the query will return all time steps
-                that fall into the range of start_time to start_time + duration
-            scenario_name (string): the name of the scenario to filter the query results by. If
-                None is entered for the scenario_name the query will not use scenario_name as a filter
-            federate_name (string): the name of the Federate to filter the query results by. If
-                None is entered for the federate_name the query will not use federate_name as a filter
-            data_name (string): the name of the data to filter the query results by. If
-                None is entered for the data_name the query will not use data_name as a filter
-            data_type (string): the id of the database table that will be queried. Must be
-                one of the following options:
-                    [ hdt_boolean, hdt_complex, hdt_complex_vector, hdt_double, hdt_int
+                that fall into the range of start_time to start_time + duration.
+            scenario_name (str): the name of the scenario to filter the query results by.
+                If None is entered for the scenario_name the query will not use scenario_name as a filter
+            federate_name (str): the name of the Federate to filter the query results by.
+                If None is entered for the federate_name the query will not use federate_name as a filter
+            data_name (str): the name of the data to filter the query results by.
+                If None is entered for the data_name the query will not use data_name as a filter
+            data_type (str): the id of the database table that will be queried.
+                Must be one of the following options:
+
+                    [ hdt_boolean, hdt_complex, hdt_complex_vector, hdt_double, hdt_int,
                     hdt_json, hdt_named_point, hdt_string, hdt_time, hdt_vector ]
 
         Returns:
-            dataframe (pandas dataframe object):
-            dataframe that contains the result records
+            dataframe (pandas dataframe): dataframe that contains the result records
             returned from the query of the database
         """
         qry_string = self.get_query_string(start_time, duration, scenario_name, federate_name, data_name, data_type)
@@ -408,16 +411,20 @@ class DBResults:
         return None
 
     def query_scenario_all_times(self, scenario_name: str, data_type: str) -> None | pd.DataFrame:
-        """This function queries data from the logger database filtered only by scenario_name and data_name
+        """
+        This function queries data from the logger database filtered only by scenario_name and data_name
 
         Args:
-            scenario_name (string): the name of the scenario to filter the query results by
-            data_type (string): the id of the database table that will be queried. Must be
+            scenario_name (str): the name of the scenario to filter the query results by
+            data_type (str): the id of the database table that will be queried.
+                Must be one of the following options:
+
+                    [ hdt_boolean, hdt_complex, hdt_complex_vector, hdt_double, hdt_int,
+                    hdt_json, hdt_named_point, hdt_string, hdt_time, hdt_vector ]
 
         Returns:
-            dataframe (pandas dataframe object):
-             dataframe that contains the result records
-                returned from the query of the database
+            dataframe (pandas dataframe): dataframe that contains the result records
+            returned from the query of the database
         """
         if type(scenario_name) is not str:
             return None
@@ -438,19 +445,17 @@ class DBResults:
         raise NotImplementedError("method query_analysis_all_times is not implemented yet")
 
     def query_analysis_federate_all_times(self, analysis_name: str, federate_name: str, data_type) ->  None | pd.DataFrame:
-        """This function queries data from the logger database filtered only by federate_name and data_name
-        and data_type
-
-        TODO: Rename "query_analysis_federate_all_times" to "query_
+        """
+        This function queries data from the logger database filtered only
+        by federate_name and data_name and data_type.
 
         Args:
-            analysis_name (string): the name of the analysis to filter the query results by
-            federate_name (string): the name of the Federate to filter the query results by
-            data_type (string): the id of the database table that will be queried. Must be
+            analysis_name (str): the name of the schema to filter the query results by
+            federate_name (str): the name of the Federate to filter the query results by
+            data_type (str): the id of the database table that will be queried. Must be
 
         Returns:
-            dataframe (pandas dataframe object):
-            dataframe that contains the result records
+            dataframe (pandas dataframe): dataframe that contains the result records
             returned from the query of the database
         """
         if type(analysis_name) is not str:
@@ -472,18 +477,18 @@ class DBResults:
         # Todo: get analysis from scenario documents
         raise NotImplementedError(f"method get_analysis_list is not implemented yet")
 
-    def get_scenario_list(self, analysis_name: str, data_type: str) -> None | pd.DataFrame:
-        """This function queries the distinct list of scenario names from the database table
+    def get_scenario_list(self, analysis_name: str, data_type: str) ->  None | pd.DataFrame:
+        """
+        This function queries the distinct list of scenario names from the database table
         defined by analysis_name and data_type
 
         Args:
-            analysis_name (string): the name of the analysis to filter the query results by
-            data_type (string): the id of the database table that will be queried.
+            analysis_name (str): the name of the analysis to filter the query results by
+            data_type (str): the id of the database table that will be queried.
 
         Returns:
-            dataframe (pandas dataframe object):
-             dataframe that contains the result records
-                returned from the query of the database
+            dataframe (pandas dataframe): dataframe that contains the result records
+            returned from the query of the database
         """
         if type(analysis_name) is not str:
             return None
@@ -499,17 +504,17 @@ class DBResults:
             dataframe = pd.DataFrame(data, columns=column_names)
             return dataframe
 
-    def get_federate_list(self, analysis_name: str, data_type: str) -> None | pd.DataFrame:
-        """This function queries the distinct list of federate names from the database table
-        defined by analysis_name and data_type
+    def get_federate_list(self, analysis_name: str, data_type: str) ->  None | pd.DataFrame:
+        """
+        This function queries the distinct list of federate names from the database table
+        defined by analysis_name and data_type.
 
         Args:
-            analysis_name (string): the name of the analysis to filter the query results by
-            data_type (string): the id of the database table that will be queried.
+            analysis_name (str): the name of the analysis to filter the query results by
+            data_type (str): the id of the database table that will be queried.
 
         Returns:
-            dataframe (pandas dataframe object):
-             dataframe that contains the result records
+            dataframe (pandas dataframe): dataframe that contains the result records
             returned from the query of the database
         """
         if type(analysis_name) is not str:
@@ -525,18 +530,18 @@ class DBResults:
             dataframe = pd.DataFrame(data, columns=column_names)
             return dataframe
 
-    def get_data_name_list(self, analysis_name: str, data_type: str) -> None | pd.DataFrame:
-        """This function queries the distinct list of data names from the database table
-        defined by analysis_name and data_type
+    def get_data_name_list(self, analysis_name: str, data_type: str) ->  None | pd.DataFrame:
+        """
+        This function queries the distinct list of data names from the database table
+        defined by analysis_name and data_type.
 
         Args:
-            analysis_name (string): the name of the analysis to filter the query results by
-            data_type (string): the id of the database table that will be queried. Must be
+            analysis_name (str): the name of the analysis to filter the query results by
+            data_type (str): the id of the database table that will be queried. Must be
 
         Returns:
-            dataframe (pandas dataframe object):
-             dataframe that contains the result records
-            returned from the query of the database
+            dataframe (pandas dataframe): dataframe that contains the result records
+            returned from the query of the database.
         """
         if type(analysis_name) is not str:
             return None
@@ -551,19 +556,19 @@ class DBResults:
             dataframe = pd.DataFrame(data, columns=column_names)
             return dataframe
 
-    def get_time_range(self, analysis_name: str, data_type: str, scenario_name: str, federate_name: str) -> None | pd.DataFrame:
-        """This function queries the minimum and maximum of time from the database
-            table defined by analysis_name, data_type, scenario_name, and federate
+    def get_time_range(self, analysis_name: str, data_type: str, scenario_name: str, federate_name: str) ->  None | pd.DataFrame:
+        """
+        This function queries the minimum and maximum of time from the
+        database table defined by analysis_name, data_type, scenario_name, and federate
 
         Args:
-            analysis_name (string): the name of the analysis to filter the query results by
-            data_type (string): the id of the database table that will be queried. Must be
-            scenario_name (string): the name of the Scenario to filter the query results by
-            federate_name (string): the name of the Federate to filter the query results by
+            analysis_name (str): the name of the analysis to filter the query results by
+            data_type (str): the id of the database table that will be queried. Must be
+            scenario_name (str): the name of the Scenario to filter the query results by
+            federate_name (str): the name of the Federate to filter the query results by
 
         Returns:
-            dataframe (pandas dataframe object):
-            dataframe that contains the result records
+            dataframe (pandas dataframe): dataframe that contains the result records
             returned from the query of the database
         """
         if type(analysis_name) is not str:
@@ -591,18 +596,18 @@ class DBResults:
 
     @staticmethod
     def set_time_stamps(dataframe: pd.DataFrame, date_time: str) -> None | pd.DataFrame:
-        """This function calculates the time stamp for each time step in the dataframe and adds them
-            to the dataframe in a column named time_stamp
+        """
+        This function calculates the time stamp for each time step in the
+        dataframe and adds them to the dataframe in a column named time_stamp.
 
         Args:
-            dataframe (pandas dataframe): the dataframe for which contains the time steps in seconds to
-                be used in the calculation of the time stamps
-            date_time (datetime): the base time stamp that will be used to calculate the time step
-                time stamps
+            dataframe (pandas dataframe): the dataframe for which contains the time steps
+                in seconds to be used in the calculation of the time stamps
+            date_time (datetime): the base time stamp that will be used to calculate the
+                time step time stamps
 
         Returns:
-            # TODO: is ts a pd.Timestamp or something else?
-            ts(pandas time series) - time series that contains the result records
+            ts (pandas time series): time series that contains the result records
             returned from the query of the database
         """
         time_list = []
@@ -611,5 +616,6 @@ class DBResults:
             sec_time = trow.time
             time_list.append(date_time + timedelta(seconds=sec_time))
         dataframe['time_stamp'] = time_list
+        # TODO: is ts a pd.Timestamp or something else?
         ts = dataframe.set_index('time_stamp')
         return ts
