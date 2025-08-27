@@ -40,7 +40,7 @@ class DBConfigs:
         add some of these terms into the Mongo documents so that they can be
         queried with the same parameters as we use in the time-series database.
         Mongo has databases, collections, and documents. Postgres has databases,
-        analysiss, and tables. Should these line up one-to-one?
+        schema (analysis), and tables. Should these line up one-to-one?
     """
     _cst_name = 'cst_007'
 

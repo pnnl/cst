@@ -38,7 +38,7 @@ def define_federation():
                  "indices": []}]
     }
 
-    federation = FederationConfig("MyLinkScenario", "MyLinkanalysis", "MyLinkFederation", with_docker)
+    federation = FederationConfig("MyLinkScenario", "MyLinkAnalysis", "MyLinkFederation", with_docker)
     f1 = federation.add_federate_config(FederateConfig(names[0], period=30))
     f2 = federation.add_federate_config(FederateConfig(names[1], period=60))
 
@@ -89,7 +89,7 @@ def define_format():
     remote = False
     with_docker = False
     names = ["Battery", "EVehicle"]
-    federation = fed.FederationConfig("MyLinkScenario", "MyLinkanalysis", "MyLinkFederation", with_docker)
+    federation = fed.FederationConfig("MyLinkScenario", "MyLinkAnalysis", "MyLinkFederation", with_docker)
 
     f1 = federation.add_federate_config(simple_config.MyFederate(names[0], period=30))
     f2 = federation.add_federate_config(simple_config2.MyFederate(names[1], period=60))

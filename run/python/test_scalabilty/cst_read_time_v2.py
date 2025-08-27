@@ -13,12 +13,9 @@ in the repo.
 """
 import json
 import logging
-import os
-import sys
 import time
 from enum import Enum
 from pathlib import Path
-import numpy as np
 import pandas as pd
 
 import cosim_toolbox as env
@@ -43,8 +40,6 @@ class ScenarioReader:
         if self.meta_db.client is not None:
             self.meta_db.client.close()
         self.meta_db = None
-
-
 
 
 class ValueType(Enum):
@@ -118,8 +113,8 @@ class DataReader(DBResults):
             qry_string (string) - string representing the query to be used in pulling time series
             data from logger database
         """
-        analysis = self.get_scenario(scenario_name)
-        analysis_name = analysis["analysis"]
+        scenario = self.get_scenario(scenario_name)
+        analysis_name = scenario["analysis"]
         qry_string = self.get_select_string(analysis_name, data_type)
         time_string = self.get_time_select_string(start_time, duration)
         scenario_string = f"scenario='{scenario_name}'" if scenario_name is not None and scenario_name != "" else ""

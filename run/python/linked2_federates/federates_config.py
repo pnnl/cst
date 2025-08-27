@@ -132,7 +132,7 @@ def define_federation_list():
                         "keys": ["#", "localWeather"],
                         "indices": []}]}
 
-    federation = FederationConfig("MyLink2Scenario", "MyLink2analysis", "MyLink2Federation", with_docker)
+    federation = FederationConfig("MyLink2Scenario", "MyLink2Analysis", "MyLink2Federation", with_docker)
     f1 = federation.add_federate_config(FederateConfig(names[0], period=15))
     f2 = federation.add_federate_config(FederateConfig(names[1], period=15))
     f3 = federation.add_federate_config(FederateConfig(names[2], period=15))
@@ -266,7 +266,7 @@ def define_federation():
                         "keys": ["#", "localWeather"],
                         "indices": []}]}
 
-    federation = FederationConfig("MyLink2Scenario", "MyLink2analysis", "MyLink2Federation", with_docker)
+    federation = FederationConfig("MyLink2Scenario", "MyLink2Analysis", "MyLink2Federation", with_docker)
     f1 = federation.add_federate_config(FederateConfig(names[0], period=15))
     f2 = federation.add_federate_config(FederateConfig(names[1], period=15))
     f3 = federation.add_federate_config(FederateConfig(names[2], period=15))
@@ -326,7 +326,7 @@ def define_federation():
 def define_match():
     with_docker = False
     names = ["gld_7", "sub_7", "pypower", "localWeather"]
-    federation = FederationConfig("MyLink2Scenario", "MyLink2analysis", "MyLink2Federation", with_docker)
+    federation = FederationConfig("MyLink2Scenario", "MyLink2Analysis", "MyLink2Federation", with_docker)
 
     federation.add_federate_config(gridlabd_output.MyFederateMatch(names[0], period=15))
     federation.add_federate_config(substation_output.MyFederateMatch(names[1], period=15))

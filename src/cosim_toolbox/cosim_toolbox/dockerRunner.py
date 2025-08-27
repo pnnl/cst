@@ -103,7 +103,7 @@ class DockerRunner:
             params = [cosim_env,
                    f"python3 -c \"import cosim_toolbox.federateLogger as datalog; "
                    f"datalog.main('FederateLogger', '{analysis_name}', '{scenario_name}')\""]
-            yaml += DockerRunner._service("cst_logger", "cosim-python:latest", params, cnt, depends=None)
+            yaml += DockerRunner._service("cst_logger", "cosim-cst:latest", params, cnt, depends=None)
 
         yaml += DockerRunner._network()
 
