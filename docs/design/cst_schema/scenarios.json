@@ -4,7 +4,7 @@
     "start_time": "<ISO 8601 string  %:z -07:00 not supported < py3.12>",
     "stop_stime": "<ISO 8601 string>",
     "federation": "<string>",
-    "schema": "<string>",
+    "analysis": "<string>",
     "docker": "<boolean>"
   },
   {
@@ -12,7 +12,7 @@
     "start_time": "2023-12-07T15:31:27",
     "stop_stime": "2023-12-07T15:31:27",
     "federation": "BT1_EV1",
-    "schema": "Tesp",
+    "analysis": "Tesp",
     "docker": true
   },
   {
@@ -20,7 +20,7 @@
     "start_time": "2023-12-07T15:31:27−07:00",
     "stop_stime": "2023-12-07T15:31:27−07:00",
     "federation": "BT1_EV1",
-    "schema": "Tesp",
+    "analysis": "Tesp",
     "montior": {},
     "docker": true
   }

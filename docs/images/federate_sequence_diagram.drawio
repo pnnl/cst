@@ -45,7 +45,7 @@
                 <mxCell id="15" value="" style="html=1;points=[];perimeter=orthogonalPerimeter;" parent="4" vertex="1">
                     <mxGeometry x="145" y="250" width="10" height="360" as="geometry"/>
                 </mxCell>
-                <mxCell id="14" value="connect_to_helics_config" style="edgeStyle=orthogonalEdgeStyle;html=1;align=left;spacingLeft=2;endArrow=block;rounded=0;exitX=0.95;exitY=0.561;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1.22;entryY=0.544;entryDx=0;entryDy=0;entryPerimeter=0;" parent="4" source="9" target="9" edge="1">
+                <mxCell id="14" value="get_helics_config" style="edgeStyle=orthogonalEdgeStyle;html=1;align=left;spacingLeft=2;endArrow=block;rounded=0;exitX=0.95;exitY=0.561;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1.22;entryY=0.544;entryDx=0;entryDy=0;entryPerimeter=0;" parent="4" source="9" target="9" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="160" y="112.09999999999991" as="sourcePoint"/>
                         <Array as="points">

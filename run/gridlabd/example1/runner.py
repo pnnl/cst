@@ -9,9 +9,9 @@ if __name__ == "__main__":
     remote = False
     with_docker = True
     _scenario_name = "gld2"
-    _schema_name = "gld2"
+    _analysis_name = "gld2"
     _federation_name = "gld2"
-    configurator = Configurator(_scenario_name, _schema_name, _federation_name, docker=with_docker)
+    configurator = Configurator(_scenario_name, _analysis_name, _federation_name, docker=with_docker)
     broker_address = None
     if with_docker:
         broker_address = "10.5.0.2"
@@ -21,7 +21,7 @@ if __name__ == "__main__":
     mdb = DBConfigs()
     mdb.store_scenario(
         scenario_name=_scenario_name,
-        schema_name=_schema_name,
+        analysis_name=_analysis_name,
         federation_name = _federation_name,
         start = "2023-12-07T15:31:27",
         stop = "2023-12-07T18:31:27",

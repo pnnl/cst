@@ -17,9 +17,9 @@ import runner as myr
 
 def prepare_case():
     _scenario_name = "dag_Scenario"
-    _schema_name = "dag_Schema"
+    _analysis_name = "dag_analysis"
     _federation_name = "dag_Federation"
-    r = myr.Runner(_scenario_name, _schema_name, _federation_name, True)
+    r = myr.Runner(_scenario_name, _analysis_name, _federation_name, True)
     r.define_scenario()
 
 

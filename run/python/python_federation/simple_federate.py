@@ -13,7 +13,7 @@ from cosim_toolbox.federate import Federate
 
 
 class SimpleFederate(Federate):
-    def __init__(self, fed_name="", schema="default", **kwargs):
+    def __init__(self, fed_name="", analysis="default", **kwargs):
         self.dummy = 0
         super().__init__(fed_name, **kwargs)
 

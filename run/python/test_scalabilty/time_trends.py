@@ -25,14 +25,14 @@ def read_time5x():
     df.loc[df.federate == "fed_3", "federate"] = "one"
     df.loc[df.federate == "fed_4", "federate"] = "one"
     df.loc[df.federate == "3 feds", "federate"] = "three"
-    df = df.groupby(["scenario", "schema", "schema_rows", "selected_rows", "time_scale", "test", "ts_indexes",
+    df = df.groupby(["scenario", "analysis", "analysis_rows", "selected_rows", "time_scale", "test", "ts_indexes",
                      "federate"]).time.mean().rename_axis().reset_index()
     df['t'] = df["time"] - 0.0548
-    df["per_schema_row"] = df.time / df.schema_rows
+    df["per_analysis_row"] = df.time / df.analysis_rows
     df["per_selected_row"] = df.time / df.selected_rows
-    df["a"] = df.t / df.schema_rows
+    df["a"] = df.t / df.analysis_rows
     df["id"] = df.scenario.str[12:]
-    dfp = df.pivot(index=["id", "schema_rows", "selected_rows", "federate"],
+    dfp = df.pivot(index=["id", "analysis_rows", "selected_rows", "federate"],
                    columns="ts_indexes", values="time").rename_axis(columns=None).reset_index()
     dfp["mult"] = dfp[1] / dfp[0]
     dfp["mult2"] = dfp[2] / dfp[0]
@@ -46,16 +46,16 @@ def read_time5x():
         labels={"mult": "1 index", "mult2": "2 index", "value": "Slowdown"}
     )
     fig.show(renderer="browser")
-    # fig = px.scatter_matrix(df, dimensions=["time_scale", "ts_indexes", "schema_rows", "selected_rows", "time", "per_schema_row", "per_selected_row"])
+    # fig = px.scatter_matrix(df, dimensions=["time_scale", "ts_indexes", "analysis_rows", "selected_rows", "time", "per_analysis_row", "per_selected_row"])
     # fig.show(renderer="browser")
-    # corr = df.loc[:, ["time_scale", "ts_indexes", "schema_rows", "selected_rows", "time", "per_schema_row", "per_selected_row"]].corr().time
-    # corr = corr.loc[["time_scale", "ts_indexes", "schema_rows", "selected_rows", "per_schema_row", "per_selected_row"]]
+    # corr = df.loc[:, ["time_scale", "ts_indexes", "analysis_rows", "selected_rows", "time", "per_analysis_row", "per_selected_row"]].corr().time
+    # corr = corr.loc[["time_scale", "ts_indexes", "analysis_rows", "selected_rows", "per_analysis_row", "per_selected_row"]]
     # fig = px.bar(corr)
     # fig.show(renderer="browser")
     fig = px.histogram(
         df,
-        # x="schema_rows",
-        x="per_schema_row",
+        # x="analysis_rows",
+        x="per_analysis_row",
         color="ts_indexes",
         nbins=100,
         barmode="group",
@@ -64,25 +64,25 @@ def read_time5x():
     df.ts_indexes = df.ts_indexes.astype(str)
     fig = px.scatter(
         df,
-        x="schema_rows",
-        y="per_schema_row",
+        x="analysis_rows",
+        y="per_analysis_row",
         color="ts_indexes",
         symbol="ts_indexes",
         log_y=False,
         log_x=True,
-        labels={"schema_rows": "Schema Rows", "per_schema_row": "Query Time Per Row in Schema"},
+        labels={"analysis_rows": "analysis Rows", "per_analysis_row": "Query Time Per Row in Schema"},
     )
     fig.show(renderer="browser")
     df.ts_indexes = df.ts_indexes.astype(str)
     fig = px.scatter(
         df,
-        x="schema_rows",
+        x="analysis_rows",
         y="time",
         color="ts_indexes",
         symbol="ts_indexes",
         log_y=True,
         log_x=True,
-        labels={"schema_rows": "Schema Rows", "per_schema_row": "Query Time Per Row in Schema"},
+        labels={"analysis_rows": "analysis Rows", "per_analysis_row": "Query Time Per Row in Schema"},
     )
     x = 240 * 10 ** (np.array(list(range(1, 6, 1))))
     y1 = 4.6e-7 * x + 0.0548
@@ -120,39 +120,39 @@ def read_time():
     df8["ts_indexes"] = 2
     df9["ts_indexes"] = 0
     df = pd.concat([df5, df6, df7, df8, df9], ignore_index=True)
-    df["per_schema_row"] = df.time / df.schema_rows
+    df["per_analysis_row"] = df.time / df.analysis_rows
     df["per_selected_row"] = df.time / df.selected_rows
     print("max")
-    print(f"test5 {df.loc[df.test == 5, 'per_schema_row'].max():.3g}")
-    print(f"test6 {df.loc[df.test == 6, 'per_schema_row'].max():.3g}")
-    print(f"test7 {df.loc[df.test == 7, 'per_schema_row'].max():.3g}")
-    print(f"test8 {df.loc[df.test == 8, 'per_schema_row'].max():.3g}")
-    print(f"test9 {df.loc[df.test == 9, 'per_schema_row'].max():.3g}")
+    print(f"test5 {df.loc[df.test == 5, 'per_analysis_row'].max():.3g}")
+    print(f"test6 {df.loc[df.test == 6, 'per_analysis_row'].max():.3g}")
+    print(f"test7 {df.loc[df.test == 7, 'per_analysis_row'].max():.3g}")
+    print(f"test8 {df.loc[df.test == 8, 'per_analysis_row'].max():.3g}")
+    print(f"test9 {df.loc[df.test == 9, 'per_analysis_row'].max():.3g}")
     print("min")
-    print(f"test5 {df.loc[df.test == 5, 'per_schema_row'].min():.3g}")
-    print(f"test6 {df.loc[df.test == 6, 'per_schema_row'].min():.3g}")
-    print(f"test7 {df.loc[df.test == 7, 'per_schema_row'].min():.3g}")
-    print(f"test8 {df.loc[df.test == 8, 'per_schema_row'].min():.3g}")
-    print(f"test9 {df.loc[df.test == 9, 'per_schema_row'].min():.3g}")
+    print(f"test5 {df.loc[df.test == 5, 'per_analysis_row'].min():.3g}")
+    print(f"test6 {df.loc[df.test == 6, 'per_analysis_row'].min():.3g}")
+    print(f"test7 {df.loc[df.test == 7, 'per_analysis_row'].min():.3g}")
+    print(f"test8 {df.loc[df.test == 8, 'per_analysis_row'].min():.3g}")
+    print(f"test9 {df.loc[df.test == 9, 'per_analysis_row'].min():.3g}")
     print("mean")
-    print(f"test5 {df.loc[df.test == 5, 'per_schema_row'].mean():.3g}")
-    print(f"test6 {df.loc[df.test == 6, 'per_schema_row'].mean():.3g}")
-    print(f"test7 {df.loc[df.test == 7, 'per_schema_row'].mean():.3g}")
-    print(f"test8 {df.loc[df.test == 8, 'per_schema_row'].mean():.3g}")
-    print(f"test9 {df.loc[df.test == 9, 'per_schema_row'].mean():.3g}")
+    print(f"test5 {df.loc[df.test == 5, 'per_analysis_row'].mean():.3g}")
+    print(f"test6 {df.loc[df.test == 6, 'per_analysis_row'].mean():.3g}")
+    print(f"test7 {df.loc[df.test == 7, 'per_analysis_row'].mean():.3g}")
+    print(f"test8 {df.loc[df.test == 8, 'per_analysis_row'].mean():.3g}")
+    print(f"test9 {df.loc[df.test == 9, 'per_analysis_row'].mean():.3g}")
 
-    fig = px.scatter_matrix(df, dimensions=["time_scale", "ts_indexes", "schema_rows", "selected_rows", "time",
-                                            "per_schema_row", "per_selected_row"])
+    fig = px.scatter_matrix(df, dimensions=["time_scale", "ts_indexes", "analysis_rows", "selected_rows", "time",
+                                            "per_analysis_row", "per_selected_row"])
     fig.show(renderer="browser")
-    corr = df.loc[:, ["time_scale", "ts_indexes", "schema_rows", "selected_rows", "time", "per_schema_row",
+    corr = df.loc[:, ["time_scale", "ts_indexes", "analysis_rows", "selected_rows", "time", "per_analysis_row",
                       "per_selected_row"]].corr().time
-    corr = corr.loc[["time_scale", "ts_indexes", "schema_rows", "selected_rows", "per_schema_row", "per_selected_row"]]
+    corr = corr.loc[["time_scale", "ts_indexes", "analysis_rows", "selected_rows", "per_analysis_row", "per_selected_row"]]
     fig = px.bar(corr)
     fig.show(renderer="browser")
     fig = px.histogram(
         df,
-        # x="schema_rows",
-        x="per_schema_row",
+        # x="analysis_rows",
+        x="per_analysis_row",
         color="ts_indexes",
         nbins=100,
         barmode="group",
@@ -161,7 +161,7 @@ def read_time():
     df.ts_indexes = df.ts_indexes.astype(str)
     fig = px.scatter(
         df,
-        x="schema_rows",
+        x="analysis_rows",
         y="time",
         color="ts_indexes",
         symbol="ts_indexes",
