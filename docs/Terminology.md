@@ -12,3 +12,6 @@ A "federate" is an instance of a simulation tool with a specific model and/or da
 
 ## "federation"
 Each scenario defines a set of federates to be used to model all the is required for that scenario and this collection of the federates is called the "federation". All federates in the federation are defined in the configuration database. Generally, there is a strong overlap in the federation definition between scenarios in a given analysis. CST provides APIs that makes defining a federation and its corresponding data exchanges easier.
+
+## Note on Terminology
+The definitions presented here are primarily used when constructing the databases and the CST APIs developed to access them. Using any unqiue combination "analysis" and "scenario" will guarantee data and metadata is not overwritten from previous co-simulation runs. Additionally, it is possible that the configuration metadata stored in the database is intended to be used across multiple scenarios and analysis.

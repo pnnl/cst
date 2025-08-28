@@ -27,8 +27,8 @@ class Federate:
     This class definition is intended to be a reasonable, generic
     class for Python-based federates in HELICS. It outlines the typical
     federate operational procedure in the "_main_" function; users that
-    don't need anything fancy will probably be able to call those few functions
-    and get a working federate.
+    don't need anything fancy will probably be able to call those few 
+    functions and get a working federate.
 
     This class gets its configuration from the metadata database following
     the standard CST definition of the "federations" document.
@@ -116,14 +116,29 @@ class Federate:
         self.__dict__.update(kwargs)
 
     @property
-    def use_timescale(self):
+    def use_timescale(self) -> bool:
+        """Sets the timescale flag
+
+        Returns:
+            bool: state of timescale flag
+        """
         self._use_timescale = self.dl.use_timescale
         return self._use_timescale
 
+
     @use_timescale.setter
     def use_timescale(self, value: bool):
+        """Sets timescale based on passed-in value
+
+        Args:
+            value (bool): Value of timescale flag
+
+        Returns:
+            None
+        """
         self.dl.use_timescale = value
         self._use_timescale = self.dl.use_timescale
+
 
     def connect_to_metadataDB(self, uri: str, db_name: str) -> None:
         """Connects to the CST metadata database
@@ -136,6 +151,9 @@ class Federate:
         Args:
             uri (str): URI for Mongo database
             db_name (str): Name for Mongo database
+
+        Returns:
+            None
         """
         self.mddb = DBConfigs(uri, db_name)
         self.scenario = self.mddb.get_dict(env.cst_scenarios, None, self.scenario_name)
@@ -143,6 +161,7 @@ class Federate:
 
         self.federation = self.mddb.get_dict(env.cst_federations, None, self.federation_name)
         self.federation = self.federation["federation"]
+
 
     def connect_to_metadataJSON(self) -> None:
         """Connects to the CST JSON configuration file
@@ -152,6 +171,12 @@ class Federate:
         management data. This method connects to that database and makes it
         available for other methods in this class.
 
+        Args: 
+            None
+
+        Returns:
+            None
+
         """
         with open(self.scenario_name + ".json", "r") as scenario:
             self.scenario = json.load(scenario)
@@ -160,7 +185,15 @@ class Federate:
         with open(self.federation_name + ".json", "r") as federation:
             self.federation = json.load(federation)
 
-    def connect_to_dataDB(self):
+
+    def connect_to_dataDB(self) -> None:
+        """Establishes a connection database data store
+        Args:
+            None
+
+        Returns:
+            None
+        """
         self.dl = DBResults()
         self.dl.open_database_connections()
         # self.dl.check_version()
@@ -174,13 +207,22 @@ class Federate:
                 return
             if not self.dl.table_exist(self.analysis_name, 'hdt_double'):
                 try:
-                    self.dl.make_logger_database(self.analysis_name)
-                    self.dl.remove_scenario(self.analysis_name, self.scenario_name)
+                    self.dl.make_logger_database(self.scheme_name)
+                    self.dl.remove_collection(self.scheme_name, self.scenario_name)
                 except Exception as ex:
                     self.dl.data_db.rollback()
                     logger.exception(f"Rolling back: make tables for analysis!")
 
-    def connect_to_dataCSV(self):
+
+    def connect_to_dataCSV(self) -> None:
+        """Connects to CSV data store
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         if self.output_csv is None:
             out_path = f"{self.path_csv}{self.federate_name}_outputs.csv"
             try:
@@ -188,12 +230,30 @@ class Federate:
             except Exception as ex:
                 logger.exception(f"{ex}\nUnable to open output file: {out_path}")
 
-    def close_metadata(self):
+
+    def close_metadata(self) -> None:
+        """Closes metadata data store
+
+        Args:
+            None
+
+        Return:
+            None
+        """
         if self.use_mdb:
             logger.debug(f"Closing mongo database connection")
             del self.mddb
 
-    def close_data(self):
+
+    def close_data(self) -> None:
+        """Closes time-series database data store
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         if self.use_pdb:
             logger.debug(f"Closing postgres database connection")
             self.commit_to_logger()
@@ -204,6 +264,7 @@ class Federate:
             if self.output_csv is not None:
                 self.output_csv.close()
 
+
     def set_metadata(self) -> None:
         """Sets instance attributes to enable HELICS config query of metadataDB
 
@@ -211,6 +272,12 @@ class Federate:
         and is copied into the `self.federation` attribute. This method pulls
         out a few keys configuration parameters from that attribute to make
         them more easily accessible.
+
+        Args:
+            None
+
+        Return:
+            None
         """
 
         # setting start and stop time
@@ -232,6 +299,7 @@ class Federate:
         if self.federation.get("tags"):
             self.fed_collect = self.federation["tags"].get("logger", self.fed_collect)
 
+
     def get_helics_config(self) -> None:
         """Sets instance attributes to enable HELICS config query of dbConfigs
 
@@ -239,12 +307,19 @@ class Federate:
         and is copied into the `self.federation` attribute. This method pulls
         out a few keys configuration parameters from that attribute to make
         them more easily accessible.
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         self.federate = self.federation[self.federate_name]
         self.federate_type = self.federate["federate_type"]
         self.period = self.federate["HELICS_config"]["period"]
         self.config = self.federate["HELICS_config"]
         # self.image = self.federate["image"]
+
 
     def create_federate(self, scenario_name: str) -> None:
         """Create CST and HELICS federates
@@ -262,6 +337,9 @@ class Federate:
 
         Raises:
             NameError: Scenario name is undefined (`None`)
+
+        Returns:
+            None
         """
         if scenario_name is None:
             raise NameError("scenario_name is None")
@@ -304,6 +382,7 @@ class Federate:
 
         self.create_helics_fed()
 
+
     def create_helics_fed(self) -> None:
         """Creates the HELICS federate object
 
@@ -313,8 +392,14 @@ class Federate:
         needs to be defined as an instance attribute to enable the correct API
         to be called.
 
+        Args:
+            None
+
         Raises:
             ValueError: Invalid value for self.federate_type
+
+        Returns:
+            None
         """
         if self.federate_type == "value":
             self.hfed = h.helicsCreateValueFederateFromConfig(json.dumps(self.config))
@@ -326,14 +411,48 @@ class Federate:
             raise ValueError(f"Federate type \'{self.federate_type}\'"
                              f" not allowed; must be 'value', 'message', or 'combo'.")
 
-    def on_start(self):
+
+    def on_start(self) -> None:
+        """Functionality executed prior to entering initializating
+
+        By default, no functionality is implemented
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         pass
 
-    def on_enter_initialization_mode(self):
+
+    def on_enter_initialization_mode(self) -> None:
+        """Functionality executed after entering initialization
+
+        By default, no functionality is implemented
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         pass
 
-    def on_enter_executing_mode(self):
+
+    def on_enter_executing_mode(self) -> None:
+        """Functionality executed after entering executing mode
+
+        By default, no functionality is implemented
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         pass
+
 
     def run_cosim_loop(self) -> None:
         """Runs the generic HELICS co-sim loop
@@ -343,6 +462,12 @@ class Federate:
         self.enter_executing_mode(), and self. simulate_next_step
         have been implemented and should be overloaded/redefined as necessary
         to fit the needs of a given federate and/or federation.
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         if self.hfed is None:
             raise ValueError("Helics Federate object has not been created")
@@ -355,6 +480,7 @@ class Federate:
         while self.granted_time < self.stop_time:
             self.simulate_next_step()
 
+
     def enter_initialization(self) -> None:
         """Moves federate to HELICS initializing mode
 
@@ -365,8 +491,15 @@ class Federate:
         Federate. What is implemented here is the simplest, most vanilla means
         of entering initializing mode. If you need something more complex,
         overload or redefine this method.
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         self.hfed.enter_initializing_mode()
+
 
     def enter_executing_mode(self) -> None:
         """Moves the Federate to executing mode
@@ -375,8 +508,15 @@ class Federate:
         handling HELICS executing mode and what is implemented here is the
         simplest. If you need something more complex or specific, overload
         or redefine this method.
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         self.hfed.enter_executing_mode()
+
 
     def simulate_next_step(self) -> None:
         """Advances the Federate to its next simulated time
@@ -385,6 +525,12 @@ class Federate:
         request is made and once granted, data from the rest of the federation
         is collected and used to update the internal model before sending out
         new data for the rest of the federation to use.
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         next_requested_time = self.calculate_next_requested_time()
         self.request_time(next_requested_time)
@@ -392,19 +538,26 @@ class Federate:
         self.update_internal_model()
         self.send_data_to_federation()
 
+
     def calculate_next_requested_time(self) -> float:
         """Determines the next simulated time to request from HELICS
 
         Many federates run at very regular time steps and thus the calculation
         of the requested time is trivial. In some cases, though, the requested
         time may be more dynamic and this method provides a place for users
-        to overload the default calculation method if they need something more complex.
+        to overload the default calculation method if they need something more
+        complex.
+
+        Args:
+            None
 
         Returns:
-            self.next_requested_time: Calculated time for the next HELICS time request
+            self.next_requested_time: Calculated time for the next HELICS time
+                request
         """
         self.next_requested_time = self.granted_time + self.period
         return self.next_requested_time
+
 
     def request_time(self, requested_time: float) -> float:
         """Requests next simulated time from HELICS
@@ -414,7 +567,8 @@ class Federate:
         are others that make the time request but allow users to continue
         working on something else while they wait for HELICS to get back to
         them with the granted time. This method is here just to allow users
-        to redefine or overload and re-implement how they want to do time requests.
+        to redefine or overload and re-implement how they want to do time 
+        requests.
 
         Args:
             requested_time: Simulated time this federate needs to request
@@ -425,6 +579,7 @@ class Federate:
         self.granted_time = self.hfed.request_time(requested_time)
         return self.granted_time
     
+
     def reset_data_to_federation(self) -> None:
         """Sets all values in dictionary of values being sent out
         via publications and endpoints in the data_to_federation
@@ -436,6 +591,12 @@ class Federate:
         preventing duplicate publication of data that has not changed and does
         not need to be re-sent. This also helps manage the data being logged in
         the time-series database.
+
+        Args:
+            None
+
+        Returns:
+            None
         """
 
         for key in self.data_to_federation["publications"].keys():
@@ -453,6 +614,12 @@ class Federate:
         interfaces via the HELICS federate (hfed object) provides a much richer
         set of metadata associated with these interfaces. The implementation
         here is vanilla and is expected to be sufficient for many use cases.
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         # Subscriptions and inputs
 
@@ -503,6 +670,7 @@ class Federate:
                     self.data_from_federation["endpoints"][ep.name].append(data)
                 logger.info(f"Message: {idx} endpoint: {ep}, data: {data}")
 
+
     def update_internal_model(self) -> None:
         """Perform federate specific calculations to bring model up to date
 
@@ -513,6 +681,12 @@ class Federate:
 
         This is entirely user-defined code and is intended to be defined by
         sub-classing and/or overloading.
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         if not self.debug:
             raise NotImplementedError("Subclass from Federate and write code to update internal model")
@@ -540,6 +714,7 @@ class Federate:
             pub = self.hfed.get_publication_by_index(0)
             self.data_to_federation["publications"][pub.name] = dummy_value
 
+
     def send_data_to_federation(self, reset=False) -> None:
         """
         Sends specified outputs to rest of HELICS federation
@@ -566,6 +741,9 @@ class Federate:
                 prevents re-publication of the value until manually set to a
                 non-`None` value. Any entry in this dictionary that is `None`
                 is not sent out via HELICS. Defaults to False.
+
+        Returns:
+            None
         """
 
         # Publications
@@ -615,7 +793,8 @@ class Federate:
                 if reset:
                     self.data_to_federation["endpoints"][key] = None
 
-    def commit_to_logger(self):
+
+    def commit_to_logger(self) -> None:
         if self._commit_qry != "":
             try:
                 with self.dl.data_db.cursor() as cur:

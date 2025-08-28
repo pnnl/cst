@@ -29,7 +29,7 @@ class TestSimpleFederation(unittest.TestCase):
                                     "2023-12-07T15:31:27",
                                     "2023-12-08T15:31:27",
                                     False)
-        self.db.remove_document(env.cst_scenarios, None, 'test_scenario')
+        self.db.remove_dict(env.cst_scenarios, None, 'test_scenario')
         self.db.add_dict(env.cst_scenarios, 'test_scenario', scenario)
 
     def test_simple_federation_result(self):
