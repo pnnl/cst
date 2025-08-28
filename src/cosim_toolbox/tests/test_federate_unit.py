@@ -63,7 +63,7 @@ class MockDBResults:
     def open_database_connections(self):
         return True
 
-    def schema_exist(self, scheme_name):
+    def analysis_exist(self, analysis_name):
         return True
 
 class MockDBConfigs:
@@ -80,7 +80,7 @@ class MockDBConfigs:
             "federation": "test_federation",
             "start_time": "2023-12-07T15:31:27",
             "stop_time": "2023-12-07T15:32:27",
-            "schema": "test_schema"
+            "analysis": "test_analysis"
         }
 
         self.federation_dict = {

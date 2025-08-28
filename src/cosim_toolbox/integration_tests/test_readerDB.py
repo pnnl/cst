@@ -14,7 +14,7 @@ from cosim_toolbox.helicsConfig import HelicsMsg, Collect
 class Singleton(object):
     _instance = None
     scenario_name = "test_my_scenario"
-    schema_name = "test_my_schema"
+    analysis_name = "test_my_schema"
     federation_name = "test_federation"
     docker = True
 
@@ -86,7 +86,7 @@ class Singleton(object):
 
             db.remove_dict(env.cst_federations, None, cls.federation_name)
             db.add_dict(env.cst_federations, cls.federation_name, diction)
-            scenario = db.scenario(cls.schema_name,
+            scenario = db.scenario(cls.analysis_name,
                                    cls.federation_name,
                                    "2023-12-07T15:31:27",
                                    "2023-12-08T15:31:27",
@@ -95,32 +95,32 @@ class Singleton(object):
             db.add_dict(env.cst_scenarios, cls.scenario_name, scenario)
 
             cmd = (f'docker cp {os.path.dirname(os.path.abspath(__file__))}'
-                   f'/data/del_{cls.schema_name}.sql '
+                   f'/data/del_{cls.analysis_name}.sql '
                    f'$(docker container ls --all --quiet --filter "name=database"):'
-                   f'/docker-entrypoint-initdb.d/del_{cls.schema_name}.sql')
+                   f'/docker-entrypoint-initdb.d/del_{cls.analysis_name}.sql')
             subprocess.Popen(cmd, shell=True).wait()
             cmd = (f'docker cp {os.path.dirname(os.path.abspath(__file__))}'
-                   f'/data/{cls.schema_name}.sql '
+                   f'/data/{cls.analysis_name}.sql '
                    f'$(docker container ls --all --quiet --filter "name=database"):'
-                   f'/docker-entrypoint-initdb.d/{cls.schema_name}.sql')
+                   f'/docker-entrypoint-initdb.d/{cls.analysis_name}.sql')
             subprocess.Popen(cmd, shell=True).wait()
             # command string for psql to load database
             cmd = ('docker exec -i $(docker container ls --all --quiet --filter "name=database") '
                    f'/bin/bash -c "export PGPASSWORD={env.cst_data_db["user"]} && psql '
                    f'-U {env.cst_data_db["user"]} -d {env.cst_data_db["dbname"]} < ')
             # remove federation data in postgres database
-            subprocess.Popen(cmd + f'/docker-entrypoint-initdb.d/del_{cls.schema_name}.sql"', shell=True).wait()
+            subprocess.Popen(cmd + f'/docker-entrypoint-initdb.d/del_{cls.analysis_name}.sql"', shell=True).wait()
             # load federation data in postgres database
-            subprocess.Popen(cmd + f'/docker-entrypoint-initdb.d/{cls.schema_name}.sql"', shell=True).wait()
+            subprocess.Popen(cmd + f'/docker-entrypoint-initdb.d/{cls.analysis_name}.sql"', shell=True).wait()
 
             # # command string for psql to load database
             # cmd = (f' | docker exec -i $(docker container ls --all --quiet --filter "name=database")'
             #        f' psql -U {env.cst_data_db["user"]} -d {env.cst_data_db["dbname"]}')
             # # remove federation data in postgres database
-            # dell = f'cat {os.path.dirname(os.path.abspath(__file__))}/data/del_{cls.schema_name}.sql' + cmd
+            # dell = f'cat {os.path.dirname(os.path.abspath(__file__))}/data/del_{cls.analysis_name}.sql' + cmd
             # subprocess.Popen(dell, shell=True).wait()
             # # load federation data in postgres database
-            # subprocess.Popen(f'cat {os.path.dirname(os.path.abspath(__file__))}/data/{cls.schema_name}.sql' + cmd, shell=True).wait()
+            # subprocess.Popen(f'cat {os.path.dirname(os.path.abspath(__file__))}/data/{cls.analysis_name}.sql' + cmd, shell=True).wait()
 
             cls.setUpBool = True
 
@@ -130,7 +130,7 @@ class Singleton(object):
 class TestLoggerApi(unittest.TestCase):
 
     scenario_name = "test_my_scenario"
-    schema_name = "test_my_schema"
+    analysis_name = "test_my_schema"
     federation_name = "test_federation"
 
     def setUp(self):
@@ -142,8 +142,8 @@ class TestLoggerApi(unittest.TestCase):
         self.assertIsNotNone(self.test_DL.data_db)
 
     def test_01_get_select_string(self):
-        qry_string = self.test_DL.get_select_string(self.schema_name, "hdt_double")
-        self.assertEqual(qry_string, f"SELECT * FROM {self.schema_name}.hdt_double WHERE ")
+        qry_string = self.test_DL.get_select_string(self.analysis_name, "hdt_double")
+        self.assertEqual(qry_string, f"SELECT * FROM {self.analysis_name}.hdt_double WHERE ")
 
     def test_02_get_time_select_string(self):
         qry_string = self.test_DL.get_time_select_string(500, 1000)
@@ -153,17 +153,17 @@ class TestLoggerApi(unittest.TestCase):
 
     def test_03_get_query_string(self):
         qry_string = self.test_DL.get_query_string(500, 1000, self.scenario_name, "Battery", "Battery/current3", "hdt_boolean")
-        self.assertEqual(qry_string, f"SELECT * FROM {self.schema_name}.hdt_boolean WHERE sim_time>=500 AND sim_time<=1500 AND scenario='{self.scenario_name}' AND federate='Battery' AND data_name='Battery/current3'")
+        self.assertEqual(qry_string, f"SELECT * FROM {self.analysis_name}.hdt_boolean WHERE sim_time>=500 AND sim_time<=1500 AND scenario='{self.scenario_name}' AND federate='Battery' AND data_name='Battery/current3'")
         qry_string2 = self.test_DL.get_query_string(None, 1000, self.scenario_name, "Battery", "Battery/current3", "hdt_boolean")
-        self.assertEqual(qry_string2, f"SELECT * FROM {self.schema_name}.hdt_boolean WHERE sim_time<=1000 AND scenario='{self.scenario_name}' AND federate='Battery' AND data_name='Battery/current3'")
+        self.assertEqual(qry_string2, f"SELECT * FROM {self.analysis_name}.hdt_boolean WHERE sim_time<=1000 AND scenario='{self.scenario_name}' AND federate='Battery' AND data_name='Battery/current3'")
         qry_string3 = self.test_DL.get_query_string(500, None, self.scenario_name, "Battery", "Battery/current3", "hdt_boolean")
-        self.assertEqual(qry_string3, f"SELECT * FROM {self.schema_name}.hdt_boolean WHERE sim_time>=500 AND scenario='{self.scenario_name}' AND federate='Battery' AND data_name='Battery/current3'")
+        self.assertEqual(qry_string3, f"SELECT * FROM {self.analysis_name}.hdt_boolean WHERE sim_time>=500 AND scenario='{self.scenario_name}' AND federate='Battery' AND data_name='Battery/current3'")
         qry_string4 = self.test_DL.get_query_string(500, 1000, None, "Battery", "Battery/current3", "hdt_boolean")
         self.assertEqual(qry_string4, None)
         qry_string5 = self.test_DL.get_query_string(500, 1000, self.scenario_name, None, "Battery/current3", "hdt_boolean")
-        self.assertEqual(qry_string5, f"SELECT * FROM {self.schema_name}.hdt_boolean WHERE sim_time>=500 AND sim_time<=1500 AND scenario='{self.scenario_name}' AND data_name='Battery/current3'")
+        self.assertEqual(qry_string5, f"SELECT * FROM {self.analysis_name}.hdt_boolean WHERE sim_time>=500 AND sim_time<=1500 AND scenario='{self.scenario_name}' AND data_name='Battery/current3'")
         qry_string6 = self.test_DL.get_query_string(500, 1000, self.scenario_name, "Battery", None, "hdt_boolean")
-        self.assertEqual(qry_string6, f"SELECT * FROM {self.schema_name}.hdt_boolean WHERE sim_time>=500 AND sim_time<=1500 AND scenario='{self.scenario_name}' AND federate='Battery'")
+        self.assertEqual(qry_string6, f"SELECT * FROM {self.analysis_name}.hdt_boolean WHERE sim_time>=500 AND sim_time<=1500 AND scenario='{self.scenario_name}' AND federate='Battery'")
         qry_string7 = self.test_DL.get_query_string(None, None, None, None, None, "hdt_boolean")
         self.assertEqual(qry_string7, None)
 
@@ -194,31 +194,31 @@ class TestLoggerApi(unittest.TestCase):
         df = self.test_DL.query_scenario_all_times(self.scenario_name, "hdt_boolean")
         self.assertTrue(len(df) == 2880)
 
-    def test_06_query_scheme_federate_all_times(self):
-        df = self.test_DL.query_scheme_federate_all_times(self.schema_name, "Battery", "hdt_boolean")
+    def test_06_query_analysis_federate_all_times(self):
+        df = self.test_DL.query_analysis_federate_all_times(self.analysis_name, "Battery", "hdt_boolean")
         self.assertTrue(len(df) == 2880)
 
     def test_07_get_scenario_list(self):
-        df = self.test_DL.get_scenario_list(self.schema_name, "hdt_boolean")
+        df = self.test_DL.get_scenario_list(self.analysis_name, "hdt_boolean")
         self.assertTrue(len(df) == 1)
         self.assertTrue(df.values[0][0] == self.scenario_name)
 
     def test_08_get_federate_list(self):
-        df = self.test_DL.get_federate_list(self.schema_name, "hdt_boolean")
+        df = self.test_DL.get_federate_list(self.analysis_name, "hdt_boolean")
         df = df.sort_values(by=['federate'])
         self.assertTrue(len(df) == 1)
         self.assertTrue(df.values[0][0] == "Battery")
         # self.assertTrue(df.values[1][0] == "EVehicle")
 
     def test_09_get_data_name_list(self):
-        df = self.test_DL.get_data_name_list(self.schema_name, "hdt_boolean")
+        df = self.test_DL.get_data_name_list(self.analysis_name, "hdt_boolean")
         df = df.sort_values(by=['data_name'])
         self.assertTrue(len(df) == 1)
         self.assertTrue(df.values[0][0] == "Battery/current3")
         # self.assertTrue(df.values[1][0] == "EVehicle/voltage3")
 
     def test_10_get_time_range(self):
-        df = self.test_DL.get_time_range(self.schema_name, "hdt_boolean", self.scenario_name, "Battery")
+        df = self.test_DL.get_time_range(self.analysis_name, "hdt_boolean", self.scenario_name, "Battery")
         self.assertTrue(len(df) > 0)
 
     def tearDown(self):

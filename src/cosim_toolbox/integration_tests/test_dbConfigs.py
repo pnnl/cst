@@ -199,9 +199,9 @@ class TestMetadataDBApi(unittest.TestCase):
         self.assertEqual(copy_dict["EVehicle"]["time_step"] - 60, new_dict_obj["EVehicle"]["time_step"])
 
     def test_12_scenario(self):
-        schema_name = "Tesp"
+        analysis_name = "Tesp"
         federate_name = "BT1"
-        scenario = self.metadb.scenario(schema_name, federate_name, "2023-12-07T15:31:27", "2023-12-08T15:31:27")
+        scenario = self.metadb.scenario(analysis_name, federate_name, "2023-12-07T15:31:27", "2023-12-08T15:31:27")
         self.assertEqual(scenario['federation'], 'BT1', "scenario federation value is not set correctly")
 
     def tearDown(self):

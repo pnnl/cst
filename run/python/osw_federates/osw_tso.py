@@ -84,9 +84,9 @@ class OSWTSO(Federate):
         # self.dl = DataLogger()
         # self.dl.open_database_connections()
         # self.dl.check_version()
-        # if self.dl.table_exist(self.scenario['osw_test_schema'], "htd_double"):
-        #     self.dl.create_schema(self.scenario['osw_test_schema'])
-        #     self.dl.make_logger_database(self.scenario['osw_test_schema']) 
+        # if self.dl.table_exist(self.scenario['osw_test_analysis'], "htd_double"):
+        #     self.dl.create_analysis(self.scenario['osw_test_analysis'])
+        #     self.dl.make_logger_database(self.scenario['osw_test_analysis'])
 
         self.market_timing = market_timing
         self.markets = self.calculate_initial_market_times(self.markets)

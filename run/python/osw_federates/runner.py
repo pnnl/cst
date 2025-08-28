@@ -15,9 +15,9 @@ from cosim_toolbox.helicsConfig import HelicsMsg, Collect
 
 class Runner:
 
-    def __init__(self, scenario_name, schema_name, federation_name, docker=False):
+    def __init__(self, scenario_name, analysis_name, federation_name, docker=False):
         self.scenario_name = scenario_name
-        self.schema_name = schema_name
+        self.analysis_name = analysis_name
         self.federation_name = federation_name
         self.docker = docker
         print(mDB.cosim_mongo_host)
@@ -87,7 +87,7 @@ class Runner:
         # print(mDB.cu_federations, self.db.get_dict_names_in_collection(mDB.cu_federations))
         # print(self.federation_name, self.db.get_dict(mDB.cu_federations, None, self.federation_name))
 
-        scenario = self.db.scenario(self.schema_name,
+        scenario = self.db.scenario(self.analysis_name,
                                     self.federation_name,
                                     "2023-12-07T15:31:27",
                                     "2023-12-08T15:31:27",
@@ -101,9 +101,9 @@ class Runner:
 if __name__ == "__main__":
     remote = True
     _scenario_name = "osw_lmp_test_scenario"
-    _schema_name = "osw_test_schema"
+    _analysis_name = "osw_test_analysis"
     _federation_name = "osw_test_federation"
-    r = Runner(_scenario_name, _schema_name, _federation_name, False)
+    r = Runner(_scenario_name, _analysis_name, _federation_name, False)
     r.define_scenario()
     # print(r.db.get_dict_names_in_collection(mDB.cu_scenarios))
     # print(r.db.get_dict_names_in_collection(mDB.cu_federations))

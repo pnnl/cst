@@ -63,7 +63,6 @@ class DBConfigs:
           the database named `db_name`
         fs (GridFS): Mongo DB object for storing and accessing files
 
-
     """
     _cst_name = 'cst_007'
 
@@ -472,13 +471,13 @@ class DBConfigs:
         return result
 
     @staticmethod
-    def scenario(schema_name: str, federation_name: str, start: str, stop: str, docker: bool = False) -> dict:
+    def scenario(analysis_name: str, federation_name: str, start: str, stop: str, docker: bool = False) -> dict:
         """
         Creates a properly formatted CoSimulation Toolbox scenario document
         (dictionary), using the provided inputs.
         """
         return {
-            "schema": schema_name,
+            "analysis": analysis_name,
             "federation": federation_name,
             "start_time": start,
             "stop_time": stop,
@@ -490,9 +489,9 @@ class DBConfigs:
         self.add_dict(env.cst_federations, name, config)
 
     def store_scenario(self,
-            scenario_name: str, schema_name: str, federation_name: str,
+            scenario_name: str, analysis_name: str, federation_name: str,
             start: str, stop: str, docker: bool = False) -> None:
-        scenario = self.scenario(schema_name, federation_name, start, stop, docker)
+        scenario = self.scenario(analysis_name, federation_name, start, stop, docker)
         self.remove_dict(env.cst_scenarios, scenario_name)
         self.add_dict(env.cst_scenarios, scenario_name, scenario)
 
@@ -520,7 +519,7 @@ class DBConfigs:
         pass
 
 
-def mytest1():
+def _mytest1():
     """
     Main method for launching metadata class to ping local container of mongodb.
     First user's will need to set up docker desktop (through the PNNL App Store), install mongodb community:
@@ -556,11 +555,11 @@ def mytest1():
     }
 
     scenario_name = "ME30"
-    schema_name = "Tesp"
+    analysis_name = "Tesp"
     federate_name = "BT1"
     db.add_dict(env.cst_federations, federate_name, diction)
 
-    scenario = db.scenario(schema_name, federate_name, "2023-12-07T15:31:27", "2023-12-08T15:31:27")
+    scenario = db.scenario(analysis_name, federate_name, "2023-12-07T15:31:27", "2023-12-08T15:31:27")
     db.add_dict(env.cst_scenarios, scenario_name, scenario)
 
     logger.info(db.get_dict_names_in_collection(env.cst_scenarios))
@@ -569,7 +568,7 @@ def mytest1():
     logger.info(db.get_dict(env.cst_federations, None, federate_name))
 
 
-def mytest2():
+def _mytest2():
     """
     Main method for launching metadata class to ping local container of mongodb.
     First user's will need to set up docker desktop (through the PNNL App Store), install mongodb community:
@@ -622,16 +621,16 @@ def mytest2():
     }
 
     scenario_name = "TE30"
-    schema_name = "Tesp"
+    analysis_name = "Tesp"
     federate_name = "BT1_EV1"
     db.add_dict(env.cst_federations, federate_name, diction)
 
-    scenario = db.scenario(schema_name, federate_name, "2023-12-07T15:31:27", "2023-12-08T15:31:27")
+    scenario = db.scenario(analysis_name, federate_name, "2023-12-07T15:31:27", "2023-12-08T15:31:27")
     db.add_dict(env.cst_scenarios, scenario_name, scenario)
 
     scenario_name = "TE100"
     # seems to remember the scenario address, not the value so reinitialize
-    scenario = db.scenario(schema_name, federate_name, "2023-12-07T15:31:27", "2023-12-10T15:31:27", True)
+    scenario = db.scenario(analysis_name, federate_name, "2023-12-07T15:31:27", "2023-12-10T15:31:27", True)
     db.add_dict(env.cst_scenarios, scenario_name, scenario)
 
     logger.info(db.get_dict_names_in_collection(env.cst_scenarios))
@@ -641,5 +640,5 @@ def mytest2():
 
 
 if __name__ == "__main__":
-    mytest1()
-    mytest2()
+    _mytest1()
+    _mytest2()
