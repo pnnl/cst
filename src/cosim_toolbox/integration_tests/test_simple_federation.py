@@ -21,6 +21,9 @@ class TestSimpleFederation(unittest.TestCase):
     def setUp(self):
         self.logger_data = DBResults()
         self.db = DBConfigs(env.cst_mongo, env.cst_mongo_db)
+
+        # this may fail if run/python/test_federation/runner.py not ran
+        # integration_test.sh does run this in the pipeline
         scenario = self.db.scenario('test_schema',
                                     'test_federation',
                                     "2023-12-07T15:31:27",

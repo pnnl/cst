@@ -35,7 +35,7 @@ class Runner:
     @staticmethod
     def define_runner():
         script = """
-IMAGE="cosim-python:latest"
+IMAGE="cosim-cst:latest"
 
 docker images -q ${IMAGE} > docker_version
 hostname > hostname
@@ -134,9 +134,9 @@ docker run \\
         prv = federate_size - 1
         for _f in range(federate_size):
             name = f"{_p}{_f}"
-            t1 = HelicsMsg(name, 30)
+            t1 = HelicsMsg(name, period=30)
             if self.docker:
-                t1.config("brokeraddress", "10.5.0.2")
+                t1.config("broker_address", "10.5.0.2")
             t1.config("core_type", "zmq")
             t1.config("log_level", "warning")
             t1.config("period", 30)  # maybe different interval for testing
@@ -156,7 +156,7 @@ docker run \\
 
             command = f"exec python3 ../../cst_federate.py {name} {scenario_name} {cst_logger}"
             federation["federation"][name] = {
-                "image": "cosim-python:latest",
+                "image": "cosim-cst:latest",
                 "command": command,
                 "federate_type": "combo",
                 "time_step": 120,

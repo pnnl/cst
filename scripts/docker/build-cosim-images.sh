@@ -28,7 +28,7 @@ for ((i = 0; i < ${#CONFIG_BUILDS[@]}; i+=3)); do
   name="${CONFIG_BUILDS[i]}"
   path="${CONFIG_BUILDS[i+1]}"
   build_flag="${CONFIG_BUILDS[i+2]}"
-
+  printf "$build_flag  : $BUILD\n"
   if [ "$build_flag" -eq $BUILD ]; then
     CONTEXT="$path"
     IMAGE_NAME="cosim-${name}:latest"

@@ -26,9 +26,9 @@ class Runner:
         names = ["Controller", "Market"]
 
         # Controller federate
-        t1 = HelicsMsg(names[0], 30)
+        t1 = HelicsMsg(names[0], period=30)
         if self.docker:
-            t1.config("brokeraddress", "10.5.0.2")
+            t1.config("broker_address", "10.5.0.2")
         t1.config("core_type", "zmq")
         t1.config("log_level", "warning")
         t1.config("period", 30)
@@ -46,7 +46,7 @@ class Runner:
 
         f1 = {
             "logger": False,
-            "image": "cosim-python:latest",
+            "image": "cosim-cst:latest",
             "command": f"python3 dummy_controller_fed.py {names[0]} {self.scenario_name}",
             "federate_type": "value",
             "time_step": 120,
@@ -54,9 +54,9 @@ class Runner:
         }
 
         # Market federate
-        t2 = HelicsMsg(names[1], 30)
+        t2 = HelicsMsg(names[1], period=30)
         if self.docker:
-            t2.config("brokeraddress", "10.5.0.2")
+            t2.config("broker_address", "10.5.0.2")
         t2.config("core_type", "zmq")
         t2.config("log_level", "warning")
         t2.config("period", 60)
@@ -74,7 +74,7 @@ class Runner:
         t2.pubs_e(names[1] + "/realtime_clearing_info", "string", "")
         f2 = {
             "logger": False,
-            "image": "cosim-python:latest",
+            "image": "cosim-cst:latest",
             "command": f"python3 dummy_market_fed.py {names[1]} {self.scenario_name}",
             "federate_type": "value",
             "time_step": 120,

@@ -12,13 +12,12 @@ cosim_toolbox can be installed using pip_::
   $ pip install cosim_toolbox
 
 However, in order to be useful, cosim_toolbox needs custom versions of
-GridLAB-D and EnergyPlus.  It also requires Python 3.10 or later, with
-NumPy_, SciPy_, NetworkX_, Matplotlib_ and PYPOWER_.  There are 
-cross-platform installers of the complete TESP for Windows, Linux and Mac 
-OS X on GitHub.  A Docker_ version is also available for users.  
+GridLAB-D and other federates that work with HELICS.  It also requires Python 3.10 or later, with
+HELICS_, NumPy_, MongoDB_, Pandas_, and Psycopg_.  There is reposistory of the complete
+Co-Simulation for Windows, Linux and Mac OS X on GitHub.  A Docker_ version is also available for users.
 
 Development Work Flow for cosim_toolbox
-======================================
+=======================================
 
 * From this directory, 'pip install -e .' points Python to this cloned repository for any calls to cosim_toolbox functions
 * See the https://[github]/copper/tree/main/src/cosim_toolbox/cosim_toolbox for a roadmap of existing Python source files, and some documentation.  Any changes or additions to the code need to be made in this directory.
@@ -34,8 +33,8 @@ Development Work Flow for cosim_toolbox
 * Any user gets the changes with 'pip install cosim_toolbox --upgrade'
 * Use 'pip show cosim_toolbox' to verify the version and location on your computer
 
-Using COSimulation Toolbox
-==========
+Using Co-Simulation Toolbox
+===========================
 
 This is a developer's platform for electric power grid research.  See 
 http://cosimtoolbox.readthedocs.io/en/latest/ for user instructions, and
@@ -45,38 +44,31 @@ Links to Dependencies
 =====================
 
 * Docker_
-* EnergyPlus_
 * GridLAB-D_
-* Matplotlib_
-* MATPOWER_
-* NetworkX_
+* HELICS_
 * NumPy_
+* MongoDB_
 * Pandas_
-* pip_
-* PYPOWER_
+* Psycopg_
 * Python_
-* SciPy_
 
 Subdirectories
 ==============
 
-- *cosim_toolbox*; utilities for building and running using PYPOWER with or without FNCS/HELICS co-simulations.
+- *cosim_toolbox*; utilities for building and running co-simulations using HELICS federates.
 - *test*; scripts that support testing the package; not automated.
 
 License & Copyright
 ===================
 
-- Copyright (c) 2017-2023 Battelle Memorial Institute
+- Copyright (c) 2022-2025 Battelle Memorial Institute
 
 .. _Docker: https://www.docker.com
-.. _EnergyPlus: https://energyplus.net
 .. _GridLAB-D: http://gridlab-d.shoutwiki.com
-.. _Matplotlib: https://www.matplotlib.org
-.. _MATPOWER: https://www.matpower.org
-.. _NetworkX: https://www.networkx.org
+.. _HELICS: https://helics.org
 .. _NumPy: https://www.numpy.org
+.. _MongoDB: https://www.mongodb.com
 .. _Pandas: https://pandas.pydata.org
+.. _Psycopg: https://www.psycopg.org/docs
 .. _pip: https://pip.pypa.io/en/stable
-.. _PYPOWER: https://github.com/rwl/PYPOWER
 .. _Python: https://www.python.org
-.. _SciPy: https://www.scipy.org

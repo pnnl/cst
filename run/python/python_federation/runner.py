@@ -24,43 +24,35 @@ class Runner:
 
     def define_scenario(self):
         names = ["Battery", "EVehicle"]
-        t1 = HelicsMsg(names[0], 30)
+        t1 = HelicsMsg(names[0], period=60)
         if self.docker:
-            t1.config("brokeraddress", "10.5.0.2")
-        t1.config("core_type", "zmq")
+            t1.config("broker_address", "10.5.0.2")
         t1.config("log_level", "warning")
-        t1.config("period", 60)
-        t1.config("uninterruptible", False)
         t1.config("terminate_on_error", True)
 #        t1.config("wait_for_current_time_update", True)
-        t1.pubs_e(names[0] + "/EV1_current", "double", "A")
+        t1.pubs_e(names[0] + "/EV1_current", "double", "A", True)
         t1.subs_e(names[1] + "/EV1_voltage", "double", "V")
         t1 = {
             "logger": False,
-            "image": "cosim-python:latest",
+            "image": "cosim-cst:latest",
             "command": f"python3 simple_federate.py {names[0]} {self.scenario_name}",
             "federate_type": "value",
-            "time_step": 120,
             "HELICS_config": t1.write_json()
         }
 
-        t2 = HelicsMsg(names[1], 30)
-        t2.config("core_type", "zmq")
+        t2 = HelicsMsg(names[1], period=60)
         if self.docker:
-            t2.config("brokeraddress", "10.5.0.2")
+            t2.config("broker_address", "10.5.0.2")
         t2.config("log_level", "warning")
-        t2.config("period", 60)
-        t2.config("uninterruptible", False)
         t2.config("terminate_on_error", True)
 #        t2.config("wait_for_current_time_update", True)
         t2.subs_e(names[0] + "/EV1_current", "double", "A")
-        t2.pubs_e(names[1] + "/EV1_voltage", "double", "V")
+        t2.pubs_e(names[1] + "/EV1_voltage", "double", "V", True)
         t2 = {
             "logger": False,
-            "image": "cosim-python:latest",
+            "image": "cosim-cst:latest",
             "command": f"python3 simple_federate.py {names[1]} {self.scenario_name}",
             "federate_type": "value",
-            "time_step": 120,
             "HELICS_config": t2.write_json()
         }
         diction = {

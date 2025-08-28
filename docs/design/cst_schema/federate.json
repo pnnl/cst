@@ -4,7 +4,7 @@
   },
   {
     "cst_007": "helics",
-    "image": "cosim-helics:latest",
+    "image": "cosim-cst:latest",
     "commands": [
       { "command": "/bin/bash -c \"exec helics_broker --ipv4 -f 3 --loglevel=warning --name=broker\"",
         "federate_type": "value",
@@ -16,7 +16,7 @@
   },
   {
     "cst_007": "python",
-    "image": "cosim-python:latest",
+    "image": "cosim-cst:latest",
     "environment": {
       POSTGRES_HOST: "${POSTGRES_HOST}",
       POSTGRES_PORT: "${POSTGRES_PORT}",

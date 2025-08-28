@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Copyright (C) 20221-2023 Battelle Memorial Institute
+# file: build_c.sh
+
 if [[ -z ${INSTDIR} ]]; then
   echo "Edit cosim.env in the CoSimulation Toolbox directory"
   echo "Run 'source cosim.env' in that same directory"
@@ -16,7 +19,7 @@ which python > "${BUILD_DIR}/venv_pypi.log" 2>&1
 
 echo "Installing Python Libraries Requirements for TESP..."
 pip install --upgrade pip >> "${BUILD_DIR}/venv_pypi.log" 2>&1
-# pip install -r "${REPO_DIR}/tesp/requirements.txt" >> "${BUILD_DIR}/venv_pypi.log" 2>&1
+# pip install -r "${BUILD_DIR}/requirements.txt" >> "${BUILD_DIR}/venv_pypi.log" 2>&1
 
 if [[ $1 == "develop" ]]; then
 #  cd "${REPO_DIR}/tesp/src/tesp_support" || exit
