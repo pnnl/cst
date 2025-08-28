@@ -37,7 +37,7 @@ class TestTimeSeriesFactory:
         assert manager.helper.conn_params["database"] == "test_db"
         assert manager.helper.conn_params["user"] == "test_user"
         assert manager.helper.conn_params["password"] == "test_pass"
-        assert manager.helper.schema_name == "test_schema"
+        assert manager.helper.analysis_name == "test_schema"
 
     @pytest.mark.postgres
     def test_create_postgresql_manager_by_url(self):
@@ -52,7 +52,7 @@ class TestTimeSeriesFactory:
         assert manager.helper.conn_params["database"] == "test_db"
         assert manager.helper.conn_params["user"] == "test_user"
         assert manager.helper.conn_params["password"] == "test_pass"
-        assert manager.helper.schema_name == "test_schema"
+        assert manager.helper.analysis_name == "test_schema"
 
     def test_invalid_backend(self):
         """Test error handling for invalid backend."""

@@ -12,6 +12,8 @@ import datetime
 import json
 import logging
 from pathlib import Path
+from typing import Any, Dict, Optional
+
 import helics as h
 
 import cosim_toolbox as env
@@ -19,8 +21,6 @@ from data_management.factories import create_metadata_manager, create_timeseries
 from data_management.abstractions import MetadataManager, TimeSeriesManager, TSRecord
 
 logger = logging.getLogger(__name__)
-logger.addHandler(logging.StreamHandler())
-logger.setLevel(logging.ERROR)
 
 
 class Federate:
@@ -72,68 +72,86 @@ class Federate:
 
     def __init__(
         self,
-        fed_name="",
-        use_mdb=True,
-        use_pdb=True,
-        metadata_config: dict = dict(),
-        timeseries_config: dict = dict(),
-        metadata_location: str = None,
-        timeseries_location: str = None,
-        **kwargs,
+        fed_name: str = "",
+        use_mdb: bool = True,
+        use_pdb: bool = True,
+        metadata_config: Optional[Dict[str, Any]] = None,
+        timeseries_config: Optional[Dict[str, Any]] = None,
+        metadata_location: Optional[str] = None,
+        timeseries_location: Optional[str] = None,
+        *,
+        debug: bool = True,
     ):
-        self.hfed: h.HelicsFederate = None
-        self.metadata_manager: MetadataManager = None
-        self.timeseries_manager: TimeSeriesManager = None
-        self.metadata_config = metadata_config
-        self.timeseries_config = timeseries_config
-        if metadata_config is None:
-            self.metadata_config = env.cst_meta_db
-        if timeseries_config is None:
-            self.timeseries_config = self.timeseries_config
+        """Initializes the Federate.
 
-        if metadata_location is not None:
+        Args:
+            fed_name (str, optional): The name of the federate. Defaults to "".
+            use_mdb (bool, optional): Whether to use a metadata database (e.g., MongoDB). Defaults to True.
+            use_pdb (bool, optional): Whether to use a timeseries database (e.g., PostgreSQL). Defaults to True.
+            metadata_config (dict, optional): A full configuration dictionary for the metadata manager.
+                If provided, it is used as the base configuration. Defaults to None.
+            timeseries_config (dict, optional): A full configuration dictionary for the timeseries manager.
+                If provided, it is used as the base configuration. Defaults to None.
+            metadata_location (str, optional): Overrides the 'host' in the metadata config. Defaults to None.
+            timeseries_location (str, optional): Overrides the 'host' in the timeseries config. Defaults to None.
+            debug (bool, optional): A flag for enabling debug behaviors. Defaults to True.
+        """
+        # HELICS and Manager Objects
+        self.hfed: Optional[h.HelicsFederate] = None
+        self.metadata_manager: Optional[MetadataManager] = None
+        self.timeseries_manager: Optional[TimeSeriesManager] = None
+
+        # Configuration Dictionaries
+        if metadata_config:
+            self.metadata_config: Dict[str, Any] = metadata_config.copy()
+        else:
+            self.metadata_config = getattr(env, "cst_meta_db", {}).copy()
+        if metadata_location:
             self.metadata_config["host"] = metadata_location
-        if timeseries_location is not None:
+
+        if timeseries_config:
+            self.timeseries_config: Dict[str, Any] = timeseries_config.copy()
+        else:
+            self.timeseries_config = {}
+        if timeseries_location:
             self.timeseries_config["host"] = timeseries_location
 
-        self.config: dict = None
-        self.scenario: dict = None
-        self.scenario_name: str = None
-        self.federation: dict = None
-        self.federation_name: str = None
-        self.federate: dict = None
-        self.federate_type: str = None
+        # Configuration Attributes (initialized later)
+        self.config: Optional[Dict[str, Any]] = None
+        self.scenario: Optional[Dict[str, Any]] = None
+        self.scenario_name: Optional[str] = None
+        self.federation: Optional[Dict[str, Any]] = None
+        self.federation_name: Optional[str] = None
+        self.federate: Optional[Dict[str, Any]] = None
+        self.federate_type: Optional[str] = None
+        self.scheme_name: Optional[str] = None
+        self.start: Optional[str] = None
+        self.stop: Optional[str] = None
+
+        # Time and Control Attributes
         self.federate_name: str = fed_name
-        self.scheme_name: str = None
-        self.start: str = None
-        self.stop: str = None
-        self.no_t_start = None
-        self.period = -1.0
-        self.stop_time = -1.0
-        self.granted_time = -1.0
-        self.next_requested_time = -1.0
-        self.pubs = {}
-        self.inputs = {}
-        self.endpoints = {}
-        self.debug = True
-        self.use_mdb = use_mdb
-        self._use_timescale = False
-        self.metadata_location = metadata_location
-        # following for datalogger
-        self.timeseries_location = timeseries_location
-        self._use_timescale = False  # This will be passed to the manager
-        self._s = None
-        self._ep = None
-        self._count = 0
-        self.fed_collect = "maybe"
-        self.use_pdb = use_pdb
+        self.period: float = -1.0
+        self.stop_time: float = -1.0
+        self.granted_time: float = -1.0
+        self.next_requested_time: float = -1.0
+        self.debug: bool = debug
+        self.use_mdb: bool = use_mdb
+        self.use_pdb: bool = use_pdb
+        self.fed_collect: str = "maybe"
 
-        # Initialize the structure of the interface dictionaries
-        self.data_from_federation = {"inputs": {}, "endpoints": {}}
-        self.data_to_federation = {"publications": {}, "endpoints": {}}
+        # Data Interface Dictionaries
+        self.pubs: Dict[str, Any] = {}
+        self.inputs: Dict[str, Any] = {}
+        self.endpoints: Dict[str, Any] = {}
+        self.data_from_federation: Dict[str, Dict] = {"inputs": {}, "endpoints": {}}
+        self.data_to_federation: Dict[str, Dict] = {"publications": {}, "endpoints": {}}
 
-        # if not wanting to debug, add debug=False as an argument
-        self.__dict__.update(kwargs)
+        # Internal State Attributes
+        self.metadata_location: Optional[str] = metadata_location
+        self.timeseries_location: Optional[str] = timeseries_location
+        self._use_timescale: bool = False
+        self._s: Optional[datetime.datetime] = None
+        self._ep: Optional[datetime.datetime] = None
 
     @property
     def use_timescale(self):
@@ -163,7 +181,6 @@ class Federate:
         s_idx = (s - ep).total_seconds()
         e_idx = (e - ep).total_seconds()
         self.stop_time = int((e_idx - s_idx))
-        self.no_t_start = self.start.replace("T", " ")
         self._s = datetime.datetime.strptime(self.start, "%Y-%m-%dT%H:%M:%S")
 
         # setting up data logging
@@ -596,7 +613,7 @@ class Federate:
                 if item_collect == "yes" or (
                     self.fed_collect != "no" and item_collect != "no"
                 ):
-                    self.write_to_logger(table, self.federate_name, key, value)
+                    self.write_to_logger(self.federate_name, key, value, table=table)
                 if reset:
                     self.data_to_federation["publications"][key] = None
 
@@ -616,7 +633,7 @@ class Federate:
                         self.fed_collect != "no" and item_collect != "no"
                     ):
                         self.write_to_logger(
-                            "hdt_endpoint", key, ep.default_destination, msg
+                            key, ep.default_destination, msg, table="hdt_endpoint"
                         )
                 logger.debug(
                     f" {self.federate_name} endpoint: {key}, default destination: {ep.default_destination}, messages: {messages}"
@@ -625,12 +642,14 @@ class Federate:
                 if reset:
                     self.data_to_federation["endpoints"][key] = None
 
-    def write_to_logger(self, table, name, key, value):
+    def write_to_logger(self, name, key, value, table=None, message_time=None):
         # The 'table' argument is no longer needed as the manager handles types.
         if self.timeseries_manager:
             # Construct the real_time timestamp
             # Note: This logic assumes granted_time is in seconds.
-            time_delta = datetime.timedelta(seconds=int(self.granted_time))
+            if message_time is None:
+                message_time = self.granted_time
+            time_delta = datetime.timedelta(seconds=int(message_time))
             real_time = self._s + time_delta
 
             # Create a TSRecord object
@@ -641,6 +660,7 @@ class Federate:
                 federate=name,
                 data_name=key,
                 data_value=value,
+                data_type=table,
             )
 
             # Add the record to the manager's buffer

@@ -10,31 +10,26 @@ Federate class.
 @author:
 mitch.pelton@pnnl.gov
 """
+
 import sys
 import logging
 
 from cosim_toolbox.federate import Federate
-from cosim_toolbox.dbResults import DBResults
 from cosim_toolbox.helicsConfig import HelicsMsg
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler())
 logger.setLevel(logging.INFO)
 
-class FederateLogger(Federate):
 
-    def __init__(self, fed_name: str = "", scheme_name: str = "default", **kwargs):
+class FederateLogger(Federate):
+    def __init__(self, fed_name: str = "logger", **kwargs):
         super().__init__(fed_name, **kwargs)
-        self.scheme_name = scheme_name
         self.fed_pubs = None
         self.fed_pts = None
 
         # save possibilities yes, no, maybe
         self.collect = "maybe"
-
-        # uncomment debug, clears schema
-        # which means all scenarios are gone in that scheme
-        # self.dl.drop_schema(self.scheme_name)
 
     def connect_to_helics_config(self) -> None:
         """Sets a few class attributes related to HELICS configuration.
@@ -75,7 +70,9 @@ class FederateLogger(Federate):
                 config = self.federation[fed]["HELICS_config"]
                 fed_collect = "maybe"
                 if self.federation[fed].get("tags"):
-                    fed_collect = self.federation[fed]["tags"].get("logger", fed_collect)
+                    fed_collect = self.federation[fed]["tags"].get(
+                        "logger", fed_collect
+                    )
                 logger.debug("fed_collect -> " + fed_collect)
 
                 if "publications" in config.keys():
@@ -110,83 +107,79 @@ class FederateLogger(Federate):
                                 self.fed_pts[fed].append(pts["name"])
 
         t1 = HelicsMsg(self.federate_name, period=30)
-        t1.config("core_type", "zmq")
         t1.config("log_level", "warning")
         t1.config("terminate_on_error", True)
         if self.scenario["docker"]:
             t1.config("broker_address", "10.5.0.2")
         self.config = t1.config("subscriptions", publications)
 
-        endpoints = [{
-                "name": self.federate_name + "/logger_endpoint",
-                "global": True
-            }]
-        filters = [{
+        endpoints = [{"name": self.federate_name + "/logger_endpoint", "global": True}]
+        filters = [
+            {
                 "name": "logger_filter",
                 "cloning": True,
                 "operation": "clone",
                 "source_targets": source_targets,
-                "delivery": self.federate_name + "/logger_endpoint"
-            }]
+                "delivery": self.federate_name + "/logger_endpoint",
+            }
+        ]
         self.config = t1.config("endpoints", endpoints)
         self.config = t1.config("filters", filters)
         logger.debug(f"Subscribed pubs {publications}")
-        self.no_t_start = self.start.replace('T',' ')
+        self.no_t_start = self.start.replace("T", " ")
 
     def update_internal_model(self) -> None:
         """Takes latest published values or sent messages (endpoints) and
-        pushes them back into the time-series database.
+        pushes them back into the time-series database using the base class methods.
         """
 
-        # Inputs
-        query = ""
+        # Process Inputs (Publications from other federates)
         for key in self.data_from_federation["inputs"]:
-            qry = ""
             value = self.data_from_federation["inputs"][key]
-            for table in DBResults.hdt_type.keys():
-                if self.inputs[key]['type'].lower() in table.lower():
-                    if len(self.fed_pubs):
-                        for fed in self.fed_pubs:
-                            if key in self.fed_pubs[fed]:
-                                qry = (f"INSERT INTO {self.scheme_name}.{table} "
-                                       "(real_time, sim_time, scenario, federate, data_name, data_value)"
-                                       f" VALUES( to_timestamp('{self.no_t_start}','YYYY-MM-DD HH24:MI:SS') + interval '1s' * "
-                                       f"{self.granted_time}, {self.granted_time}, "
-                                       f"'{self.scenario_name}', '{fed}', '{key}', ")
-                                if (type(value) is str) or (type(value) is complex) or (type(value) is list):
-                                    qry += f"'{value}'); "
-                                else:
-                                    qry += f"{value}); "
-                                logger.debug(f"type: {self.inputs[key]['type']} table: {table}")
-                                break
-                    break
-            query += qry
-        # add to logger database
-        self.query_to_logger(query)
 
-        # EndPoints
-        query = ""
-        table = "hdt_endpoint"
+            # Find which federate this publication belongs to
+            federate_name = None
+            if len(self.fed_pubs):
+                for fed in self.fed_pubs:
+                    if key in self.fed_pubs[fed]:
+                        federate_name = fed
+                        break
+
+            if federate_name and value is not None:
+                input_type = self.inputs[key]["type"].lower()
+                table = f"hdt_{input_type}"
+                self.write_to_logger(federate_name, key, value, table=table)
+                logger.debug(
+                    f"Logged input - federate: {federate_name}, key: {key}, value: {value}"
+                )
+
+        # Process Endpoints
         for key in self.data_from_federation["endpoints"]:
             for msg in self.data_from_federation["endpoints"][key]:
-                query += (f"INSERT INTO {self.scheme_name}.{table} "
-                          "(real_time, sim_time, scenario, federate, data_name, data_value)"
-                          f" VALUES( to_timestamp('{self.no_t_start}','YYYY-MM-DD HH24:MI:SS') + interval '1s' * "
-                          f"{msg.time}, {msg.time}, '{self.scenario_name}', '"
-                          f"{msg.original_source}', '{msg.original_destination}', '{msg.data}'); ")
-                logger.debug(f"type: string table: {table}")
-        # add to logger database
-        self.query_to_logger(query)
+                self.write_to_logger(
+                    msg.original_source,
+                    msg.original_destination,
+                    msg.data,
+                    table="hdt_endpoint",
+                    message_time=msg.time
+                )
+                logger.debug(
+                    f"Logged endpoint - source: {msg.original_source}, dest: {msg.original_destination}, data: {msg.data}"
+                )
 
 
 def main(federate_name: str, scheme_name: str, scenario_name: str) -> None:
-    fed_logger = FederateLogger(federate_name, scheme_name)
-    fed_logger.create_federate(scenario_name)
-    fed_logger.run_cosim_loop()
-    fed_logger.destroy_federate()
+    fed_logger = FederateLogger(fed_name=federate_name)
+    fed_logger.run(scenario_name)
+    
     del fed_logger
 
 
 if __name__ == "__main__":
-    if sys.argv.__len__() > 3:
-        main(sys.argv[1], sys.argv[2], sys.argv[3])
+    # CHANGED: Updated argument check from 3 to 2, as 'scheme_name' is removed.
+    if len(sys.argv) > 2:
+        # CHANGED: Updated main call to pass only the required arguments.
+        main(federate_name=sys.argv[1], scenario_name=sys.argv[2])
+    else:
+        # Added a simple usage message for clarity.
+        print("Usage: python FederateLogger.py <federate_name> <scenario_name>")

@@ -78,7 +78,7 @@ def make_scenario_diction(schema_name: str, federation_name: str, start: str, st
         "docker": docker
     }
     
-def write_scenarion_json(federation, overwrite=False):
+def write_scenario_json(federation, overwrite=False):
     with JSONMetadataManager("./config") as db:
         scenario = make_scenario_diction(
             federation.schema_name,
@@ -113,7 +113,7 @@ def main():
 
     # federation.define_scenario("2023-12-07T15:31:27", "2023-12-08T15:31:27")
     write_federation_json(federation, overwrite=True)
-    write_scenarion_json(federation, overwrite=True)
+    write_scenario_json(federation, overwrite=True)
 
     # if with_docker:
     #     DockerRunner.define_yaml(federation.scenario_name)

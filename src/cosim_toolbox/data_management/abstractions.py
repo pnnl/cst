@@ -12,24 +12,34 @@ import pandas as pd
 
 @dataclass
 class TSRecord:
-    """
-    Time-series record dataclass that holds a single time-series record.
-    This dataclass defines the standard structure for time-series data in CST,
-    matching the current database schema. Type hints provide IDE support and
-    help ensure correct datatypes are used.
-    """
-
     real_time: datetime
     sim_time: float
     scenario: str
     federate: str
     data_name: str
     data_value: Any
+    data_type: Optional[str] = None  # "hdt_string", "hdt_endpoint", "hdt_double", etc.
 
     def __post_init__(self) -> None:
-        """Validate data types if needed (currently disabled for performance)"""
-        # Optional validation could be added here
-        pass
+        # Auto-detect type if not provided
+        if self.data_type is None:
+            self.data_type = self._auto_detect_type()
+
+    def _auto_detect_type(self) -> str:
+        """Auto-detect data type from value"""
+        if isinstance(self.data_value, bool):
+            return "hdt_boolean"
+        if isinstance(self.data_value, int):
+            return "hdt_integer"
+        if isinstance(self.data_value, float):
+            return "hdt_double"
+        if isinstance(self.data_value, complex):
+            return "hdt_complex"
+        if isinstance(self.data_value, str):
+            return "hdt_string"
+        if isinstance(self.data_value, (list, tuple)):
+            return "hdt_vector"  # Could be enhanced for complex vectors
+        return "hdt_string"  # Default fallback
 
 
 class TSDataWriter(ABC):

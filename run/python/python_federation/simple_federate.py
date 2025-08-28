@@ -44,16 +44,18 @@ class SimpleFederate(Federate):
 
 
 if __name__ == "__main__":
-    metadata_location="penny.pnl.gov"
-    timeseries_location="penny.pnl.gov"
+    metadata_location = "./config"
+    timeseries_location = "./data"
     # metadata_location=Path(__file__).parent / "config"
     # timeseries_location=Path(__file__).parent / "data"
+
     if sys.argv.__len__() > 2:
         test_fed = SimpleFederate(
             sys.argv[1],
-            use_mdb=True,
-            use_pdb=True,
+            use_mdb=False,
+            use_pdb=False,
             metadata_location=metadata_location,
             timeseries_location=timeseries_location,
         )
+        test_fed.fed_collect = "no"
         test_fed.run(sys.argv[2])

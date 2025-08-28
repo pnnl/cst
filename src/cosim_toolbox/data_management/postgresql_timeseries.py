@@ -40,7 +40,7 @@ class _PostgresConnectionHelper:
         database: str,
         user: str,
         password: str,
-        schema_name: str,
+        analysis_name: str,
         use_timescale: bool = False,
     ):
         if not PSYCOPG2_AVAILABLE:
@@ -55,7 +55,7 @@ class _PostgresConnectionHelper:
             "user": user,
             "password": password,
         }
-        self.schema_name = schema_name
+        self.analysis_name = analysis_name
         self.use_timescale = use_timescale
         self.connection: Optional[psycopg2.extensions.connection] = None
 
@@ -64,7 +64,7 @@ class _PostgresConnectionHelper:
         if self.connection and not self.connection.closed:
             return True
         try:
-            validate_database_identifier(self.schema_name, "schema")
+            validate_database_identifier(self.analysis_name, "schema")
             self.connection = psycopg2.connect(
                 host=self.conn_params["host"],
                 port=self.conn_params["port"],
@@ -95,10 +95,45 @@ class _PostgresConnectionHelper:
         with self.connection.cursor() as cursor:
             cursor.execute(
                 sql.SQL("CREATE SCHEMA IF NOT EXISTS {}").format(
-                    sql.Identifier(self.schema_name)
+                    sql.Identifier(self.analysis_name)
                 )
             )
         self.connection.commit()
+
+    def get_data_type_info(self, record: TSRecord) -> Tuple[str, str]:
+        """
+        Get table name and PostgreSQL column type from TSRecord.
+
+        Args:
+            record (TSRecord): The record containing data_type and data_value
+
+        Returns:
+            Tuple[str, str]: (table_suffix, postgres_column_type)
+        """
+        # If data_type is explicitly set, use it
+        if record.data_type:
+            table_suffix = record.data_type.lower()
+        else:
+            # Fallback to auto-detection (for backward compatibility)
+            table_suffix = self._auto_detect_type(record.data_value)
+
+        # Map HDT type to PostgreSQL column type
+        type_mapping = {
+            "hdt_string": "TEXT",
+            "hdt_double": "DOUBLE PRECISION",
+            "hdt_integer": "BIGINT",
+            "hdt_complex": "VARCHAR(255)",
+            "hdt_vector": "TEXT",
+            "hdt_complex_vector": "TEXT",
+            "hdt_named_point": "VARCHAR(255)",
+            "hdt_boolean": "BOOLEAN",
+            "hdt_time": "TIMESTAMP",
+            "hdt_json": "TEXT",
+            "hdt_endpoint": "TEXT",
+        }
+
+        postgres_type = type_mapping.get(table_suffix, "TEXT")
+        return (table_suffix, postgres_type)
 
     def get_data_type_info(self, value: Any) -> Tuple[str, str]:
         if isinstance(value, bool):
@@ -141,7 +176,7 @@ class PostgreSQLTimeSeriesWriter(TSDataWriter):
         database: Optional[str] = None,
         user: Optional[str] = None,
         password: Optional[str] = None,
-        schema_name: Optional[str] = None,
+        analysis_name: Optional[str] = None,
         use_timescale: bool = False,
         batch_size: int = 1000,
         helper: Optional[_PostgresConnectionHelper] = None,
@@ -159,10 +194,10 @@ class PostgreSQLTimeSeriesWriter(TSDataWriter):
             and database is not None
             and user is not None
             and password is not None
-            and schema_name is not None
+            and analysis_name is not None
         ):
             self.helper = _PostgresConnectionHelper(
-                location, port, database, user, password, schema_name, use_timescale
+                location, port, database, user, password, analysis_name, use_timescale
             )
             self._owns_connection = True
         else:
@@ -189,7 +224,7 @@ class PostgreSQLTimeSeriesWriter(TSDataWriter):
         self._table_cache.clear()
 
     def _ensure_table_exists(self, table_suffix: str, postgres_type: str) -> None:
-        table_key = f"{self.helper.schema_name}.{table_suffix}"
+        table_key = f"{self.helper.analysis_name}.{table_suffix}"
         if table_key in self._table_cache:
             return
         assert self.helper.connection is not None, "Database not connected"
@@ -201,17 +236,17 @@ class PostgreSQLTimeSeriesWriter(TSDataWriter):
                     scenario TEXT NOT NULL, federate TEXT NOT NULL, data_name TEXT NOT NULL,
                     data_value {pg_type} NOT NULL, created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
                 )""").format(
-                    schema=sql.Identifier(self.helper.schema_name),
+                    schema=sql.Identifier(self.helper.analysis_name),
                     table=sql.Identifier(table_suffix),
                     pg_type=sql.SQL(postgres_type),
                 )
             )
             if self.helper.use_timescale:
                 try:
-                    full_table_name = f"{self.helper.schema_name}.{table_suffix}"
+                    full_table_name = f"{self.helper.analysis_name}.{table_suffix}"
                     cursor.execute(
                         "SELECT 1 FROM timescaledb_information.hypertables WHERE hypertable_schema = %s AND hypertable_name = %s",
-                        (self.helper.schema_name, table_suffix),
+                        (self.helper.analysis_name, table_suffix),
                     )
                     if cursor.fetchone() is None:
                         logger.info(f"Creating hypertable for {full_table_name}")
@@ -231,7 +266,7 @@ class PostgreSQLTimeSeriesWriter(TSDataWriter):
                         "CREATE INDEX IF NOT EXISTS {idx} ON {schema}.{table} ({col})"
                     ).format(
                         idx=idx_name,
-                        schema=sql.Identifier(self.helper.schema_name),
+                        schema=sql.Identifier(self.helper.analysis_name),
                         table=sql.Identifier(table_suffix),
                         col=sql.Identifier(col),
                     )
@@ -268,7 +303,7 @@ class PostgreSQLTimeSeriesWriter(TSDataWriter):
                     insert_query = sql.SQL(
                         "INSERT INTO {}.{} (real_time, sim_time, scenario, federate, data_name, data_value) VALUES %s"
                     ).format(
-                        sql.Identifier(self.helper.schema_name),
+                        sql.Identifier(self.helper.analysis_name),
                         sql.Identifier(table_suffix),
                     )
                     execute_values(
@@ -293,7 +328,7 @@ class PostgreSQLTimeSeriesReader(TSDataReader):
         database: Optional[str] = None,
         user: Optional[str] = None,
         password: Optional[str] = None,
-        schema_name: Optional[str] = None,
+        analysis_name: Optional[str] = None,
         helper: Optional[_PostgresConnectionHelper] = None,
     ):
         super().__init__()
@@ -307,10 +342,10 @@ class PostgreSQLTimeSeriesReader(TSDataReader):
             and database is not None
             and user is not None
             and password is not None
-            and schema_name is not None
+            and analysis_name is not None
         ):
             self.helper = _PostgresConnectionHelper(
-                location, port, database, user, password, schema_name
+                location, port, database, user, password, analysis_name
             )
             self._owns_connection = True
         else:
@@ -339,7 +374,7 @@ class PostgreSQLTimeSeriesReader(TSDataReader):
         assert self.helper.connection is not None, "Database not connected"
         with self.helper.connection.cursor() as cursor:
             query_str = "SELECT table_name FROM information_schema.tables WHERE table_schema = %s"
-            params = [self.helper.schema_name]
+            params = [self.helper.analysis_name]
             if data_type:
                 query_str += " AND table_name = %s"
                 params.append(data_type)
@@ -388,7 +423,7 @@ class PostgreSQLTimeSeriesReader(TSDataReader):
                 query = sql.SQL(
                     "SELECT * FROM {}.{} WHERE {} ORDER BY sim_time"
                 ).format(
-                    sql.Identifier(self.helper.schema_name),
+                    sql.Identifier(self.helper.analysis_name),
                     sql.Identifier(table_suffix),
                     where_clause,
                 )
@@ -426,7 +461,7 @@ class PostgreSQLTimeSeriesReader(TSDataReader):
             for table in tables:
                 query = sql.SQL("SELECT DISTINCT {} FROM {}.{}").format(
                     sql.Identifier(column_name),
-                    sql.Identifier(self.helper.schema_name),
+                    sql.Identifier(self.helper.analysis_name),
                     sql.Identifier(table),
                 )
                 cursor.execute(query)
@@ -456,13 +491,13 @@ class PostgreSQLTimeSeriesManager(TSDataManager):
         database: str,
         user: str,
         password: str,
-        schema_name: str,
+        analysis_name: str,
         use_timescale: bool = False,
         **kwargs,
     ):
         super().__init__()
         self.helper: _PostgresConnectionHelper = _PostgresConnectionHelper(
-            location, port, database, user, password, schema_name, use_timescale
+            location, port, database, user, password, analysis_name, use_timescale
         )
         self.writer: PostgreSQLTimeSeriesWriter = PostgreSQLTimeSeriesWriter(
             helper=self.helper, **kwargs
@@ -515,7 +550,7 @@ class PostgreSQLTimeSeriesManager(TSDataManager):
             with self.helper.connection.cursor() as cursor:
                 for table in tables:
                     query = sql.SQL("DELETE FROM {}.{} WHERE {} = %s").format(
-                        sql.Identifier(self.helper.schema_name),
+                        sql.Identifier(self.helper.analysis_name),
                         sql.Identifier(table),
                         sql.Identifier(column_name),
                     )

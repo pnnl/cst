@@ -166,8 +166,7 @@ class CSVTimeSeriesWriter(TSDataWriter):
             grouped_records: Dict[tuple[str, str], List[TSRecord]] = {}
             for record in records:
                 validate_name(record.federate, context="federate")
-                data_type = self.helper.get_data_type(record.data_value)
-                key = (record.federate, data_type)
+                key = (record.federate, record.data_type)
                 grouped_records.setdefault(key, []).append(record)
 
             for (federate_name, data_type), group_records in grouped_records.items():
@@ -362,7 +361,7 @@ class CSVTimeSeriesManager(TSDataManager):
     Manages a shared Helper for a single reader and writer instance.
     """
 
-    def __init__(self, location: str, analysis_name: str = "default"):
+    def __init__(self, *, location: str, analysis_name: str = "default", **kwargs):
         """Initialize CSV time-series manager."""
         super().__init__()
         # The manager creates ONE helper and shares it.

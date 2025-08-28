@@ -20,7 +20,7 @@ def create_timeseries_manager(
     if backend == "csv":
         from data_management.csv_timeseries import CSVTimeSeriesManager
 
-        return CSVTimeSeriesManager(location, **kwargs)
+        return CSVTimeSeriesManager(location=location, **kwargs)
     elif backend in ("postgresql", "postgres"):
         from data_management.postgresql_timeseries import PostgreSQLTimeSeriesManager
 
