@@ -38,5 +38,6 @@ This site provides the documentation on CoSim Toolbox. The major components of t
    MetadataDB
    UseCaseDevelopment
    examples/index
+   References
 
 ```
