@@ -2,6 +2,8 @@
 CSV file-based time-series data management for CoSim Toolbox.
 Refactored to use a composition-based architecture for clarity,
 testability, and maintainability.
+
+@author Nathan Gray
 """
 
 import csv
@@ -45,12 +47,38 @@ class _CSVHelper:
         self.analysis_path = self.location / self.analysis_name
 
     def get_file_path(self, federate_name: str, data_type: str) -> Path:
-        """Get the file path for a specific federate and data type."""
+        """Get the file path for a specific federate and data type.
+        For the CSV data backend each federate has its own folder to store
+        data and each data type is stored in its own file.
+
+        Args:
+            federate_name (str): name of federate 
+            data_type (str): data type
+
+        Returns:
+            Path: Path to CSV file
+        """
         federate_path = self.analysis_path / federate_name
         return federate_path / f"{data_type}.csv"
 
     def get_data_type(self, value: Any) -> str:
-        """Determine the CST data type for a given value."""
+        """Determine the CST data type for a given value.
+
+        Args:
+            value (Any): value whose data type is being determined
+
+        Returns:
+            str: String defining the data type. Value will be one of the
+                following:
+                    "hdt_boolean"
+                    "hdt_integer"
+                    "hdt_double"
+                    "hdt_complex"
+                    "hdt_string"
+                    "hdt_complex_vector"
+                    "hdt_vector"
+                    "hdt_string"
+        """
         if isinstance(value, bool):
             return "hdt_boolean"
         if isinstance(value, int):
@@ -70,7 +98,14 @@ class _CSVHelper:
         return "hdt_string"  # Default for unknown types
 
     def format_value_for_csv(self, value: Any) -> str:
-        """Format a value for CSV storage."""
+        """Format a value for CSV storage.
+
+        Args:
+            value (Any): value to be formatted
+
+        Returns:
+            str: formatted value as string
+        """
         if isinstance(value, (list, tuple)):
             return json.dumps(value)
         if isinstance(value, complex):
@@ -80,7 +115,22 @@ class _CSVHelper:
         return str(value)
 
     def parse_value_from_csv(self, value_str: str, data_type: str) -> Any:
-        """Parse a value from CSV string back to appropriate Python type."""
+        """ Parse a value from CSV string back to appropriate Python type.
+
+        Args:
+            value_str (str): Numerical value as string to be converted
+            data_type (str): defines data type of string to be converted
+                Must be one of the following values:
+                    "hdt_boolean"
+                    "hdt_integer"
+                    "hdt_double"
+                    "hdt_complex"
+                    "hdt_complex_vector"
+                    "hdt_vector"
+
+        Returns:
+            Any: **TODO**
+        """
         try:
             if data_type == "hdt_double":
                 return float(value_str)
@@ -130,7 +180,12 @@ class CSVTimeSeriesWriter(TSDataWriter):
             raise ValueError("Either 'helper' or 'location' must be provided.")
 
     def _ensure_file_exists(self, file_path: Path) -> None:
-        """Ensure the CSV file exists with proper headers."""
+        """Ensure the CSV file exists with proper headers.
+
+        Args:
+            file_path (Path): Path to CSV file whose existence is being 
+                evaluated.
+        """
         if not file_path.exists():
             file_path.parent.mkdir(parents=True, exist_ok=True)
             with open(file_path, "w", newline="", encoding="utf-8") as f:
@@ -138,7 +193,15 @@ class CSVTimeSeriesWriter(TSDataWriter):
                 writer.writerow(self.helper.CSV_HEADERS)
 
     def connect(self) -> bool:
-        """Create directory structure if it doesn't exist."""
+        """Create directory structure if it doesn't exist.
+
+        Args:
+            None
+
+        Returns:
+            bool: Flag indicating whether directory structure has been 
+                created.
+        """
         try:
             self.helper.analysis_path.mkdir(parents=True, exist_ok=True)
             self._is_connected = True
@@ -151,16 +214,32 @@ class CSVTimeSeriesWriter(TSDataWriter):
             return False
 
     def disconnect(self) -> None:
-        """Close connection (no-op for files, but maintains consistency)."""
+        """Close connection (no-op for files, but maintains consistency).
+        
+        Args:
+            None
+        
+        Returns:
+            None
+        """
         self._is_connected = False
         logger.debug("CSV time-series writer disconnected")
 
     def write_records(self, records: List[TSRecord]) -> bool:
-        """Write TSRecord objects to CSV files."""
+        """Write TSRecord objects to CSV files.
+
+        Args:
+            records (List[TSRecord]): Records (data) to be written to the data
+                backend
+
+        Returns:
+            bool: flag indicating whether the data was written to the data
+                backend
+        """
         if not self.is_connected:
             logger.error("CSV writer not connected. Call connect() first.")
             return False
-        if not records:
+        if not records: 
             return True
         try:
             grouped_records: Dict[tuple[str, str], List[TSRecord]] = {}
@@ -226,7 +305,15 @@ class CSVTimeSeriesReader(TSDataReader):
             raise ValueError("Either 'helper' or 'location' must be provided.")
 
     def connect(self) -> bool:
-        """Verify that the directory structure exists."""
+        """Verify that the directory structure exists.
+
+        Args:
+            None
+
+        Returns:
+            bool: flag indicated whether the connection to the data backend 
+                exists
+        """
         if not self.helper.analysis_path.exists():
             logger.warning(f"Analysis path does not exist: {self.helper.analysis_path}")
         self._is_connected = True
@@ -234,7 +321,14 @@ class CSVTimeSeriesReader(TSDataReader):
         return True
 
     def disconnect(self) -> None:
-        """Close connection (no-op for files)."""
+        """Close connection (no-op for files).
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         self._is_connected = False
         logger.debug("CSV time-series reader disconnected")
 
@@ -247,7 +341,25 @@ class CSVTimeSeriesReader(TSDataReader):
         data_name: Optional[str] = None,
         data_type: Optional[str] = None,
     ) -> pd.DataFrame:
-        """Read time-series data from CSV files."""
+        """Read time-series data from CSV files.
+
+        Args:
+            start_time (Optional[float], optional): Start time (ordinal time
+                in seconds) for requested data. Defaults to None.
+            duration (Optional[float], optional): Length of time (in seconds)
+                from the data to read . Defaults to None.
+            scenario_name (Optional[str], optional): Name of scenario to read.
+                Defaults to None.
+            federate_name (Optional[str], optional): Name of federation to
+                read. Defaults to None.
+            data_name (Optional[str], optional): Name of data to read.
+                Defaults to None.
+            data_type (Optional[str], optional): Data type to read. Defaults
+                to None.
+
+        Returns:
+            pd.DataFrame: requested data
+        """
         if not self.is_connected:
             logger.error("CSV reader not connected. Call connect() first.")
             return pd.DataFrame()
@@ -313,6 +425,14 @@ class CSVTimeSeriesReader(TSDataReader):
         return filtered_df.sort_values("sim_time").reset_index(drop=True)
 
     def list_federates(self) -> List[str]:
+        """Provides a list of federates with data in the data backend
+
+        Args:
+            None
+        
+        Returns:
+            List[str]: list of federates with data in the data backend
+        """
         if not self.is_connected or not self.helper.analysis_path.exists():
             return []
         return sorted(
@@ -320,6 +440,15 @@ class CSVTimeSeriesReader(TSDataReader):
         )
 
     def list_data_types(self, federate_name: str) -> List[str]:
+        """Provides a list of data types in data backend for a given federate
+
+        Args:
+            federate_name (str): name of federate whose available 
+                data types are being determined
+
+        Returns:
+            List[str]: list of data types in data backend
+        """
         if not self.is_connected:
             return []
         federate_path = self.helper.analysis_path / federate_name
@@ -328,7 +457,11 @@ class CSVTimeSeriesReader(TSDataReader):
         return sorted([f.stem for f in federate_path.glob("*.csv")])
 
     def get_scenarios(self) -> List[str]:
-        """Get list of unique scenarios in the data."""
+        """Get list of unique scenarios in the data.
+
+        Returns:
+            List[str]: list of unique scenarios in the data
+        """
         if not self._is_connected or not self.helper.analysis_path.exists():
             return []
         scenarios: set = set()
@@ -345,7 +478,19 @@ class CSVTimeSeriesReader(TSDataReader):
         return sorted(list(scenarios))
 
     def get_time_range(self, **kwargs) -> Dict[str, float]:
-        """Get the time range (min and max simulation times) for the data."""
+        """Get the time range (min and max simulation times) for the data.
+
+        Args:
+            **kwargs
+
+        Returns:
+            Dict[str, float]: Dictionary with the time range for a given
+                set of data. Returned dictionary is structured as
+                {
+                    "min_time": float value,
+                    "max_time": float value
+                }
+        """
         df = self.read_data(**kwargs)
         if df.empty:
             return {"min_time": 0.0, "max_time": 0.0}
@@ -370,38 +515,110 @@ class CSVTimeSeriesManager(TSDataManager):
         self.reader: CSVTimeSeriesReader = CSVTimeSeriesReader(helper=self.helper)
 
     def connect(self) -> bool:
-        """Establish connection for both reader and writer."""
+        """Establish connection for both reader and writer.
+
+        Args:
+            None
+
+        Returns:
+            bool: flag indicating whether the connection to the data backend
+                exists
+        """
         writer_connected = self.writer.connect()
         reader_connected = self.reader.connect()
         self._is_connected = writer_connected and reader_connected
         return self._is_connected
 
     def disconnect(self) -> None:
-        """Close connection for both reader and writer."""
+        """Close connection for both reader and writer.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         self.writer.disconnect()
         self.reader.disconnect()
         self._is_connected = False
 
     def list_federates(self) -> List[str]:
+        """Lists federates with data in data backend
+
+        Args:
+            None
+
+        Returns:
+            List[str]: list of federates with data in data backend
+        """
         return self.reader.list_federates()
 
     def list_data_types(self, federate_name: str) -> List[str]:
+        """Lists data types for a given federate in the data backend
+
+        Args:
+            federate_name (str): Name of federate being queried
+
+        Returns:
+            List[str]: list of data types in data backend
+        """
         return self.reader.list_data_types(federate_name)
 
     def get_scenarios(self) -> List[str]:
+        """List of scenarios in the data backend
+
+        Args:
+            None
+
+        Returns:
+            List[str]: list of scenarios in the data backend
+        """
         return self.reader.get_scenarios()
 
     def get_time_range(self, **kwargs) -> Dict[str, float]:
+        """Get time range of data in data backend
+
+        Args:
+            **kwargs
+
+        Returns:
+            Dict[str, float]: Dictionary with the time range for a given
+                set of data. Returned dictionary is structured as
+                {
+                    "min_time": float value,
+                    "max_time": float value
+                }
+        """
         return self.reader.get_time_range(**kwargs)
 
     def delete_scenario_data(self, scenario_name: str) -> bool:
+        """NOT IMPLEMENTED
+        
+        Delete data from the data backend for the specified scenario
+
+        Args:
+            scenario_name (str): Name of scenario being deleted
+
+        Raises:
+            NotImplementedError: 
+
+        Returns:
+            bool: flag indicating whether data was deleted
+        """
         raise NotImplementedError(
             "Scenario deletion is not efficiently supported for CSV files. "
             "Consider using a database backend for selective deletion."
         )
 
     def delete_federate_data(self, federate_name: str) -> bool:
-        """Delete all data for a specific federate."""
+        """Delete all data for a specific federate.
+
+        Args:
+            federate_name (str): federate for which to delete data
+
+        Returns:
+            bool: flag indicating whether data was deleted
+        """
         try:
             validate_name(federate_name, context="federate")
             federate_path = self.helper.analysis_path / federate_name
@@ -423,7 +640,14 @@ class CSVTimeSeriesManager(TSDataManager):
             return False
 
     def backup_analysis(self, backup_path: str) -> bool:
-        """Create a backup of the entire analysis."""
+        """Create a backup of the entire analysis.
+
+        Args:
+            backup_path (str): path to backup data
+
+        Returns:
+            bool: flag indicating whether backup completed
+        """
         if not self.helper.analysis_path.exists():
             logger.warning(
                 f"Analysis '{self.analysis_name}' does not exist, nothing to backup"
@@ -440,16 +664,35 @@ class CSVTimeSeriesManager(TSDataManager):
 
     @property
     def location(self) -> Path:
+        """Location property
+
+        Returns:
+            Path: location as a file path
+        """
         return self.reader.helper.location
 
     @property
     def analysis_name(self) -> str:
-        """Get the current analysis name."""
+        """Get the current analysis name.
+
+        Args:
+            None
+
+        Returns:
+            str: analysis name
+        """
         return self.helper.analysis_name
 
     @analysis_name.setter
     def analysis_name(self, value: str) -> None:
-        """Set the analysis name and update the shared helper."""
+        """Set the analysis name and update the shared helper.
+
+        Args:
+            value (str): name of analysis
+
+        Returns:
+            None
+        """
         validate_name(value, context="analysis")
         self.helper.analysis_name = value
         self.helper.analysis_path = self.helper.location / value
