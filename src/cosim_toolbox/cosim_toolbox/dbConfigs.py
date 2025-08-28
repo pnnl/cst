@@ -54,7 +54,8 @@ class DBConfigs:
         if self.client is not None:
             self.client.close()
 
-    def _open_file(self, file_path: str, mode: str = 'r') -> typing.IO:
+    @staticmethod
+    def _open_file(file_path: str, mode: str = 'r') -> None | typing.IO:
         """Utility function to open file with reasonable error handling.
 
         Args:
@@ -71,7 +72,8 @@ class DBConfigs:
         else:
             return fh
 
-    def _connect_to_database(self, uri: str = None, db: str = None) -> tuple:
+    @staticmethod
+    def _connect_to_database(uri: str = None, db: str = None) -> tuple:
         """Sets up connection to server port for mongodb
 
         Args:
@@ -179,8 +181,7 @@ class DBConfigs:
                     path = os.path.join(path, name)
                 fh = self._open_file(path, 'wb')
                 fh.write(db_file)
-            else:
-                return db_file
+            return db_file
 
     def remove_collection(self, collection_name: str):
         """
@@ -400,7 +401,7 @@ def mytest1():
     db.add_collection(env.cst_scenarios)
     db.add_collection(env.cst_federations)
 
-    t1 = HelicsMsg("Battery", 30)
+    t1 = HelicsMsg("Battery", period=30)
     t1.config("core_type", "zmq")
     t1.config("log_level", "warning")
     t1.config("period", 60)
@@ -449,7 +450,7 @@ def mytest2():
     db.add_collection(env.cst_scenarios)
     db.add_collection(env.cst_federations)
 
-    t1 = HelicsMsg("Battery", 30)
+    t1 = HelicsMsg("Battery", period=30)
     t1.config("core_type", "zmq")
     t1.config("log_level", "warning")
     t1.config("period", 60)
@@ -465,7 +466,7 @@ def mytest2():
         "HELICS_config": t1.write_json()
     }
 
-    t2 = HelicsMsg("EVehicle", 30)
+    t2 = HelicsMsg("EVehicle", period=30)
     t2.config("core_type", "zmq")
     t2.config("log_level", "warning")
     t2.config("period", 60)

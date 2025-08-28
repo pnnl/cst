@@ -16,11 +16,10 @@ nathan.gray@pnnl.gov
 """
 
 import logging
-from os import environ
 
 import pandas as pd
-import datetime as dt
-import psycopg2 as pg
+from datetime import timedelta
+from psycopg2 import connect
 
 import cosim_toolbox as env
 from cosim_toolbox.readConfig import ReadConfig
@@ -52,7 +51,8 @@ class DBResults:
         self._scenario = None
         self.use_timescale = False
 
-    def _connect_logger_database(self, connection: dict = None):
+    @staticmethod
+    def _connect_logger_database(connection: dict = None):
         """This function defines the connection to the data database
         and opens a connection to the postgres database
 
@@ -64,7 +64,7 @@ class DBResults:
             connection = env.cst_data_db
         logger.info(connection)
         try:
-            return pg.connect(**connection)
+            return connect(**connection)
         except Exception as ex:
             logger.exception(f"{ex}\nFailed to create PostgresDB instance.")
             return None
@@ -156,14 +156,25 @@ class DBResults:
             cur.execute(query)
             self.data_db.commit()
 
-    def schema_exist(self, scheme_name: str) -> None:
+    def schema_exist(self, scheme_name: str) -> bool:
+        """Checks to see if the specified schema exist in the database
+
+        Args:
+            scheme_name (str): schema name whose existence is being checked
+
+        Returns:
+            bool: specified schema exist or not
+        """
+        exist = False
         with self.data_db.cursor() as cur:
             cur.execute("select * from information_schema.tables "
                         "where table_schema=%s",
                         (scheme_name,))
-            if bool(cur.rowcount):  return
+            if cur.rowcount > 0:
+                exist = True
+        return exist
 
-    def table_exist(self, analysis_name: str, table_name: str) -> None:
+    def table_exist(self, analysis_name: str, table_name: str) -> bool:
         """Checks to see if the specified tables exist in the specified analysis
 
         Args:
@@ -171,13 +182,16 @@ class DBResults:
             table_name (str): Table name whose existence is being checked
 
         Returns:
-            _type_: _description_
+            bool: specified tables exist or not
         """
+        exist = False
         with self.data_db.cursor() as cur:
             cur.execute("select * from information_schema.tables "
                         "where table_schema=%s and table_name=%s",
                         (analysis_name,table_name))
-            if bool(cur.rowcount):  return
+            if cur.rowcount > 0:
+                exist = True
+        return exist
 
     def make_logger_database(self, analysis_name: str) -> None:
         """_summary_
@@ -208,7 +222,7 @@ class DBResults:
             cur.execute(query)
             self.data_db.commit()
 
-    def get_scenario(self, scenario_name: str) -> ReadConfig:
+    def get_scenario(self, scenario_name: str) ->  None | ReadConfig:
         """Gets the metadata associated with the specified scenario from the
         metadata database.
 
@@ -231,7 +245,7 @@ class DBResults:
         return self._scenario
 
     @staticmethod
-    def get_select_string(scheme_name: str, data_type: str) -> str:
+    def get_select_string(scheme_name: str, data_type: str) ->  None | str:
         """This method creates the SELECT portion of the query string
 
         Args:
@@ -281,7 +295,7 @@ class DBResults:
                          scenario_name: str,
                          federate_name: str,
                          data_name: str,
-                         data_type: str) -> str:
+                         data_type: str) ->  None | str:
         """This method creates the query string to pull time series data from the
         logger database, and depends upon the keys identified by the user input arguments.
 
@@ -348,7 +362,7 @@ class DBResults:
                                       scenario_name: str,
                                       federate_name: str,
                                       data_name: str,
-                                      data_type: str) -> pd.DataFrame:
+                                      data_type: str) ->  None | pd.DataFrame:
         """This method queries time series data from the logger database and
         depends upon the keys identified by the user input arguments.
 
@@ -389,7 +403,7 @@ class DBResults:
                 return dataframe
         return None
 
-    def query_scenario_all_times(self, scenario_name: str, data_type: str) -> pd.DataFrame:
+    def query_scenario_all_times(self, scenario_name: str, data_type: str) -> None | pd.DataFrame:
         """This function queries data from the logger database filtered only by scenario_name and data_name
 
         Args:
@@ -418,7 +432,7 @@ class DBResults:
     def query_scheme_all_times(self, scheme_name: str, data_type: str) -> None:
         raise NotImplementedError("method query_scheme_all_times is not implemented yet")
 
-    def query_scheme_federate_all_times(self, scheme_name: str, federate_name: str, data_type) -> pd.DataFrame:
+    def query_scheme_federate_all_times(self, scheme_name: str, federate_name: str, data_type) ->  None | pd.DataFrame:
         """This function queries data from the logger database filtered only by federate_name and data_name
         and data_type
 
@@ -452,7 +466,7 @@ class DBResults:
         # Todo: get schema from scenario documents
         raise NotImplementedError(f"method get_schema_list is not implemented yet")
 
-    def get_scenario_list(self, scheme_name: str, data_type: str) -> pd.DataFrame:
+    def get_scenario_list(self, scheme_name: str, data_type: str) ->  None | pd.DataFrame:
         """This function queries the distinct list of scenario names from the database table
         defined by scheme_name and data_type
 
@@ -478,7 +492,7 @@ class DBResults:
             dataframe = pd.DataFrame(data, columns=column_names)
             return dataframe
 
-    def get_federate_list(self, scheme_name: str, data_type: str) -> pd.DataFrame:
+    def get_federate_list(self, scheme_name: str, data_type: str) ->  None | pd.DataFrame:
         """This function queries the distinct list of federate names from the database table
         defined by scheme_name and data_type
 
@@ -503,7 +517,7 @@ class DBResults:
             dataframe = pd.DataFrame(data, columns=column_names)
             return dataframe
 
-    def get_data_name_list(self, scheme_name: str, data_type: str) -> pd.DataFrame:
+    def get_data_name_list(self, scheme_name: str, data_type: str) ->  None | pd.DataFrame:
         """This function queries the distinct list of data names from the database table
         defined by scheme_name and data_type
 
@@ -528,7 +542,7 @@ class DBResults:
             dataframe = pd.DataFrame(data, columns=column_names)
             return dataframe
 
-    def get_time_range(self, scheme_name: str, data_type: str, scenario_name: str, federate_name: str) -> pd.DataFrame:
+    def get_time_range(self, scheme_name: str, data_type: str, scenario_name: str, federate_name: str) ->  None | pd.DataFrame:
         """This function queries the minimum and maximum of time from the database
             table defined by scheme_name, data_type, scenario_name, and federate
 
@@ -565,7 +579,8 @@ class DBResults:
             dataframe = pd.DataFrame(data, columns=column_names)
             return dataframe
 
-    def set_time_stamps(self, dataframe: pd.DataFrame, date_time: str):
+    @staticmethod
+    def set_time_stamps(dataframe: pd.DataFrame, date_time: str) -> None | pd.DataFrame:
         """This function calculates the time stamp for each time step in the dataframe and adds them
             to the dataframe in a column named time_stamp
 
@@ -584,7 +599,7 @@ class DBResults:
         for x in range(len(dataframe)):
             trow = dataframe.iloc[x]
             sec_time = trow.time
-            time_list.append(date_time + dt.timedelta(seconds=sec_time))
+            time_list.append(date_time + timedelta(seconds=sec_time))
         dataframe['time_stamp'] = time_list
         ts = dataframe.set_index('time_stamp')
         return ts

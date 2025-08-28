@@ -2,7 +2,7 @@
 Created on 12/14/2023
 
 Federate class that defines the basic operations of Python-based federates in
-Copper.
+CoSim Toolbox (CST).
 
 @author: Trevor Hardy
 trevor.hardy@pnnl.gov
@@ -31,7 +31,7 @@ class Federate:
     and get a working federate.
 
     This class gets its configuration from the metadata database following
-    the standard Copper definition of the "federations" document.
+    the standard CST definition of the "federations" document.
 
     To be overly clear, this class is intended to be sub-classed and overloaded
     to allow users to customize it as necessary. If nothing else, the
@@ -154,6 +154,7 @@ class Federate:
 
     def connect_to_metadataDB(self, uri: str, db_name: str) -> None:
         """Connects to the CST metadata database
+        """Connects to the CST metadata database
 
         The metadata database contains the HELICS configuration
         JSON along with other pieces of useful configuration or federation
@@ -174,7 +175,7 @@ class Federate:
         self.federation = self.federation["federation"]
 
     def connect_to_metadataJSON(self) -> None:
-        """Opens CST configuration JSON files
+        """Connects to the CST JSON configuration file
 
         The CST JSON files contains the HELICS configuration
         JSON along with other pieces of useful configuration or federation
@@ -289,7 +290,7 @@ class Federate:
         self.config = self.federate["HELICS_config"]
 
     def create_federate(self, scenario_name: str) -> None:
-        """Create Copper and HELICS federates
+        """Create CST and HELICS federates
 
         Creates and defines both the instance of this class,(the Co-Simulation
         federate) and the HELICS federate object (self.hfed). Any

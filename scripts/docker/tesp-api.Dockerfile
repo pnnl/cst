@@ -1,5 +1,5 @@
 # Build runtime image
-FROM cosim-python:latest AS cosim-tespapi
+FROM cosim-cst:latest AS cosim-tespapi
 
 USER root
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (C) 2021-2023 Battelle Memorial Institute
+# Copyright (c) 2022-2025 Battelle Memorial Institute
 # file: runcosim.sh
 
 if [[ -z ${CST_ROOT} ]]; then
@@ -22,7 +22,7 @@ IMAGE=pnnl/cst:${docker_tag}
 IMAGE=cosim-cplex:cst_${grid_ver}
 #IMAGE=cosim-user:cst_${grid_ver}
 
-IMAGE=cosim-python:latest
+IMAGE=cosim-cst:latest
 
 echo "Should always confirm that you are logged in to docker using 'docker login'"
 

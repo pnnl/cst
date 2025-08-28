@@ -24,24 +24,20 @@ class Runner:
 
     def define_scenario(self):
         names = ["Battery", "EVehicle"]
-        t1 = HelicsMsg(names[0], 30)
+        t1 = HelicsMsg(names[0], period=30)
         if self.docker:
-            t1.config("brokeraddress", "10.5.0.2")
-        t1.config("core_type", "zmq")
-        t1.config("log_level", "warning")
-        t1.config("period", 30)
-        t1.config("uninterruptible", False)
+            t1.config("broker_address", "10.5.0.2")
         t1.config("terminate_on_error", True)
         # t1.config("wait_for_current_time_update", True)
         t1.collect(Collect.YES)
 
-        t1.pubs_e(names[0] + "/current", "double", "V", True, Collect.YES)
+        t1.pubs_e(names[0] + "/current", "double", "A", True, Collect.YES)
         t1.subs_e(names[1] + "/voltage", "double", "V")
         t1.pubs_e(names[0] + "/current2", "integer", "A", True, Collect.NO)
         t1.subs_e(names[1] + "/voltage2", "integer", "V")
-        t1.pubs_e(names[0] + "/current3", "boolean", "A")
+        t1.pubs_e("current3", "boolean", "A")
         t1.subs_e(names[1] + "/voltage3", "boolean", "V")
-        t1.pubs_e(names[0] + "/current4", "string", "A")
+        t1.pubs_e("current4", "string", "A")
         t1.subs_e(names[1] + "/voltage4", "string", "V")
         t1.pubs_e(names[0] + "/current5", "complex", "A", True, Collect.MAYBE)
         t1.subs_e(names[1] + "/voltage5", "complex", "V")
@@ -49,44 +45,39 @@ class Runner:
         t1.subs_e(names[1] + "/voltage6", "vector", "V")
         t1.endpt(names[0] + "/current1", names[1] + "/voltage1", True, Collect.YES)
 
-        t2 = HelicsMsg(names[1], 30)
+        t2 = HelicsMsg(names[1], period=60)
         if self.docker:
-            t2.config("brokeraddress", "10.5.0.2")
-        t2.config("core_type", "zmq")
-        t2.config("log_level", "warning")
-        t2.config("period", 60)
-        t2.config("uninterruptible", False)
+            t2.config("broker_address", "10.5.0.2")
         t2.config("terminate_on_error", True)
         # t2.config("wait_for_current_time_update", True)
+        t2.collect(Collect.NO)
 
-        t2.subs_e(names[0] + "/current", "double", "V")
-        t2.pubs_e(names[1] + "/voltage", "double", "V")
+        t2.subs_e(names[0] + "/current", "double", "A")
+        t2.pubs_e("voltage", "double", "V")
         t2.subs_e(names[0] + "/current2", "integer", "A")
-        t2.pubs_e(names[1] + "/voltage2", "integer", "V")
+        t2.pubs_e("voltage2", "integer", "V")
         t2.subs_e(names[0] + "/current3", "boolean", "A")
         t2.pubs_e(names[1] + "/voltage3", "boolean", "V", True, Collect.NO)
         t2.subs_e(names[0] + "/current4", "string", "A")
-        t2.pubs_e(names[1] + "/voltage4", "string", "V")
+        t2.pubs_e("voltage4", "string", "V")
         t2.subs_e(names[0] + "/current5", "complex", "A")
-        t2.pubs_e(names[1] + "/voltage5", "complex", "V")
+        t2.pubs_e("voltage5", "complex", "V")
         t2.subs_e(names[0] + "/current6", "vector", "A")
-        t2.pubs_e(names[1] + "/voltage6", "vector", "V")
-        t2.endpt(names[1] + "/voltage1", names[0] + "/current1", True, Collect.YES)
+        t2.pubs_e("voltage6", "vector", "V")
+        t2.endpt("voltage1", names[0] + "/current1", None, Collect.YES)
 
         f1 = {
             "logger": False,
-            "image": "cosim-python:latest",
+            "image": "cosim-cst:latest",
             "command": f"python3 simple_federate.py {names[0]} {self.scenario_name}",
             "federate_type": "combo",
-            "time_step": 120,
             "HELICS_config": t1.write_json()
         }
         f2 = {
             "logger": False,
-            "image": "cosim-python:latest",
+            "image": "cosim-cst:latest",
             "command": f"python3 simple_federate2.py {names[1]} {self.scenario_name}",
             "federate_type": "combo",
-            "time_step": 120,
             "HELICS_config": t2.write_json()
         }
         diction = {
@@ -118,7 +109,7 @@ class Runner:
 
 def main():
     remote = False
-    with_docker = False
+    with_docker = True
     r = Runner("test_scenario", "test_schema", "test_federation", with_docker)
     r.define_scenario()
     print(r.db.get_collection_document_names(env.cst_scenarios))
