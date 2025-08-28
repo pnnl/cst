@@ -201,20 +201,20 @@ class Federate:
         self.dl.open_database_connections()
         # self.dl.check_version()
 
-        if not self.dl.schema_exist(self.scheme_name):
+        if not self.dl.analysis_exist(self.analysis_name):
             try:
-                self.dl.create_schema(self.scheme_name)
+                self.dl.create_analysis(self.analysis_name)
             except Exception as ex:
                 self.dl.data_db.rollback()
-                logger.exception(f"Rolling back: create schema!")
+                logger.exception(f"Rolling back: create analysis!")
                 return
-            if not self.dl.table_exist(self.scheme_name, 'hdt_double'):
+            if not self.dl.table_exist(self.analysis_name, 'hdt_double'):
                 try:
-                    self.dl.make_logger_database(self.scheme_name)
-                    self.dl.remove_scenario(self.scheme_name, self.scenario_name)
+                    self.dl.make_logger_database(self.analysis_name)
+                    self.dl.remove_scenario(self.analysis_name, self.scenario_name)
                 except Exception as ex:
                     self.dl.data_db.rollback()
-                    logger.exception(f"Rolling back: make tables for schema!")
+                    logger.exception(f"Rolling back: make tables for analysis!")
 
     def connect_to_dataCSV(self):
         """Opens local CSV file for writing output data
@@ -269,7 +269,7 @@ class Federate:
         self.stop_time = datetime.datetime.fromisoformat(self.scenario["stop_time"])
 
         # setting up data logging
-        self.scheme_name = self.scenario["schema"]
+        self.analysis_name = self.scenario["analysis"]
         if self.federation.get("tags"):
             self.fed_collect = self.federation["tags"].get("logger", self.fed_collect)
 
@@ -314,6 +314,7 @@ class Federate:
         else:
             self.connect_to_metadataJSON()
         self.set_metadata()
+        self.get_helics_config()
         self.get_helics_config()
 
         # Provide internal copies of the HELICS interfaces for convenience during debugging.
@@ -585,15 +586,18 @@ class Federate:
             self.data_to_federation["publications"][pub.name] = dummy_value
 
     def send_data_to_federation(self, reset=False) -> None:
-        """Sends specified outputs to rest of HELICS federation
+        """
+        Sends specified outputs to rest of HELICS federation
 
         This method provides an easy way for users to send out any data
         to the rest of the federation. Users pass in a dict structured the same
         as the "data_from_federation" with sub-dicts for publications and
-        endpoints and keys inside those dicts for the name of the pub or
-        endpoint. The value for the keys is slightly different, though:
-            - pubs: value is the data to send
-            - endpoints: value is a dictionary as follows
+        endpoints and keys inside those dicts for the name of the pub or endpoint.
+        The value for the keys is slightly different, though:
+
+            pubs: value is the data to send
+            endpoints: value is a dictionary as follows::
+
                 {
                     "destination": <target endpoint name, may be an empty string>
                     "payload": <data to send>
@@ -604,9 +608,9 @@ class Federate:
 
         Args:
             reset (bool, optional): When set erases published value which
-            prevents re-publication of the value until manually set to a 
-            non-`None` value. Any entry in this dictionary that is `None` is
-            not sent out via HELICS. Defaults to False.
+                prevents re-publication of the value until manually set to a
+                non-`None` value. Any entry in this dictionary that is `None`
+                is not sent out via HELICS. Defaults to False.
         """
 
         # Publications
@@ -678,7 +682,7 @@ class Federate:
 
     def write_to_logger(self, table, name, key, value):
         if self.use_pdb:
-            query = (f"INSERT INTO {self.scheme_name}.{table} "
+            query = (f"INSERT INTO {self.analysis_name}.{table} "
                    "(real_time, sim_time, scenario, federate, data_name, data_value)"
                    f" VALUES( to_timestamp('{self.granted_time}','YYYY-MM-DDTHH24:MI:SS.US'),"
                    f"{self.granted_time}, "

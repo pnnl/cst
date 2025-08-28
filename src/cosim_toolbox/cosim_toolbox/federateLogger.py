@@ -23,21 +23,22 @@ logger.setLevel(logging.INFO)
 
 class FederateLogger(Federate):
 
-    def __init__(self, fed_name: str = "", scheme_name: str = "default", **kwargs):
+    def __init__(self, fed_name: str = "", analysis_name: str = "default", **kwargs):
         super().__init__(fed_name, **kwargs)
-        self.scheme_name = scheme_name
+        self.analysis_name = analysis_name
         self.fed_pubs = None
         self.fed_pts = None
 
         # save possibilities yes, no, maybe
         self.collect = "maybe"
 
-        # uncomment debug, clears schema
-        # which means all scenarios are gone in that scheme
-        # self.dl.drop_schema(self.scheme_name)
+        # uncomment debug, clears analysis
+        # which means all scenarios are gone in that analysis
+        # self.dl.drop_analysis(self.analysis_name)
 
     def get_helics_config(self) -> None:
-        """Sets a few class attributes related to HELICS configuration.
+        """
+        Sets a few class attributes related to HELICS configuration.
 
         Also determines which publications need to be pushed into the
         time-series database.
@@ -134,7 +135,8 @@ class FederateLogger(Federate):
         self.no_t_start = self.start.replace('T',' ')
 
     def update_internal_model(self) -> None:
-        """Takes latest published values or sent messages (endpoints) and
+        """
+        Takes latest published values or sent messages (endpoints) and
         pushes them back into the time-series database.
         """
 
@@ -143,12 +145,12 @@ class FederateLogger(Federate):
         for key in self.data_from_federation["inputs"]:
             qry = ""
             value = self.data_from_federation["inputs"][key]
-            for table in DBResults.hdt_type.keys():
+            for table in DBResults._hdt_type.keys():
                 if self.inputs[key]['type'].lower() in table.lower():
                     if len(self.fed_pubs):
                         for fed in self.fed_pubs:
                             if key in self.fed_pubs[fed]:
-                                qry = (f"INSERT INTO {self.scheme_name}.{table} "
+                                qry = (f"INSERT INTO {self.analysis_name}.{table} "
                                        "(real_time, sim_time, scenario, federate, data_name, data_value)"
                                        f" VALUES( to_timestamp('{self.no_t_start}','YYYY-MM-DD HH24:MI:SS') + interval '1s' * "
                                        f"{self.granted_time}, {self.granted_time}, "
@@ -169,7 +171,7 @@ class FederateLogger(Federate):
         table = "hdt_endpoint"
         for key in self.data_from_federation["endpoints"]:
             for msg in self.data_from_federation["endpoints"][key]:
-                query += (f"INSERT INTO {self.scheme_name}.{table} "
+                query += (f"INSERT INTO {self.analysis_name}.{table} "
                           "(real_time, sim_time, scenario, federate, data_name, data_value)"
                           f" VALUES( to_timestamp('{self.no_t_start}','YYYY-MM-DD HH24:MI:SS') + interval '1s' * "
                           f"{msg.time}, {msg.time}, '{self.scenario_name}', '"
@@ -179,8 +181,8 @@ class FederateLogger(Federate):
         self.query_to_logger(query)
 
 
-def main(federate_name: str, scheme_name: str, scenario_name: str) -> None:
-    fed_logger = FederateLogger(federate_name, scheme_name)
+def main(federate_name: str, analysis_name: str, scenario_name: str) -> None:
+    fed_logger = FederateLogger(federate_name, analysis_name)
     fed_logger.create_federate(scenario_name)
     fed_logger.run_cosim_loop()
     fed_logger.destroy_federate()
