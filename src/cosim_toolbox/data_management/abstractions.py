@@ -1,6 +1,8 @@
 """
 Core data management abstractions for CoSim Toolbox.
 Provides TSRecord dataclass and abstract base classes for data I/O.
+
+@author Nathan Gray
 """
 
 from abc import ABC, abstractmethod
