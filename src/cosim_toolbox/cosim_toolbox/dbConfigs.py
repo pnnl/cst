@@ -55,12 +55,12 @@ class DBConfigs:
     value of `cst_mongo` in the TODO (where does this value come from)?
 
     Attributes:
-        collections (list[str]) - list of collection names in the database
-        db_name (str) - Name of MongoDB database being used
+        collections (list[str]): list of collection names in the database
+        db_name (str): - Name of MongoDB database being used
         client (MongoClient[Dict[str, Any]]) - MongoDB object, used for 
-          accessing the MongoDB server
+            accessing the MongoDB server
         db (Database): Mongo database object, used for access the data in
-          the database named `db_name`
+            the database named `db_name`
         fs (GridFS): Mongo DB object for storing and accessing files
 
     """
@@ -110,7 +110,7 @@ class DBConfigs:
         Args:
             uri (str, optional): URI for MongoDB. Defaults to None.
             db (str, optional): Name of database in MongoDB to use.
-            Defaults to None.
+                Defaults to None.
 
         Returns:
             tuple: name of database as string and MongoDB client object
@@ -142,10 +142,10 @@ class DBConfigs:
         method decide what to do with it.
 
         Args:
-            collection_name (str) - Name of MongoDB collection where document
-            name is being checked
-            new_name (str) - Name of JSON (Mongo DB document) whose 
-            unique-ness is being checked.
+            collection_name (str): Name of MongoDB collection where document
+                name is being checked
+            new_name (str): Name of JSON (Mongo DB document) whose 
+                unique-ness is being checked.
 
         Return:
             bool: flag indicating if the name is unique (true) or not
@@ -174,18 +174,18 @@ class DBConfigs:
         to a different value (see below). 
 
         Args:
-            file (str) - file (including path) that is being added to
+            file (str): file (including path) that is being added to
             MongoDB
-            conflict (str) - Indicates how to handle file name space collisions
-            Supported values are
-            "fail" - Produces an error if the file name being added
+            conflict (str): Indicates how to handle file name space collisions
+                Supported values are
+                "fail" - Produces an error if the file name being added
                      already exists in the database
-            "overwrite" - New file overwrites the existing one
-            "add version" - New file is added as a version of
+                "overwrite" - New file overwrites the existing one
+                "add version" - New file is added as a version of
                             the existing one.
-            name (str) - (optional) Database name of file that can be 
-            used when accessing it later. Does not rename the file if
-            defined.
+            name (str): (optional) Database name of file that can be 
+                used when accessing it later. Does not rename the file if
+                defined.
 
         Returns:
             None
@@ -225,16 +225,16 @@ class DBConfigs:
 
         Args:
             name (str): The name of the file being pulled from the metadata
-            database
+                database
             disk_name (str): (optional) Name of file to use when writing 
-            it to disk. if left undefined the name used to access the file 
-            in database will be used.
+                it to disk. if left undefined the name used to access the file 
+                in database will be used.
             path (str): (optional) Path indicating where the file is to be
-            written on disk. If not specified, the file will not be written
-            to disk.
+                written on disk. If not specified, the file will not be 
+                written to disk.
         
         Returns:
-            fileObject - File-like object of file requested
+            fileObject: File-like object of file requested
 
         """
         db_file = self.fs.files.find({'filename': name})
@@ -258,7 +258,7 @@ class DBConfigs:
         "collection_name"
 
         Args: 
-            collection_name (str) - Name of MongoDB collection to remove
+            collection_name (str): Name of MongoDB collection to remove
 
         Returns:
             None
@@ -273,7 +273,7 @@ class DBConfigs:
         Creates a collection in the metadata database
 
         Args: 
-            collection_name (str) - Name of MongoDB collection to add
+            collection_name (str): Name of MongoDB collection to add
 
         Returns:
             None
@@ -285,6 +285,7 @@ class DBConfigs:
         collection = self.db.createCollection(new_collection_name)
         self.update_collection_names()
         return None
+    
     
     def update_collection_names(self) -> list:
         """
@@ -311,11 +312,11 @@ class DBConfigs:
 
         Args:
             collection_name (str): collection string where JSON to be removed
-            lives
+                lives
             obejct_id (bson.objectid.ObjectId): (optional) Mongo DB identifier
-            provided when the JSON was added to the metadata database
-            dataset_name (str): (optional) name of JSON as defined when the 
-            JSON was added to the metadata database
+                provided when the JSON was added to the metadata database
+                dataset_name (str): (optional) name of JSON as defined when  
+                the JSON was added to the metadata database
 
         Returns:
             None
@@ -341,7 +342,7 @@ class DBConfigs:
 
         Args:
             collection_name (str): Name of collection being queried for
-            dictionary names
+                dictionary names
 
         Returns:
             list: list of JSONs in collection
@@ -360,7 +361,7 @@ class DBConfigs:
 
         Args:
             collection_name (str): Name of collection where JSON is stored
-            whose keys are being queried
+                whose keys are being queried
             json_name (str): Name of JSON whose keys are being queried
 
         Returns:
@@ -388,14 +389,14 @@ class DBConfigs:
 
         Args:
             collection_name (str): Name of collection where JSON is to be
-            added
+                added
             json_name (str): Name give to the JSON as it is referred to in 
-            the metadata database
+                the metadata database
             dict_to_add (dict): Dictionary to be added to metadata database
 
         Returns:
             str: Mongo database object ID that can be used to query the added
-            JSON out of the database
+                JSON out of the database
         """
         if self._check_unique_dict_name(collection_name, dict_name):
             dict_to_add[self._cst_name] = dict_name
@@ -418,7 +419,7 @@ class DBConfigs:
 
         Args:
             collection_name (str): Name of collection in which the JSON to be
-            queried is stored
+                queried is stored
 
 
         """
@@ -445,13 +446,26 @@ class DBConfigs:
     def update_dict(self, collection_name: str,
                     updated_dict: dict,
                     object_id: bson.objectid.ObjectId = None,
-                    dict_name: str = None) -> object:
+                    dict_name: str = None):
         """
         Updates the dictionary on the database (under the same object_ID/name)
         with the passed in updated dictionary.
 
         User must enter either the dictionary name used or the object_ID that
         was created when the dictionary was added but not both.
+
+        Args:
+            collection_name (str): name of collection where dict being 
+                updated lives
+            updated_dict (dict): new defintion of dict being updated
+                (bson.objectid.ObjectId): (optional) Mongo DB identifier
+                provided when the JSON was added to the metadata database
+                dataset_name (str): (optional) name of JSON as defined when  
+                the JSON was added to the metadata database
+            dict_name (str): name of dictionary being updated
+
+        Returns:
+            None
         """
         result = None
         updated_dict[self._cst_name] = dict_name
@@ -468,13 +482,25 @@ class DBConfigs:
                 raise NameError(f"{dict_name} does not exist in collection {collection_name} and cannot be updated.")
         elif object_id is not None:
             result = self.db[collection_name].replace_one({"_id": object_id}, updated_dict)
-        return result
 
     @staticmethod
     def scenario(analysis_name: str, federation_name: str, start: str, stop: str, docker: bool = False) -> dict:
         """
         Creates a properly formatted CoSimulation Toolbox scenario document
         (dictionary), using the provided inputs.
+
+        Args:
+            analysis_name (str): Name of analysis used in defining the
+                location of the configuration document
+            federation_name (str): Federation name used in configuration
+                document
+            start (str): Start time in ISO 8601 str format
+            stop (str): Stop time in ISO 8601 str format
+            docker (bool): Flag to indicate whether a Docker is used
+
+        Returns:
+            dict: Scenario dictionary
+
         """
         return {
             "analysis": analysis_name,
@@ -485,38 +511,81 @@ class DBConfigs:
         }
 
     def store_federation_config(self, name: str, config: dict) -> None:
+        """Loads passed in configuration into metadata store
+
+        Args:
+            name (str): configuration dictionary name
+            config (dict): configuration dictionary to be stored
+        """
         self.remove_dict(env.cst_federations, name)
         self.add_dict(env.cst_federations, name, config)
 
     def store_scenario(self,
             scenario_name: str, analysis_name: str, federation_name: str,
             start: str, stop: str, docker: bool = False) -> None:
+        """Stores scenario dictionary in the metadata store
+
+        Args:
+            scenario_name (str): Name of scenario whose dictionary is being 
+                stored
+            analysis_name (str): Name of analysis that owns the dictionary
+            federation_name (str): Name of federation used in scenario
+            start (str): Start time in ISO 8601 str format
+            stop (str): Stop time in ISO 8601 str format
+            docker (bool, optional): Flag to indicate whether a Docker is used
+                Defaults to False.
+        
+        Returns:
+            None
+        """
         scenario = self.scenario(analysis_name, federation_name, start, stop, docker)
         self.remove_dict(env.cst_scenarios, scenario_name)
         self.add_dict(env.cst_scenarios, scenario_name, scenario)
 
-    def get_scenario(self, scenario_name) -> dict:
+    def get_scenario(self, scenario_name: str) -> dict:
+        """Retrieves scenario configuration information from 
+        metadata store
+
+        Args:
+            scenario_name (str): Name of scenario being retrieved
+
+        Returns:
+            dict: scenario dictionary
+        """
         if scenario_name not in self.list_scenarios():
             logger.error(f"{scenario_name} not found in {self.list_scenarios()}.")
         return self.get_dict(env.cst_scenarios, None, scenario_name)
 
-    def get_federation_config(self, federation_name) -> dict:
+    def get_federation_config(self, federation_name: str) -> dict:
+        """Gets configuration dictionary for the specified dictionary
+
+        Args:
+            federation_name (str): Name of federation whose configuration is
+                being retrieved
+
+        Returns:
+            dict: federation configuration dictionary
+        """
         if federation_name not in self.list_federations():
             logger.error(f"{federation_name} not found in {self.list_federations()}.")
         return self.get_dict(env.cst_federations, None, federation_name)
 
     def list_scenarios(self) -> list:
+        """Provides list of scenarios in metadata store
+
+        Returns:
+            list: list of scenarios in metadata store
+        """
         return self.get_dict_names_in_collection(env.cst_scenarios)
 
     def list_federations(self) -> list:
+        """Provides list of federations in metadata store
+
+        Returns:
+            list: list of federations in metadata store
+        """
         return self.get_dict_names_in_collection(env.cst_federations)
 
-    # TODO: discuss what might be useful for extra user defined data
-    def store_user_defined_config(self, name):
-        pass
-
-    def get_user_defined_config(self, name):
-        pass
 
 
 def _mytest1():
