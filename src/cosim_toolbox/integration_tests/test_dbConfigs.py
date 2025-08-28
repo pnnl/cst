@@ -60,7 +60,7 @@ class TestMetadataDBApi(unittest.TestCase):
     def test_02_add_collection(self):
         collection_name = "case_data"
         name_list = ["case_data"]
-        name_out = self.metadb.add_collection(name=collection_name)
+        self.metadb.add_collection(collection_name)
         name_collections = self.metadb.update_collection_names()
         section = list(set(name_list).intersection(name_collections))
         self.assertEqual(len(section), 1, "return collection did not contain new collection name")
@@ -68,12 +68,12 @@ class TestMetadataDBApi(unittest.TestCase):
     def test_03_remove_collection(self):
         dict_name = "psc3"
         collection_name = "case_data3"
-        name_out = self.metadb.add_collection(name=collection_name)
+        self.metadb.add_collection(collection_name)
         named_file_dict = {'psc3': {'bus': {'bus_num': [1, 2, 3, 4, 5]},
                                     'branch': {'from_bus': [1, 1, 1, 3, 4], 'to_bus': [2, 3, 5, 2, 5]},
                                     'gen': {'bus_num': [1, 2, 3], 'id': ['1', '1', '1'], 'mw': [10, 20, 30]},
                                     'load': {'bus_num': [4, 5, 5], 'id': ['1', '1', '2'], 'mw': [12, 17, 25]}}}
-        obj_id = self.metadb.add_dict(collection_name, dict_name, named_file_dict)
+        self.metadb.add_dict(collection_name, dict_name, named_file_dict)
         name_collections = self.metadb.update_collection_names()
         for c in name_collections:
             self.metadb.remove_collection(c)
@@ -82,7 +82,7 @@ class TestMetadataDBApi(unittest.TestCase):
     def test_04_add_dict(self):
         dict_name = "psc4"
         collection_name = "case_data4"
-        name_out = self.metadb.add_collection(name=collection_name)
+        self.metadb.add_collection(collection_name)
         named_file_dict = {'psc4': {'bus': {'bus_num': [1, 2, 3, 4, 5]},
                                     'branch': {'from_bus': [1, 1, 1, 3, 4], 'to_bus': [2, 3, 5, 2, 5]},
                                     'gen': {'bus_num': [1, 2, 3], 'id': ['1', '1', '1'], 'mw': [10, 20, 30]},
@@ -93,12 +93,12 @@ class TestMetadataDBApi(unittest.TestCase):
     def test_05_get_dict_key_names(self):
         dict_name = "psc5"
         collection_name = "case_data5"
-        name_out = self.metadb.add_collection(name=collection_name)
+        self.metadb.add_collection(collection_name)
         named_file_dict = {'psc5': {'bus': {'bus_num': [1, 2, 3, 4, 5]},
                                     'branch': {'from_bus': [1, 1, 1, 3, 4], 'to_bus': [2, 3, 5, 2, 5]},
                                     'gen': {'bus_num': [1, 2, 3], 'id': ['1', '1', '1'], 'mw': [10, 20, 30]},
                                     'load': {'bus_num': [4, 5, 5], 'id': ['1', '1', '2'], 'mw': [12, 17, 25]}}}
-        obj_id = self.metadb.add_dict(collection_name, dict_name, named_file_dict)
+        self.metadb.add_dict(collection_name, dict_name, named_file_dict)
         keys = self.metadb.get_dict_key_names(collection_name, dict_name)
         self.assertTrue(len(keys) > 0, "no key names were returned")
 
@@ -109,32 +109,32 @@ class TestMetadataDBApi(unittest.TestCase):
         self.assertTrue(file_name_unique, "unique check incorrectly returned False")
         dict_name = "psc6"
         collection_name = "case_data6"
-        name_out = self.metadb.add_collection(name=collection_name)
+        self.metadb.add_collection(collection_name)
         named_file_dict = {'psc6': {'bus': {'bus_num': [1, 2, 3, 4, 5]},
                                     'branch': {'from_bus': [1, 1, 1, 3, 4], 'to_bus': [2, 3, 5, 2, 5]},
                                     'gen': {'bus_num': [1, 2, 3], 'id': ['1', '1', '1'], 'mw': [10, 20, 30]},
                                     'load': {'bus_num': [4, 5, 5], 'id': ['1', '1', '2'], 'mw': [12, 17, 25]}}}
-        obj_id = self.metadb.add_dict(collection_name, dict_name, named_file_dict)
+        self.metadb.add_dict(collection_name, dict_name, named_file_dict)
         file_name_unique = self.metadb._check_unique_dict_name(collection_name, dict_name)
         self.assertFalse(file_name_unique, "unique check incorrectly returned True")
 
     def test_07_update_collection_names(self):
         dict_name = "psc7"
         collection_name = "case_data7"
-        name_out = self.metadb.add_collection(name=collection_name)
+        self.metadb.add_collection(collection_name)
         name_collections = self.metadb.update_collection_names()
         self.assertTrue(len(name_collections) > 0, "no collection names were returned")
 
     def test_08_get_collection_document_names(self):
         dict_name = "psc8"
         collection_name = "case_data8"
-        name_out = self.metadb.add_collection(name=collection_name)
+        self.metadb.add_collection(collection_name)
 
         named_file_dict = {'psc8': {'bus': {'bus_num': [1, 2, 3, 4, 5]},
                                     'branch': {'from_bus': [1, 1, 1, 3, 4], 'to_bus': [2, 3, 5, 2, 5]},
                                     'gen': {'bus_num': [1, 2, 3], 'id': ['1', '1', '1'], 'mw': [10, 20, 30]},
                                     'load': {'bus_num': [4, 5, 5], 'id': ['1', '1', '2'], 'mw': [12, 17, 25]}}}
-        obj_id = self.metadb.add_dict(collection_name, dict_name, named_file_dict)
+        self.metadb.add_dict(collection_name, dict_name, named_file_dict)
 
         doc_names = self.metadb.get_dict_names_in_collection(collection_name)
         self.assertTrue(len(doc_names) > 0, "no document names were returned")
@@ -143,25 +143,25 @@ class TestMetadataDBApi(unittest.TestCase):
         dict_name = "psc9"
         collection_name = "case_data9"
         name_list = ["case_data9"]
-        name_out = self.metadb.add_collection(name=collection_name)
+        self.metadb.add_collection(collection_name)
         named_file_dict = {'psc9': {'bus': {'bus_num': [1, 2, 3, 4, 5]},
                                     'branch': {'from_bus': [1, 1, 1, 3, 4], 'to_bus': [2, 3, 5, 2, 5]},
                                     'gen': {'bus_num': [1, 2, 3], 'id': ['1', '1', '1'], 'mw': [10, 20, 30]},
                                     'load': {'bus_num': [4, 5, 5], 'id': ['1', '1', '2'], 'mw': [12, 17, 25]}}}
-        obj_id = self.metadb.add_dict(collection_name, dict_name, named_file_dict)
+        self.metadb.add_dict(collection_name, dict_name, named_file_dict)
         try:
             doc_names = self.metadb.get_dict_names_in_collection(collection_name)
-            self.metadb.remove_dict(collection_name=collection_name, dict_name="psc9")
+            self.metadb.remove_dict(collection_name, dict_name="psc9")
             doc_names2 = self.metadb.get_dict_names_in_collection(collection_name)
             name_collections = self.metadb.update_collection_names()
             section = list(set(name_list).intersection(name_collections))
             self.assertNotEqual(doc_names, doc_names2)
         except AttributeError as e:
             print("AttributeError : ", e)
-        obj_id = self.metadb.add_dict(collection_name, dict_name, named_file_dict)
+        self.metadb.add_dict(collection_name, dict_name, named_file_dict)
         try:
             doc_names = self.metadb.get_dict_names_in_collection(collection_name)
-            self.metadb.remove_dict(collection_name=collection_name, dict_name="blah")
+            self.metadb.remove_dict(collection_name, dict_name="blah")
             doc_names2 = self.metadb.get_dict_names_in_collection(collection_name)
             self.assertEqual(doc_names, doc_names2, "invalid dict_name entered")
         except NameError as e:
@@ -171,12 +171,12 @@ class TestMetadataDBApi(unittest.TestCase):
     def test_10_get_dict(self):
         dict_name = "psc10"
         collection_name = "case_data10"
-        name_out = self.metadb.add_collection(name=collection_name)
+        self.metadb.add_collection(collection_name)
         named_file_dict = {'psc10': {'bus': {'bus_num': [1, 2, 3, 4, 5]},
                                      'branch': {'from_bus': [1, 1, 1, 3, 4], 'to_bus': [2, 3, 5, 2, 5]},
                                      'gen': {'bus_num': [1, 2, 3], 'id': ['1', '1', '1'], 'mw': [10, 20, 30]},
                                      'load': {'bus_num': [4, 5, 5], 'id': ['1', '1', '2'], 'mw': [12, 17, 25]}}}
-        obj_id = self.metadb.add_dict(collection_name, dict_name, named_file_dict)
+        self.metadb.add_dict(collection_name, dict_name, named_file_dict)
         dict_obj = self.metadb.get_dict(collection_name=collection_name, dict_name=dict_name)
         self.assertGreater(len(dict_obj['psc10']['branch']), 0, "dict_obj['psc10']['branch'] has zero length")
         self.assertEqual(dict_obj['psc10']['branch'], {'from_bus': [1, 1, 1, 3, 4], 'to_bus': [2, 3, 5, 2, 5]},
@@ -185,13 +185,13 @@ class TestMetadataDBApi(unittest.TestCase):
     def test_11_update_dict(self):
         collection_name = "case_data11"
         dict_name = self.update_data[1]['cst_007']
-        name_out = self.metadb.add_collection(name=collection_name)
+        self.metadb.add_collection(collection_name)
         copy_dict = copy.deepcopy(self.update_data[1]['federation'])
-        obj_id = self.metadb.add_dict(collection_name, dict_name, copy_dict)
+        self.metadb.add_dict(collection_name, dict_name, copy_dict)
         dict_obj = self.metadb.get_dict(collection_name=collection_name, dict_name=dict_name)
         dict_obj["EVehicle"]["time_step"] -= 60
         # print(self.metadb.get_dict_names_in_collection(collection_name), flush=True)
-        test_result = self.metadb.update_dict(collection_name=collection_name, updated_dict=dict_obj,
+        self.metadb.update_dict(collection_name=collection_name, updated_dict=dict_obj,
                                               dict_name=dict_name)
         new_dict_obj = self.metadb.get_dict(collection_name=collection_name, dict_name=dict_name)
         # print(self.metadb.get_dict_names_in_collection(collection_name), flush=True)
