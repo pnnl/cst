@@ -305,7 +305,7 @@ class Federate:
                 user=self.timeseries_config.get("user", "worker"),
                 password=self.timeseries_config.get("password", "worker"),
                 port=self.timeseries_config.get("port", "5432"),
-                schema_name=analysis_name,
+                analysis_name=analysis_name,
                 use_timescale=self.use_timescale,
             )
         else:

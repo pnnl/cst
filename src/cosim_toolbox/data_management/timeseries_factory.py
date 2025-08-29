@@ -41,7 +41,7 @@ def create_timeseries_manager(
         from data_management.csv_timeseries import CSVTimeSeriesManager
 
         analysis_name = kwargs.get("analysis_name", "default")
-        return CSVTimeSeriesManager(location, analysis_name)
+        return CSVTimeSeriesManager(location=location, analysis_name=analysis_name)
     elif backend in ("postgresql", "postgres"):
         from data_management.postgresql_timeseries import PostgreSQLTimeSeriesManager
 
@@ -62,7 +62,7 @@ def create_timeseries_manager(
                     database=database,
                     user=user or "postgres",
                     password=password or "",
-                    schema_name=kwargs.get("schema_name", "public"),
+                    analysis_name=kwargs.get("schema_name", "public"),
                 )
             else:
                 raise ValueError(f"Invalid PostgreSQL connection string: {location}")
@@ -74,7 +74,7 @@ def create_timeseries_manager(
                 database=kwargs.get("database", "cst"),
                 user=kwargs.get("user", "postgres"),
                 password=kwargs.get("password", ""),
-                schema_name=kwargs.get("schema_name", "public"),
+                analysis_name=kwargs.get("schema_name", "public"),
             )
     else:
         raise ValueError(f"Unknown backend: {backend}. Supported: csv, postgresql")

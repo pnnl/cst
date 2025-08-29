@@ -13,7 +13,7 @@ mitch.pelton@pnnl.gov
 
 import sys
 import logging
-
+import cosim_toolbox as env
 from cosim_toolbox.federate import Federate
 from cosim_toolbox.helicsConfig import HelicsMsg
 
@@ -161,7 +161,7 @@ class FederateLogger(Federate):
                     msg.original_destination,
                     msg.data,
                     table="hdt_endpoint",
-                    message_time=msg.time
+                    message_time=msg.time,
                 )
                 logger.debug(
                     f"Logged endpoint - source: {msg.original_source}, dest: {msg.original_destination}, data: {msg.data}"
@@ -169,17 +169,23 @@ class FederateLogger(Federate):
 
 
 def main(federate_name: str, scheme_name: str, scenario_name: str) -> None:
-    fed_logger = FederateLogger(fed_name=federate_name)
+    fed_logger = FederateLogger(
+        fed_name=federate_name,
+        metadata_config=env.cst_default_mongo_setup,
+        timeseries_config=env.cst_default_postgres_setup,
+    )
     fed_logger.run(scenario_name)
-    
+
     del fed_logger
 
 
 if __name__ == "__main__":
-    # CHANGED: Updated argument check from 3 to 2, as 'scheme_name' is removed.
+    federate_name = "logger"
+    scenario_name = "MyScenario"
     if len(sys.argv) > 2:
-        # CHANGED: Updated main call to pass only the required arguments.
-        main(federate_name=sys.argv[1], scenario_name=sys.argv[2])
-    else:
-        # Added a simple usage message for clarity.
-        print("Usage: python FederateLogger.py <federate_name> <scenario_name>")
+        federate_name = sys.argv[1]
+        scenario_name = sys.argv[2]
+    main(federate_name=federate_name, scheme_name="", scenario_name=scenario_name)
+    # else:
+    #     # Added a simple usage message for clarity.
+    #     print("Usage: python FederateLogger.py <federate_name> <scenario_name>")
