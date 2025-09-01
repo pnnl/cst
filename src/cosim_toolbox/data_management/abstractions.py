@@ -154,7 +154,7 @@ class TSDataWriter(ABC):
             None
 
         Returns:
-            bool: True if writer is connected to data backend
+            bool: True if writer is connected to data store
         
         """
         return self._is_connected
@@ -204,7 +204,7 @@ class TSDataReader(ABC):
             None
 
         Returns:
-            bool: flag indicated if the connection to the data backend exists
+            bool: flag indicated if the connection to the data store exists
         """
         raise NotImplementedError(
                 "TSDataReader.connect() is an abstract class and must be " \
@@ -219,7 +219,7 @@ class TSDataReader(ABC):
             None
 
         Returns:
-            bool: flag indicated if the connection to the data backend exists
+            bool: flag indicated if the connection to the data store exists
         """
         raise NotImplementedError(
                 "TSDataReader.disconnect() is an abstract class and must be" \
@@ -258,7 +258,7 @@ class TSDataReader(ABC):
             None
 
         Returns:
-            bool: flag indicated if the connection to the data backend exists
+            bool: flag indicated if the connection to the data store exists
         """
         return self._is_connected
 
@@ -306,7 +306,7 @@ class MDDataWriter(ABC):
             None
 
         Returns:
-            bool: flag indicated if the connection to the data backend
+            bool: flag indicated if the connection to the data store
                 was established
         """
         pass
@@ -386,7 +386,7 @@ class MDDataWriter(ABC):
             None
 
         Returns:
-            bool: flag indicated if the connection to the data backend exists
+            bool: flag indicated if the connection to the data store exists
         """
         return self._is_connected
 
@@ -441,7 +441,7 @@ class MDDataReader(ABC):
             None
 
         Returns:
-            bool: flag indicated if the connection to the data backend exists
+            bool: flag indicated if the connection to the data store exists
         """
         raise NotImplementedError(
                 "MDDataReader.connect() is an abstract class and must be" \
@@ -456,7 +456,7 @@ class MDDataReader(ABC):
             None
 
         Returns:
-            bool: flag indicated if the connection to the data backend exists
+            bool: flag indicated if the connection to the data store exists
         """
         raise NotImplementedError(
                 "MDDataReader.disconnect() is an abstract class and must be" \
@@ -561,7 +561,7 @@ class MDDataReader(ABC):
             None
 
         Returns:
-            bool: flag indicating if data backend is connected
+            bool: flag indicating if data store is connected
         """
         return self._is_connected
 
@@ -609,7 +609,7 @@ class TSDataManager(ABC):
             None
 
         Returns:
-            bool: flag indicating whether the connection to the backend exist
+            bool: flag indicating whether the connection to the store exist
         """
         pass
 
@@ -627,14 +627,14 @@ class TSDataManager(ABC):
         pass
 
     def write_records(self, records: list[TSRecord]) -> bool:
-        """Writes records to the data backend
+        """Writes records to the data store
 
         Args:
-            records (list[TSRecord]): Data to be written to the data backend
+            records (list[TSRecord]): Data to be written to the data store
 
         Returns:
             bool: flag indicating whether the data was successfully written
-                to the data backend
+                to the data store
         """
         return self.writer.write_records(records)
 
@@ -645,12 +645,12 @@ class TSDataManager(ABC):
             None
 
         Returns:
-            pd.DataFrame: Requested data from data backend
+            pd.DataFrame: Requested data from data store
         """
         return self.reader.read_data(**kwargs)
 
     def add_record(self, record: TSRecord) -> None:
-        """Adds a single record (data point) to the data backend
+        """Adds a single record (data point) to the data store
 
         Args:
             record (TSRecord): Data record to be written
@@ -689,13 +689,13 @@ class TSDataManager(ABC):
 
     @property
     def is_connected(self) -> bool:
-        """Flag indicating if connected to the data backend
+        """Flag indicating if connected to the data store
 
         Args:
             None
 
         Returns:
-            bool: flag indicating if connected to the data backend
+            bool: flag indicating if connected to the data store
         """
         return self._is_connected
 
@@ -719,7 +719,7 @@ class MDDataManager(ABC):
             None
 
         Returns:
-            bool: flag indicating if connected to the data backend
+            bool: flag indicating if connected to the data store
         """
         pass
 
@@ -738,7 +738,7 @@ class MDDataManager(ABC):
     def write_federation(
         self, name: str, federation_data: Dict[str, Any], overwrite: bool = False
     ) -> bool:
-        """Writes passed in federation data to the data backend
+        """Writes passed in federation data to the data store
 
         Args:
             name (str): **TODO**
@@ -750,14 +750,14 @@ class MDDataManager(ABC):
 
         Returns:
             bool: flag indicating whether the federation dictionary was 
-                successfully written to the data backend
+                successfully written to the data store
         """
         return self.writer.write_federation(name, federation_data, overwrite)
 
     def write_scenario(
         self, name: str, scenario_data: Dict[str, Any], overwrite: bool = False
     ) -> bool:
-        """Writes passed in scenario data to the data backend
+        """Writes passed in scenario data to the data store
 
         Args:
             name (str): **TODO**
@@ -768,7 +768,7 @@ class MDDataManager(ABC):
 
         Returns:
             bool: flag indicating whether the scenario dictionary was 
-                successfully written to the data backend
+                successfully written to the data store
         """
         return self.writer.write_scenario(name, scenario_data, overwrite)
 
@@ -784,7 +784,7 @@ class MDDataManager(ABC):
         Args:
             collection_type (str): **TODO**
             name (str): **TODO**
-            data (Dict[str, Any]): Data to be written to the backend
+            data (Dict[str, Any]): Data to be written to the data store
             overwrite (bool, optional): Flag indicating if any existing 
                 dictionary should be overwritten. Defaults to False.
 
@@ -794,7 +794,7 @@ class MDDataManager(ABC):
         return self.writer.write(collection_type, name, data, overwrite)
 
     def read_federation(self, name: str) -> Optional[Dict[str, Any]]:
-        """Reads the federation dictionary from the data backend
+        """Reads the federation dictionary from the data store
 
         Args:
             name (str): **TODO**
@@ -805,7 +805,7 @@ class MDDataManager(ABC):
         return self.reader.read_federation(name)
 
     def read_scenario(self, name: str) -> Optional[Dict[str, Any]]:
-        """Reads the scenario dictionary from the data backend
+        """Reads the scenario dictionary from the data store
 
         Args:
             name (str): **TODO**
@@ -829,7 +829,7 @@ class MDDataManager(ABC):
         return self.reader.read(collection_type, name)
 
     def list_federations(self) -> list[str]:
-        """Provides list of federations with dictionaries in the data backend
+        """Provides list of federations with dictionaries in the data store
 
         Returns:
             list[str]: List of federations dictionary names
@@ -837,7 +837,7 @@ class MDDataManager(ABC):
         return self.reader.list_federations()
 
     def list_scenarios(self) -> list[str]:
-        """Provides list of scenarios with dictionaries in the data backend
+        """Provides list of scenarios with dictionaries in the data store
 
         Returns:
             list[str]: List of scenario dictionary names
@@ -856,7 +856,7 @@ class MDDataManager(ABC):
         return self.reader.list_items(collection_type)
 
     def list_custom_collections(self) -> list[str]:
-        """Provides the list of custom collection names in data backend
+        """Provides the list of custom collection names in data store
 
         Args:
             None
@@ -875,13 +875,13 @@ class MDDataManager(ABC):
 
     @property
     def is_connected(self) -> bool:
-        """Check if the backend is connected
+        """Check if the data store is connected
         
         Args: 
             None
 
         Returns:
-            bool: True if writer is connected to data backend
+            bool: True if writer is connected to data store
         """
         return self._is_connected
 
