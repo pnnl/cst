@@ -1,5 +1,7 @@
 """
 Validation utilities for data management components.
+
+@author Nathan Gray
 """
 
 import re
@@ -26,6 +28,9 @@ def validate_name(name: str, context: str = "name", max_length: int = 255) -> No
 
     Raises:
         ValidationError: If name is invalid
+
+    Returns:
+        None
     """
     if not name:
         raise ValidationError(f"{context.title()} name cannot be empty")
@@ -68,6 +73,9 @@ def validate_database_identifier(
 
     Raises:
         ValidationError: If identifier is invalid
+
+    Returns:
+        None
     """
     if not name:
         raise ValidationError(f"{context.title()} cannot be empty")
@@ -143,6 +151,9 @@ def validate_connection_string(
 
     Raises:
         ValidationError: If connection string is invalid
+
+    Returns:
+        None
     """
     if not connection_string:
         raise ValidationError("Connection string cannot be empty")
