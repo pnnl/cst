@@ -129,7 +129,7 @@ class _CSVHelper:
                     "hdt_vector"
 
         Returns:
-            Any: **TODO**
+            Any: Data from passed in string as the specified data type
         """
         try:
             if data_type == "hdt_double":
@@ -185,6 +185,9 @@ class CSVTimeSeriesWriter(TSDataWriter):
         Args:
             file_path (Path): Path to CSV file whose existence is being 
                 evaluated.
+
+        Returns:
+            None
         """
         if not file_path.exists():
             file_path.parent.mkdir(parents=True, exist_ok=True)
