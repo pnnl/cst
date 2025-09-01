@@ -95,7 +95,7 @@ class _MongoConnectionHelper:
             None
 
         Returns:
-            bool: Flag indicating success of connection to metadata store
+            bool: Flag indicating success of connection to MongoDB
         """
         if self.client:
             return True  # Already connected
