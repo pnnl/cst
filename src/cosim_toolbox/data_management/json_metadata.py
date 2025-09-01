@@ -318,7 +318,7 @@ class JSONMetadataReader(MDDataReader):
             return None
 
     def list_federations(self) -> List[str]:
-        """Prodcues a list of federations stored in the metadata store
+        """Produces a list of federations stored in the metadata store
 
         Args:
             None
@@ -329,7 +329,7 @@ class JSONMetadataReader(MDDataReader):
         return self.list_items("federations")
 
     def list_scenarios(self) -> List[str]:
-        """Prodcues a list of scenarios stored in the metadata store
+        """Produces a list of scenarios stored in the metadata store
 
         Args:
             None
@@ -628,6 +628,8 @@ class JSONMetadataManager(MDDataManager):
         except Exception as e:
             logger.error(f"Failed to backup collection {collection_type}: {e}")
             return False
+        
+    # **TODO** - Need a method to load a backup database
 
     @property
     def location(self) -> Path:
