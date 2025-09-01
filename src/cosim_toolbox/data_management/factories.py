@@ -1,5 +1,7 @@
 """
 Factory functions for creating data managers.
+
+@author Nathan Gray
 """
 
 # Use relative imports within the module
@@ -15,6 +17,9 @@ def create_timeseries_manager(
         backend (str): Backend type ("csv", "postgresql").
         location (str): Storage location (path for CSV, host for PostgreSQL).
         **kwargs: Backend-specific options.
+
+    Returns:
+        TimeSeriesManager: Manager for writing data with the specified backend
     """
     backend = backend.lower()
     if backend == "csv":
@@ -38,6 +43,9 @@ def create_metadata_manager(backend: str, location: str, **kwargs) -> MetadataMa
         backend (str): Backend type ("json", "mongo").
         location (str): Storage location (path for JSON, URI for MongoDB).
         **kwargs: Backend-specific options.
+
+    Returns:
+        MetadataManger: Manager for writing data with the specified backend
     """
     backend = backend.lower()
     if backend == "json":
