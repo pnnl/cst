@@ -82,7 +82,7 @@ def sample_federation_data() -> Dict[str, Any]:
 def sample_scenario_data() -> Dict[str, Any]:
     """Sample scenario configuration data."""
     return {
-        "schema": "MySchema",
+        "analysis": "MyAnalysis",
         "federation": "MyFederation",
         "start_time": "2023-12-07T15:31:27",
         "stop_time": "2023-12-08T15:31:27",

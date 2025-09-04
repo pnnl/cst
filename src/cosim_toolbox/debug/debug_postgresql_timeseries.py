@@ -6,7 +6,7 @@ with PostgreSQLTimeSeriesReader(
     database="copper",
     user="worker",
     password="worker",
-    schema_name="ny_dr_prototype",
+    analysis_name="ny_dr_prototype",
 ) as reader:
     data = reader.read_data(data_type="hdt_double")
     print(data)

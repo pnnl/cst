@@ -5,8 +5,8 @@ from data_management.factories import create_timeseries_manager
 
 # --- Configuration Section ---
 # This makes it easy to switch between different data sources.
-# The schema_name corresponds to the 'analysis name' used by the federates.
-SCHEMA_NAME = "gld2"
+# The analysis_name corresponds to the 'analysis name' used by the federates.
+ANALYSIS_NAME = "gld2"
 
 # Choose your backend and provide its configuration.
 # Option 1: PostgreSQL Backend
@@ -27,12 +27,12 @@ BACKEND_CONFIG = {
 
 
 # --- Data Loading Section ---
-print(f"Loading data for schema '{SCHEMA_NAME}' from '{BACKEND_TYPE}' backend...")
+print(f"Loading data for analysis '{ANALYSIS_NAME}' from '{BACKEND_TYPE}' backend...")
 
 # Use a context manager to handle connection and disconnection.
 with create_timeseries_manager(
     backend=BACKEND_TYPE,
-    schema_name=SCHEMA_NAME,
+    analysis_name=ANALYSIS_NAME,
     **BACKEND_CONFIG
 ) as ts_manager:
     # Fetch the data. We specify the data_type to get only complex values,

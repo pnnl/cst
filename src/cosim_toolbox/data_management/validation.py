@@ -140,14 +140,14 @@ def safe_name_log(name: str, max_length: int = 50) -> str:
 
 
 def validate_connection_string(
-    connection_string: str, expected_scheme: Optional[str] = None
+    connection_string: str, expected_analysis: Optional[str] = None
 ) -> None:
     """
     Validate a connection string format.
 
     Args:
         connection_string (str): Connection string to validate
-        expected_scheme (Optional[str]): Expected URL scheme (e.g., "postgresql")
+        expected_analysis (Optional[str]): Expected URL analysis (e.g., "postgresql")
 
     Raises:
         ValidationError: If connection string is invalid
@@ -158,9 +158,9 @@ def validate_connection_string(
     if not connection_string:
         raise ValidationError("Connection string cannot be empty")
 
-    if expected_scheme and not connection_string.startswith(f"{expected_scheme}://"):
+    if expected_analysis and not connection_string.startswith(f"{expected_analysis}://"):
         raise ValidationError(
-            f"Connection string must start with '{expected_scheme}://': {connection_string[:50]}..."
+            f"Connection string must start with '{expected_analysis}://': {connection_string[:50]}..."
         )
 
     # Basic URL format validation
@@ -169,7 +169,7 @@ def validate_connection_string(
             from urllib.parse import urlparse
 
             parsed = urlparse(connection_string)
-            if not parsed.scheme or not parsed.netloc:
+            if not parsed.analysis or not parsed.netloc:
                 raise ValidationError(
                     f"Invalid connection string format: {connection_string[:50]}..."
                 )

@@ -109,7 +109,7 @@ def test_basic_functionality():
             # Test scenario write/read
             print("\n--- Testing Scenario Management ---")
             scenario_data = {
-                "schema": "MySchema",
+                "analysis": "MyAnalysis",
                 "federation": "MyFederation",
                 "start_time": "2023-12-07T15:31:27",
                 "stop_time": "2023-12-08T15:31:27",
@@ -271,7 +271,7 @@ def test_with_federation_runner_data():
             }
             
             scenario_data = {
-                "schema": "MySchema",
+                "analysis": "MyAnalysis",
                 "federation": "MyFederation",
                 "start_time": "2023-12-07T15:31:27",
                 "stop_time": "2023-12-08T15:31:27",

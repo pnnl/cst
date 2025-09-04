@@ -306,7 +306,7 @@ class FederationConfig:
 def mytest():
     remote = False
     with_docker = False
-    federation = FederationConfig("MyTestScenario", "MyTestSchema", "MyTestFederation", with_docker)
+    federation = FederationConfig("MyTestScenario", "MyTestanalysis", "MyTestFederation", with_docker)
     f1 = federation.add_federate_config(FederateConfig("Battery", period=30))
     f2 = federation.add_federate_config(FederateConfig("EVehicle", period=30))
 

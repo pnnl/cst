@@ -23,7 +23,7 @@ DataReader classes are responsible for establishing a connection to the data sto
 The implementation of each data store technology requires consideration of how that particular technology structures data and how it manages the data on disk (or not). 
 
 ### Postgres 
-Postgres is an implementation of a traditional SQL-style database and was the first data store type implemented in CST. All data is written to a single database named "cst". Data is organized where each analysis is representated by a Postgres "scheme" with the data organized in third-form normal with a unique table for each data type. The data types of almost all columns are fixed with the final "data value" column varying by table depending on the data being stored.
+Postgres is an implementation of a traditional SQL-style database and was the first data store type implemented in CST. All data is written to a single database named "cst". Data is organized where each analysis is represented by a Postgres "scheme" with the data organized in third-form normal with a unique table for each data type. The data types of almost all columns are fixed with the final "data value" column varying by table depending on the data being stored.
 
 The PostgresDataWriter establishes a connection to the Postgres database and as necessary creates the database, schemas and tables necessary to write the data stored in one or more TSDataRecord objects. PostgresDataReader connects to the Postgres database and reads out the time-series data as specified by a few user-provided values (_e.g._ which federates, which scenario) and returns the queried value as a Pandas Dataframe.
 

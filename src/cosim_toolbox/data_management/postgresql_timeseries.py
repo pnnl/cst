@@ -73,7 +73,7 @@ class _PostgresConnectionHelper:
         if self.connection and not self.connection.closed:
             return True
         try:
-            validate_database_identifier(self.analysis_name, "schema")
+            validate_database_identifier(self.analysis_name, "analysis")
             self.connection = psycopg2.connect(
                 host=self.conn_params["host"],
                 port=self.conn_params["port"],
@@ -82,7 +82,7 @@ class _PostgresConnectionHelper:
                 password=self.conn_params["password"],
             )
             self.connection.autocommit = False
-            self._ensure_schema_exists()
+            self._ensure_analysis_exists()
             logger.info(
                 f"PostgreSQL helper connected to: {self.conn_params['host']}/{self.conn_params['database']}"
             )
@@ -106,7 +106,7 @@ class _PostgresConnectionHelper:
             logger.debug("PostgreSQL helper disconnected.")
         self.connection = None
 
-    def _ensure_schema_exists(self) -> None:
+    def _ensure_analysis_exists(self) -> None:
         """Checks to see if schema exists in current PostgresSQL database
 
         Args:
@@ -307,12 +307,12 @@ class PostgreSQLTimeSeriesWriter(TSDataWriter):
         with self.helper.connection.cursor() as cursor:
             cursor.execute(
                 sql.SQL("""
-                CREATE TABLE IF NOT EXISTS {schema}.{table} (
+                CREATE TABLE IF NOT EXISTS {analysis}.{table} (
                     id SERIAL PRIMARY KEY, real_time TIMESTAMPTZ NOT NULL, sim_time DOUBLE PRECISION NOT NULL,
                     scenario TEXT NOT NULL, federate TEXT NOT NULL, data_name TEXT NOT NULL,
                     data_value {pg_type} NOT NULL, created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
                 )""").format(
-                    schema=sql.Identifier(self.helper.analysis_name),
+                    analysis=sql.Identifier(self.helper.analysis_name),
                     table=sql.Identifier(table_suffix),
                     pg_type=sql.SQL(postgres_type),
                 )
@@ -339,10 +339,10 @@ class PostgreSQLTimeSeriesWriter(TSDataWriter):
                 idx_name = sql.Identifier(f"idx_{table_suffix}_{col}")
                 cursor.execute(
                     sql.SQL(
-                        "CREATE INDEX IF NOT EXISTS {idx} ON {schema}.{table} ({col})"
+                        "CREATE INDEX IF NOT EXISTS {idx} ON {analysis}.{table} ({col})"
                     ).format(
                         idx=idx_name,
-                        schema=sql.Identifier(self.helper.analysis_name),
+                        analysis=sql.Identifier(self.helper.analysis_name),
                         table=sql.Identifier(table_suffix),
                         col=sql.Identifier(col),
                     )

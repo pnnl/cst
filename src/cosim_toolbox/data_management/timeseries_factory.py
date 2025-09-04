@@ -25,7 +25,7 @@ def create_timeseries_manager(
                 - database (str): Database name (default: "cst")
                 - user (str): Username (default: "postgres")
                 - password (str): Password (default: "")
-                - schema_name (str): Schema name (default: "public")
+                - analysis_name (str): analysis name (default: "public")
                 - batch_size (int): Batch size for inserts (default: 1000)
 
     Returns:
@@ -62,7 +62,7 @@ def create_timeseries_manager(
                     database=database,
                     user=user or "postgres",
                     password=password or "",
-                    analysis_name=kwargs.get("schema_name", "public"),
+                    analysis_name=kwargs.get("analysis_name", "public"),
                 )
             else:
                 raise ValueError(f"Invalid PostgreSQL connection string: {location}")
@@ -74,7 +74,7 @@ def create_timeseries_manager(
                 database=kwargs.get("database", "cst"),
                 user=kwargs.get("user", "postgres"),
                 password=kwargs.get("password", ""),
-                analysis_name=kwargs.get("schema_name", "public"),
+                analysis_name=kwargs.get("analysis_name", "public"),
             )
     else:
         raise ValueError(f"Unknown backend: {backend}. Supported: csv, postgresql")

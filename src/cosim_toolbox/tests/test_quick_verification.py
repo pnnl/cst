@@ -115,7 +115,7 @@ def test_federation_runner_simulation():
         }
 
         scenario_data = {
-            "schema": "MySchema",
+            "analysis": "MyAnalysis",
             "federation": "MyFederation",
             "start_time": "2023-12-07T15:31:27",
             "stop_time": "2023-12-08T15:31:27",
@@ -139,7 +139,7 @@ def test_federation_runner_simulation():
             battery_config = federation["federation"]["Battery"]
             helics_config = battery_config["HELICS_config"]
 
-            print(f"   ✅ Scenario read: {scenario['schema']}")
+            print(f"   ✅ Scenario read: {scenario['analysis']}")
             print(f"   ✅ Federation read: {len(federation['federation'])} federates")
             print(f"   ✅ Battery config: period={helics_config['period']}")
             print(f"   ✅ Battery pubs: {len(helics_config['publications'])}")

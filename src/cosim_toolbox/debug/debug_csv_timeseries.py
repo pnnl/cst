@@ -66,7 +66,7 @@ sample_federation_data = {
 
 
 sample_scenario_data = {
-    "schema": "MySchema",
+    "analysis": "MyAnalysis",
     "federation": "MyFederation",
     "start_time": "2023-12-07T15:31:27",
     "stop_time": "2023-12-08T15:31:27",

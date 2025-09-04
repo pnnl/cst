@@ -19,4 +19,4 @@ if __name__ == "__main__":
     test_fed.run("MyScenario")
 
 
-# datalog.main('FederateLogger', 'HelicsExampleDefaultSchema', 'HelicsExampleDefault')
+# datalog.main('FederateLogger', 'HelicsExampleDefaultAnalysis', 'HelicsExampleDefault')

@@ -65,13 +65,13 @@ def write_federation_json(federation, overwrite=False):
         db.write_federation(federation.federation_name, get_federation_diction(federation), overwrite=overwrite)
 
 
-def make_scenario_diction(schema_name: str, federation_name: str, start: str, stop: str, docker: bool = False) -> dict:
+def make_scenario_diction(analysis_name: str, federation_name: str, start: str, stop: str, docker: bool = False) -> dict:
     """
     Creates a properly formatted CoSimulation Toolbox scenario document
     (dictionary), using the provided inputs.
     """
     return {
-        "schema": schema_name,
+        "analysis": analysis_name,
         "federation": federation_name,
         "start_time": start,
         "stop_time": stop,
@@ -81,7 +81,7 @@ def make_scenario_diction(schema_name: str, federation_name: str, start: str, st
 def write_scenario_json(federation, overwrite=False):
     with JSONMetadataManager("./config") as db:
         scenario = make_scenario_diction(
-            federation.schema_name,
+            federation.analysis_name,
             federation.federation_name,
             "2023-12-07T15:31:27",
             "2023-12-08T15:31:27",
@@ -93,7 +93,7 @@ def write_scenario_json(federation, overwrite=False):
 def main():
     remote = False
     with_docker = False
-    federation = FederationConfig("MyScenario", "MySchema", "MyFederation", with_docker)
+    federation = FederationConfig("MyScenario", "MyAnalysis", "MyFederation", with_docker)
 
     f1 = federation.add_federate_config(MyFederate1("Battery", period=60))
     f2 = federation.add_federate_config(MyFederate2("EVehicle", period=60))

@@ -525,7 +525,7 @@ class DBResults:
         by federate_name and data_name and data_type.
 
         Args:
-            analysis_name (str): the name of the schema to filter the query
+            analysis_name (str): the name of the analysis to filter the query
                 results by
             federate_name (str): the name of the Federate to filter the query
                 results by

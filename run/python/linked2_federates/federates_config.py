@@ -358,7 +358,7 @@ def define_match():
 def define_format():
     names = ["gld_7", "sub_7", "pypower", "localWeather"]
     federation = FederationConfig("MyLink2Scenario",
-                                  "MyLink2Schema",
+                                  "MyLink2Analysis",
                                   "MyLink2Federation",
                                   with_docker)
 

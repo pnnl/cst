@@ -99,7 +99,7 @@ class TestJSONMetadataManager(unittest.TestCase):
             }
         }
         self.sample_scenario = {
-            "schema": "TestSchema",
+            "analysis": "TestAnalysis",
             "federation": "TestFederation",
             "start_time": "2023-12-07T15:31:27",
             "stop_time": "2023-12-08T15:31:27",
@@ -511,7 +511,7 @@ class TestFederationRunnerCompatibility(unittest.TestCase):
         }
 
         self.scenario_data = {
-            "schema": "MySchema",
+            "analysis": "MyAnalysis",
             "federation": "MyFederation",
             "start_time": "2023-12-07T15:31:27",
             "stop_time": "2023-12-08T15:31:27",
@@ -551,7 +551,7 @@ class TestFederationRunnerCompatibility(unittest.TestCase):
 
             # Verify all required fields exist
             required_scenario_fields = [
-                "schema",
+                "analysis",
                 "federation",
                 "start_time",
                 "stop_time",

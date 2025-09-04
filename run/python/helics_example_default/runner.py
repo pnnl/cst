@@ -46,7 +46,7 @@ if __name__ == "__main__":
     remote = False
     with_docker = True
     _scenario_name = "HelicsExampleDefault"
-    _analysis_name = "HelicsExampleDefaultSchema"
+    _analysis_name = "HelicsExampleDefaultAnalysys"
     _federation_name = "HelicsExampleDefaultFederation"
     configurator = Configurator(_scenario_name, _analysis_name, _federation_name, docker=with_docker)
     if with_docker:

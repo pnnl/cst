@@ -29,7 +29,7 @@ class TestTimeSeriesFactory:
             database="test_db",
             user="test_user",
             password="test_pass",
-            schema_name="test_schema",
+            analysis_name="test_analysis",
         )
         assert isinstance(manager, PostgreSQLTimeSeriesManager)
         assert manager.helper.conn_params["host"] == "localhost"
@@ -37,14 +37,14 @@ class TestTimeSeriesFactory:
         assert manager.helper.conn_params["database"] == "test_db"
         assert manager.helper.conn_params["user"] == "test_user"
         assert manager.helper.conn_params["password"] == "test_pass"
-        assert manager.helper.analysis_name == "test_schema"
+        assert manager.helper.analysis_name == "test_analysis"
 
     @pytest.mark.postgres
     def test_create_postgresql_manager_by_url(self):
         """Test creating PostgreSQL manager via connection URL."""
         url = "postgresql://test_user:test_pass@localhost:5432/test_db"
         manager = create_timeseries_manager(
-            "postgresql", url, schema_name="test_schema"
+            "postgresql", url, analysis_name="test_analysis"
         )
         assert isinstance(manager, PostgreSQLTimeSeriesManager)
         assert manager.helper.conn_params["host"] == "localhost"
@@ -52,7 +52,7 @@ class TestTimeSeriesFactory:
         assert manager.helper.conn_params["database"] == "test_db"
         assert manager.helper.conn_params["user"] == "test_user"
         assert manager.helper.conn_params["password"] == "test_pass"
-        assert manager.helper.analysis_name == "test_schema"
+        assert manager.helper.analysis_name == "test_analysis"
 
     def test_invalid_backend(self):
         """Test error handling for invalid backend."""
@@ -60,7 +60,7 @@ class TestTimeSeriesFactory:
             create_timeseries_manager("invalid", "location")
 
     def test_case_insensitive_backend(self, temp_directory):
-        """Test that backend names are case insensitive."""
+        """Test that backend names are case-insensitive."""
         manager1 = create_timeseries_manager("CSV", temp_directory)
         manager2 = create_timeseries_manager("csv", temp_directory)
 
