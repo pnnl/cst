@@ -1,8 +1,7 @@
-# Copyright (c) 2024-2024 Battelle Memorial Institute
+# Copyright (c) 2022-2025 Battelle Memorial Institute
 # file: __init__.py
-""" CoSimulation Toolbox (CoSimToolbox)
-Contains the python packages for the 'cosim_toolbox'
-
+"""
+CoSim Toolbox (CST) package contains the python packages for the 'cosim_toolbox'
 """
 from os import environ
 
@@ -53,4 +52,28 @@ cst_meta_db = {
     "dbname": cst_db,
     "user": cst_user,
     "password": cst_password
+}
+
+pg_data_db = {
+    "location": cst_pg_host,
+    "port": cst_pg_port,
+    "database": cst_db,
+    "user": cst_user,
+    "password": cst_password
+}
+
+csv_data_db = {
+    "location": "./config",
+}
+
+mongo_meta_db = {
+    "location": cst_mg_host,
+    "port": cst_mg_port,
+    "database": cst_db,
+    "user": cst_user,
+    "password": cst_password
+}
+
+json_meta_db = {
+    "location": "./data"
 }

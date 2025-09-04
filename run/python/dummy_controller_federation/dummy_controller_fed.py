@@ -14,7 +14,7 @@ import json
 
 class DummyControllerFederate(Federate):
     
-    def __init__(self, fed_name="", schema="default", **kwargs):
+    def __init__(self, fed_name="", analysis="default", **kwargs):
         super().__init__(fed_name, **kwargs)
     # TDH: Add class attributes/parameters here. See federate.py for example
 

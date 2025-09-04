@@ -10,7 +10,7 @@ SCHEMA_NAME = "gld2"
 
 # Choose your backend and provide its configuration.
 # Option 1: PostgreSQL Backend
-BACKEND_TYPE = "postgresql"
+BACKEND_TYPE = "postgres"
 BACKEND_CONFIG = {
     "location": "localhost",
     "database": "copper",

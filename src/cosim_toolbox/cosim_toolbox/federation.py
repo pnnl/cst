@@ -9,10 +9,13 @@ using helicsMsg class and write it out to a federation configuration JSON.
 mitch.pelton@pnnl.gov
 """
 
+import cosim_toolbox as env
+from cosim_toolbox.dbConfigs import DBConfigs
 from cosim_toolbox.helicsConfig import HelicsPubGroup
 from cosim_toolbox.helicsConfig import HelicsSubGroup
 from cosim_toolbox.helicsConfig import HelicsEndPtGroup
 from cosim_toolbox.helicsConfig import HelicsMsg
+from data_management.factories import create_metadata_manager
 
 
 class FederateConfig:
@@ -21,14 +24,14 @@ class FederateConfig:
     # prefix for export and other commands for docker and sh
     # command for docker and sh
     # federate_type -> value | combo | message,
-    config_var = {
+    _config_var = {
         "name": "",
         "logger": True,
         "image": "None",
         "prefix": "",
         "command": "None",
         "federate_type": "combo",
-        "HELICS_config": {},
+        "HELICS_config": {}
     }
 
     def __init__(self, name: str, **kwargs):
@@ -45,7 +48,7 @@ class FederateConfig:
 
         kwargs.setdefault("terminate_on_error", True)
         helics = HelicsMsg(name, **kwargs)
-        self.helics: HelicsMsg = helics
+        self.helics:HelicsMsg = helics
 
     def unique(self) -> str:
         guid = f"id_{self._unique_id}"
@@ -53,7 +56,8 @@ class FederateConfig:
         return guid
 
     def config(self, _n: str, _v: any) -> dict:
-        """Adds key specified by first parameter with value specified
+        """
+        Adds key specified by first parameter with value specified
         by the second parameter to the federate config ("_fed_cnfg")
         attribute of this object
 
@@ -64,25 +68,25 @@ class FederateConfig:
         Returns:
             dict: Dictionary to which the new value was added.
         """
-        if HelicsMsg.verify(self.config_var, _n, _v):
+        if HelicsMsg.verify(self._config_var, _n, _v):
             self._fed_cnfg[_n] = _v
         return self._fed_cnfg
 
-    def find_output_group(self, key: str) -> (str, str):
+    def find_output_group(self, key: str) -> None | tuple:
         for name, group in self.outputs.items():
             for var in group.vars:
                 if var["key"] == key:
                     return self.name, group.name
         return None
 
-    def find_input_group(self, key: str) -> (str, str):
+    def find_input_group(self, key: str) -> None | tuple:
         for name, group in self.inputs.items():
             for var in group.vars:
                 if var["key"] == key:
                     return group.fed, group.name
         return None
 
-    def docker(self, address: int = 0):
+    def docker(self, address: int=0):
         if address > 0:
             self.helics.config("broker_address", f"10.5.0.{address}")
 
@@ -101,17 +105,19 @@ class FederateConfig:
 
 
 class FederationConfig:
-    def __init__(
-        self,
-        scenario_name: str,
-        schema_name: str,
-        federation_name: str,
-        docker: bool = False,
-    ):
+
+    def __init__(self, scenario_name: str, analysis_name: str, federation_name: str,
+                 docker: bool=False, use_meta_db: str = "mongo", use_data_db: str = "postgres"):
+
+        # use_meta_db for meta database -> mongo | json
+        # use_data_db for timeseries database -> postgres | csv
+
         self.scenario_name = scenario_name
-        self.schema_name = schema_name  # analysis
+        self.analysis_name = analysis_name   # analysis
         self.federation_name = federation_name
         self.docker = docker
+        self.use_meta_db = use_meta_db
+        self.use_data_db = use_data_db
         self.address = 2
         self.federates = {}
 
@@ -133,7 +139,7 @@ class FederationConfig:
             src_type = data_type
             if "datatype" in src_format:
                 src_type = src_format["datatype"]
-            pub_group = HelicsPubGroup(name, src_type, src_format)
+            pub_group = HelicsPubGroup(name, src_type, src_format, **kwargs)
             from_config.outputs[from_config.unique()] = pub_group
             if "des" in key_format:
                 for des_format in key_format["des"]:
@@ -141,7 +147,11 @@ class FederationConfig:
                     des_type = data_type
                     if "datatype" in des_format:
                         des_type = des_format["datatype"]
-                    sub_group = HelicsSubGroup(name, des_type, des_format)
+                    if "globl" in kwargs:
+                        kwargs.pop("globl")
+                    if "tags" in kwargs:
+                        kwargs.pop("tags")
+                    sub_group = HelicsSubGroup(name, des_type, des_format, **kwargs)
                     to_config.inputs[to_config.unique()] = sub_group
                     if "keys" not in des_format:
                         self.add_group_subs(pub_group, sub_group, des_format)
@@ -169,9 +179,7 @@ class FederationConfig:
                             found = True
                             s_fed, s_grp = sub_fed.find_input_group(sub["key"])
                             if sub_name != pub_name and grp != s_grp:
-                                miss_match.append(
-                                    f"{pub_name}, {fed}, {grp}:{sub_name}, {s_fed}, {s_grp}"
-                                )
+                                miss_match.append(f"{pub_name}, {fed}, {grp}:{sub_name}, {s_fed}, {s_grp}")
                             break
                 if not found:
                     not_found.append(pub["key"])
@@ -198,9 +206,7 @@ class FederationConfig:
                             found = True
                             p_fed, p_grp = pub_fed.find_output_group(pub["key"])
                             if sub_name != pub_name and grp != p_grp:
-                                miss_match.append(
-                                    f"{pub_name}, {fed}, {grp}:{sub_name}, {p_fed}, {p_grp}"
-                                )
+                                miss_match.append(f"{pub_name}, {fed}, {grp}:{sub_name}, {p_fed}, {p_grp}")
                             break
                 if not found:
                     not_found.append(sub["key"])
@@ -208,18 +214,17 @@ class FederationConfig:
             missing[sub_name]["Missmatch"] = miss_match
         return missing
 
-    def add_group_subs(
-        self, pub_group: HelicsPubGroup, sub_group: HelicsSubGroup, des_format: dict
-    ):
+    @staticmethod
+    def add_group_subs(pub_group:HelicsPubGroup, sub_group:HelicsSubGroup, des_format:dict):
         pubs = pub_group.vars
         for pub in pubs:
             parts = pub["key"].split("/")
             property_name = parts[-1]
             sub = sub_group.diction.copy()
-            sub["key"] = des_format["fed"] + "/" + pub["key"]
+            sub["key"] = des_format["to_fed"] + "/" + pub["key"]
             if "info" in des_format:
                 obj = parts[len(parts) - 2]
-                sub["info"] = {"object": obj, "property": property_name}
+                sub["info"] = { "object": obj, "property": property_name }
             sub_group.vars.append(sub)
 
     def add_subs(self, from_fed: str, to_fed_list: list, info: bool = False):
@@ -237,18 +242,12 @@ class FederationConfig:
                             sub["key"] = to_fed + "/" + pub["key"]
                             if info:
                                 obj = parts[len(parts) - 2]
-                                sub["info"] = {"object": obj, "property": property_name}
+                                sub["info"] = { "object": obj, "property": property_name }
                             group.vars.append(sub)
                             break
 
-    def add_pub_sub(
-        self,
-        from_fed: HelicsMsg,
-        to_fed: HelicsMsg,
-        v_name: str,
-        v_type: str,
-        v_unit: str,
-    ):
+    def add_pub_sub(self, from_fed: HelicsMsg, to_fed: HelicsMsg,
+                    v_name: str, v_type: str, v_unit: str):
         from_fed.pubs_e(from_fed.name + "/" + v_name, v_type, v_unit)
         to_fed.subs_e(from_fed.name + "/" + v_name, v_type, v_unit)
 
@@ -285,53 +284,42 @@ class FederationConfig:
                   serialized.
         """
         return {
-            "schema": self.schema_name,
+            "analysis": self.analysis_name,
             "federation": self.federation_name,
             "start_time": start_time,
             "stop_time": stop_time,
             "docker": self.docker,
         }
 
+    def write_config(self, start, stop):
+        # Use the new data_management API to write the configurations to disk.
+        # Here, we use a JSON backend, but this could easily be switched to 'mongo'.
+        with create_metadata_manager(self.use_meta_db) as mgr:
+            federation_doc = self.get_federation_document()
+            scenario_doc = self.get_scenario_document(start_time=start, stop_time=stop)
+            print(f"Writing configuration files to '{mgr.location}'...")
+            mgr.write_federation(self.federation_name, federation_doc, overwrite=True)
+            mgr.write_scenario(self.scenario_name, scenario_doc, overwrite=True)
+            print("Configuration files written successfully.")
 
-def main():
-    from data_management.factories import create_metadata_manager
 
+def mytest():
     remote = False
     with_docker = False
-    federation = FederationConfig(
-        "MyTestScenario", "MyTestSchema", "MyTestFederation", with_docker
-    )
+    federation = FederationConfig("MyTestScenario", "MyTestSchema", "MyTestFederation", with_docker)
     f1 = federation.add_federate_config(FederateConfig("Battery", period=30))
     f2 = federation.add_federate_config(FederateConfig("EVehicle", period=30))
 
     federation.add_pub_sub(f1, f2, "EV1_current", "double", "A")
     f1.config("image", "cosim-cst:latest")
-    f1.config(
-        "command", f"python3 simple_federate.py {f1.name} {federation.scenario_name}"
-    )
+    f1.config("command", f"python3 simple_federate.py {f1.name} {federation.scenario_name}")
 
     federation.add_pub_sub(f2, f1, "EV1_voltage", "double", "V")
     f2.config("image", "cosim-cst:latest")
-    f2.config(
-        "command", f"python3 simple_federate.py {f2.name} {federation.scenario_name}"
-    )
+    f2.config("command", f"python3 simple_federate.py {f2.name} {federation.scenario_name}")
+    federation.define_io()
 
-    # User chooses their backend. For this example, we use JSON in a local folder.
-    with create_metadata_manager(backend="json", location="./config_example") as mgr:
-        # 1. Get the configuration documents from the FederationConfig object.
-        fed_doc = federation.get_federation_document()
-        scen_doc = federation.get_scenario_document(
-            start_time="2023-12-07T15:31:27", stop_time="2023-12-08T15:31:27"
-        )
-
-        # 2. Use the metadata manager to write the documents.
-        mgr.write_federation(federation.federation_name, fed_doc, overwrite=True)
-        mgr.write_scenario(federation.scenario_name, scen_doc, overwrite=True)
-
-        print(
-            f"Successfully wrote federation '{federation.federation_name}' and scenario '{federation.scenario_name}' to ./config_example"
-        )
-
+    federation.write_config("2023-12-07T15:31:27", "2023-12-08T15:31:27")
 
 if __name__ == "__main__":
-    main()
+    mytest()

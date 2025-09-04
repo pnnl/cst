@@ -23,13 +23,13 @@ def open_logger():
 
 _federate_name = "Controller"
 _scenario_name = "test_DummyController"
-_schema_name = "test_DummyControllerSchema"
+_analysis_name = "test_DummyControllerAnalysis"
 
 names = ["Controller", "Market"]
 items = ["DAM_bid", "DAM_clearing_info"]
 _data_name = names[0] + "/" + items[0]
 
-qry = f"SELECT sim_time, data_value FROM {_schema_name}.HDT_STRING WHERE " \
+qry = f"SELECT sim_time, data_value FROM {_analysis_name}.HDT_STRING WHERE " \
       f"sim_time > 30 AND " \
       f"scenario = '{_scenario_name}' AND " \
       f"federate = '{_federate_name}' AND " \

@@ -27,7 +27,7 @@ def run(scenario_name):
     charg = Charger(fed_name="Charger")
     p_batt = Process(target=batt.run, args=(_scenario_name,))
     p_charg = Process(target=charg.run, args=(_scenario_name,))
-    p_log = Process(target=datalog.main, args=('FederateLogger', _schema_name, _scenario_name))
+    p_log = Process(target=datalog.main, args=('FederateLogger', _analysis_name, _scenario_name))
     print("Starting Processes...")
     # p_broker = Process(target=h.helicsCreateBroker, args=("zmq", "", f"--federates=3"))
     # p_broker.start()
@@ -46,9 +46,9 @@ if __name__ == "__main__":
     remote = False
     with_docker = True
     _scenario_name = "HelicsExampleDefault"
-    _schema_name = "HelicsExampleDefaultSchema"
+    _analysis_name = "HelicsExampleDefaultSchema"
     _federation_name = "HelicsExampleDefaultFederation"
-    configurator = Configurator(_scenario_name, _schema_name, _federation_name, docker=with_docker)
+    configurator = Configurator(_scenario_name, _analysis_name, _federation_name, docker=with_docker)
     if with_docker:
         broker_address = "10.5.0.2"
     else:
@@ -58,7 +58,7 @@ if __name__ == "__main__":
     configurator.store_federation_config(_federation_name)
     configurator.store_scenario(
         scenario_name=_scenario_name,
-        schema_name=_schema_name,
+        analysis_name=_analysis_name,
         federation_name=_federation_name,
         start="2023-12-07T15:31:27",
         stop="2023-12-08T15:31:27",

@@ -44,7 +44,7 @@ def realtime_clearing_info():
 
 class DummyMarketFederate(Federate):
     
-    def __init__(self, fed_name="", schema="default", **kwargs):
+    def __init__(self, fed_name="", analysis="default", **kwargs):
         super().__init__(fed_name, **kwargs)
         
     

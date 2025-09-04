@@ -32,7 +32,7 @@ To this end, we will be building and conducting scalability testing in Oct FY25 
 
 The CST scalability experiment will have the following parameters and values:
 
-1. Number of federates: [10, 100, 1000]
+1. Number of federates: [5, 50, 500]
 2. Number of pubs and subs per federate: [1, 10, 100]
 3. Use of endpoints: [true, false]
 4. Use of CST: [true, false]
@@ -42,78 +42,78 @@ A full factorial version of this study is as follows:
 
 | Scenario | Fed. Count | Pub Count | Endpoints | Use CST | Use Profiling |
 | -------- |----------- | --------- | --------- | ------- | ------------- |
-| 1        | 10         | 1         | false     | false   | false         |
-| 2        | 100        | 1         | false     | false   | false         |
-| 3        | 1000       | 1         | false     | false   | false         |
-| 4        | 10         | 10        | false     | false   | false         |
-| 5        | 100        | 10        | false     | false   | false         |
-| 6        | 1000       | 10        | false     | false   | false         |
-| 7        | 10         | 100       | false     | false   | false         |
-| 8        | 100        | 100       | false     | false   | false         |
-| 9        | 1000       | 100       | false     | false   | false         |
-| 10       | 10         | 1         | true      | false   | false         |
-| 11       | 100        | 1         | true      | false   | false         |
-| 12       | 1000       | 1         | true      | false   | false         |
-| 13       | 10         | 10        | true      | false   | false         |
-| 14       | 100        | 10        | true      | false   | false         |
-| 15       | 1000       | 10        | true      | false   | false         |
-| 16       | 10         | 100       | true      | false   | false         |
-| 17       | 100        | 100       | true      | false   | false         |
-| 18       | 1000       | 100       | true      | false   | false         |
-| 19       | 10         | 1         | false     | true    | false         |
-| 20       | 100        | 1         | false     | true    | false         |
-| 21       | 1000       | 1         | false     | true    | false         |
-| 22       | 10         | 10        | false     | true    | false         |
-| 23       | 100        | 10        | false     | true    | false         |
-| 24       | 1000       | 10        | false     | true    | false         |
-| 25       | 10         | 100       | false     | true    | false         |
-| 26       | 100        | 100       | false     | true    | false         |
-| 27       | 1000       | 100       | false     | true    | false         |
-| 28       | 10         | 1         | true      | true    | false         |
-| 29       | 100        | 1         | true      | true    | false         |
-| 30       | 1000       | 1         | true      | true    | false         |
-| 31       | 10         | 10        | true      | true    | false         |
-| 32       | 100        | 10        | true      | true    | false         |
-| 33       | 1000       | 10        | true      | true    | false         |
-| 34       | 10         | 100       | true      | true    | false         |
-| 35       | 100        | 100       | true      | true    | false         |
-| 36       | 1000       | 100       | true      | true    | false         |
-| 37       | 10         | 1         | false     | false   | true          |
-| 38       | 100        | 1         | false     | false   | true          |
-| 39       | 1000       | 1         | false     | false   | true          |
-| 40       | 10         | 10        | false     | false   | true          |
-| 41       | 100        | 10        | false     | false   | true          |
-| 42       | 1000       | 10        | false     | false   | true          |
-| 43       | 10         | 100       | false     | false   | true          |
-| 44       | 100        | 100       | false     | false   | true          |
-| 45       | 1000       | 100       | false     | false   | true          |
-| 46       | 10         | 1         | true      | false   | true          |
-| 47       | 100        | 1         | true      | false   | true          |
-| 48       | 1000       | 1         | true      | false   | true          |
-| 49       | 10         | 10        | true      | false   | true          |
-| 50       | 100        | 10        | true      | false   | true          |
-| 51       | 1000       | 10        | true      | false   | true          |
-| 52       | 10         | 100       | true      | false   | true          |
-| 53       | 100        | 100       | true      | false   | true          |
-| 54       | 1000       | 100       | true      | false   | true          |
-| 55       | 10         | 1         | false     | true    | true          |
-| 56       | 100        | 1         | false     | true    | true          |
-| 57       | 1000       | 1         | false     | true    | true          |
-| 58       | 10         | 10        | false     | true    | true          |
-| 59       | 100        | 10        | false     | true    | true          |
-| 60       | 1000       | 10        | false     | true    | true          |
-| 61       | 10         | 100       | false     | true    | true          |
-| 62       | 100        | 100       | false     | true    | true          |
-| 63       | 1000       | 100       | false     | true    | true          |
-| 64       | 10         | 1         | true      | true    | true          |
-| 65       | 100        | 1         | true      | true    | true          |
-| 66       | 1000       | 1         | true      | true    | true          |
-| 67       | 10         | 10        | true      | true    | true          |
-| 68       | 100        | 10        | true      | true    | true          |
-| 69       | 1000       | 10        | true      | true    | true          |
-| 70       | 10         | 100       | true      | true    | true          |
-| 71       | 100        | 100       | true      | true    | true          |
-| 72       | 1000       | 100       | true      | true    | true          |
+| 1        | 5          | 1         | false     | false   | false         |
+| 2        | 50         | 1         | false     | false   | false         |
+| 3        | 500        | 1         | false     | false   | false         |
+| 4        | 5          | 10        | false     | false   | false         |
+| 5        | 50         | 10        | false     | false   | false         |
+| 6        | 500        | 10        | false     | false   | false         |
+| 7        | 5          | 100       | false     | false   | false         |
+| 8        | 50         | 100       | false     | false   | false         |
+| 9        | 500        | 100       | false     | false   | false         |
+| 10       | 5          | 1         | true      | false   | false         |
+| 11       | 50         | 1         | true      | false   | false         |
+| 12       | 500        | 1         | true      | false   | false         |
+| 13       | 5          | 10        | true      | false   | false         |
+| 14       | 50         | 10        | true      | false   | false         |
+| 15       | 500        | 10        | true      | false   | false         |
+| 16       | 5          | 100       | true      | false   | false         |
+| 17       | 50         | 100       | true      | false   | false         |
+| 18       | 500        | 100       | true      | false   | false         |
+| 19       | 5          | 1         | false     | true    | false         |
+| 20       | 50         | 1         | false     | true    | false         |
+| 21       | 500        | 1         | false     | true    | false         |
+| 22       | 5          | 10        | false     | true    | false         |
+| 23       | 50         | 10        | false     | true    | false         |
+| 24       | 500        | 10        | false     | true    | false         |
+| 25       | 5          | 100       | false     | true    | false         |
+| 26       | 50         | 100       | false     | true    | false         |
+| 27       | 500        | 100       | false     | true    | false         |
+| 28       | 5          | 1         | true      | true    | false         |
+| 29       | 50         | 1         | true      | true    | false         |
+| 30       | 500        | 1         | true      | true    | false         |
+| 31       | 5          | 10        | true      | true    | false         |
+| 32       | 50         | 10        | true      | true    | false         |
+| 33       | 500        | 10        | true      | true    | false         |
+| 34       | 5          | 100       | true      | true    | false         |
+| 35       | 50         | 100       | true      | true    | false         |
+| 36       | 500        | 100       | true      | true    | false         |
+| 37       | 5          | 1         | false     | false   | true          |
+| 38       | 50         | 1         | false     | false   | true          |
+| 39       | 500        | 1         | false     | false   | true          |
+| 40       | 5          | 10        | false     | false   | true          |
+| 41       | 50         | 10        | false     | false   | true          |
+| 42       | 500        | 10        | false     | false   | true          |
+| 43       | 5          | 100       | false     | false   | true          |
+| 44       | 50         | 100       | false     | false   | true          |
+| 45       | 500        | 100       | false     | false   | true          |
+| 46       | 5          | 1         | true      | false   | true          |
+| 47       | 50         | 1         | true      | false   | true          |
+| 48       | 500        | 1         | true      | false   | true          |
+| 49       | 5          | 10        | true      | false   | true          |
+| 50       | 50         | 10        | true      | false   | true          |
+| 51       | 500        | 10        | true      | false   | true          |
+| 52       | 5          | 100       | true      | false   | true          |
+| 53       | 50         | 100       | true      | false   | true          |
+| 54       | 500        | 100       | true      | false   | true          |
+| 55       | 5          | 1         | false     | true    | true          |
+| 56       | 50         | 1         | false     | true    | true          |
+| 57       | 500        | 1         | false     | true    | true          |
+| 58       | 5          | 10        | false     | true    | true          |
+| 59       | 50         | 10        | false     | true    | true          |
+| 60       | 500        | 10        | false     | true    | true          |
+| 61       | 5          | 100       | false     | true    | true          |
+| 62       | 50         | 100       | false     | true    | true          |
+| 63       | 500        | 100       | false     | true    | true          |
+| 64       | 5          | 1         | true      | true    | true          |
+| 65       | 50         | 1         | true      | true    | true          |
+| 66       | 500        | 1         | true      | true    | true          |
+| 67       | 5          | 10        | true      | true    | true          |
+| 68       | 50         | 10        | true      | true    | true          |
+| 69       | 500        | 10        | true      | true    | true          |
+| 70       | 5          | 100       | true      | true    | true          |
+| 71       | 50         | 100       | true      | true    | true          |
+| 72       | 500        | 100       | true      | true    | true          |
 
 The use of profiling is a stretch goal for this effort so the bottom half of the scenarios may not be evaluated. 
 
@@ -270,7 +270,7 @@ This script is responsible for creating the artifacts of the analysis; in this c
 ## Execution
 The "cst_scalability_experiment" produced by cst_experiment_creator.py should be placed in the CST "run/python" folder where it can be launched either by a local interpreter of the Python container in CST.
 
-For scenarios where the data is logged to file and 1000 federates are running simultaneously, it may be necessary to adjust the number of open files the OS supports. In Linux this is a configurable system variable.
+For scenarios where the data is logged to file and 500  federates are running simultaneously, it may be necessary to adjust the number of open files the OS supports. In Linux this is a configurable system variable.
 
 The execution order for the entire experiment will be as follows:
 

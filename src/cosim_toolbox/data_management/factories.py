@@ -5,17 +5,18 @@ Factory functions for creating data managers.
 """
 
 # Use relative imports within the module
+import cosim_toolbox as env
 from data_management.abstractions import TimeSeriesManager, MetadataManager
 
 
 def create_timeseries_manager(
-    backend: str, location: str, **kwargs
+    backend: str, analysis: str, **kwargs
 ) -> TimeSeriesManager:
     """
     Factory function to create appropriate time-series data manager.
     Args:
-        backend (str): Backend type ("csv", "postgresql").
-        location (str): Storage location (path for CSV, host for PostgreSQL).
+        backend (str): Backend type ("csv", "postgres").
+        analysis (str): Analysis name.
         **kwargs: Backend-specific options.
 
     Returns:
@@ -25,23 +26,22 @@ def create_timeseries_manager(
     if backend == "csv":
         from data_management.csv_timeseries import CSVTimeSeriesManager
 
-        return CSVTimeSeriesManager(location=location, **kwargs)
-    elif backend in ("postgresql", "postgres"):
+        return CSVTimeSeriesManager(**env.csv_data_db, analysis_name=analysis)
+    elif backend == "postgres":
         from data_management.postgresql_timeseries import PostgreSQLTimeSeriesManager
 
-        return PostgreSQLTimeSeriesManager(location=location, **kwargs)
+        return PostgreSQLTimeSeriesManager(**env.pg_data_db, analysis_name=analysis)
     else:
         raise ValueError(
             f"Unknown time-series backend: {backend}. Supported: csv, postgresql"
         )
 
 
-def create_metadata_manager(backend: str, location: str, **kwargs) -> MetadataManager:
+def create_metadata_manager(backend: str = "mongo", **kwargs) -> MetadataManager:
     """
     Factory function to create appropriate metadata manager.
     Args:
         backend (str): Backend type ("json", "mongo").
-        location (str): Storage location (path for JSON, URI for MongoDB).
         **kwargs: Backend-specific options.
 
     Returns:
@@ -51,10 +51,12 @@ def create_metadata_manager(backend: str, location: str, **kwargs) -> MetadataMa
     if backend == "json":
         from data_management.json_metadata import JSONMetadataManager
 
-        return JSONMetadataManager(location=location, **kwargs)
-    elif backend in ("mongo", "mongodb"):
+        return JSONMetadataManager(**env.json_meta_db)
+
+    elif backend == "mongo":
         from data_management.mongo_metadata import MongoMetadataManager
 
-        return MongoMetadataManager(location=location, **kwargs)
+        return MongoMetadataManager(**env.mongo_meta_db)
+
     else:
         raise ValueError(f"Unknown metadata backend: {backend}. Supported: json, mongo")

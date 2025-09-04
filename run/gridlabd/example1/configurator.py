@@ -13,13 +13,13 @@ class Configurator(DBConfigs):
 
     def __init__(self, 
                  scenario_name: str, 
-                 schema_name: str, 
+                 analysis_name: str,
                  federation_name: str, 
                  docker: bool = False, 
                  remote: bool = False):
         super().__init__()
         self.scenario_name = scenario_name
-        self.schema_name = schema_name
+        self.analysis_name = analysis_name
         self.federation_name = federation_name
         self.docker = docker
         self.remote = remote
@@ -89,7 +89,7 @@ class Configurator(DBConfigs):
     def store_scenario(
             self, 
             scenario_name: str = None,
-            schema_name: str = None, 
+            analysis_name: str = None,
             federation_name: str = None, 
             start: str = "2023-12-07T12:00:00", 
             stop: str = "2023-12-08T12:00:00", 
@@ -97,24 +97,24 @@ class Configurator(DBConfigs):
         
         if scenario_name is None:
             scenario_name = self.scenario_name
-        if schema_name is None:
-            schema_name = self.schema_name
+        if analysis_name is None:
+            analysis_name = self.analysis_name
         if federation_name is None:
             federation_name = self.federation_name
         scenario = self.db.scenario(
-            schema_name, 
+            analysis_name,
             federation_name, 
             start,
             stop,
             docker)
         
-        self.db.remove_document(env.cst_scenarios, None, scenario_name)
+        self.db.remove_dict(env.cst_scenarios, None, scenario_name)
         self.db.add_dict(env.cst_scenarios, scenario_name, scenario)
 
     def store_federation_config(self, name:str, federation_config: dict) -> None:
         if name is None:
             name = self.federation_name
-        self.db.remove_document(env.cst_federations, None, name)
+        self.db.remove_dict(env.cst_federations, None, name)
         self.db.add_dict(env.cst_federations, name, federation_config)
 
     def get_scenario(self, name=None) -> dict:
@@ -132,9 +132,9 @@ class Configurator(DBConfigs):
         return self.db.get_dict(env.cst_federations, None, name)
     
     def list_scenarios(self) -> list:
-        return self.db.get_collection_document_names(env.cst_scenarios)
+        return self.db.get_dict_names_in_collection(env.cst_scenarios)
     
     def list_federations(self) -> list:
-        return self.db.get_collection_document_names(env.cst_federations)
+        return self.db.get_dict_names_in_collection(env.cst_federations)
 
     

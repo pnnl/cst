@@ -14,7 +14,7 @@ class TestHelicsMsg(unittest.TestCase):
 
     def setUp(self):
         self.helics_msg = HelicsMsg("test_name", period=1)
-        self.federation = FederationConfig("MyTestScenario", "MyTestSchema", "MyTestFederation", False)
+        self.federation = FederationConfig("MyTestScenario", "MyTestAnalysis", "MyTestFederation", False)
 
     def test_init(self):
         self.assertEqual(self.helics_msg._cnfg["name"], "test_name")
@@ -45,12 +45,11 @@ class TestHelicsMsg(unittest.TestCase):
     def test_add_groups(self):
         names = ["a1", "b1"]
         load = {"src": {"from_fed": names[0],
-                        "fed": "",
                         "keys": ["", "network_node"],
                         "indices": []},
-                "des": [{"to_fed": names[1],
-                         "fed": names[0],
-                         "keys": ["/", ""],
+                "des": [{"from_fed": names[0],
+                         "to_fed": names[1],
+                         "keys": ["", ""],
                          "indices": []
                          }]}
 

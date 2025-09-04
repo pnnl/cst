@@ -13,16 +13,26 @@ from enum import Enum
 import json
 
 
+class Group(Enum):
+    SUB = 'sub'
+    PUB = 'pub'
+    INP = 'inp'
+    EPT = 'ept'
+
 class Collect(Enum):
     YES = 'yes'
     NO = 'no'
     MAYBE = 'maybe'
 
 class HelicsFormatter:
-    def __init__(self, name:str, key_format: dict):
+    def __init__(self, name: str, key_format: dict, group: Group):
+        self.seperator = "/"
         self.name = name
-        self.fed = key_format["fed"]
+        self.fed = key_format["from_fed"]
+        if "output_fed" in key_format:
+             self.fed = key_format["to_fed"]
         self.format = False
+        self.group = group
         self.vars = []
         if "keys" in key_format:
             self.keys = key_format["keys"]
@@ -33,6 +43,12 @@ class HelicsFormatter:
     def format_variables(self):
         variables = []
         if self.format:
+            global_fed = ""
+            if self.group == Group.SUB:
+                global_fed = self.fed + self.seperator
+            if "global" in self.diction:
+                if self.diction["global"]:
+                    global_fed = self.fed + self.seperator
             # Multiples
             if "@@" in self.keys[0] and "##" in self.keys[0]:
                 for k in self.indices:
@@ -44,7 +60,7 @@ class HelicsFormatter:
                         key = key.replace("##", str(j))
                         obj = obj.replace("##", str(j))
                         var = self.diction.copy()
-                        var["key"] = self.fed + key + self.name
+                        var["key"] = global_fed + key + self.seperator + self.name
                         if len(obj) > 0:
                             var["info"] = {"object": obj, "property": self.name}
                         variables.append(var)
@@ -55,7 +71,7 @@ class HelicsFormatter:
                     key = key.replace("@list@", k)
                     obj = obj.replace("@list@", k)
                     var = self.diction.copy()
-                    var["key"] = self.fed + key + self.name
+                    var["key"] = global_fed + key + self.seperator + self.name
                     if len(obj) > 0:
                         var["info"] = {"object": obj, "property": self.name}
                     variables.append(var)
@@ -67,9 +83,9 @@ class HelicsFormatter:
                     obj = obj.replace("@@", k[0])
                     var = self.diction.copy()
                     if k[1]:
-                        var["key"] = self.fed + key
+                        var["key"] = global_fed + key
                     else:
-                        var["key"] = self.fed + key + self.name
+                        var["key"] = global_fed + key + self.seperator + self.name
                     if len(obj) > 0:
                         var["info"] = {"object": obj, "property": self.name}
                     variables.append(var)
@@ -82,10 +98,9 @@ class HelicsFormatter:
                         obj = obj.replace("##", str(j))
                         var = self.diction.copy()
                         if k[2]:
-                            var["key"] = self.fed + key
+                            var["key"] = global_fed + key
                         else:
-                            var["key"] = self.fed + key + self.name
-                        var["key"] = self.fed + key + self.name
+                            var["key"] = global_fed + key + self.seperator + self.name
                         if len(obj) > 0:
                             var["info"] = {"object": obj, "property": self.name}
                         variables.append(var)
@@ -94,57 +109,32 @@ class HelicsFormatter:
                 key = self.keys[0]
                 obj = self.keys[1]
                 var = self.diction.copy()
-                var["key"] = self.fed + key + self.name
+                var["key"] = global_fed + key + self.name
                 if len(obj) > 0:
                     var["info"] = {"object": obj, "property": self.name}
                 variables.append(var)
         self.vars = variables
 
-class HelicsPubGroup(HelicsFormatter):
-    def __init__(self, name: str, data_type: str, key_format: dict, **kwargs):
-        super().__init__(name, key_format)
-        self.diction = {"type": data_type}
-        # rename 'glob' to 'global' because of 'global' keyword can not be used in kwargs
-        if "globl" in kwargs:
-            kwargs["global"] = kwargs["globl"]
-            kwargs.pop("globl")
-        self.diction.update(kwargs)
-        for attr_name, attr in self.diction.items():
-            HelicsMsg.verify(HelicsMsg.pub_var, attr_name, attr)
-        self.format_variables()
-
-class HelicsSubGroup(HelicsFormatter):
-    def __init__(self, name: str, data_type: str, key_format: dict=None, **kwargs):
-        super().__init__(name, key_format)
-        self.diction = {"type": data_type}
-        self.diction.update(kwargs)
-        for attr_name, attr  in self.diction.items():
-            HelicsMsg.verify(HelicsMsg.sub_var, attr_name, attr)
-        self.format_variables()
-
-class HelicsEndPtGroup:
-    def __init__(self, name: str, key_format: dict, destination: str, des_format: dict, **kwargs):
+class HelicsEndpointFormatter:
+    def __init__(self, name: str, key_format: dict, destination: str, des_format: dict, group: Group):
+        self.seperator = "/"
         self.name = name
         self.destination = destination
-        self.fed = key_format["fed"]
+        self.fed = key_format["from_fed"]
         self.keys = key_format["keys"]
         self.indices = key_format["indices"]
-        self.fed1 = des_format["fed"]
+        self.fed1 = des_format["to_fed"]
         self.keys1 = des_format["keys"]
         self.indices1 = des_format["indices"]
-        self.diction = {}
         self.vars = []
-        # rename 'globl' to 'global' because of 'global' keyword can not be used in kwargs
-        if "globl" in kwargs:
-            kwargs["global"] = kwargs["globl"]
-            kwargs.pop("globl")
-        self.diction.update(kwargs)
-        for attr_name, attr in self.diction.items():
-            HelicsMsg.verify(HelicsMsg.end_pts, attr_name, attr)
-        self.format_endpoints()
+        self.diction = None
 
     def format_endpoints(self):
         variables = []
+        global_fed = ""
+        if "global" in self.diction:
+            if self.diction["global"]:
+                global_fed = self.fed + self.seperator
         # Multiples
         if "@@" in self.keys[0] and "##" in self.keys[0]:
             pass
@@ -159,8 +149,8 @@ class HelicsEndPtGroup:
             des = self.keys1[0]
             d_obj = self.keys1[1]
             var = self.diction.copy()
-            var["name"] = self.fed + src + self.name
-            var["destination"] = self.fed1 + des + self.destination
+            var["name"] = global_fed + src + self.name
+            var["destination"] = self.fed1 + self.seperator + des + self.destination
             if len(s_obj) > 0:
                 var["info"] = {"object": s_obj, "property": self.name}
             if len(d_obj) > 0:
@@ -168,11 +158,47 @@ class HelicsEndPtGroup:
             variables.append(var)
         self.vars = variables
 
+class HelicsPubGroup(HelicsFormatter):
+    def __init__(self, name: str, data_type: str, key_format: dict, **kwargs):
+        super().__init__(name, key_format, Group.PUB)
+        self.diction = {"type": data_type}
+        # rename 'globl' to 'global' because of 'global' keyword can not be used in kwargs
+        if "globl" in kwargs:
+            kwargs["global"] = kwargs["globl"]
+            kwargs.pop("globl")
+        self.diction.update(kwargs)
+        for attr_name, attr in self.diction.items():
+            HelicsMsg.verify(HelicsMsg._pub_var, attr_name, attr)
+        self.format_variables()
+
+class HelicsSubGroup(HelicsFormatter):
+    def __init__(self, name: str, data_type: str, key_format: dict=None, **kwargs):
+        super().__init__(name, key_format, Group.SUB)
+        self.diction = {"type": data_type}
+        self.diction.update(kwargs)
+        for attr_name, attr in self.diction.items():
+            HelicsMsg.verify(HelicsMsg._sub_var, attr_name, attr)
+        self.format_variables()
+
+class HelicsEndPtGroup(HelicsEndpointFormatter):
+    def __init__(self, name: str, key_format: dict, destination: str, des_format: dict, **kwargs):
+        super().__init__(name, key_format, destination, des_format, Group.EPT)
+        self.diction = {}
+        # rename 'globl' to 'global' because of 'global' keyword can not be used in kwargs
+        if "globl" in kwargs:
+            kwargs["global"] = kwargs["globl"]
+            kwargs.pop("globl")
+        self.diction.update(kwargs)
+        for attr_name, attr in self.diction.items():
+            HelicsMsg.verify(HelicsMsg._end_pts, attr_name, attr)
+        self.format_endpoints()
+
 class HelicsMsg:
-    """Provides a data structure for building up the HELICS configuration
+    """
+    Provides a data structure for building up the HELICS configuration
     definitions for publications and subscriptions.
     """
-    config_var = {
+    _config_var = {
         # General
         "name": "",
         "core_type": "zmq",
@@ -253,7 +279,7 @@ class HelicsMsg:
         "endpoints": [],
         "filters": [],
         "translators": []}
-    var_attr = {
+    _var_attr = {
         "key": "",
         "type": "",
         "unit": "",
@@ -271,14 +297,14 @@ class HelicsMsg:
         "only_update_on_change": False,
         "only_transmit_on_change": False,
         "info": {}}
-    pub_var = dict(var_attr)
-    pub_var.update({
+    _pub_var = dict(_var_attr)
+    _pub_var.update({
         "global": False,
         "tags": {}})
-    sub_var = dict(var_attr)
-    sub_var.update({})
-    inp_var = dict(var_attr)
-    inp_var.update({
+    _sub_var = dict(_var_attr)
+    _sub_var.update({})
+    _inp_var = dict(_var_attr)
+    _inp_var.update({
         "global": False,
         "connections": 1,
         "input_priority_location": 0,
@@ -287,7 +313,7 @@ class HelicsMsg:
         "single_connection_only": False,
         "multiple_connections_allowed": True,
         "multi_input_handling_method": "none"})
-    end_pts = {
+    _end_pts = {
         "name": "",
         "type": "",
         # endpoint destination "federate/name"
@@ -301,7 +327,7 @@ class HelicsMsg:
         "info": {},
         "tags": {}
     }
-    filters = {
+    _filters = {
         "name": "",
         # use singular for *_targets, use multiples for *Targets
         "source_targets": "",
@@ -314,7 +340,7 @@ class HelicsMsg:
             "name": "delay",
             "value": 600}
     }
-    translators = {
+    _translators = {
         "name": "",
         "type": "",
         # use singular for *_targets, use multiples for *Targets
@@ -335,7 +361,7 @@ class HelicsMsg:
 
         self._cnfg.update(kwargs)
         for attr_name, attr in self._cnfg.items():
-            HelicsMsg.verify(HelicsMsg.config_var, attr_name, attr)
+            HelicsMsg.verify(HelicsMsg._config_var, attr_name, attr)
 
         self._pubs = []
         self._subs = []
@@ -345,9 +371,9 @@ class HelicsMsg:
         self._translators = []
 
     def write_json(self) -> dict:
-        """Adds publications and subscriptions to the objects
-        "_cnfg" (configuration) attribute and returns it as a
-        dictionary.
+        """
+        Adds publications and subscriptions to the objects "_cnfg" (configuration)
+        attribute and returns it as a dictionary.
 
         Returns:
             dict: Configuration dict after adding publications and subscriptions
@@ -361,13 +387,12 @@ class HelicsMsg:
         return self._cnfg
 
     def write_file(self, _fn: str) -> None:
-        """Adds publications and subscriptions to the objects
-        "_cnfg" (configuration) attribute and writes it to the
-        specified file.
+        """
+        Adds publications and subscriptions to the objects "_cnfg" (configuration)
+        attribute and writes it to the specified file.
 
         Args:
-            _fn (str): File name (including path) to which
-            configuration will be written.
+            _fn (str): File name (including path) to which configuration will be written.
         """
         op = open(_fn, 'w', encoding='utf-8')
         json.dump(self.write_json(), op, ensure_ascii=False, indent=2)
@@ -388,9 +413,9 @@ class HelicsMsg:
             raise ValueError(f"Diction flag \'{name}\' not allowed")
 
     def config(self, _n: str, _v: any) -> dict:
-        """Adds key specified by first parameter with value specified
-        by the second parameter to the config ("_cnfg") attribute of
-        this object
+        """
+        Adds key specified by first parameter with value specified by the
+        second parameter to the config ("_cnfg") attribute of this object
 
         Args:
             _n (str): Key under which new attribute will be added
@@ -399,7 +424,7 @@ class HelicsMsg:
         Returns:
             dict: Dictionary to which the new value was added.
         """
-        if HelicsMsg.verify(self.config_var, _n, _v):
+        if HelicsMsg.verify(self._config_var, _n, _v):
             self._cnfg[_n] = _v
         return self._cnfg
 
@@ -417,11 +442,12 @@ class HelicsMsg:
     def publication(self, diction: dict, _c: Collect = None) -> None:
         if type(_c) is Collect: diction["tags"] = {"logger": _c.value}
         for name in diction.keys():
-            HelicsMsg.verify(self.pub_var, name, diction[name])
+            HelicsMsg.verify(self._pub_var, name, diction[name])
         self._pubs.append(diction)
 
     def pubs(self, _k: str, _t: str, _o: str, _p: str, _g: bool = True, _c: Collect = None) -> None:
-        """Defines a HELICS publication definition and adds it to the
+        """
+        Defines a HELICS publication definition and adds it to the
         "_pubs" attribute of this object. This API supports the
         definition of the publication "info" field which is used by
         GridLAB-D to link the publication to the GridLAB-D object. This API
@@ -432,17 +458,18 @@ class HelicsMsg:
             _t (str): HELICS data type of publication
             _o (str): HELICS "info" object name
             _p (str): HELICS "info" object property associate with the name
-            _g (bool, optional): Indicates whether publication is global in the
-            HELICS namespace. Defaults to True.
+            _g (bool, optional): Indicates whether publication is global in the HELICS namespace.
+                Defaults to True.
             _c (Collect, optional): Collect object used by the logger.
-            Defaults to None.
+                Defaults to None.
         """
         # for object and property is for internal code interface for GridLAB-D
         diction = {"global": _g, "key": _k, "type": _t, "info": {"object": _o, "property": _p}}
         self.publication(diction, _c)
 
     def pubs_n(self, _k: str, _t: str, _g: bool = True, _c: Collect = None) -> None:
-        """Defines a HELICS publication definition and adds it to the
+        """
+        Defines a HELICS publication definition and adds it to the
         "_pubs" attribute of this object. Does not include support for the
         "info" field used by GridLAB-D for HELICS configuration. Does not
         include support of the publication "unit" field.
@@ -450,10 +477,10 @@ class HelicsMsg:
         Args:
             _k (str): HELICS key (name) of publication
             _t (str): HELICS data type of publication
-            _g (bool, optional): Indicates whether publication is global in the
-            HELICS namespace. Defaults to True.
+            _g (bool, optional): Indicates whether publication is global in the HELICS namespace.
+                Defaults to True.
             _c (Collect, optional): Collect object used by the logger.
-            Defaults to None.
+                Defaults to None.
         """
         diction = {"global": _g, "key": _k, "type": _t}
         if type(_c) is Collect:
@@ -461,7 +488,8 @@ class HelicsMsg:
         self._pubs.append(diction)
 
     def pubs_e(self, _k: str, _t: str, _u: str, _g: bool = None, _c: Collect = None) -> None:
-        """Defines a HELICS publication definition and adds it to the
+        """
+        Defines a HELICS publication definition and adds it to the
         "_pubs" attribute of this object. Includes support for the
         publication "unit" field.
 
@@ -469,14 +497,15 @@ class HelicsMsg:
             _k (str): HELICS key (name) of publication
             _t (str): HELICS data type of publication
             _u (str): HELICS unit of publication
-            _g (bool, optional): Indicates whether publication is global in the
-            HELICS namespace. Defaults to True.
+            _g (bool, optional): Indicates whether publication is global in the HELICS namespace.
+                Defaults to True.
             _c (Collect, optional): Collect object used by the logger.
-            Defaults to None.
+                Defaults to None.
         """
         # for object and property is for internal code interface for EnergyPlus
         diction = {"key": _k, "type": _t, "unit": _u}
-        if type(_g) is bool: diction["global"] = _g
+        if type(_g) is bool:
+            diction["global"] = _g
         self.publication(diction, _c)
 
     def get_subs(self):
@@ -484,11 +513,12 @@ class HelicsMsg:
 
     def subscription(self, diction: dict) -> None:
         for name in diction.keys():
-            HelicsMsg.verify(self.sub_var, name, diction[name])
+            HelicsMsg.verify(self._sub_var, name, diction[name])
         self._subs.append(diction)
 
     def subs(self, _k: str, _t: str, _o: str, _p: str) -> None:
-        """Defines a HELICS subscription definition and adds it to the
+        """
+        Defines a HELICS subscription definition and adds it to the
         "_subs" attribute of this object. This API supports the
         definition of the subscription "info" field which is used by
         GridLAB-D to link the publication to the GridLAB-D object. This does
@@ -496,46 +526,46 @@ class HelicsMsg:
 
         Args:
             _k (str): HELICS key of subscription indicating which publication
-            this subscription is linked to.
+                this subscription is linked to.
             _t (str): HELICS data type of subscription
             _o (str): HELICS "info" object name
             _p (str): HELICS "info" object property associate with the name
         """
-        # for object and property is for internal code interface for GridLAB-D
         self.subscription({"key": _k, "type": _t, "info": {"object": _o, "property": _p}})
 
     def subs_n(self, _k, _t) -> None:
-        """Defines a HELICS subscription definition and adds it to the
+        """
+        Defines a HELICS subscription definition and adds it to the
         "_subs" attribute of this object. This API does not support the
         subscription "info", "required", or "type" field.
 
         Args:
             _k (str): HELICS key of subscription indicating which publication
-            this subscription is linked to.
+                this subscription is linked to.
             _t (str): HELICS data type of subscription
         """
         self._subs.append({"key": _k, "type": _t})
 
     def subs_e(self, _k: str, _t: str, _u: str, _r: bool = None) -> None:
-        """Defines a HELICS subscription definition and adds it to the
+        """
+        Defines a HELICS subscription definition and adds it to the
         "_subs" attribute of this object. This API supports the
-        definition of the subscription "info" field which is used by
-        GridLAB-D to link the subscription to the GridLAB-D object. This
-        supports the subscription "required" flag.
+        EnergyPlus to link the subscription to the EnergyPlus object. This
+        supports the subscription "connection_required" flag.
 
         Args:
             _k (str): HELICS key of subscription indicating which publication
-            this subscription is linked to.
+                this subscription is linked to.
             _t (str): HELICS data type of subscription
             _u (str): unit name
             _r (bool, optional): HELICS "required" flag. Setting this flag will
-            cause HELICS to throw an error if the HELICS subscription does not
-            connect to the publication indicated by the "key" field.
-            Defaults to None.
+                cause HELICS to throw an error if the HELICS subscription does not
+                connect to the publication indicated by the "key" field.
+                Defaults to None.
         """
-        # for object and property is for internal code interface for EnergyPlus
         diction = {"key": _k, "type": _t, "unit": _u}
-        if type(_r) is bool: diction["connection_required"] = _r
+        if type(_r) is bool:
+            diction["connection_required"] = _r
         self.subscription(diction)
 
     def end_point(self, diction: dict, _c: Collect = None) -> None:
@@ -546,12 +576,13 @@ class HelicsMsg:
             diction["name"] = diction["key"]
             diction.pop("key")
         for name in diction.keys():
-            HelicsMsg.verify(self.end_pts, name, diction[name])
+            HelicsMsg.verify(self._end_pts, name, diction[name])
         self._endpoints.append(diction)
 
     def endpt(self, _k: str, _d: list | str, _g: bool = None, _c: Collect = None) -> None:
         diction = {"name": _k, "destination": _d}
-        if type(_g) is bool: diction["global"] = _g
+        if type(_g) is bool:
+            diction["global"] = _g
         self.end_point(diction, _c)
 
     def subscribe_from_published(self, h_msg: object, varfilter: str):
@@ -560,57 +591,3 @@ class HelicsMsg:
             for v in pub_msg:
                 if varfilter in pub_msg[v].key:
                     self.subs_n(pub_msg[v].key, pub_msg[v].type)
-
-
-"""
-# filter, scale, index, regex
-# define filter for
-
-# https://mepas.pnnl.gov/FramesV1/model.stm
-# https://mepas.pnnl.gov/ACC/protocol.htm
-
-What can we learn from these cases 
-tesp_case.py
-prep_substation_dsot.py
-
-FNCS published only output 
-
-input->module->output(input)->module 
-input->module->boundary->module 
-
-Onus on module(federate) developer to read/find(subscribe) inputs 
-then manipulate the inputs and publish the outputs.
-
-gui works well because humans are matching machines and can understand context.
-
-Can we infer context, given some filter, when we want to find and subscribe published outputs.
-
-Develop a language to published 'key' into output boundary and then be able to find automagically.
-
-The output should unique and contain 'key' or 'info' for find and match.
-
-In dsot gridlabd indices are: 
-      gld_1 = federate
-      R4_12_47_1 = feeder
-      _tn_1 = transformer
-      _Low = income
-      _hse_1 = house
-      #Tair = property
-
-      "key": "R4_12_47_1_tn_1_Low_hse_1#Tair",
-      "info": {
-        "object": "R4_12_47_1_tn_1_Low_hse_1",
-        "property": "air_temperature" }
-
-      key: feeder
-      {R4_12_47_1,sd}  
-
-in energyplus indices
-      eplus_1 = federate
-      EMS Cooling Controlled Load = property
-
-      agent_1 = federate
-      cooling_setpoint_delta = property
-
-
-"""

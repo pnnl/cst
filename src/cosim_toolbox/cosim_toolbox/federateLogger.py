@@ -13,7 +13,7 @@ mitch.pelton@pnnl.gov
 
 import sys
 import logging
-import cosim_toolbox as env
+
 from cosim_toolbox.federate import Federate
 from cosim_toolbox.helicsConfig import HelicsMsg
 
@@ -23,6 +23,7 @@ logger.setLevel(logging.INFO)
 
 
 class FederateLogger(Federate):
+
     def __init__(self, fed_name: str = "logger", **kwargs):
         super().__init__(fed_name, **kwargs)
         self.fed_pubs = None
@@ -31,8 +32,13 @@ class FederateLogger(Federate):
         # save possibilities yes, no, maybe
         self.collect = "maybe"
 
-    def connect_to_helics_config(self) -> None:
-        """Sets a few class attributes related to HELICS configuration.
+        # uncomment debug, clears analysis
+        # which means all scenarios are gone in that analysis
+        # self.dl.drop_analysis(self.analysis_name)
+
+    def get_helics_config(self) -> None:
+        """
+        Sets a few class attributes related to HELICS configuration.
 
         Also determines which publications need to be pushed into the
         time-series database.
@@ -70,9 +76,7 @@ class FederateLogger(Federate):
                 config = self.federation[fed]["HELICS_config"]
                 fed_collect = "maybe"
                 if self.federation[fed].get("tags"):
-                    fed_collect = self.federation[fed]["tags"].get(
-                        "logger", fed_collect
-                    )
+                    fed_collect = self.federation[fed]["tags"].get("logger", fed_collect)
                 logger.debug("fed_collect -> " + fed_collect)
 
                 if "publications" in config.keys():
@@ -113,16 +117,17 @@ class FederateLogger(Federate):
             t1.config("broker_address", "10.5.0.2")
         self.config = t1.config("subscriptions", publications)
 
-        endpoints = [{"name": self.federate_name + "/logger_endpoint", "global": True}]
-        filters = [
-            {
+        endpoints = [{
+                "name": self.federate_name + "/logger_endpoint",
+                "global": True
+            }]
+        filters = [{
                 "name": "logger_filter",
                 "cloning": True,
                 "operation": "clone",
                 "source_targets": source_targets,
-                "delivery": self.federate_name + "/logger_endpoint",
-            }
-        ]
+                "delivery": self.federate_name + "/logger_endpoint"
+            }]
         self.config = t1.config("endpoints", endpoints)
         self.config = t1.config("filters", filters)
         logger.debug(f"Subscribed pubs {publications}")
@@ -168,24 +173,19 @@ class FederateLogger(Federate):
                 )
 
 
-def main(federate_name: str, scheme_name: str, scenario_name: str) -> None:
-    fed_logger = FederateLogger(
-        fed_name=federate_name,
-        metadata_config=env.cst_default_mongo_setup,
-        timeseries_config=env.cst_default_postgres_setup,
-    )
-    fed_logger.run(scenario_name)
-
+def main(federate_name: str, scenario_name: str, use_meta_db: str ="mongo", use_data_db: str ="postgres") -> None:
+    fed_logger = FederateLogger(federate_name)
+    fed_logger.run(scenario_name, use_meta_db, use_data_db)
     del fed_logger
 
 
 if __name__ == "__main__":
-    federate_name = "logger"
-    scenario_name = "MyScenario"
-    if len(sys.argv) > 2:
-        federate_name = sys.argv[1]
-        scenario_name = sys.argv[2]
-    main(federate_name=federate_name, scheme_name="", scenario_name=scenario_name)
-    # else:
-    #     # Added a simple usage message for clarity.
-    #     print("Usage: python FederateLogger.py <federate_name> <scenario_name>")
+    if len(sys.argv) > 4:
+        f_name = sys.argv[1]
+        s_name = sys.argv[2]
+        meta_db = sys.argv[3]
+        data_db = sys.argv[4]
+        main(f_name, s_name, meta_db, data_db)
+    else:
+        # Added a simple usage message for clarity.
+        print("Usage: python FederateLogger.py <federate_name> <scenario_name> <meta_db> <data_db>")

@@ -41,7 +41,7 @@ def validate_name(name: str, context: str = "name", max_length: int = 255) -> No
         )
 
     # Check for filesystem/database unsafe characters
-    if re.search(r'[<>:"/\\|?*\x00-\x1f]', name):
+    if re.search(r'[<>:"\\|?*\x00-\x1f]', name):
         raise ValidationError(
             f"{context.title()} name contains invalid characters: {name}"
         )

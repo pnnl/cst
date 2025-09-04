@@ -17,7 +17,7 @@ source ./docker/config.sh
 
 printf "Stop existing running stack...\n"
 cd $CID_ROOT/scripts/stack
-./stop_cu.sh
+./stop_db.sh
 docker network prune -f
 
 # Function to download images, delete existing local tags, and re-tag downloaded images

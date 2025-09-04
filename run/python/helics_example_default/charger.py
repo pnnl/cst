@@ -92,16 +92,25 @@ def get_new_battery(numBattery):
 
 
 class Charger(Federate):
-    # def __init__(self, fed_name="Charger", schema="default", **kwargs):
-    #     super().__init__(fed_name, **kwargs)
-    #     scenario_name = kwargs.get("scenario_name", "HelicsExampleDefault")
-    #     print(f"scenario_name={scenario_name}")
-    #     self.create_federate(scenario_name)
-    #     print("Scenario:")
-    #     print(self.scenario)
-    #     print("config")
-    #     print(self.config)
-    
+
+    def __init__(
+            self,
+            fed_name: str = "",
+            *,
+            debug: bool = True,
+    ):
+        super().__init__(fed_name, null, debug)
+        self.charging_current = None
+        self.power = None
+        self.time_sim = None
+        self.current_soc = None
+        self.charging_voltage = None
+        self.EVlist = None
+        self.numLvl3 = None
+        self.numLvl2 = None
+        self.numLvl1 = None
+        self.charge_rate = None
+
     def on_start(self) -> None:
         logger.debug("~~~~~~~~~~~~ on_start ~~~~~~~~~~~~")
         logger.debug(self.hfed.name)
@@ -113,7 +122,7 @@ class Charger(Federate):
         #   federate.
         self.numLvl1, self.numLvl2, self.numLvl3, self.EVlist = get_new_EV(self.hfed.n_publications)
         self.charging_voltage = calc_charging_voltage(self.EVlist)
-        self.currentsoc = {}
+        self.current_soc = {}
 
         # Data collection lists
         self.time_sim = []
@@ -171,11 +180,6 @@ class Charger(Federate):
         logger.debug("~~~~~~~~~~~~ data_to_federation ~~~~~~~~~~~~")
         logger.debug(json.dumps(self.data_to_federation, indent=4))
 
-
-    def run(self, scenario_name: str) -> None:
-        self.create_federate(scenario_name)
-        self.run_cosim_loop()
-        self.destroy_federate()
 
 if __name__ == "__main__":
     _scenario_name = "HelicsExampleDefault"

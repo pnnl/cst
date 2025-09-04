@@ -11,8 +11,8 @@ if __name__ == "__main__":
 
     test_fed = FederateLogger(
         "logger",
-        use_mdb=False,
-        use_pdb=False,
+        use_meta_db="json",
+        use_data_db="csv",
         metadata_location=metadata_location,
         timeseries_location=timeseries_location,
     )
