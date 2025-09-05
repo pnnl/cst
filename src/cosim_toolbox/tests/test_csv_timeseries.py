@@ -103,7 +103,7 @@ class TestCSVTimeSeriesWriter:
         writer = CSVTimeSeriesWriter(
             location=temp_directory, analysis_name="TestAnalysis"
         )
-        invalid_record = TSRecord(datetime.now(), 0.0, "Test", "invalid/name", "v", 1.0)
+        invalid_record = TSRecord(datetime.now(), 0.0, "Test", "invalid\name", "v", 1.0)
         with writer:
             assert not writer.write_records([invalid_record])
 

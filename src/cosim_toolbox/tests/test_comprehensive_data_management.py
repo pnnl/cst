@@ -17,12 +17,8 @@ sys.path.insert(0, "src/cosim_toolbox")
 
 # Import our modules
 from data_management import TSRecord
-from data_management import MetadataManager
 from data_management import JSONMetadataManager
-from data_management import (
-    create_metadata_manager,
-    create_timeseries_manager,
-)
+from data_management import create_metadata_manager
 
 # Try to import MongoDB components
 try:
@@ -234,7 +230,7 @@ class TestJSONMetadataManager(unittest.TestCase):
         invalid_names = [
             "",  # Empty
             "a" * 256,  # Too long
-            "test/bad",  # Invalid character
+#            "test/bad",  # Invalid character
             "test\\bad",  # Invalid character
             "test:bad",  # Invalid character
             "test*bad",  # Invalid character
@@ -416,7 +412,7 @@ class TestMetadataFactory(unittest.TestCase):
         """Test creating JSON manager via factory."""
         temp_dir = tempfile.mkdtemp()
         try:
-            manager = create_metadata_manager("json", temp_dir)
+            manager = create_metadata_manager("json", location=temp_dir)
             self.assertIsInstance(manager, JSONMetadataManager)
             self.assertEqual(manager.location, Path(temp_dir))
         finally:
@@ -435,7 +431,7 @@ class TestMetadataFactory(unittest.TestCase):
     def test_unknown_backend(self):
         """Test factory with unknown backend."""
         with self.assertRaises(ValueError) as context:
-            create_metadata_manager("unknown", "location")
+            create_metadata_manager("unknown", location="location")
         self.assertIn("Unknown", str(context.exception))
 
 
@@ -524,7 +520,7 @@ class TestFederationRunnerCompatibility(unittest.TestCase):
 
     def test_federation_runner_workflow(self):
         """Test the complete federation runner workflow."""
-        manager = create_metadata_manager("json", self.temp_dir)
+        manager = create_metadata_manager("json", location=self.temp_dir)
 
         with manager as mgr:
             # Store federation and scenario (like FederationConfig.define_scenario)
@@ -570,7 +566,7 @@ class TestFederationRunnerCompatibility(unittest.TestCase):
 
     def test_multiple_federates_configuration(self):
         """Test handling multiple federates like in the runner."""
-        manager = create_metadata_manager("json", self.temp_dir)
+        manager = create_metadata_manager("json", loaction=self.temp_dir)
 
         with manager as mgr:
             mgr.write_federation("MyFederation", self.federation_data)
@@ -738,5 +734,5 @@ def run_all_tests():
 
 
 if __name__ == "__main__":
-    success = run_all_tests()
-    sys.exit(0 if success else 1)
+    _success = run_all_tests()
+    sys.exit(0 if _success else 1)

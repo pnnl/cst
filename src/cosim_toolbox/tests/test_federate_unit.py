@@ -127,11 +127,12 @@ class MockDBConfigs:
             }
         }
 
-    def get_dict(self, test_scenario, object_id, dict_name):
-        if test_scenario == "scenarios":
+    def get_dict(self, test_dict, object_id, dict_name):
+        if test_dict == "scenarios":
             return self.scenario_dict
-        if test_scenario == "federations":
+        if test_dict == "federations":
             return self.federation_dict
+        return {}
 
 
 @patch('helics.helicsCreateCombinationFederateFromConfig')

@@ -47,15 +47,24 @@ def create_metadata_manager(backend: str = "mongo", **kwargs) -> MetadataManager
     Returns:
         MetadataManger: Manager for writing data with the specified backend
     """
+
     backend = backend.lower()
     if backend == "json":
         from data_management.json_metadata import JSONMetadataManager
 
+        # assign kwargs to backend option
+        for key, value in kwargs.items():
+            if key in env.json_meta_db:
+                env.json_meta_db[key] = value
         return JSONMetadataManager(**env.json_meta_db)
 
     elif backend == "mongo":
         from data_management.mongo_metadata import MongoMetadataManager
 
+        # assign kwargs to backend option
+        for key, value in kwargs.items():
+            if key in env.mongo_meta_db:
+                env.mongo_meta_db[key] = value
         return MongoMetadataManager(**env.mongo_meta_db)
 
     else:

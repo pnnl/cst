@@ -38,17 +38,31 @@ cst_postgres_db = environ.get("CST_POSTGRES_DB", cst_db)
 cst_federations: str = "federations"
 cst_scenarios: str = "scenarios"
 
-cst_data_db = {
-    "host": cst_pg_host,
-    "port": cst_pg_port,
+# Database connection strings for metadata
+cst_meta_db = {
+    "host": cst_mg_host,
+    "port": cst_mg_port,
     "dbname": cst_db,
     "user": cst_user,
     "password": cst_password
 }
 
-cst_meta_db = {
-    "host": cst_mg_host,
+mongo_meta_db = {
+    "location": cst_mg_host,
     "port": cst_mg_port,
+    "database": cst_db,
+    "user": cst_user,
+    "password": cst_password
+}
+
+json_meta_db = {
+    "location": "./data"
+}
+
+# Database connection strings for data
+cst_data_db = {
+    "host": cst_pg_host,
+    "port": cst_pg_port,
     "dbname": cst_db,
     "user": cst_user,
     "password": cst_password
@@ -64,16 +78,4 @@ pg_data_db = {
 
 csv_data_db = {
     "location": "./config",
-}
-
-mongo_meta_db = {
-    "location": cst_mg_host,
-    "port": cst_mg_port,
-    "database": cst_db,
-    "user": cst_user,
-    "password": cst_password
-}
-
-json_meta_db = {
-    "location": "./data"
 }

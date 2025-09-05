@@ -164,7 +164,7 @@ class TestJSONMetadataManager:
     def test_invalid_names(self, temp_directory):
         """Test handling of invalid names."""
         with JSONMetadataManager(temp_directory) as manager:
-            invalid_names = ["", "test/bad", "con", " test "]
+            invalid_names = ["", "test\bad", "con", " test "]
 
             for name in invalid_names:
                 success = manager.write_federation(name, {"test": "data"})

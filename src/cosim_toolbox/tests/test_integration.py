@@ -11,7 +11,7 @@ class TestIntegration:
     
     def test_federation_runner_workflow_json(self, temp_directory, sample_federation_data, sample_scenario_data):
         """Test the complete workflow similar to federation runner using JSON."""
-        manager = create_metadata_manager("json", temp_directory)
+        manager = create_metadata_manager("json", location=temp_directory)
         
         with manager:
             # Step 1: Create federation configuration (like FederationConfig.define_scenario)
@@ -62,7 +62,7 @@ class TestIntegration:
     @pytest.mark.mongo
     def test_federation_runner_workflow_mongo(self, sample_federation_data, sample_scenario_data):
         """Test the complete workflow using MongoDB."""
-        manager = create_metadata_manager("mongo", "mongodb://localhost:27017", database="test_integration")
+        manager = create_metadata_manager("mongo", location="mongodb://localhost:27017", database="test_integration")
         
         try:
             with manager:
@@ -88,7 +88,7 @@ class TestIntegration:
     def test_backend_compatibility(self, temp_directory, sample_federation_data, sample_scenario_data):
         """Test that data can be moved between backends."""
         # Create data with JSON
-        json_manager = create_metadata_manager("json", temp_directory)
+        json_manager = create_metadata_manager("json", location=temp_directory)
         
         with json_manager:
             json_manager.write_federation("TestFed", sample_federation_data)
@@ -124,7 +124,7 @@ class TestIntegration:
     
     def test_custom_collections_workflow(self, temp_directory):
         """Test workflow with custom collections."""
-        manager = create_metadata_manager("json", temp_directory)
+        manager = create_metadata_manager("json", location=temp_directory)
         
         with manager:
             # Create electrical configuration

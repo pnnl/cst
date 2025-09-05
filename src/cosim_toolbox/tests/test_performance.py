@@ -12,7 +12,7 @@ class TestPerformance:
 
     def test_json_write_performance(self, temp_directory):
         """Test JSON write performance."""
-        manager = create_metadata_manager("json", temp_directory)
+        manager = create_metadata_manager("json", location=temp_directory)
 
         test_data = {"test": "data", "numbers": list(range(100))}
 
@@ -30,7 +30,7 @@ class TestPerformance:
 
     def test_json_read_performance(self, temp_directory):
         """Test JSON read performance."""
-        manager = create_metadata_manager("json", temp_directory)
+        manager = create_metadata_manager("json", location=temp_directory)
 
         test_data = {"test": "data", "numbers": list(range(100))}
 
@@ -53,7 +53,7 @@ class TestPerformance:
 
     def test_json_list_performance(self, temp_directory):
         """Test JSON list performance."""
-        manager = create_metadata_manager("json", temp_directory)
+        manager = create_metadata_manager("json", location=temp_directory)
 
         test_data = {"test": "data"}
 
