@@ -9,13 +9,10 @@ using helicsMsg class and write it out to a federation configuration JSON.
 mitch.pelton@pnnl.gov
 """
 
-import cosim_toolbox as env
-from cosim_toolbox.dbConfigs import DBConfigs
 from cosim_toolbox.helicsConfig import HelicsPubGroup
 from cosim_toolbox.helicsConfig import HelicsSubGroup
-from cosim_toolbox.helicsConfig import HelicsEndPtGroup
 from cosim_toolbox.helicsConfig import HelicsMsg
-from data_management.factories import create_metadata_manager
+from cosim_toolbox.dbms import create_metadata_manager
 
 
 class FederateConfig:

@@ -10,8 +10,8 @@ from pathlib import Path
 import sys
 sys.path.insert(0, 'src/cosim_toolbox')
 
-from data_management import TSRecord
-from data_management import JSONMetadataManager
+from cosim_toolbox.dbms import TSRecord
+from cosim_toolbox.dbms import JSONMetadataManager
 
 
 def test_basic_functionality():

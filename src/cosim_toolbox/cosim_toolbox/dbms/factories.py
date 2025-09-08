@@ -6,12 +6,10 @@ Factory functions for creating data managers.
 
 # Use relative imports within the module
 import cosim_toolbox as env
-from data_management.abstractions import TimeSeriesManager, MetadataManager
+from .abstractions import TimeSeriesManager, MetadataManager
 
 
-def create_timeseries_manager(
-    backend: str, analysis: str, **kwargs
-) -> TimeSeriesManager:
+def create_timeseries_manager(backend: str="postgres", analysis: str="default", **kwargs) -> TimeSeriesManager:
     """
     Factory function to create appropriate time-series data manager.
     Args:
@@ -24,20 +22,28 @@ def create_timeseries_manager(
     """
     backend = backend.lower()
     if backend == "csv":
-        from data_management.csv_timeseries import CSVTimeSeriesManager
+        from cosim_toolbox.dbms import CSVTimeSeriesManager
 
+        # assign kwargs to backend option
+        for key, value in kwargs.items():
+            if key in env.csv_data_db:
+                env.csv_data_db[key] = value
         return CSVTimeSeriesManager(**env.csv_data_db, analysis_name=analysis)
     elif backend == "postgres":
-        from data_management.postgresql_timeseries import PostgreSQLTimeSeriesManager
+        from cosim_toolbox.dbms import PostgreSQLTimeSeriesManager
 
+        # assign kwargs to backend option
+        for key, value in kwargs.items():
+            if key in env.pg_data_db:
+                env.pg_data_db[key] = value
         return PostgreSQLTimeSeriesManager(**env.pg_data_db, analysis_name=analysis)
     else:
         raise ValueError(
-            f"Unknown time-series backend: {backend}. Supported: csv, postgresql"
+            f"Unknown time-series backend: {backend}. Supported: csv, postgres"
         )
 
 
-def create_metadata_manager(backend: str = "mongo", **kwargs) -> MetadataManager:
+def create_metadata_manager(backend: str="mongo", **kwargs) -> MetadataManager:
     """
     Factory function to create appropriate metadata manager.
     Args:
@@ -50,7 +56,7 @@ def create_metadata_manager(backend: str = "mongo", **kwargs) -> MetadataManager
 
     backend = backend.lower()
     if backend == "json":
-        from data_management.json_metadata import JSONMetadataManager
+        from cosim_toolbox.dbms import JSONMetadataManager
 
         # assign kwargs to backend option
         for key, value in kwargs.items():
@@ -59,7 +65,7 @@ def create_metadata_manager(backend: str = "mongo", **kwargs) -> MetadataManager
         return JSONMetadataManager(**env.json_meta_db)
 
     elif backend == "mongo":
-        from data_management.mongo_metadata import MongoMetadataManager
+        from cosim_toolbox.dbms import MongoMetadataManager
 
         # assign kwargs to backend option
         for key, value in kwargs.items():

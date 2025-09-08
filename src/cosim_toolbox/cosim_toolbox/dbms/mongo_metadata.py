@@ -12,22 +12,14 @@ try:
     from pymongo import MongoClient
     from pymongo.database import Database
     from pymongo.collection import Collection, UpdateResult, InsertOneResult
-    from pymongo.errors import (
-        ConnectionFailure,
-        ServerSelectionTimeoutError,
-        PyMongoError,
-    )
+    from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError, PyMongoError
 
     PYMONGO_AVAILABLE = True
 except ImportError:
     PYMONGO_AVAILABLE = False
 
-from data_management.abstractions import (
-    MDDataWriter,
-    MDDataReader,
-    MDDataManager,
-)
-from data_management.validation import validate_name, ValidationError, safe_name_log
+from .abstractions import MDDataWriter, MDDataReader, MDDataManager
+from .validation import validate_name, ValidationError, safe_name_log
 
 logger = logging.getLogger(__name__)
 
@@ -91,9 +83,6 @@ class _MongoConnectionHelper:
     def connect(self) -> bool:
         """Establishes connection to the MongoDB server.
         
-        Args: 
-            None
-
         Returns:
             bool: Flag indicating success of connection to MongoDB
         """
@@ -126,9 +115,6 @@ class _MongoConnectionHelper:
 
     def disconnect(self) -> None:
         """Closes the connection to the MongoDB server.
-        
-        Args:
-            None
         
         Returns:
             None
@@ -189,9 +175,6 @@ class MongoMetadataWriter(MDDataWriter):
     def connect(self) -> bool:
         """Connects to the database, creating the connection if owned.
         
-        Args:
-            None
-
         Returns:
             bool: Flag indicating successful connection to the Mongo database
         """
@@ -208,9 +191,6 @@ class MongoMetadataWriter(MDDataWriter):
     def disconnect(self) -> None:
         """Disconnects from the database if the connection is owned.
         
-        Args:
-            None
-
         Returns:
             None
         """
@@ -241,9 +221,9 @@ class MongoMetadataWriter(MDDataWriter):
         """Write scenario metadata to MongoDB
 
         Args:
+            scenario_data:
             name (str): Name of scenario
-            federation_data (Dict[str, Any]): scenario metadata
-            overwrite (bool, optional): Set flag to overwrite any existing 
+            overwrite (bool, optional): Set flag to overwrite any existing
                 metadata. Defaults to False.
 
         Returns:
@@ -357,9 +337,6 @@ class MongoMetadataReader(MDDataReader):
     def connect(self) -> bool:
         """Connect to MongoDB
 
-        Args:
-            None
-
         Returns:
             bool: Flag indicating database connection has been established
         """
@@ -374,9 +351,6 @@ class MongoMetadataReader(MDDataReader):
     def disconnect(self) -> None:
         """Disconnects from MongoDB
 
-        Args:
-            None
-        
         Returns:
             None
         """
@@ -453,9 +427,6 @@ class MongoMetadataReader(MDDataReader):
     def list_federations(self) -> List[str]:
         """Produces a list of federations stored in the metadata store
 
-        Args:
-            None
-
         Returns:
             List[str]: list of federations
         """
@@ -463,9 +434,6 @@ class MongoMetadataReader(MDDataReader):
 
     def list_scenarios(self) -> List[str]:
         """Produces a list of scenarios stored in the metadata store
-
-        Args:
-            None
 
         Returns:
             List[str]: list of scenarios
@@ -503,10 +471,7 @@ class MongoMetadataReader(MDDataReader):
             return []
 
     def list_custom_collections(self) -> List[str]:
-        """Lists custom colletion names in metadata store
-
-        Args:
-            None
+        """Lists custom collection names in metadata store
 
         Returns:
             List[str]: List of collection names in metadata store
@@ -554,9 +519,6 @@ class MongoMetadataManager(MDDataManager):
     def connect(self) -> bool:
         """Establish connection for both reader and writer to MongoDB.
         
-        Args:
-            None
-
         Returns:
             bool: Flag indicating that writer and reader are connected
         """
@@ -572,9 +534,6 @@ class MongoMetadataManager(MDDataManager):
     def disconnect(self) -> None:
         """Close connection for both reader and writer to MongoDB.
         
-        Args:
-            None
-
         Returns:
             None
         """
@@ -660,7 +619,7 @@ class MongoMetadataManager(MDDataManager):
         """Checks to see if federation metadata exists in metadata store
 
         Args:
-            name (str): Name of federation metadata to check for existance
+            name (str): Name of federation metadata to check for existence
 
         Returns:
             bool: Flag indicating whether federation metadata exists in
@@ -672,7 +631,7 @@ class MongoMetadataManager(MDDataManager):
         """Checks to see if scenario metadata exists in metadata store
 
         Args:
-            name (str): Name of scenario metadata to check for existance
+            name (str): Name of scenario metadata to check for existence
 
         Returns:
             bool: Flag indicating whether scenario metadata exists in
@@ -685,11 +644,11 @@ class MongoMetadataManager(MDDataManager):
 
         Args:
             collection_type (str): Collection type name where metadata
-                is being checked for existance.
-            name (str): Metadata name whose existance is being checked.
+                is being checked for existence.
+            name (str): Metadata name whose existence is being checked.
 
         Returns:
-            bool: Flag indicating the existance of the named metadata
+            bool: Flag indicating the existence of the named metadata
         """
         if not self._is_connected:
             return False
@@ -698,9 +657,6 @@ class MongoMetadataManager(MDDataManager):
 
     def get_database_stats(self) -> Dict[str, Any]:
         """Gets MongoDB stats
-
-        Args:
-            None
 
         Returns:
             dict: MongoDB database statistics

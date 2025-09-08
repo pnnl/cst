@@ -3,7 +3,7 @@ Integration tests for the complete data management system.
 """
 
 import pytest
-from data_management import create_metadata_manager
+from cosim_toolbox.dbms import create_metadata_manager
 
 
 class TestIntegration:

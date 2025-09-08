@@ -3,7 +3,7 @@ import logging
 import subprocess
 
 import cosim_toolbox as env
-from data_management.factories import create_metadata_manager
+from cosim_toolbox.dbms import create_metadata_manager
 
 logger = logging.getLogger(__name__)
 

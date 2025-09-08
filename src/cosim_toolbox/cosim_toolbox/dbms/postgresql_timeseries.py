@@ -21,13 +21,8 @@ try:
 except ImportError:
     PSYCOPG2_AVAILABLE = False
 
-from data_management.abstractions import (
-    TSDataReader,
-    TSDataManager,
-    TSDataWriter,
-    TSRecord,
-)
-from data_management.validation import ValidationError, validate_database_identifier
+from .abstractions import TSDataReader, TSDataManager, TSDataWriter, TSRecord
+from .validation import ValidationError, validate_database_identifier
 
 logger = logging.getLogger(__name__)
 
@@ -64,11 +59,8 @@ class _PostgresConnectionHelper:
     def connect(self) -> bool:
         """Establishes and validates the PostgreSQL connection.
         
-        Args:
-            None
-
         Returns:
-            bool: Flag indicating success of connection to PostgresSQL
+            bool: Flag indicating success of connection to PostgreSQL
         """
         if self.connection and not self.connection.closed:
             return True
@@ -95,9 +87,6 @@ class _PostgresConnectionHelper:
     def disconnect(self) -> None:
         """Closes the PostgreSQL connection.
         
-        Args:
-            None
-
         Returns:
             None
         """
@@ -107,7 +96,7 @@ class _PostgresConnectionHelper:
         self.connection = None
 
     def _ensure_analysis_exists(self) -> None:
-        """Checks to see if schema exists in current PostgresSQL database
+        """Checks to see if schema exists in current PostgreSQL database
 
         Args:
             None
@@ -163,10 +152,10 @@ class _PostgresConnectionHelper:
         """Identifies the data type of the passed in value
 
         Args:
-            value (Any): Value's whose data type is being determined
+            value (Any): The value whose data type is being determined
 
         Returns:
-            Tuple[str, str]: (CST data type, equivalet PostgresSQL data type)
+            Tuple[str, str]: (CST data type, equivalent PostgreSQL data type)
         """
         if isinstance(value, bool):
             return ("hdt_boolean", "BOOLEAN")
@@ -181,13 +170,13 @@ class _PostgresConnectionHelper:
         return ("hdt_string", "TEXT")
 
     def format_value_for_db(self, value: Any) -> Any:
-        """Formats passed in value for writing to PostgresSQL
+        """Formats passed in value for writing to PostgreSQL
 
         Args:
             value (Any): value to be formatted
 
         Returns:
-            Any: Formatted data for PostgresSQL
+            Any: Formatted data for PostgreSQL
         """
         if isinstance(value, (list, tuple)):
             return json.dumps(value)
@@ -196,12 +185,12 @@ class _PostgresConnectionHelper:
         return value
 
     def parse_value_from_db(self, value: Any, table_suffix: str) -> Any:
-        """Formats read data from PostgresSQL into Python data types
+        """Formats read data from PostgreSQL into Python data types
 
         Only used to handle "hdt_complex", "hdt_vector", "hdt_complex_vector".
 
         Args:
-            value (Any): Data read from PostgresSQL database
+            value (Any): Data read from PostgreSQL database
             table_suffix (str): CST data type of data 
 
         Returns:
@@ -257,11 +246,8 @@ class PostgreSQLTimeSeriesWriter(TSDataWriter):
             )
 
     def connect(self) -> bool:
-        """Establishes connection to the PostgresSQL server.
+        """Establishes connection to the PostgreSQL server.
         
-        Args: 
-            None
-
         Returns:
             bool: Flag indicating success of connection to MongoDB
         """
@@ -277,10 +263,7 @@ class PostgreSQLTimeSeriesWriter(TSDataWriter):
         return False
 
     def disconnect(self) -> None:
-        """Closes the connection to the PostgresSQL server.
-        
-        Args:
-            None
+        """Closes the connection to the PostgreSQL server.
         
         Returns:
             None
@@ -291,7 +274,7 @@ class PostgreSQLTimeSeriesWriter(TSDataWriter):
         self._table_cache.clear()
 
     def _ensure_table_exists(self, table_suffix: str, postgres_type: str) -> None:
-        """ Checks to see specified PostgresSQL table exists
+        """ Checks to see specified PostgreSQL table exists
 
         Args:
             table_suffix (str): **TODO**
@@ -351,14 +334,14 @@ class PostgreSQLTimeSeriesWriter(TSDataWriter):
         self._table_cache.add(table_key)
 
     def write_records(self, records: List[TSRecord]) -> bool:
-        """Writes records (rows) to PostgresSQL database
+        """Writes records (rows) to PostgreSQL database
 
         Args:
             records (List[TSRecord]): data to be written to database
 
         Returns:
             bool: Flag indicating data was successfully written to
-                PostgresSQL database.
+                PostgreSQL database.
         """
         if not self._is_connected:
             logger.error("PostgreSQL writer not connected.")
@@ -439,10 +422,10 @@ class PostgreSQLTimeSeriesReader(TSDataReader):
             )
 
     def connect(self) -> bool:
-        """Establishes connection to the PostgresSQL server.
+        """Establishes connection to the PostgreSQL server.
 
         Returns:
-            bool: Flag indicating successful connection to the PostgresSQL
+            bool: Flag indicating successful connection to the PostgreSQL
                 database
         """
         if self._owns_connection:
@@ -457,10 +440,7 @@ class PostgreSQLTimeSeriesReader(TSDataReader):
         return False
 
     def disconnect(self) -> None:
-        """Closes the connection to the PostgresSQL server.
-        
-        Args:
-            None
+        """Closes the connection to the PostgreSQL server.
         
         Returns:
             None
@@ -470,13 +450,13 @@ class PostgreSQLTimeSeriesReader(TSDataReader):
         self._is_connected = False
 
     def _get_tables_to_query(self, data_type: Optional[str]) -> List[str]:
-        """Gets list of tables in the PostgresSQL database
+        """Gets list of tables in the PostgreSQL database
 
         Args:
             data_type (Optional[str]): CST data type to be read
 
         Returns:
-            List[str]: tables in PostgresSQL DB
+            List[str]: tables in PostgreSQL DB
         """
         assert self.helper.connection is not None, "Database not connected"
         with self.helper.connection.cursor() as cursor:
@@ -497,7 +477,7 @@ class PostgreSQLTimeSeriesReader(TSDataReader):
         data_name: Optional[str] = None,
         data_type: Optional[str] = None,
     ) -> pd.DataFrame:
-        """Generic PostgresSQL data read
+        """Generic PostgreSQL data read
 
         Args:
             Args:
@@ -606,9 +586,6 @@ class PostgreSQLTimeSeriesReader(TSDataReader):
     def list_scenarios(self) -> List[str]:
         """Produces a list of scenarios stored in the metadata store
 
-        Args:
-            None
-
         Returns:
             List[str]: list of scenarios
         """
@@ -617,16 +594,13 @@ class PostgreSQLTimeSeriesReader(TSDataReader):
     def list_federates(self) -> List[str]:
         """Produces a list of federations stored in the metadata store
 
-        Args:
-            None
-
         Returns:
             List[str]: list of federations
         """
         return self._query_distinct_column("federate")
 
     def list_data_types(self) -> List[str]:
-        """Produces the list of data types in PostgresSQL database
+        """Produces the list of data types in PostgreSQL database
 
         Returns:
             List[str]: Data types in database
@@ -663,10 +637,10 @@ class PostgreSQLTimeSeriesManager(TSDataManager):
         )
 
     def connect(self) -> bool:
-        """Establishes connection to the PostgresSQL server.
+        """Establishes connection to the PostgreSQL server.
 
         Returns:
-            bool: Flag indicating successful connection to the PostgresSQL
+            bool: Flag indicating successful connection to the PostgreSQL
                 database
         """
         if not self.helper.connect():
@@ -677,10 +651,7 @@ class PostgreSQLTimeSeriesManager(TSDataManager):
         return self._is_connected
 
     def disconnect(self) -> None:
-        """Closes the connection to the PostgresSQL server.
-        
-        Args:
-            None
+        """Closes the connection to the PostgreSQL server.
         
         Returns:
             None
@@ -693,9 +664,6 @@ class PostgreSQLTimeSeriesManager(TSDataManager):
     def list_scenarios(self) -> List[str]:
         """Produces a list of scenarios stored in the metadata store
 
-        Args:
-            None
-
         Returns:
             List[str]: list of scenarios
         """
@@ -704,30 +672,27 @@ class PostgreSQLTimeSeriesManager(TSDataManager):
     def list_federates(self) -> List[str]:
         """Produces a list of federations stored in the metadata store
 
-        Args:
-            None
-
         Returns:
             List[str]: list of federations
         """
         return self.reader.list_federates()
 
     def list_data_types(self) -> List[str]:
-        """Produces a list of data types in the PostgresSQL database
+        """Produces a list of data types in the PostgreSQL database
 
         Returns:
-            List[str]: ist of data types in the PostgresSQL database
+            List[str]: ist of data types in the PostgreSQL database
         """
         return self.reader.list_data_types()
 
     def get_time_range(self, **kwargs) -> Dict[str, float]:
-        """Produces time range of data in PostgresSQL database
+        """Produces time range of data in PostgreSQL database
 
         Returns:
             Dict[str, float]: Time range information as
                 {
                     "min_time": float
-                    "max_tiome": float 
+                    "max_time": float
                 }
 
                 Time values are in ordinal time
@@ -775,7 +740,7 @@ class PostgreSQLTimeSeriesManager(TSDataManager):
             return False
 
     def delete_scenario_data(self, scenario_name: str) -> bool:
-        """Delete data from PostgresSQL database from specified scenario
+        """Delete data from PostgreSQL database from specified scenario
 
         Args:
             scenario_name (str): name of scenario to delete from database
@@ -786,10 +751,10 @@ class PostgreSQLTimeSeriesManager(TSDataManager):
         return self._delete_by_column("scenario", scenario_name)
 
     def delete_federate_data(self, federate_name: str) -> bool:
-        """Delete data from PostgresSQL database for specified data
+        """Delete data from PostgreSQL database for specified data
 
         Args:
-            scenario_name (str): name of scenario to delete from database
+            federate_name:
 
         Returns:
             bool: Flag indicating data was deleted

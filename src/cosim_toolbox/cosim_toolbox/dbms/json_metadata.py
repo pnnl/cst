@@ -11,11 +11,7 @@ import shutil
 from pathlib import Path
 from typing import Any, Dict, Optional, Union, List, cast
 
-from .abstractions import (
-    MDDataWriter,
-    MDDataReader,
-    MDDataManager,
-)
+from .abstractions import MDDataWriter, MDDataReader, MDDataManager
 from .validation import validate_name, ValidationError, safe_name_log
 
 logger = logging.getLogger(__name__)
@@ -77,9 +73,6 @@ class JSONMetadataWriter(MDDataWriter):
     def connect(self) -> bool:
         """Create directory structure if it doesn't exist.
         
-        Args:
-            None
-
         Returns:
             bool: Flag indicating success in creating the necessary
                 folders for storing the JSON files.
@@ -98,10 +91,7 @@ class JSONMetadataWriter(MDDataWriter):
     def disconnect(self) -> None:
         """Close connection (no-op for files, but maintains state).
         
-        Args:
-            None
-
-        Returns: 
+        Returns:
             None
         """
         self._is_connected = False
@@ -214,11 +204,8 @@ class JSONMetadataReader(MDDataReader):
     def connect(self) -> bool:
         """Verify that the directory structure exists.
         
-        Args:
-            None
-
         Returns:
-            bool: Flag indicating whether the JSON files were able to be 
+            bool: Flag indicating whether the JSON files able to be
                 accessed or not.
         """
         try:
@@ -234,10 +221,7 @@ class JSONMetadataReader(MDDataReader):
     def disconnect(self) -> None:
         """Close connection (no-op for files, but maintains state).
         
-        Args:
-            None
-
-        Returns: 
+        Returns:
             None
         """
         self._is_connected = False
@@ -255,10 +239,10 @@ class JSONMetadataReader(MDDataReader):
         return self.read("federations", name)
 
     def read_scenario(self, name: str) -> Optional[Dict[str, Any]]:
-        """Reads scenario  metadatadata
+        """Reads scenario metadata
 
         Args:
-            name (str): name of scneario being read
+            name (str): name of scenario being read
 
         Returns:
             Optional[Dict[str, Any]]: Scenario metadata
@@ -320,9 +304,6 @@ class JSONMetadataReader(MDDataReader):
     def list_federations(self) -> List[str]:
         """Produces a list of federations stored in the metadata store
 
-        Args:
-            None
-
         Returns:
             List[str]: list of federations
         """
@@ -330,9 +311,6 @@ class JSONMetadataReader(MDDataReader):
 
     def list_scenarios(self) -> List[str]:
         """Produces a list of scenarios stored in the metadata store
-
-        Args:
-            None
 
         Returns:
             List[str]: list of scenarios
@@ -391,10 +369,7 @@ class JSONMetadataReader(MDDataReader):
             return False
 
     def list_custom_collections(self) -> List[str]:
-        """Lists custom colletion names in metadata store
-
-        Args:
-            None
+        """Lists custom collection names in metadata store
 
         Returns:
             List[str]: List of collection names in metadata store
@@ -456,9 +431,6 @@ class JSONMetadataManager(MDDataManager):
     def connect(self) -> bool:
         """Establish connection for both reader and writer.
         
-        Args:
-            None
-
         Returns:
             bool: Flag indicating that writer and reader are connected
         """
@@ -470,9 +442,6 @@ class JSONMetadataManager(MDDataManager):
     def disconnect(self) -> None:
         """Close connection for both reader and writer.
         
-        Args:
-            None
-
         Returns:
             None
         """
@@ -563,7 +532,7 @@ class JSONMetadataManager(MDDataManager):
         """Checks to see if federation metadata exists in metadata store
 
         Args:
-            name (str): Name of federation metadata to check for existance
+            name (str): Name of federation metadata to check for existence
 
         Returns:
             bool: Flag indicating whether federation metadata exists in
@@ -575,7 +544,7 @@ class JSONMetadataManager(MDDataManager):
         """Checks to see if scenario metadata exists in metadata store
 
         Args:
-            name (str): Name of scenario metadata to check for existance
+            name (str): Name of scenario metadata to check for existence
 
         Returns:
             bool: Flag indicating whether scenario metadata exists in
@@ -588,11 +557,11 @@ class JSONMetadataManager(MDDataManager):
 
         Args:
             collection_type (str): Collection type name where metadata
-                is being checked for existance.
-            name (str): Metadata name whose existance is being checked.
+                is being checked for existence.
+            name (str): Metadata name whose existence is being checked.
 
         Returns:
-            bool: Flag indicating the existance of the named metadata
+            bool: Flag indicating the existence of the named metadata
         """
         return self.reader.helper.get_file_path(collection_type, name).exists()
 

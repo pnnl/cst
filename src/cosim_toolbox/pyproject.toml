@@ -43,7 +43,7 @@ Documentation = "https://cosim_toolbox.readthedocs.io"
 Repository = "https://devops.pnnl.gov/e-comp/thrust-3/copper"
 
 [tool.setuptools.packages.find]
-where = [".","cosim_toolbox","data_management"]
+where = [".","cosim_toolbox"]
 
 [tool.setuptools.package-data]
 api = ["*"]

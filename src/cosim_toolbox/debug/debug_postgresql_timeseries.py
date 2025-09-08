@@ -1,4 +1,4 @@
-from data_management.postgresql_timeseries import PostgreSQLTimeSeriesReader
+from cosim_toolbox.dbms import PostgreSQLTimeSeriesReader
 
 with PostgreSQLTimeSeriesReader(
     host="penny.pnl.gov",

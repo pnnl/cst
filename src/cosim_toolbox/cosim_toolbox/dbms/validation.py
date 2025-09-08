@@ -147,7 +147,7 @@ def validate_connection_string(
 
     Args:
         connection_string (str): Connection string to validate
-        expected_analysis (Optional[str]): Expected URL analysis (e.g., "postgresql")
+        expected_analysis (Optional[str]): Expected URL analysis (e.g., "postgres")
 
     Raises:
         ValidationError: If connection string is invalid

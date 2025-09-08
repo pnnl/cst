@@ -16,13 +16,13 @@ import sys
 sys.path.insert(0, "src/cosim_toolbox")
 
 # Import our modules
-from data_management import TSRecord
-from data_management import JSONMetadataManager
-from data_management import create_metadata_manager
+from cosim_toolbox.dbms import TSRecord
+from cosim_toolbox.dbms import JSONMetadataManager
+from cosim_toolbox.dbms import create_metadata_manager
 
 # Try to import MongoDB components
 try:
-    from data_management import MongoMetadataManager
+    from cosim_toolbox.dbms import MongoMetadataManager
 
     MONGO_AVAILABLE = True
 except ImportError:
@@ -302,7 +302,7 @@ class TestMongoMetadataManager(unittest.TestCase):
 
         return mock_client, mock_db, mock_collection
 
-    @patch("data_management.mongo_metadata.MongoClient")
+    @patch("cosim_toolbox.dbms.mongo_metadata.MongoClient")
     def test_connection_management(self, mock_mongo_client):
         """Test MongoDB connection management."""
         mock_client, mock_db, mock_collection = self._setup_mock_client()
@@ -327,7 +327,7 @@ class TestMongoMetadataManager(unittest.TestCase):
         self.assertFalse(manager.is_connected)
         mock_client.close.assert_called_once()
 
-    @patch("data_management.mongo_metadata.MongoClient")
+    @patch("cosim_toolbox.dbms.mongo_metadata.MongoClient")
     def test_federation_operations(self, mock_mongo_client):
         """Test MongoDB federation operations."""
         mock_client, mock_db, mock_collection = self._setup_mock_client()
@@ -351,7 +351,7 @@ class TestMongoMetadataManager(unittest.TestCase):
             expected_doc["cst_007"] = "TestFed"
             mock_collection.insert_one.assert_called_once_with(expected_doc)
 
-    @patch("data_management.mongo_metadata.MongoClient")
+    @patch("cosim_toolbox.dbms.mongo_metadata.MongoClient")
     def test_overwrite_protection(self, mock_mongo_client):
         """Test MongoDB overwrite protection."""
         mock_client, mock_db, mock_collection = self._setup_mock_client()
@@ -387,7 +387,7 @@ class TestMongoMetadataManager(unittest.TestCase):
                 {"cst_007": "TestFed"}, expected_doc
             )
 
-    @patch("data_management.mongo_metadata.MongoClient")
+    @patch("cosim_toolbox.dbms.mongo_metadata.MongoClient")
     def test_read_operations(self, mock_mongo_client):
         """Test MongoDB read operations."""
         mock_client, mock_db, mock_collection = self._setup_mock_client()

@@ -1,6 +1,6 @@
 import plotly.express as px
 import numpy as np
-from data_management.factories import create_timeseries_manager
+from cosim_toolbox.dbms import create_timeseries_manager
 
 
 # --- Configuration Section ---
@@ -9,7 +9,7 @@ from data_management.factories import create_timeseries_manager
 ANALYSIS_NAME = "gld2"
 
 # Choose your backend and provide its configuration.
-# Option 1: PostgreSQL Backend
+# Option 1:  Backend
 BACKEND_TYPE = "postgres"
 BACKEND_CONFIG = {
     "location": "localhost",

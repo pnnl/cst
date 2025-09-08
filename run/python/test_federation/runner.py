@@ -9,7 +9,7 @@ mitch.pelton@pnnl.gov
 """
 from cosim_toolbox.dockerRunner import DockerRunner
 from cosim_toolbox.helicsConfig import HelicsMsg, Collect
-from data_management.factories import create_metadata_manager
+from cosim_toolbox.dbms import create_metadata_manager
 
 
 class Runner:

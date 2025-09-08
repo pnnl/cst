@@ -2,7 +2,7 @@ from glmpy import Gridlabd
 from pathlib import Path
 import logging
 from typing import Optional, Dict, Any
-from data_management.factories import create_metadata_manager
+from cosim_toolbox.dbms import create_metadata_manager
 
 logger = logging.getLogger(__name__)
 

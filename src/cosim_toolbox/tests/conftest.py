@@ -112,7 +112,7 @@ def temp_directory():
 @pytest.fixture
 def sample_ts_records():
     """Sample time-series records for testing."""
-    from cosim_toolbox.data_management import TSRecord
+    from cosim_toolbox.dbms import TSRecord
     
     base_time = datetime(2023, 12, 7, 15, 31, 27)
     

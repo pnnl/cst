@@ -3,7 +3,7 @@ Tests for MongoDB metadata manager.
 """
 
 import pytest
-from data_management.mongo_metadata import MongoMetadataManager
+from cosim_toolbox.dbms import MongoMetadataManager
 
 
 @pytest.mark.mongo

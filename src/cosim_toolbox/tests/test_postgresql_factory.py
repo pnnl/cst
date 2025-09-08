@@ -4,9 +4,9 @@ Tests for updated timeseries factory with PostgreSQL support.
 
 import pytest
 from pathlib import Path
-from data_management.timeseries_factory import create_timeseries_manager
-from data_management.csv_timeseries import CSVTimeSeriesManager
-from data_management.postgresql_timeseries import PostgreSQLTimeSeriesManager
+from cosim_toolbox.dbms import create_timeseries_manager
+from cosim_toolbox.dbms import CSVTimeSeriesManager
+from cosim_toolbox.dbms import PostgreSQLTimeSeriesManager
 
 
 class TestTimeSeriesFactory:
@@ -14,7 +14,7 @@ class TestTimeSeriesFactory:
 
     def test_create_csv_manager(self, temp_directory):
         """Test creating CSV manager via factory."""
-        manager = create_timeseries_manager("csv", temp_directory, analysis_name="test")
+        manager = create_timeseries_manager("csv", "test", location=temp_directory)
         assert isinstance(manager, CSVTimeSeriesManager)
         assert manager.helper.location == Path(temp_directory)
         assert manager.analysis_name == "test"
@@ -23,13 +23,13 @@ class TestTimeSeriesFactory:
     def test_create_postgresql_manager_by_params(self):
         """Test creating PostgreSQL manager via individual parameters."""
         manager = create_timeseries_manager(
-            "postgresql",
-            "localhost",
+            "postgres",
+            "test_analysis",
+            location="localhost",
             port=5432,
             database="test_db",
             user="test_user",
             password="test_pass",
-            analysis_name="test_analysis",
         )
         assert isinstance(manager, PostgreSQLTimeSeriesManager)
         assert manager.helper.conn_params["host"] == "localhost"
@@ -44,7 +44,7 @@ class TestTimeSeriesFactory:
         """Test creating PostgreSQL manager via connection URL."""
         url = "postgresql://test_user:test_pass@localhost:5432/test_db"
         manager = create_timeseries_manager(
-            "postgresql", url, analysis_name="test_analysis"
+            "postgres", "test_analysis", location=url
         )
         assert isinstance(manager, PostgreSQLTimeSeriesManager)
         assert manager.helper.conn_params["host"] == "localhost"
@@ -56,22 +56,21 @@ class TestTimeSeriesFactory:
 
     def test_invalid_backend(self):
         """Test error handling for invalid backend."""
-        with pytest.raises(ValueError, match="Unknown backend"):
-            create_timeseries_manager("invalid", "location")
+        with pytest.raises(ValueError, match="Unknown time-series backend"):
+            create_timeseries_manager("invalid", location="location")
 
     def test_case_insensitive_backend(self, temp_directory):
         """Test that backend names are case-insensitive."""
-        manager1 = create_timeseries_manager("CSV", temp_directory)
-        manager2 = create_timeseries_manager("csv", temp_directory)
+        manager1 = create_timeseries_manager("CSV", location=temp_directory)
+        manager2 = create_timeseries_manager("csv", location=temp_directory)
 
         assert all(isinstance(m, CSVTimeSeriesManager) for m in [manager1, manager2])
 
     @pytest.mark.postgres
     def test_postgresql_aliases(self):
         """Test that both 'postgresql' and 'postgres' work as backend names."""
-        manager1 = create_timeseries_manager("postgresql", "localhost")
-        manager2 = create_timeseries_manager("postgres", "localhost")
+        manager2 = create_timeseries_manager("postgres", location="localhost")
 
         assert all(
-            isinstance(m, PostgreSQLTimeSeriesManager) for m in [manager1, manager2]
+            isinstance(m, PostgreSQLTimeSeriesManager) for m in [manager2]
         )

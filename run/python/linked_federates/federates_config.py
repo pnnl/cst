@@ -7,7 +7,7 @@ mitch.pelton@pnnl.gov
 
 import simple_config
 import simple_config2
-import cosim_toolbox.federation as fed
+#import cosim_toolbox.federation as fed
 from cosim_toolbox.helicsConfig import Collect
 from cosim_toolbox.helicsConfig import HelicsEndPtGroup
 from cosim_toolbox.federation import FederateConfig
@@ -93,11 +93,11 @@ def define_federation():
 
 def define_format():
     names = ["Battery", "EVehicle"]
-    federation = fed.FederationConfig("MyLinkScenario",
-                                      "MyLinkAnalysis",
-                                      "MyLinkFederation",
-                                      with_docker,
-                                      use_meta_db, use_data_db)
+    federation = FederationConfig("MyLinkScenario",
+                                  "MyLinkAnalysis",
+                                  "MyLinkFederation",
+                                  with_docker,
+                                  use_meta_db, use_data_db)
 
     f1 = federation.add_federate_config(simple_config.MyFederate(names[0], period=30))
     f2 = federation.add_federate_config(simple_config2.MyFederate(names[1], period=60))

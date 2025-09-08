@@ -7,7 +7,7 @@ time-series data and metadata to various storage backends.
 The primary entry points are the factory functions and the manager classes.
 
 Example Usage:
-    from cosim_toolbox.data_management import create_timeseries_manager, TSRecord
+    from cosim_toolbox.dbms import create_timeseries_manager, TSRecord
 
     # Create a CSV-based manager
     with create_timeseries_manager("csv", "/path/to/data", analysis_name="my_sim") as ts_manager:
@@ -16,23 +16,23 @@ Example Usage:
 """
 
 # Core data structures and abstract classes
-from .abstractions import (
+from cosim_toolbox.dbms.abstractions import (
     TSRecord,
     TimeSeriesManager,
     MetadataManager,
 )
 
 # Factory functions for easy instantiation
-from .factories import (
+from cosim_toolbox.dbms.factories import (
     create_timeseries_manager,
     create_metadata_manager,
 )
 
 # Concrete Manager implementations
-from .csv_timeseries import CSVTimeSeriesManager
-from .postgresql_timeseries import PostgreSQLTimeSeriesManager
-from .json_metadata import JSONMetadataManager
-from .mongo_metadata import MongoMetadataManager
+from cosim_toolbox.dbms.json_metadata import JSONMetadataManager
+from cosim_toolbox.dbms.mongo_metadata import MongoMetadataManager
+from cosim_toolbox.dbms.csv_timeseries import CSVTimeSeriesManager
+from cosim_toolbox.dbms.postgresql_timeseries import PostgreSQLTimeSeriesManager
 
 # Public API definition
 __all__ = [

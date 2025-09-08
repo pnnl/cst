@@ -2,7 +2,7 @@
 Tests for core data management abstractions.
 """
 from datetime import datetime
-from data_management import TSRecord
+from cosim_toolbox.dbms import TSRecord
 
 
 class TestTSRecord:

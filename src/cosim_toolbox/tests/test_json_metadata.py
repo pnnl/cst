@@ -4,7 +4,7 @@ Tests for JSON metadata manager.
 
 import json
 from pathlib import Path
-from data_management import JSONMetadataManager
+from cosim_toolbox.dbms import JSONMetadataManager
 
 
 class TestJSONMetadataManager:

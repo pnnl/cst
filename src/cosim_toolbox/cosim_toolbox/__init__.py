@@ -23,13 +23,13 @@ cst_password: str = environ.get("CST_PASSWORD", cst_user)
 # database, same name for mongo/postgres cst pair
 cst_db: str = environ.get("CST_DB", "copper")
 
-# postgresql database
+# mongo database
 cst_mg_host = environ.get("MONGO_HOST", "mongodb://" + cst_host)
 cst_mg_port = environ.get("MONGO_PORT", "27017")
 cst_mongo = cst_mg_host + ":" + cst_mg_port
 cst_mongo_db = environ.get("CST_MONGO_DB", cst_db)
 
-# mongo database
+# postgres database
 cst_pg_host = environ.get("POSTGRES_HOST", cst_host)
 cst_pg_port = environ.get("POSTGRES_PORT", "5432")
 cst_postgres = cst_pg_host + ":" + cst_pg_port

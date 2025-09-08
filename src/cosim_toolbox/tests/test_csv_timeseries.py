@@ -7,13 +7,13 @@ from datetime import datetime, timedelta
 from pathlib import Path
 import pandas as pd
 
-from data_management.csv_timeseries import (
+from cosim_toolbox.dbms.csv_timeseries import (
     CSVTimeSeriesWriter,
     CSVTimeSeriesReader,
     CSVTimeSeriesManager,
     _CSVHelper,
 )
-from data_management import TSRecord
+from cosim_toolbox.dbms import TSRecord
 
 
 @pytest.fixture

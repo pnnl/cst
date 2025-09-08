@@ -69,9 +69,6 @@ class TSDataWriter(ABC):
     def connect(self) -> bool:
         """Establish connection to the data store.
         
-        Args: 
-            None
-
         Returns:
             None
 
@@ -82,9 +79,6 @@ class TSDataWriter(ABC):
     def disconnect(self) -> None:
         """Close connection to the data store.
         
-        Args: 
-            None
-
         Returns:
             None
 
@@ -120,9 +114,6 @@ class TSDataWriter(ABC):
         """
         Write all buffered records to the data store and clear buffer.
         
-        Args:
-            None
-
         Returns:
             bool: True if flush successful, False otherwise
         """
@@ -137,9 +128,6 @@ class TSDataWriter(ABC):
     def buffer_size(self) -> int:
         """Get current buffer size.
         
-        Args: 
-            None
-
         Returns:
             int: number of elements in buffer list
         
@@ -150,9 +138,6 @@ class TSDataWriter(ABC):
     def is_connected(self) -> bool:
         """Check if the writer is connected.
         
-        Args: 
-            None
-
         Returns:
             bool: True if writer is connected to data store
         
@@ -200,14 +185,11 @@ class TSDataReader(ABC):
     def connect(self) -> bool:
         """Establish connection to the data store.
         
-        Args: 
-            None
-
         Returns:
             bool: flag indicated if the connection to the data store exists
         """
         raise NotImplementedError(
-                "TSDataReader.connect() is an abstract class and must be " \
+                "TSDataReader.connect() is an abstract class and must be "
                 "subclassed and implemented."
             )
 
@@ -215,14 +197,11 @@ class TSDataReader(ABC):
     def disconnect(self) -> None:
         """Close connection to the data store.
         
-        Args: 
-            None
-
         Returns:
             bool: flag indicated if the connection to the data store exists
         """
         raise NotImplementedError(
-                "TSDataReader.disconnect() is an abstract class and must be" \
+                "TSDataReader.disconnect() is an abstract class and must be"
                 "subclassed and implemented."
             )
 
@@ -254,9 +233,6 @@ class TSDataReader(ABC):
     def is_connected(self) -> bool:
         """Check if the reader is connected.
         
-        Args: 
-            None
-
         Returns:
             bool: flag indicated if the connection to the data store exists
         """
@@ -302,9 +278,6 @@ class MDDataWriter(ABC):
     def connect(self) -> bool:
         """Establish connection to the data store.
         
-        Args: 
-            None
-
         Returns:
             bool: flag indicated if the connection to the data store
                 was established
@@ -314,9 +287,6 @@ class MDDataWriter(ABC):
     @abstractmethod
     def disconnect(self) -> None:
         """Close connection to the data store.
-        Args: 
-            None
-
         Returns:
             None
         """
@@ -368,7 +338,7 @@ class MDDataWriter(ABC):
         Write metadata to the data store (generic method).
         
         Args:
-            collection_type (str): Collection/category name
+            collection_type (str): Collection/category name type
             name (str): Data identifier name
             data (Dict[str, Any]): Data to write
             overwrite (bool): Whether to overwrite existing data
@@ -382,9 +352,6 @@ class MDDataWriter(ABC):
     def is_connected(self) -> bool:
         """Check if the writer is connected.
         
-        Args: 
-            None
-
         Returns:
             bool: flag indicated if the connection to the data store exists
         """
@@ -437,14 +404,11 @@ class MDDataReader(ABC):
     def connect(self) -> bool:
         """Establish connection to the data store.
         
-        Args: 
-            None
-
         Returns:
             bool: flag indicated if the connection to the data store exists
         """
         raise NotImplementedError(
-                "MDDataReader.connect() is an abstract class and must be" \
+                "MDDataReader.connect() is an abstract class and must be"
                 "subclassed and implemented."
             )
 
@@ -452,14 +416,11 @@ class MDDataReader(ABC):
     def disconnect(self) -> None:
         """Close connection to the data store.
         
-        Args: 
-            None
-
         Returns:
             bool: flag indicated if the connection to the data store exists
         """
         raise NotImplementedError(
-                "MDDataReader.disconnect() is an abstract class and must be" \
+                "MDDataReader.disconnect() is an abstract class and must be" 
                 "subclassed and implemented."
             )
 
@@ -495,7 +456,7 @@ class MDDataReader(ABC):
         Read metadata from the data store (generic method).
         
         Args:
-            collection_type (str): Collection/category name
+            collection_type (str): Collection/category name type
             name (str): Data identifier name
         
         Returns:
@@ -507,9 +468,6 @@ class MDDataReader(ABC):
     def list_federations(self) -> list[str]:
         """List available federation names.
         
-        Args: 
-            None
-
         Returns:
             list[str]: list of names of federations as strings
         """
@@ -519,9 +477,6 @@ class MDDataReader(ABC):
     def list_scenarios(self) -> list[str]:
         """List available scenario names.
         
-        Args: 
-            None
-
         Returns:
             list[str]: list of names of scenarios as strings
         """
@@ -545,9 +500,6 @@ class MDDataReader(ABC):
         """
         List available custom collection names.
         
-        Args:
-            None
-
         Returns:
             list[str]: List of custom collection names
         """
@@ -557,9 +509,6 @@ class MDDataReader(ABC):
     def is_connected(self) -> bool:
         """Check if the reader is connected.
         
-        Args: 
-            None
-
         Returns:
             bool: flag indicating if data store is connected
         """
@@ -605,9 +554,6 @@ class TSDataManager(ABC):
     def connect(self) -> bool:
         """Establish connection for both reader and writer.
         
-        Args: 
-            None
-
         Returns:
             bool: flag indicating whether the connection to the store exist
         """
@@ -617,9 +563,6 @@ class TSDataManager(ABC):
     def disconnect(self) -> None:
         """Close connection for both reader and writer.
         
-        Args: 
-            None
-
         Returns:
             None
 
@@ -639,10 +582,7 @@ class TSDataManager(ABC):
         return self.writer.write_records(records)
 
     def read_data(self, **kwargs) -> pd.DataFrame:
-        """Reads data from data backedn
-
-        Args:
-            None
+        """Reads data from data backend
 
         Returns:
             pd.DataFrame: Requested data from data store
@@ -663,9 +603,6 @@ class TSDataManager(ABC):
     def flush(self) -> bool:
         """_summary_
 
-        Args:
-            None
-        
         Returns:
             bool: flag indicating the success of the write to disk
         """
@@ -691,9 +628,6 @@ class TSDataManager(ABC):
     def is_connected(self) -> bool:
         """Flag indicating if connected to the data store
 
-        Args:
-            None
-
         Returns:
             bool: flag indicating if connected to the data store
         """
@@ -715,9 +649,6 @@ class MDDataManager(ABC):
     def connect(self) -> bool:
         """Establish connection for both reader and writer.
         
-        Args:
-            None
-
         Returns:
             bool: flag indicating if connected to the data store
         """
@@ -727,9 +658,6 @@ class MDDataManager(ABC):
     def disconnect(self) -> None:
         """Close connection for both reader and writer.
         
-        Args:
-            None
-
         Returns:
             None
         """
@@ -858,9 +786,6 @@ class MDDataManager(ABC):
     def list_custom_collections(self) -> list[str]:
         """Provides the list of custom collection names in data store
 
-        Args:
-            None
-
         Returns:
             list[str]: List of custom collection names
         """
@@ -877,9 +802,6 @@ class MDDataManager(ABC):
     def is_connected(self) -> bool:
         """Check if the data store is connected
         
-        Args: 
-            None
-
         Returns:
             bool: True if writer is connected to data store
         """

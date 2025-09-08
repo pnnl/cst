@@ -15,8 +15,8 @@ from typing import Any, Dict, Optional
 
 import helics as h
 
-from data_management.abstractions import MetadataManager, TimeSeriesManager, TSRecord
-from data_management.factories import create_metadata_manager, create_timeseries_manager
+from cosim_toolbox.dbms import MetadataManager, TimeSeriesManager, TSRecord
+from cosim_toolbox.dbms import create_metadata_manager, create_timeseries_manager
 
 logger = logging.getLogger(__name__)
 
@@ -206,7 +206,7 @@ class Federate:
         Args:
             scenario_name (str): Name of scenario used to store configuration information in the dbConfigs
             use_meta_db (bool, optional): Whether to use a metadata database (e.g., MongoDB). Defaults to True.
-            use_data_db (bool, optional): Whether to use a timeseries database (e.g., PostgresSQL). Defaults to True.
+            use_data_db (bool, optional): Whether to use a timeseries database (e.g., PostgreSQL). Defaults to True.
 
         Raises:
             NameError: Scenario name is undefined (`None`)
@@ -723,7 +723,7 @@ class Federate:
         Args:
             scenario_name (str): Name of scenario used to store configuration information in the dbConfigs
             use_meta_db (bool, optional): Whether to use a metadata database (e.g., MongoDB). Defaults to True.
-            use_data_db (bool, optional): Whether to use a timeseries database (e.g., PostgresSQL). Defaults to True.
+            use_data_db (bool, optional): Whether to use a timeseries database (e.g., PostgreSQL). Defaults to True.
         """
         self.create_federate(scenario_name, use_meta_db, use_data_db)
         self.run_cosim_loop()

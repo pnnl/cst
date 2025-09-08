@@ -16,13 +16,8 @@ from typing import Any, Dict, List, Optional
 
 import pandas as pd
 
-from data_management.abstractions import (
-    TSDataWriter,
-    TSDataReader,
-    TSDataManager,
-    TSRecord,
-)
-from data_management.validation import validate_name, ValidationError, safe_name_log
+from .abstractions import TSDataWriter, TSDataReader, TSDataManager, TSRecord
+from .validation import validate_name, ValidationError, safe_name_log
 
 logger = logging.getLogger(__name__)
 
@@ -198,9 +193,6 @@ class CSVTimeSeriesWriter(TSDataWriter):
     def connect(self) -> bool:
         """Create directory structure if it doesn't exist.
 
-        Args:
-            None
-
         Returns:
             bool: Flag indicating whether directory structure has been 
                 created.
@@ -218,9 +210,6 @@ class CSVTimeSeriesWriter(TSDataWriter):
 
     def disconnect(self) -> None:
         """Close connection (no-op for files, but maintains consistency).
-        
-        Args:
-            None
         
         Returns:
             None
@@ -310,9 +299,6 @@ class CSVTimeSeriesReader(TSDataReader):
     def connect(self) -> bool:
         """Verify that the directory structure exists.
 
-        Args:
-            None
-
         Returns:
             bool: flag indicated whether the connection to the data backend 
                 exists
@@ -325,9 +311,6 @@ class CSVTimeSeriesReader(TSDataReader):
 
     def disconnect(self) -> None:
         """Close connection (no-op for files).
-
-        Args:
-            None
 
         Returns:
             None
@@ -430,9 +413,6 @@ class CSVTimeSeriesReader(TSDataReader):
     def list_federates(self) -> List[str]:
         """Provides a list of federates with data in the data backend
 
-        Args:
-            None
-        
         Returns:
             List[str]: list of federates with data in the data backend
         """
@@ -520,9 +500,6 @@ class CSVTimeSeriesManager(TSDataManager):
     def connect(self) -> bool:
         """Establish connection for both reader and writer.
 
-        Args:
-            None
-
         Returns:
             bool: flag indicating whether the connection to the data backend
                 exists
@@ -535,9 +512,6 @@ class CSVTimeSeriesManager(TSDataManager):
     def disconnect(self) -> None:
         """Close connection for both reader and writer.
 
-        Args:
-            None
-
         Returns:
             None
         """
@@ -547,9 +521,6 @@ class CSVTimeSeriesManager(TSDataManager):
 
     def list_federates(self) -> List[str]:
         """Lists federates with data in data backend
-
-        Args:
-            None
 
         Returns:
             List[str]: list of federates with data in data backend
@@ -569,9 +540,6 @@ class CSVTimeSeriesManager(TSDataManager):
 
     def get_scenarios(self) -> List[str]:
         """List of scenarios in the data backend
-
-        Args:
-            None
 
         Returns:
             List[str]: list of scenarios in the data backend
@@ -646,7 +614,7 @@ class CSVTimeSeriesManager(TSDataManager):
         """Create a backup of the entire analysis.
 
         Args:
-            backup_path (str): path to backup data
+            backup_path (str): path to back up data
 
         Returns:
             bool: flag indicating whether backup completed
@@ -677,9 +645,6 @@ class CSVTimeSeriesManager(TSDataManager):
     @property
     def analysis_name(self) -> str:
         """Get the current analysis name.
-
-        Args:
-            None
 
         Returns:
             str: analysis name

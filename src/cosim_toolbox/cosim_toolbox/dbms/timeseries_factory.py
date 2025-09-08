@@ -3,8 +3,7 @@ Factory for creating time-series data managers.
 Updated to include PostgreSQL support.
 """
 
-from typing import Any
-from data_management import TimeSeriesManager
+from .abstractions import TimeSeriesManager
 
 
 def create_timeseries_manager(
@@ -14,7 +13,7 @@ def create_timeseries_manager(
     Factory function to create appropriate time-series data manager.
 
     Args:
-        backend (str): Backend type ("csv", "postgresql")
+        backend (str): Backend type ("csv", "postgres")
         location (str): Storage location (path for CSV, connection string for PostgreSQL)
         **kwargs: Backend-specific options
             CSV options:
@@ -38,12 +37,12 @@ def create_timeseries_manager(
     backend = backend.lower()
 
     if backend == "csv":
-        from data_management.csv_timeseries import CSVTimeSeriesManager
+        from cosim_toolbox.dbms import CSVTimeSeriesManager
 
         analysis_name = kwargs.get("analysis_name", "default")
         return CSVTimeSeriesManager(location=location, analysis_name=analysis_name)
-    elif backend in ("postgresql", "postgres"):
-        from data_management.postgresql_timeseries import PostgreSQLTimeSeriesManager
+    elif backend == "postgres":
+        from cosim_toolbox.dbms import PostgreSQLTimeSeriesManager
 
         # Parse connection string or use individual parameters
         if location.startswith("postgresql://"):

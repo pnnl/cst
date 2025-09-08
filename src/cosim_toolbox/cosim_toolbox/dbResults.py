@@ -121,7 +121,7 @@ class DBResults:
 
         """
         with self.data_db.cursor() as cur:
-            logger.info('PostgresSQL database version:')
+            logger.info('PostgreSQL database version:')
             cur.execute('SELECT version()')
             db_version = cur.fetchone()
             logger.info(db_version)
