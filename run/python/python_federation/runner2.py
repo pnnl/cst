@@ -5,7 +5,7 @@ Example runner script for defining and deploying a co-simulation federation.
 This script demonstrates how to:
 1. Define a federation configuration using the FederationConfig class.
 2. Generate the necessary JSON configuration files using the new
-   data_management API.
+   database management system (dbms) API.
 3. Generate the deployment artifacts (docker-compose.yaml or a .sh script)
    using the DockerRunner class.
 @author:

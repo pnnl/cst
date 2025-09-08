@@ -289,7 +289,7 @@ class FederationConfig:
         }
 
     def write_config(self, start, stop):
-        # Use the new data_management API to write the configurations to disk.
+        # Use the new database management system (dbms) API to write the configurations to disk.
         # Here, we use a JSON backend, but this could easily be switched to 'mongo'.
         with create_metadata_manager(self.use_meta_db) as mgr:
             federation_doc = self.get_federation_document()

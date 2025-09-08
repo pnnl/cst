@@ -27,7 +27,7 @@ class FederateGridlabD:
         Args:
             fed_name (str): The name of the GridLAB-D federate as defined
                             in the federation configuration.
-            backend (str, optional): The data_management backend to use
+            backend (str, optional): The database management system backend to use
                 ('json', 'mongo', etc.). Defaults to "json".
             **backend_config: Keyword arguments required by the chosen
                 backend's metadata manager.
