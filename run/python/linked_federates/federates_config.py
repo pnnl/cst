@@ -7,17 +7,20 @@ mitch.pelton@pnnl.gov
 
 import simple_config
 import simple_config2
-import cosim_toolbox.federation as fed
-from cosim_toolbox.helicsConfig import Collect
-from cosim_toolbox.helicsConfig import HelicsEndPtGroup
-from cosim_toolbox.federation import FederateConfig
-from cosim_toolbox.federation import FederationConfig
-from cosim_toolbox.dockerRunner import DockerRunner
+#import cosim_toolbox.federation as fed
+from cosim_toolbox.sims import Collect
+from cosim_toolbox.sims import HelicsEndPtGroup
+from cosim_toolbox.sims import FederateConfig
+from cosim_toolbox.sims import FederationConfig
+from cosim_toolbox.sims import DockerRunner
+
+use_meta_db = "json"
+use_data_db = "csv"
+remote = False
+with_docker = False
 
 
 def define_federation():
-    remote = False
-    with_docker = False
     names = ["Battery", "EVehicle"]
     bt = {
         "src": { "from_fed": names[0],
@@ -38,7 +41,10 @@ def define_federation():
                  "indices": []}]
     }
 
-    federation = FederationConfig("MyLinkScenario", "MyLinkAnalysis", "MyLinkFederation", with_docker)
+    federation = FederationConfig("MyLinkScenario",
+                                  "MyLinkAnalysis",
+                                  "MyLinkFederation",
+                                  with_docker, use_meta_db, use_data_db)
     f1 = federation.add_federate_config(FederateConfig(names[0], period=30))
     f2 = federation.add_federate_config(FederateConfig(names[1], period=60))
 
@@ -70,26 +76,28 @@ def define_federation():
     if with_docker:
         f1.config("image", "cosim-cst:latest")
         f2.config("image", "cosim-cst:latest")
-    f1.config("command", f"python3 simple_federate.py {f1.name} {federation.scenario_name}")
-    f2.config("command", f"python3 simple_federate2.py {f2.name} {federation.scenario_name}")
+    f1.config("command", f"python3 simple_federate.py {f1.name} {federation.scenario_name} {use_meta_db} {use_data_db}")
+    f2.config("command", f"python3 simple_federate2.py {f2.name} {federation.scenario_name} {use_meta_db} {use_data_db}")
 
     federation.write_config("2023-12-07T15:31:27", "2023-12-08T15:31:27")
 
     if with_docker:
-        DockerRunner.define_yaml(federation.scenario_name)
+        DockerRunner.define_yaml(federation.scenario_name, use_meta_db)
         if remote:
             DockerRunner.run_remote_yaml(federation.scenario_name)
         else:
             DockerRunner.run_yaml(federation.scenario_name)
     else:
-        DockerRunner.define_sh(federation.scenario_name)
+        DockerRunner.define_sh(federation.scenario_name, use_meta_db)
 
 
 def define_format():
-    remote = False
-    with_docker = False
     names = ["Battery", "EVehicle"]
-    federation = fed.FederationConfig("MyLinkScenario", "MyLinkAnalysis", "MyLinkFederation", with_docker)
+    federation = FederationConfig("MyLinkScenario",
+                                  "MyLinkAnalysis",
+                                  "MyLinkFederation",
+                                  with_docker,
+                                  use_meta_db, use_data_db)
 
     f1 = federation.add_federate_config(simple_config.MyFederate(names[0], period=30))
     f2 = federation.add_federate_config(simple_config2.MyFederate(names[1], period=60))
@@ -98,19 +106,19 @@ def define_format():
     if with_docker:
         f1.config("image", "cosim-cst:latest")
         f2.config("image", "cosim-cst:latest")
-    f1.config("command", f"python3 simple_federate.py {f1.name} {federation.scenario_name}")
-    f2.config("command", f"python3 simple_federate2.py {f2.name} {federation.scenario_name}")
+    f1.config("command", f"python3 simple_federate.py {f1.name} {federation.scenario_name} {use_meta_db} {use_data_db}")
+    f2.config("command", f"python3 simple_federate2.py {f2.name} {federation.scenario_name} {use_meta_db} {use_data_db}")
 
     federation.write_config("2023-12-07T15:31:27", "2023-12-08T15:31:27")
 
     if with_docker:
-        DockerRunner.define_yaml(federation.scenario_name)
+        DockerRunner.define_yaml(federation.scenario_name, use_meta_db)
         if remote:
             DockerRunner.run_remote_yaml(federation.scenario_name)
         else:
             DockerRunner.run_yaml(federation.scenario_name)
     else:
-        DockerRunner.define_sh(federation.scenario_name)
+        DockerRunner.define_sh(federation.scenario_name, use_meta_db)
 
 
 if __name__ == "__main__":

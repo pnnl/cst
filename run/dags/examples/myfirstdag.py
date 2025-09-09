@@ -8,7 +8,7 @@ from airflow.contrib.hooks.ssh_hook import SSHHook
 # To initiate the DAG Object
 from airflow import DAG
 # Import CoSimulation Toolbox
-from cosim_toolbox.dockerRunner import DockerRunner
+from cosim_toolbox.sims import DockerRunner
 
 # Add new code
 sys.path.insert(0, '/python_extended/test_federation')

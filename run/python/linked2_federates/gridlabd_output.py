@@ -5,10 +5,10 @@ Created on 7/7/2023
 mitch.pelton@pnnl.gov
 """
 
-from cosim_toolbox.helicsConfig import Collect
-from cosim_toolbox.helicsConfig import HelicsPubGroup
-from cosim_toolbox.helicsConfig import HelicsSubGroup
-from cosim_toolbox.federation import FederateConfig
+from cosim_toolbox.sims import Collect
+from cosim_toolbox.sims import HelicsPubGroup
+from cosim_toolbox.sims import HelicsSubGroup
+from cosim_toolbox.sims import FederateConfig
 from tesp_support.api.modify_GLM import GLMModifier
 
 class MyFederateMatch(FederateConfig):

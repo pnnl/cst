@@ -10,7 +10,7 @@ adapted by Molly 8/29/24
 mollyrose.kelly-gorham@pnnl.gov
 """
 import cosim_toolbox.metadataDB as mDB
-from cosim_toolbox.helicsConfig import HelicsMsg, Collect
+from cosim_toolbox.sims import HelicsMsg, Collect
 
 
 class Runner:

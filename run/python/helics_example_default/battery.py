@@ -1,5 +1,5 @@
 import sys
-from cosim_toolbox.federate import Federate
+from cosim_toolbox.sims import Federate
 import numpy as np
 import logging
 import json
@@ -36,11 +36,22 @@ def get_new_battery(numBattery):
 
 
 class Battery(Federate):
-    # def __init__(self, fed_name="Battery", analysis="default", **kwargs):
-    #     super().__init__(fed_name, **kwargs)
-    #     scenario_name = kwargs.get("scenario_name", "HelicsExampleDefault")
-    #     self.create_federate(scenario_name)
     
+    def __init__(
+            self,
+            fed_name: str = "",
+            *,
+            debug: bool = True,
+    ):
+        super().__init__(fed_name, null, debug)
+        self.batt_list = None
+        self.soc = None
+        self.current = None
+        self.time_sim = None
+        self.current_soc = None
+        self.effective_R = None
+        self.socs = None
+
     def on_start(self) -> None:
         logger.debug("on_start")
         logger.debug(self.hfed.name)
@@ -119,10 +130,6 @@ class Battery(Federate):
         self.hfed.enter_executing_mode()
         self.on_start()
 
-    def run(self, scenario_name: str) -> None:
-        self.create_federate(scenario_name)
-        self.run_cosim_loop()
-        self.destroy_federate()
 
 if __name__ == "__main__":
     

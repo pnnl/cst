@@ -1,6 +1,6 @@
 # Login for mongoku
 ==**==
-worker:worker@tapteal.pnl.gov:27017/?authSource=copper&authMechanism=SCRAM-SHA-1
+worker:worker@gage.pnl.gov:27017/?authSource=copper&authMechanism=SCRAM-SHA-1
 
 
 # PostgresSQL

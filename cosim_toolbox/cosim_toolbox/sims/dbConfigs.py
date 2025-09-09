@@ -1,0 +1,708 @@
+"""
+Created 30 Nov 2023
+
+Metadata Database API implementation
+
+@author Trevor Hardy
+"""
+import os
+import typing
+import logging
+
+from pymongo import MongoClient
+import gridfs
+import bson
+
+import cosim_toolbox as env
+from .helicsConfig import HelicsMsg
+
+logger = logging.getLogger(__name__)
+
+# TODO - Is this what we want to happen? As soon as this file is imported
+# the existing database gets blown away?
+def federation_database(clear: bool = False) -> None:
+    """Removes existing default CST databases and creates new ones.
+    """
+    db = DBConfigs(env.cst_mongo, env.cst_mongo_db)
+    logger.info("Before: ", db.update_collection_names())
+    if clear:
+        db.db[env.cst_federations].drop()
+        db.db[env.cst_scenarios].drop()
+    db.add_collection(env.cst_scenarios)
+    db.add_collection(env.cst_federations)
+    logger.info("After clear: ", db.update_collection_names())
+
+
+class DBConfigs:
+    """
+    Provides methods to read and write to the metadata database. This database
+    is generally use for storing configuration information but can be used for
+    storing any structured data (think JSON or Python dictionary). CST uses it
+    mostly for storing all the federation configuration data that is needed to 
+    run a co-simulation but other similar data could easily be stored in this 
+    database. For example, model metadata for one of the federates could be 
+    stored here for use in post-processing.
+
+    If you're comfortable with using either database directly and/or need to 
+    work around the simplification that CST provides, you can access the 
+    database objects directly. In this case, `self.client` is the MongoDB
+    object.
+
+    TODO - Maybe the following will not always be true?
+    Of particular note, on import of this file in a Python script, the default
+    database used by CST is erased. This database name is defined by the current
+    value of `cst_mongo` in the TODO (where does this value come from)?
+
+    Attributes:
+        collections (list[str]): list of collection names in the database
+        db_name (str): - Name of MongoDB database being used
+        client (MongoClient[Dict[str, Any]]) - MongoDB object, used for 
+            accessing the MongoDB server
+        db (Database): Mongo database object, used for access the data in
+            the database named `db_name`
+        fs (GridFS): Mongo DB object for storing and accessing files
+
+    """
+    _cst_name = 'cst_007'
+
+    def __init__(self, uri: str = None, db_name: str = None) -> None:
+        self.collections: list = None
+        self.db_name: str
+        self.client: MongoClient
+        self.db_name, self.client = self._connect_to_database(uri, db_name)
+        self.db: object = self.client[self.db_name]
+        self.fs = gridfs.GridFS(self.db)
+
+    def __del__(self):
+        """
+        Closes connection to the Mongo database
+
+        Returns
+            None
+        """
+
+        if self.client is not None:
+            self.client.close()
+
+    @staticmethod
+    def _open_file(file_path: str, mode: str = 'r') -> None | typing.IO:
+        """
+        Utility function to open file with reasonable error handling.
+
+        Args:
+            file_path (str): Path to file to be opened
+            mode (str, optional): File opening style. Defaults to 'r'.
+
+        Returns:
+            typing.IO: File handle
+        """
+        try:
+            fh = open(file_path, mode)
+        except IOError:
+            logger.error('Unable to open {}'.format(file_path))
+        else:
+            return fh
+
+    @staticmethod
+    def _connect_to_database(uri: str = None, db: str = None) -> tuple:
+        """
+        Sets up connection to server port for mongodb
+
+        Args:
+            uri (str, optional): URI for MongoDB. Defaults to None.
+            db (str, optional): Name of database in MongoDB to use.
+                Defaults to None.
+
+        Returns:
+            tuple: name of database as string and MongoDB client object
+        """
+        # Set up default uri_string to the server Trevor was using on the EIOC
+        if uri is None:
+            uri = env.cst_mongo
+        if db is None:
+            db = env.cst_mongo_db
+        # Set up connection
+        uri = uri.replace('//', '//' + env.cst_user + ':' + env.cst_password + '@')
+        client = MongoClient(uri + '/?authSource=' + db + '&authMechanism=SCRAM-SHA-1')
+        # Test connection
+        try:
+            client.admin.command('ping')
+            logger.info("Pinged your deployment. You successfully connected to MongoDB!")
+        except Exception as ex:
+            logger.info(ex)
+
+        return db, client
+
+    def _check_unique_dict_name(self, collection_name: str, new_name: str) -> bool:
+        """
+        Checks to see if the provided Mongo document name is unique in the 
+        specified Mongo collection.
+
+        Doesn't throw an error if the name is not unique and lets the calling
+        method decide what to do with it.
+
+        Args:
+            collection_name (str): Name of MongoDB collection where document
+                name is being checked
+            new_name (str): Name of JSON (Mongo DB document) whose
+                unique-ness is being checked.
+
+        Return:
+            bool: flag indicating if the name is unique (true) or not
+        """
+        ret_val = True
+        for doc in (self.db[collection_name].find({}, {"_id": 0, self._cst_name: 1})):
+            if doc.__len__():
+                if doc[self._cst_name] == new_name:
+                    ret_val = False
+        return ret_val
+
+    def add_file(self, file: str, conflict: str = 'fail', name: str = None) -> None:
+        """
+        Gets file from disk and adds it to the metadata database for all
+        federates to use.
+
+        The "name" parameter is optional. If provided, the file will be
+        stored by that name in the database. If omitted, the name of the
+        file itself will be used.
+
+        MongoDB allows files to have the same name and creates unique IDs.
+        By default, this method will produce an error if the name of the
+        file being added already exists in the file storage. This can
+        behavior can be altered by specifying the "conflict" parameter
+        to a different value (see below). 
+
+        Args:
+            file (str): file (including path) that is being added to MongoDB
+            conflict (str): Indicates how to handle file name space
+                collisions. Supported values are:
+
+                    "fail":  Produces an error if the file name being added already exists in the database.
+
+                    "overwrite":  New file overwrites the existing one.
+
+                    "add version":  New file is added as a version of the existing one.
+
+            name (str): (optional) Database name of file that can be used
+                when accessing it later. Does not rename the file if defined.
+
+        Returns:
+            None
+        
+        """
+        if not name:
+            path, file = os.path.split(file)
+            name = file
+        fh = self._open_file(file, mode='rb')
+
+        # Check for unique filename
+        db_file = self.fs.files.find({'filename': name})
+        if db_file:
+            if conflict == "fail":
+                raise NameError(f"File '{name}' already exists, set 'conflict' to 'overwrite' to overwrite it.")
+            if conflict == "overwrite":
+                logger.warning(f"File {name} being overwritten.")
+            if conflict == "add version":
+                logger.warning(f"New version of file {name} being added.")
+            else:
+                raise NameError(f"Invalid value for conflict resolution '{name}',"
+                                f"must be 'fail', 'overwrite' or 'add version' ")
+        self.fs.put(fh, filename=name)
+
+    def get_file(self, name: str, disk_name: str = None, path: str = None) -> gridfs.GridOut:
+        """
+        Pulls a file from the dbConfigs by "name" and optionally writes it to
+        disk. This method only gets the latest version of the file (if
+        multiple versions exist).
+
+        If "disk_name" is specified, that name will be used when writing the
+        file to disk; otherwise the file name as specified in the dbConfigs
+        will be used. If "path" is not specified, the file is not written to
+        disk. If it is, the file is written at the location specified by "path"
+        using the provided "disk_name".
+
+        Args:
+            name (str): The name of the file being pulled from the metadata
+                database
+            disk_name (str): (optional) Name of file to use when writing 
+                it to disk. if left undefined the name used to access the file
+                in database will be used.
+            path (str): (optional) Path indicating where the file is to be
+                written on disk. If not specified, the file will not be
+                written to disk.
+        
+        Returns:
+            fileObject: File-like object of file requested
+
+        """
+        db_file = self.fs.files.find({'filename': name})
+        if not db_file:
+            raise NameError(f"File '{name}' does not exist in metadata database.")
+        else:
+            db_file = self.fs.get_last_version(filename=name)
+            if path:
+                if disk_name:
+                    path = os.path.join(path, disk_name)
+                else:
+                    path = os.path.join(path, name)
+                fh = self._open_file(path, 'wb')
+                fh.write(db_file)
+            return db_file
+
+    def remove_collection(self, collection_name: str) -> None:
+        """
+        Removes the MongoDB collection from the dbConfigs specified by
+        "collection_name"
+
+        Args: 
+            collection_name (str): Name of MongoDB collection to remove
+
+        Returns:
+            None
+        """
+        self.db[collection_name].drop()
+        self.update_collection_names()
+        return None
+
+    def add_collection(self, new_collection_name: str):
+        """
+        Creates a collection in the metadata database
+
+        Args: 
+            new_collection_name (str): Name of MongoDB collection to add
+        """
+        for collection in self.db.list_collection_names():
+            if collection == new_collection_name:
+                logger.warning(f"Collection {new_collection_name} already exists")
+        self.db.create_collection(new_collection_name)
+        self.update_collection_names()
+
+    def update_collection_names(self) -> list:
+        """
+        Updates the list of collection names in the db object from the database.
+        As you can see in the code below, this is pure syntax sugar.
+
+        Returns:
+            list: list of collection names
+        """
+        self.collections = self.db.list_collection_names()
+        return self.collections
+
+    def remove_dict(self, collection_name: str,
+                        object_id: bson.objectid.ObjectId = None,
+                        dict_name: str = None) -> None:
+        """
+        Remove the JSON (MongoDB document) specified by "object_id" or 
+        "dataset_name" from the collection specified by "collection_name".
+        "object_id" or "dict_name" must be specified
+
+        Args:
+            collection_name (str): collection string where JSON to be removed
+                lives
+            object_id (bson.objectid.ObjectId): (optional) Mongo DB identifier
+                provided when the JSON was added to the metadata database
+                dataset_name (str): (optional) name of JSON as defined when
+                the JSON was added to the metadata database
+            dict_name (str): Name of JSON whose keys are being queried
+
+        Returns:
+            None
+        """
+        if dict_name is None and object_id is None:
+            raise AttributeError("Must provide the name or object ID of the dictionary to be retrieved.")
+        elif dict_name is not None and object_id is not None:
+            logger.warning("Using provided object ID (and not provided name) to remove document.")
+            self.db[collection_name].delete_one({"_id": object_id})
+        elif dict_name is not None:
+            self.db[collection_name].delete_one({self._cst_name: dict_name})
+        elif object_id is not None:
+            self.db[collection_name].delete_one({"_id": object_id})
+        # TODO: Add check for success on delete.
+
+        return None
+
+    def get_dict_names_in_collection(self, collection_name: str) -> list:
+        """
+        Provides list of document names in collection specified by
+        "collection_name"
+
+        Args:
+            collection_name (str): Name of collection being queried for
+                dictionary names
+
+        Returns:
+            list: list of JSONs in collection
+        """
+        dict_names = []
+        for diction in (self.db[collection_name].find({}, {"_id": 0, self._cst_name: 1})):
+            if diction.__len__():
+                dict_names.append(diction[self._cst_name])
+        return dict_names
+
+    def get_dict_key_names(self, collection_name: str, dict_name: str) -> list:
+        """
+        Provides the list of keys for the JSON specified by "dict_name" in the
+        collection "collection_name".
+
+        Args:
+            collection_name (str): Name of collection where JSON is stored
+                whose keys are being queried
+            dict_name (str): Name of JSON whose keys are being queried
+
+        Returns:
+            list: list of keys for specified JSON
+        """
+
+        if collection_name not in self.collections:
+            raise NameError(f"Collection '{collection_name}' does not exist.")
+        if dict_name not in self.get_dict_names_in_collection(collection_name):
+            raise NameError(f"Document '{dict_name}' does not exist in collection {collection_name}.")
+        doc = self.db[collection_name].find({self._cst_name: dict_name})
+        return doc[0].keys()
+
+    def add_dict(self, collection_name: str, dict_name: str, dict_to_add: dict) -> str:
+        """
+        Adds the Python dictionary to the specified MongoDB collection as a
+        MongoDB document. Checks to make sure another document does not exist
+        by that name; if it does, throw an error.
+
+        To allow later access to the document by name, the field "cst_007"
+        is added to the dictionary before adding it to the collection (the
+        assumption is that "cst_007" will always be a unique field in the 
+        dictionary).
+
+        Args:
+            collection_name (str): Name of collection where JSON is to be added
+            dict_name (str): Name give to the JSON as it is referred to in
+                the metadata database
+            dict_to_add (dict): Dictionary to be added to metadata database
+
+        Returns:
+            str: Mongo database object ID that can be used to query the added
+                JSON out of the database
+        """
+        if self._check_unique_dict_name(collection_name, dict_name):
+            dict_to_add[self._cst_name] = dict_name
+        else:
+            raise NameError(f"{dict_name} is not unique in collection {collection_name} and cannot be added.")
+        obj_id = self.db[collection_name].insert_one(dict_to_add).inserted_id
+        return str(obj_id)
+
+    def get_dict(self, collection_name: str,
+                 object_id: bson.objectid.ObjectId = None,
+                 dict_name: str = None) -> dict:
+        """
+        Returns the dictionary in the database based on the user-provided
+        object ID or name.
+
+        User must enter either the dictionary name used or the object_ID that
+        was created when the dictionary was added but not both.
+
+        Args:
+            collection_name (str): Name of collection in which the JSON to be
+                queried is stored
+            object_id (bson.objectid.ObjectId): (optional) Mongo DB identifier
+                provided when the JSON was added to the metadata database
+                dataset_name (str): (optional) name of JSON as defined when
+                the JSON was added to the metadata database
+            dict_name (str): name of dictionary being updated
+
+
+        """
+        doc: dict = None
+        if dict_name is None and object_id is None:
+            raise AttributeError("Must provide the name or object ID of the dictionary to be retrieved.")
+        elif dict_name is not None and object_id is not None:
+            logger.warning("Using provided object ID (and not provided name) to get dictionary.")
+            doc = self.db[collection_name].find_one({"_id": object_id})
+        elif dict_name is not None:
+            doc = self.db[collection_name].find_one({self._cst_name: dict_name})
+            if not doc:
+                raise NameError(f"{dict_name} does not exist in collection {collection_name} and cannot be retrieved.")
+        elif object_id is not None:
+            doc = self.db[collection_name].find_one({"_id": object_id})
+        # Pulling out the DBConfigs secret name field that was added when we put
+        #   the dictionary into the database. Will not raise an error if
+        #   somehow that key does not exist in the dictionary
+        if doc:
+            doc.pop(self._cst_name, None)
+            doc.pop("_id", None)
+        return doc
+
+    def update_dict(self, collection_name: str,
+                    updated_dict: dict,
+                    object_id: bson.objectid.ObjectId = None,
+                    dict_name: str = None):
+        """
+        Updates the dictionary on the database (under the same object_ID/name)
+        with the passed in updated dictionary.
+
+        User must enter either the dictionary name used or the object_ID that
+        was created when the dictionary was added but not both.
+
+        Args:
+            collection_name (str): name of collection where dict being
+                updated lives
+            updated_dict (dict): new definition of dict being updated
+                (bson.objectid.ObjectId): (optional) Mongo DB identifier
+                provided when the JSON was added to the metadata database
+                dataset_name (str): (optional) name of JSON as defined when
+                the JSON was added to the metadata database
+            object_id (bson.objectid.ObjectId): (optional) Mongo DB identifier
+                provided when the JSON was added to the metadata database
+                dataset_name (str): (optional) name of JSON as defined when
+                the JSON was added to the metadata database
+            dict_name (str): name of dictionary being updated
+
+        """
+        result = None
+        updated_dict[self._cst_name] = dict_name
+        if dict_name is None and object_id is None:
+            raise AttributeError("Must provide the name or object ID of the dictionary to be modified.")
+        elif dict_name is not None and object_id is not None:
+            logger.warning("Using provided object ID (and not provided name) to update database.")
+            result = self.db[collection_name].replace_one({"_id": object_id}, updated_dict)
+        elif dict_name is not None:
+            doc = self.db[collection_name].find_one({self._cst_name: dict_name})
+            if doc:
+                result = self.db[collection_name].replace_one({"_id": doc['_id']}, updated_dict)
+            else:
+                raise NameError(f"{dict_name} does not exist in collection {collection_name} and cannot be updated.")
+        elif object_id is not None:
+            result = self.db[collection_name].replace_one({"_id": object_id}, updated_dict)
+
+    @staticmethod
+    def scenario(analysis_name: str, federation_name: str, start: str, stop: str, docker: bool = False) -> dict:
+        """
+        Creates a properly formatted CoSimulation Toolbox scenario document
+        (dictionary), using the provided inputs.
+
+        Args:
+            analysis_name (str): Name of analysis used in defining the
+                location of the configuration document
+            federation_name (str): Federation name used in configuration
+                document
+            start (str): Start time in ISO 8601 str format
+            stop (str): Stop time in ISO 8601 str format
+            docker (bool): Flag to indicate whether a Docker is used
+
+        Returns:
+            dict: Scenario dictionary
+
+        """
+        return {
+            "analysis": analysis_name,
+            "federation": federation_name,
+            "start_time": start,
+            "stop_time": stop,
+            "docker": docker
+        }
+
+    def store_federation_config(self, name: str, config: dict) -> None:
+        """
+        Loads passed in configuration into metadata store
+
+        Args:
+            name (str): configuration dictionary name
+            config (dict): configuration dictionary to be stored
+
+        Returns:
+            None
+        """
+        self.remove_dict(env.cst_federations, None, name)
+        self.add_dict(env.cst_federations, name, config)
+
+    def store_scenario(self,
+            scenario_name: str, analysis_name: str, federation_name: str,
+            start: str, stop: str, docker: bool = False) -> None:
+        """
+        Stores scenario dictionary in the metadata store
+
+        Args:
+            scenario_name (str): Name of scenario whose dictionary is being stored
+            analysis_name (str): Name of analysis that owns the dictionary
+            federation_name (str): Name of federation used in scenario
+            start (str): Start time in ISO 8601 str format
+            stop (str): Stop time in ISO 8601 str format
+            docker (bool, optional): Flag to indicate whether a Docker is used
+                Defaults to False.
+
+        Returns:
+            None
+        """
+        scenario = self.scenario(analysis_name, federation_name, start, stop, docker)
+        self.remove_dict(env.cst_scenarios, None, scenario_name)
+        self.add_dict(env.cst_scenarios, scenario_name, scenario)
+
+    def get_scenario(self, scenario_name: str) -> dict:
+        """
+        Retrieves scenario configuration information from metadata store
+
+        Args:
+            scenario_name (str): Name of scenario being retrieved
+
+        Returns:
+            dict: scenario dictionary
+        """
+        if scenario_name not in self.list_scenarios():
+            logger.error(f"{scenario_name} not found in {self.list_scenarios()}.")
+        return self.get_dict(env.cst_scenarios, None, scenario_name)
+
+    def get_federation_config(self, federation_name: str) -> dict:
+        """
+        Gets configuration dictionary for the specified dictionary
+
+        Args:
+            federation_name (str): Name of federation whose configuration is
+                being retrieved
+
+        Returns:
+            dict: federation configuration dictionary
+        """
+        if federation_name not in self.list_federations():
+            logger.error(f"{federation_name} not found in {self.list_federations()}.")
+        return self.get_dict(env.cst_federations, None, federation_name)
+
+    def list_scenarios(self) -> list:
+        """
+        Provides list of scenarios in metadata store
+
+        Returns:
+            list: list of scenarios in metadata store
+        """
+        return self.get_dict_names_in_collection(env.cst_scenarios)
+
+    def list_federations(self) -> list:
+        """
+        Provides list of federations in metadata store
+
+        Returns:
+            list: list of federations in metadata store
+        """
+        return self.get_dict_names_in_collection(env.cst_federations)
+
+
+
+def _mytest1():
+    """
+    Main method for launching metadata class to ping local container of mongodb.
+    First user's will need to set up docker desktop (through the PNNL App Store), install mongodb community:
+    https://www.mongodb.com/docs/manual/tutorial/install-mongodb-community-with-docker/
+    But run docker with the port number exposed to the host so that it can be pinged from outside the container:
+    docker run --name mongodb -d -p 27017:27017 mongodb/mongodb-community-server:$MONGODB_VERSION
+    If no version number is important the tag MONGODB_VERSION=latest can be used
+    """
+    db = DBConfigs(env.cst_mongo, env.cst_mongo_db)
+    logger.info(db.update_collection_names())
+    db.add_collection(env.cst_scenarios)
+    db.add_collection(env.cst_federations)
+
+    t1 = HelicsMsg("Battery", period=30)
+    t1.config("core_type", "zmq")
+    t1.config("log_level", "warning")
+    t1.config("period", 60)
+    t1.config("uninterruptible", False)
+    t1.config("terminate_on_error", True)
+    t1.config("wait_for_current_time_update", True)
+    t1.pubs_e("Battery/EV1_current", "double", "A", True)
+    t1 = {
+        "image": "python/3.11.7-slim-bullseye",
+        "federate_type": "value",
+        "time_step": 120,
+        "HELICS_config": t1.write_json()
+    }
+
+    diction = {
+        "federation": {
+            "Battery": t1
+        }
+    }
+
+    scenario_name = "ME30"
+    analysis_name = "Tesp"
+    federate_name = "BT1"
+    db.add_dict(env.cst_federations, federate_name, diction)
+
+    scenario = db.scenario(analysis_name, federate_name, "2023-12-07T15:31:27", "2023-12-08T15:31:27")
+    db.add_dict(env.cst_scenarios, scenario_name, scenario)
+
+    logger.info(db.get_dict_names_in_collection(env.cst_scenarios))
+    logger.info(db.get_dict_names_in_collection(env.cst_federations))
+    logger.info(db.get_dict_key_names(env.cst_federations, federate_name))
+    logger.info(db.get_dict(env.cst_federations, None, federate_name))
+
+
+def _mytest2():
+    """
+    Main method for launching metadata class to ping local container of mongodb.
+    First user's will need to set up docker desktop (through the PNNL App Store), install mongodb community:
+    https://www.mongodb.com/docs/manual/tutorial/install-mongodb-community-with-docker/
+    But run docker with the port number exposed to the host so that it can be pinged from outside the container:
+    docker run --name mongodb -d -p 27017:27017 mongodb/mongodb-community-server:$MONGODB_VERSION
+    If no version number is important the tag MONGODB_VERSION=latest can be used
+    """
+    db = DBConfigs(env.cst_mongo, env.cst_mongo_db)
+    logger.info(db.update_collection_names())
+    db.add_collection(env.cst_scenarios)
+    db.add_collection(env.cst_federations)
+
+    t1 = HelicsMsg("Battery", period=30)
+    t1.config("core_type", "zmq")
+    t1.config("log_level", "warning")
+    t1.config("period", 60)
+    t1.config("uninterruptible", False)
+    t1.config("terminate_on_error", True)
+    t1.config("wait_for_current_time_update", True)
+    t1.pubs_e("Battery/EV1_current", "double", "A", True)
+    t1.subs_e("EVehicle/EV1_voltage", "double", "V", True)
+    t1 = {
+        "image": "python/3.11.7-slim-bullseye",
+        "federate_type": "value",
+        "time_step": 120,
+        "HELICS_config": t1.write_json()
+    }
+
+    t2 = HelicsMsg("EVehicle", period=30)
+    t2.config("core_type", "zmq")
+    t2.config("log_level", "warning")
+    t2.config("period", 60)
+    t2.config("uninterruptible", False)
+    t2.config("terminate_on_error", True)
+    t2.config("wait_for_current_time_update", True)
+    t2.subs_e("Battery/EV1_current", "double", "A", True)
+    t2.pubs_e("EVehicle/EV1_voltage", "double", "V", True)
+    t2 = {
+        "image": "python/3.11.7-slim-bullseye",
+        "federate_type": "value",
+        "time_step": 120,
+        "HELICS_config": t2.write_json()
+    }
+    diction = {
+        "federation": {
+            "Battery": t1,
+            "EVehicle": t2
+        }
+    }
+
+    scenario_name = "TE30"
+    analysis_name = "Tesp"
+    federate_name = "BT1_EV1"
+    db.add_dict(env.cst_federations, federate_name, diction)
+
+    scenario = db.scenario(analysis_name, federate_name, "2023-12-07T15:31:27", "2023-12-08T15:31:27")
+    db.add_dict(env.cst_scenarios, scenario_name, scenario)
+
+    scenario_name = "TE100"
+    # seems to remember the scenario address, not the value so reinitialize
+    scenario = db.scenario(analysis_name, federate_name, "2023-12-07T15:31:27", "2023-12-10T15:31:27", True)
+    db.add_dict(env.cst_scenarios, scenario_name, scenario)
+
+    logger.info(db.get_dict_names_in_collection(env.cst_scenarios))
+    logger.info(db.get_dict_names_in_collection(env.cst_federations))
+    logger.info(db.get_dict_key_names(env.cst_federations, federate_name))
+    logger.info(db.get_dict(env.cst_federations, None, federate_name))
+
+
+if __name__ == "__main__":
+    _mytest1()
+    _mytest2()

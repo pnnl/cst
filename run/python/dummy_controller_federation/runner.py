@@ -8,9 +8,9 @@ shat.pratoomratana@pnnl.gov
 """
 
 import cosim_toolbox as env
-from cosim_toolbox.dbConfigs import DBConfigs
-from cosim_toolbox.dockerRunner import DockerRunner
-from cosim_toolbox.helicsConfig import HelicsMsg
+from cosim_toolbox.sims import DBConfigs
+from cosim_toolbox.sims import DockerRunner
+from cosim_toolbox.sims import HelicsMsg
 
 
 class Runner:
