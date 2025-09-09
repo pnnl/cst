@@ -3,7 +3,7 @@ The installation of CoSim Toolbox (CST) will vary on how the co-simulation is ex
 
 1. Persistent services - These are services that will remain running all the time and are usable by any CST-based co-simulation. The most common of these are the databases for mananing metadata and time-series data.
 2. APIs - CST provides Python APIs for accessing the persistent services and creating new CST-based HELICS federates. Using these APIs means having them installed in one or more appropriate places, depending on how the analysis is being developed.
-3. Docker images - CST provides a docker image with the HELICS co-simulation platform and the CST API installed. This image may or may not be necessary or sufficient for a given analysis but can serve as a starting point for developing the use case. CST also provides Docker images for some simulation tools that have been integrated with CST.
+3. Docker images - CST provides a docker image with the HELICS co-simulation platform and the CST API installed. This image may or may not be necessary or sufficient for a given analysis but can serve as a starting point for developing the analysis. CST also provides Docker images for some simulation tools that have been integrated with CST.
 
 Let's walk through the process of figuring out how to handle these components of CST for a given analysis
 

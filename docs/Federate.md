@@ -1,4 +1,4 @@
-# CoSim Toolbox Federate Class
+# Federate Class
 To aid in making of new Python-based federates and to provide a common integration point for some of the CoSim Toolbox (CST) functionality, a [Federate class](../src/cosim_toolbox/cosim_toolbox/federate.py) has been created. The class has been defined in such a way that, for many simple federates, it will be largely useable as-is, though some degree of customization is always required. Like all programming with classes, to customize the Federate class code, it is expected that the developer will sub-class the CST Federate class and then overload the necessary functions. In some cases you'll want to call the Federate class code first and then add customization, in other cases you'll want to scrap all of a particular method and do your own thing. Its common that some of the customization will involve doing something different with HELICS and thus learning more about HELICS and its APIs.
 
 :::seealso
@@ -12,6 +12,10 @@ As a reference, the class diagram and sequence diagram is shown below that shows
 - `run_cosim_loop()` - Runs the main co-simulation loop
 - `destroy_federate()` - Cleans up after the completion of the co-simulation
 
+:::important
+There is one method that must be overloaded: `update_internal_model()`. If you only read one more thing on this page, read that section below.
+:::
+
 ## Class Diagram
 ```{eval-rst}
 .. uml:: ./design/uml/federate_cd.plantuml
@@ -21,9 +25,9 @@ As a reference, the class diagram and sequence diagram is shown below that shows
 .. uml:: ./design/uml/federate_sd.plantuml
 ```
 
-TODO: probably need to create links to HELICS documentation for some of these.
-
 ## Federate class methods
+
+
 
 ### `create_federate()`
 Alot goes into getting a CST 'federate' stood up and this method takes care of it all. First, the method connects to the metadata database using the URI and database name and, among other things, pulls down the HELICS configuration information. The "publications", "subscriptions", "inputs" and "endpoints" attribute dictionaries are then populated with the names, keys, and destinations in the HELICS config file. Lastly, the HELICS federate itself is created. What follows are the details of the methods called in `create_federate()`
@@ -75,12 +79,18 @@ This method simply makes the HELICS API calls necessary to get the inputs and me
 Data previously stored in the dictionary is erased before being updated to ensure the values are only from the latest granted simulation time.
 
 ### `update_internal_model()`
-OK, this method **must** be overloaded; if you don't CST throws an error. This is the part of the federate that CST can never even approximate as it requires specific knowledge of the federate logic. Additionally, this method must put any data it wants to be published into the `data_to_federation` dictionary (Federate class attribute) as well as delete out any values from the last simulated time that should not be published. 
+OK, this method **must** be overloaded; if you don't CST throws an error. This is where all the non-co-simulation stuff of the federate takes place; this is where all the logic and functionality the federate provides in the co-simulation is executed. If this federate is a thermostat, this is where the logic to determine whether to turn the HVAC system off or on is implemented. If this federate exists to solve a fluid dynamics problem, this is where all those fun differential equations are solved.
 
-This is where the core logic and functionality this federate is providing to the 'federate' is implemented. If this federate is a thermostat, this is where the logic to determine whether to turn the HVAC system off or on is implemented. If this federate exists to solve a fluid dynamics problem, this is where all those fun differential equations are solved.
+Generally, this method will start by getting current values provided by the rest of the federation by reading the `data_from_federation` dictionary. This dictionary holds the latest values of all defined HELICS inputs and endpoints which have (presumably) been defined because they are needed to correctly perform this federate's functionality. The names of the data are the names the federation knows the data by and may or may not well-match the internal variable names. The public federation names of the data are defined by the sending federates in their HELICS configuration JSONs (in the "publication" and "endpoint" sections.)
+
+After reading these inputs and assigning them to appropriate variables in the internal model (_i.e._ variables in the thermostat or fluid dynamics equations or whatever functionality your federate provides), the core logic of the federate is executed. This logic provides whatever functionality the federate provides to the rest of the federation and often involves solving equations.
+
+After this logic is executed and any relevant equations are solved, the outputs this provides to the federation need to be assigned. To do this, the process is the inverse of getting the data from the federation: the variables from the solved equations that hold the relevant keys need to be assigned to the appropriate keys in the `data_to_federation` dictionary. The names in this dictionary are the those defined for "publications" and "endpoints" in this federate's HELICS configuration JSON. 
+
+Though this assignment is generally the final step in this method, it doesn't have to be. For example, clean-up activities after solving equations may be needed or logging diagnostic messages or writing something to file may still need to take place. 
 
 ### `send_data_to_federation()`
-Like "get_data_from_federation()", this method takes the data in the dictionary and sends it out to the rest of the federation via HELICS. This is mostly tedious work, and it is unlikely this method will need to be overloaded. See the API documentation to see how to format the output value depending on whether the output in question is a publication or endpoint.
+Like `get_data_from_federation()`, this method takes the data in the dictionary and sends it out to the rest of the federation via HELICS. This is mostly tedious work, and it is unlikely this method will need to be overloaded. See the API documentation to see how to format the output value depending on whether the output in question is a publication or endpoint.
 
 ### `destroy_federate()`
 After "run_cosim_loop()" has reached the terminal simulation time (as indicated in the object attribute "stop_time"), that loop exits and this method is called. Though not strictly necessary, this method does the clean-up work to exit the co-simulation cleanly and avoid generating any nuisance warning messages.

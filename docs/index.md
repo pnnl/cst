@@ -1,6 +1,6 @@
 # CoSim Toolbox Overview
 
-CoSim Toolbox (CST) is a suite of Dockerized tools and libraries that make it easier to build, run, and analyze HELICS-based co-simulations. Some of these applications are web-based services (_e.g._ databases for storing configuration and simulation data) and some of these are simulation tools themselves. Additionally, CST provides a Python HELICS federate class that makes writing a HELICs federate easier and provides access to some CST functionality with no additional coding.
+CoSim Toolbox (CST) is a suite of libraries and Dockerized tools that make it easier to build, run, and analyze HELICS-based co-simulations. Some of these applications are web-based services (_e.g._ databases for storing configuration and simulation data) and some of these are simulation tools themselves. Additionally, CST provides a Python HELICS federate class that makes writing a HELICS federate easier and provides access to some CST functionality with no additional coding.
 
 ## Major Features
 CoSim Toolbox has the following key features:
@@ -11,7 +11,7 @@ CoSim Toolbox has the following key features:
 - **Co-Simulation Monitoring** - CST has integrated a tool that allows monitoring of the data collected by the logging functionality during the running of the co-simulation.
 - **CST federate class** - CST provides a Python Federate class that is both a template for how a basic HELICS federate operates as well as incorporating the the HELICS API calls so that for basic federates, no knowledge of HELICS APIs are required to write the federate. And being class-based, users are able to sub-class and overload any of the methods to provide specific functionality not implemented in the basic Federate class.
 
-The time-series data logging, configuration management, and monitoring are considered "persistent services" that can be installed and run locally on the user's computer via Docker or can be installed in a centralized location for a group or team to use collectively. The former can be useful for initial development or where data is meant to be kept private. The later is useful when working on a team with centralized computation infrastructure for both data-sharing or co-simulation performance reasons.
+The time-series data logging, configuration management, and monitoring are considered "persistent services" that can be installed and run locally on the user's computer via Docker or can be installed in a remote location for a group or team to use collectively. The former can be useful for initial development or where data is meant to be kept private. The later is useful when working on a team with centralized computation infrastructure for both data-sharing or co-simulation performance reasons.
 
 
 ## Documentation Introduction
