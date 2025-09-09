@@ -10,8 +10,8 @@ import json
 import sys
 import time
 
-from cosim_toolbox.federate import Federate
-from cosim_toolbox.bench_profile import bench_profile
+from cosim_toolbox.sims import Federate
+from cosim_toolbox.sims.bench_profile import bench_profile
 
 class CST_Time:
     def __init__(self):

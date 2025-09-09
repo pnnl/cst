@@ -1,7 +1,7 @@
 import logging
 
 import cosim_toolbox as env
-from cosim_toolbox.dbConfigs import DBConfigs
+from .dbConfigs import DBConfigs
 
 logger = logging.getLogger(__name__)
 

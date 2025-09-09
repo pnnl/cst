@@ -1,5 +1,5 @@
 from datetime import timedelta
-from cosim_toolbox.metadata_factory import create_metadata_manager
+from cosim_toolbox.dbms.metadata_factory import create_metadata_manager
 from cosim_toolbox.dbms import create_timeseries_manager
 from cosim_toolbox.dbms import TSRecord
 from datetime import datetime

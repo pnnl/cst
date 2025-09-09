@@ -10,7 +10,7 @@ mitch.pelton@pnnl.gov
 
 import sys
 
-from cosim_toolbox.federate import Federate
+from cosim_toolbox.sims import Federate
 
 
 class SimpleFederate(Federate):

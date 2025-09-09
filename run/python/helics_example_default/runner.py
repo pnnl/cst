@@ -7,12 +7,12 @@ from multiprocessing import Process
 
 import helics as h
 
-import cosim_toolbox.federateLogger as datalog
+import cosim_toolbox.sims.federateLogger as datalog
 from battery import Battery
 from charger import Charger
 from configurator import Configurator
-from cosim_toolbox.dockerRunner import DockerRunner
-from cosim_toolbox.readConfig import ReadConfig
+from cosim_toolbox.sims import DockerRunner
+from cosim_toolbox.sims import ReadConfig
 
 
 def run(scenario_name):

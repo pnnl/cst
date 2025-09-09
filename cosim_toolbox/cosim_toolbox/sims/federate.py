@@ -189,7 +189,6 @@ class Federate:
         # setting up data logging
         if self.config.get("tags"):
             self.fed_collect = self.config["tags"].get("logger", self.fed_collect)
-            print(self.fed_collect)
 
     def create_federate(self, scenario_name: str,
                         use_meta_db: str ="mongo",
@@ -679,7 +678,6 @@ class Federate:
             self._count += 1
             if self._count > self.interval:
                 self.timeseries_manager.flush()
-                print(record)
                 self._count = 0
 
     def destroy_federate(self) -> None:

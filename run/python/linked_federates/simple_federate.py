@@ -8,7 +8,7 @@ Python-based logger federate in CoSimulation Toolbox.
 """
 import sys
 
-from cosim_toolbox.federate import Federate
+from cosim_toolbox.sims import Federate
 
 
 def increment_double(original_value):

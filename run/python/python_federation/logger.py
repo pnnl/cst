@@ -1,22 +1,10 @@
-import sys
-from cosim_toolbox.federateLogger import FederateLogger
-from pathlib import Path
 
-base_path = Path(__file__).parent
+from cosim_toolbox.sims import FederateLogger
+
 if __name__ == "__main__":
-    metadata_location = base_path / "config"
-    timeseries_location = base_path / "data"
-    # metadata_location=Path(__file__).parent / "config"
-    # timeseries_location=Path(__file__).parent / "data"
 
-    test_fed = FederateLogger(
-        "logger",
-        use_meta_db="json",
-        use_data_db="csv",
-        metadata_location=metadata_location,
-        timeseries_location=timeseries_location,
-    )
-    test_fed.run("MyScenario")
-
-
-# datalog.main('FederateLogger', 'HelicsExampleDefaultAnalysis', 'HelicsExampleDefault')
+    test_fed = FederateLogger()
+    test_fed.run("MyScenario",
+                 use_meta_db = "json",
+                 use_data_db = "csv"
+                 )

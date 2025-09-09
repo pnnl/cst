@@ -17,7 +17,7 @@ logger.setLevel(logging.ERROR)
 
 from unittest.mock import patch
 import unittest
-from cosim_toolbox.federate import Federate
+from cosim_toolbox.sims import Federate
 
 class MockHelicsInput:
     def __init__(self):

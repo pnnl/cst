@@ -8,7 +8,7 @@ nathan.gray@pnnl.gov
 import unittest
 import logging
 from unittest.mock import patch
-from cosim_toolbox.federate import Federate
+from cosim_toolbox.sims import Federate
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler())

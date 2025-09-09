@@ -3,8 +3,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 import cosim_toolbox as env
-from cosim_toolbox.dbConfigs import DBConfigs
-from cosim_toolbox.dockerRunner import DockerRunner
+from cosim_toolbox.sims import DBConfigs
+from cosim_toolbox.sims import DockerRunner
 
 PYTHON_CMD_PREFIX = "python3 "
 GRIDLABD_CMD_PREFIX = "gridlabd "

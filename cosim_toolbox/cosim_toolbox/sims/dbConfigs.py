@@ -14,7 +14,7 @@ import gridfs
 import bson
 
 import cosim_toolbox as env
-from cosim_toolbox.helicsConfig import HelicsMsg
+from .helicsConfig import HelicsMsg
 
 logger = logging.getLogger(__name__)
 

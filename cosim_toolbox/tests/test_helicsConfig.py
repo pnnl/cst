@@ -5,9 +5,9 @@ import json
 import os
 import unittest
 
-from cosim_toolbox.helicsConfig import HelicsMsg
-from cosim_toolbox.federation import FederateConfig
-from cosim_toolbox.federation import FederationConfig
+from cosim_toolbox.sims import HelicsMsg
+from cosim_toolbox.sims import FederateConfig
+from cosim_toolbox.sims import FederationConfig
 
 
 class TestHelicsMsg(unittest.TestCase):

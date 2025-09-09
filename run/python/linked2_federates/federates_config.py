@@ -9,9 +9,9 @@ import gridlabd_output
 import substation_output
 import pypower_output
 import weather_output
-from cosim_toolbox.federation import FederateConfig
-from cosim_toolbox.federation import FederationConfig
-from cosim_toolbox.dockerRunner import DockerRunner
+from cosim_toolbox.sims import FederateConfig
+from cosim_toolbox.sims import FederationConfig
+from cosim_toolbox.sims import DockerRunner
 from tesp_support.api.modify_GLM import GLMModifier
 
 use_meta_db = "json"
@@ -89,7 +89,10 @@ def define_federation_list():
                     "keys": ["", "network_node"],
                     "indices": []},
             "des": [{"to_fed": names[1],
-                     "from_fed": names[0]}]}
+                     "from_fed": names[0]},
+                    {"to_fed": names[2],
+                     "from_fed": names[0]}
+                    ]}
     house = {"src": gld_fmt["house"],
              "des": [{"to_fed": names[1],
                       "from_fed": names[0] }]}
@@ -126,7 +129,7 @@ def define_federation_list():
                "des": [{"to_fed": names[0],
                         "from_fed": names[2],
                         "keys": ["@@", "network_node"],
-                        "indices": [["three_phase_voltage_7", True]]
+                        "indices": [["positive_sequence_voltage", True]]
                         }]}
     # weather
     weather = {"src": {"from_fed": names[3]},
@@ -138,7 +141,7 @@ def define_federation_list():
     federation = FederationConfig("MyLink2Scenario",
                                   "MyLink2Analysis",
                                   "MyLink2Federation",
-                                  with_docker)
+                                  with_docker, use_meta_db="json")
     f1 = federation.add_federate_config(FederateConfig(names[0], period=15))
     f2 = federation.add_federate_config(FederateConfig(names[1], period=15))
     f3 = federation.add_federate_config(FederateConfig(names[2], period=15))
@@ -166,7 +169,7 @@ def define_federation_list():
     federation.add_group("clear_price", "double", bid)
     # pypower
     federation.add_group("LMP_7", "double", lmp)
-    federation.add_group("three_phase_voltage_7", "double", voltage)
+    federation.add_group("three_phase_voltage_7", "complex", voltage)
     # weather
     federation.add_group("temperature", "double", weather)
     federation.add_group("humidity", "double", weather)
@@ -176,10 +179,11 @@ def define_federation_list():
     federation.add_group("wind_speed", "double", weather)
     federation.define_io()
 
-    missing = federation.check_pubs()
-    print("pubs-> ", missing)
-    missing = federation.check_subs()
-    print("subs-> ", missing)
+    # debug
+    # missing = federation.check_pubs()
+    # print("pubs-> ", missing)
+    # missing = federation.check_subs()
+    # print("subs-> ", missing)
 
     if with_docker:
         f1.config("image", "cosim-cst:latest")
@@ -194,6 +198,7 @@ def define_federation_list():
     f4.config("command", f"python3 -c \"import tesp_support.weather.weather_agent as tesp;tesp.startWeatherAgent('weather.dat')\"")
 
     federation.write_config("2023-12-07T15:31:27", "2023-12-08T15:31:27")
+    federation.write_file_helics_configs()
     DockerRunner.define_sh("MyLink2Scenario")
 
 def define_federation():
@@ -207,7 +212,13 @@ def define_federation():
                      "from_fed": names[0],
                      "keys": ["", ""],
                      "indices": []
-                     }]}
+                    },
+                    {"to_fed": names[2],
+                     "from_fed": names[0],
+                     "keys": ["", ""],
+                     "indices": []
+                    }
+                   ]}
     house = {"src": {"from_fed": names[0],
                      "keys": ["Fdr1_Houses_@@_hse_##", "Fdr1_Houses_@@_hse_##"],
                      "indices": [["A", 1, 501], ["B", 1, 501], ["C", 1, 501]]},
@@ -262,7 +273,7 @@ def define_federation():
                "des": [{"to_fed": names[0],
                         "from_fed": names[2],
                         "keys": ["@@", "network_node"],
-                        "indices": [["three_phase_voltage_7", True]]
+                        "indices": [["positive_sequence_voltage", True]]
                         }]}
     # weather
     weather = {"src": {"from_fed": names[3]},
@@ -274,7 +285,7 @@ def define_federation():
     federation = FederationConfig("MyLink2Scenario",
                                   "MyLink2Analysis",
                                   "MyLink2Federation",
-                                  with_docker)
+                                  with_docker, use_meta_db="json")
     f1 = federation.add_federate_config(FederateConfig(names[0], period=15))
     f2 = federation.add_federate_config(FederateConfig(names[1], period=15))
     f3 = federation.add_federate_config(FederateConfig(names[2], period=15))
@@ -312,10 +323,12 @@ def define_federation():
     federation.add_group("wind_speed", "double", weather)
     federation.define_io()
 
-    missing = federation.check_pubs()
-    print("pubs-> ", missing)
-    missing = federation.check_subs()
-    print("subs-> ", missing)
+    # debug
+    # missing = federation.check_pubs()
+    # print("pubs-> ", missing)
+    # missing = federation.check_subs()
+    # print("subs-> ", missing)
+
     if with_docker:
         f1.config("image", "cosim-cst:latest")
         f2.config("image", "cosim-cst:latest")
@@ -329,6 +342,7 @@ def define_federation():
     f4.config("command", f"python3 -c \"import tesp_support.weather.weather_agent as tesp;tesp.startWeatherAgent('weather.dat')\"")
 
     federation.write_config("2023-12-07T15:31:27", "2023-12-08T15:31:27")
+    federation.write_file_helics_configs()
     DockerRunner.define_sh("MyLink2Scenario")
 
 def define_match():
@@ -336,7 +350,7 @@ def define_match():
     federation = FederationConfig("MyLink2Scenario",
                                   "MyLink2Analysis",
                                   "MyLink2Federation",
-                                  with_docker)
+                                  with_docker, use_meta_db="json")
 
     federation.add_federate_config(gridlabd_output.MyFederateMatch(names[0], period=15))
     federation.add_federate_config(substation_output.MyFederateMatch(names[1], period=15))
@@ -347,12 +361,14 @@ def define_match():
     federation.add_subs(names[2],[names[1]],False)
     federation.define_io()
 
-    missing = federation.check_pubs()
-    print("pubs-> ", missing)
-    missing = federation.check_subs()
-    print("subs-> ", missing)
+    # debug
+    # missing = federation.check_pubs()
+    # print("pubs-> ", missing)
+    # missing = federation.check_subs()
+    # print("subs-> ", missing)
 
     federation.write_config("2023-12-07T15:31:27", "2023-12-08T15:31:27")
+    federation.write_file_helics_configs()
     DockerRunner.define_sh("MyLink2Scenario")
 
 def define_format():
@@ -360,7 +376,7 @@ def define_format():
     federation = FederationConfig("MyLink2Scenario",
                                   "MyLink2Analysis",
                                   "MyLink2Federation",
-                                  with_docker)
+                                  with_docker, use_meta_db="json")
 
     federation.add_federate_config(gridlabd_output.MyFederate(names[0], period=15))
     federation.add_federate_config(substation_output.MyFederate(names[1], period=15))
@@ -368,12 +384,14 @@ def define_format():
     federation.add_federate_config(weather_output.MyFederate(names[3], period=300))
     federation.define_io()
 
-    missing = federation.check_pubs()
-    print("pubs-> ", missing)
-    missing = federation.check_subs()
-    print("subs-> ", missing)
+    # debug
+    # missing = federation.check_pubs()
+    # print("pubs-> ", missing)
+    # missing = federation.check_subs()
+    # print("subs-> ", missing)
 
     federation.write_config("2023-12-07T15:31:27", "2023-12-08T15:31:27")
+    federation.write_file_helics_configs()
     DockerRunner.define_sh("MyLink2Scenario")
 
 if __name__ == "__main__":

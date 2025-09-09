@@ -22,7 +22,7 @@ from datetime import timedelta
 from psycopg2 import connect
 
 import cosim_toolbox as env
-from cosim_toolbox.readConfig import ReadConfig
+from .readConfig import ReadConfig
 
 logger = logging.getLogger(__name__)
 

@@ -1,5 +1,5 @@
 import sys
-from cosim_toolbox.federate import Federate
+from cosim_toolbox.sims import Federate
 import numpy as np
 import logging
 import json

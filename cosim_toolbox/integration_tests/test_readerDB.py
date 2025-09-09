@@ -7,9 +7,9 @@ import subprocess
 import unittest
 
 import cosim_toolbox as env
-from cosim_toolbox.dbResults import DBResults
-from cosim_toolbox.dbConfigs import DBConfigs
-from cosim_toolbox.helicsConfig import HelicsMsg, Collect
+from cosim_toolbox.sims import DBResults
+from cosim_toolbox.sims import DBConfigs
+from cosim_toolbox.sims import HelicsMsg, Collect
 
 class Singleton(object):
     _instance = None

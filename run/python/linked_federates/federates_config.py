@@ -8,11 +8,11 @@ mitch.pelton@pnnl.gov
 import simple_config
 import simple_config2
 #import cosim_toolbox.federation as fed
-from cosim_toolbox.helicsConfig import Collect
-from cosim_toolbox.helicsConfig import HelicsEndPtGroup
-from cosim_toolbox.federation import FederateConfig
-from cosim_toolbox.federation import FederationConfig
-from cosim_toolbox.dockerRunner import DockerRunner
+from cosim_toolbox.sims import Collect
+from cosim_toolbox.sims import HelicsEndPtGroup
+from cosim_toolbox.sims import FederateConfig
+from cosim_toolbox.sims import FederationConfig
+from cosim_toolbox.sims import DockerRunner
 
 use_meta_db = "json"
 use_data_db = "csv"

@@ -7,8 +7,8 @@ Copper.
 @author:
 mitch.pelton@pnnl.gov
 """
-from cosim_toolbox.helicsConfig import HelicsMsg
-from cosim_toolbox.dockerRunner import DockerRunner
+from cosim_toolbox.sims import HelicsMsg
+from cosim_toolbox.sims import DockerRunner
 from cosim_toolbox.dbms import create_metadata_manager
 
 

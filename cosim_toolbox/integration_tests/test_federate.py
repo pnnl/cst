@@ -2,9 +2,11 @@
 import threading
 import helics as h
 import collections
+
 collections.Callable = collections.abc.Callable
-from cosim_toolbox.federate import Federate
-from cosim_toolbox.dbConfigs import DBConfigs
+
+from cosim_toolbox.sims import Federate
+from cosim_toolbox.sims import DBConfigs
 
 # create a db for a simple federation
 local_default_uri = 'mongodb://localhost:27017'

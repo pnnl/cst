@@ -1,6 +1,6 @@
 import os
 
-from cosim_toolbox.federate import Federate
+from cosim_toolbox.sims import Federate
 from julia import Main
 
 Main.include(os.path.join(os.path.dirname(__file__), "jl_functions.jl"))

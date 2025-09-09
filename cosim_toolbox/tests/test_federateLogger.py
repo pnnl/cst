@@ -3,7 +3,7 @@ collections.Callable = collections.abc.Callable
 
 import unittest
 
-from cosim_toolbox.federateLogger import FederateLogger
+from cosim_toolbox.sims import FederateLogger
 
 
 class TestFederateLogger(unittest.TestCase):

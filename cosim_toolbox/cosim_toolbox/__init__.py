@@ -56,7 +56,7 @@ mongo_meta_db = {
 }
 
 json_meta_db = {
-    "location": "./data"
+    "location": "./meta_store"
 }
 
 # Database connection strings for data
@@ -77,5 +77,5 @@ pg_data_db = {
 }
 
 csv_data_db = {
-    "location": "./config",
+    "location": "./data_store",
 }

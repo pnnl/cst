@@ -1,7 +1,7 @@
 import helics as h
 import multiprocessing as mp
 
-from cosim_toolbox.dbConfigs import DBConfigs
+from cosim_toolbox.sims import DBConfigs
 from pyjulia_federates import Python_Fed, PyJulia_Fed
 
 """

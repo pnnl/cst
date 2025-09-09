@@ -83,11 +83,14 @@ class HelicsFormatter:
                     obj = obj.replace("@@", k[0])
                     var = self.diction.copy()
                     if k[1]:
-                        var["key"] = global_fed + key
+                        var["key"] = global_fed + self.name
                     else:
                         var["key"] = global_fed + key + self.seperator + self.name
                     if len(obj) > 0:
-                        var["info"] = {"object": obj, "property": self.name}
+                        if self.group == Group.SUB:
+                            var["info"] = {"object": obj, "property": key}
+                        else:
+                            var["info"] = {"object": obj, "property": self.name}
                     variables.append(var)
             elif "##" in self.keys[0]:
                 for k in self.indices:
@@ -98,11 +101,14 @@ class HelicsFormatter:
                         obj = obj.replace("##", str(j))
                         var = self.diction.copy()
                         if k[2]:
-                            var["key"] = global_fed + key
+                            var["key"] = global_fed + self.name
                         else:
                             var["key"] = global_fed + key + self.seperator + self.name
                         if len(obj) > 0:
-                            var["info"] = {"object": obj, "property": self.name}
+                            if self.group == Group.SUB:
+                                var["info"] = {"object": obj, "property": key}
+                            else:
+                                var["info"] = {"object": obj, "property": self.name}
                         variables.append(var)
             else:
             # Single

@@ -1,3 +1,4 @@
+#
 """
 Created on 12/14/2023
 
@@ -14,8 +15,8 @@ mitch.pelton@pnnl.gov
 import sys
 import logging
 
-from cosim_toolbox.federate import Federate
-from cosim_toolbox.helicsConfig import HelicsMsg
+from .federate import Federate
+from .helicsConfig import HelicsMsg
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler())

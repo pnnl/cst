@@ -1,5 +1,5 @@
 import argparse
-from cosim_toolbox.federate import Federate
+from cosim_toolbox.sims import Federate
 import helics as h
 import logging
 import numpy as np

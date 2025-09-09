@@ -4,7 +4,7 @@ import os
 import unittest
 
 import cosim_toolbox as env
-from cosim_toolbox.dbConfigs import DBConfigs
+from cosim_toolbox.sims import DBConfigs
 
 import collections
 collections.Callable = collections.abc.Callable

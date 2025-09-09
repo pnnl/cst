@@ -9,9 +9,7 @@ using helicsMsg class and write it out to a federation configuration JSON.
 mitch.pelton@pnnl.gov
 """
 
-from cosim_toolbox.helicsConfig import HelicsPubGroup
-from cosim_toolbox.helicsConfig import HelicsSubGroup
-from cosim_toolbox.helicsConfig import HelicsMsg
+from .helicsConfig import HelicsPubGroup, HelicsSubGroup, HelicsMsg
 from cosim_toolbox.dbms import create_metadata_manager
 
 
@@ -218,7 +216,7 @@ class FederationConfig:
             parts = pub["key"].split("/")
             property_name = parts[-1]
             sub = sub_group.diction.copy()
-            sub["key"] = des_format["to_fed"] + "/" + pub["key"]
+            sub["key"] = des_format["from_fed"] + "/" + pub["key"]
             if "info" in des_format:
                 obj = parts[len(parts) - 2]
                 sub["info"] = { "object": obj, "property": property_name }
@@ -247,6 +245,16 @@ class FederationConfig:
                     v_name: str, v_type: str, v_unit: str):
         from_fed.pubs_e(from_fed.name + "/" + v_name, v_type, v_unit)
         to_fed.subs_e(from_fed.name + "/" + v_name, v_type, v_unit)
+
+    def write_file_helics_configs(self):
+        """
+        This method iterates through all registered federates, generates their
+        individual HELICS JSON configurations, and write them on disk.
+
+        """
+        for name, fed in self.federates.items():
+            # This generates the HELICS config and adds it to the federate's internal config
+            fed.helics.write_file(f"{name}.json")
 
     def get_federation_document(self) -> dict:
         """
@@ -300,18 +308,18 @@ class FederationConfig:
             print("Configuration files written successfully.")
 
 
-def mytest():
+def _mytest():
     remote = False
     with_docker = False
-    federation = FederationConfig("MyTestScenario", "MyTestanalysis", "MyTestFederation", with_docker)
+    federation = FederationConfig("MyTestScenario", "MyTestAnalysis", "MyTestFederation", with_docker)
     f1 = federation.add_federate_config(FederateConfig("Battery", period=30))
     f2 = federation.add_federate_config(FederateConfig("EVehicle", period=30))
 
-    federation.add_pub_sub(f1, f2, "EV1_current", "double", "A")
+    federation.add_pub_sub(f1.helics, f2.helics, "EV1_current", "double", "A")
     f1.config("image", "cosim-cst:latest")
     f1.config("command", f"python3 simple_federate.py {f1.name} {federation.scenario_name}")
 
-    federation.add_pub_sub(f2, f1, "EV1_voltage", "double", "V")
+    federation.add_pub_sub(f2.helics, f1.helics, "EV1_voltage", "double", "V")
     f2.config("image", "cosim-cst:latest")
     f2.config("command", f"python3 simple_federate.py {f2.name} {federation.scenario_name}")
     federation.define_io()
@@ -319,4 +327,4 @@ def mytest():
     federation.write_config("2023-12-07T15:31:27", "2023-12-08T15:31:27")
 
 if __name__ == "__main__":
-    mytest()
+    _mytest()

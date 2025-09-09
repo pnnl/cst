@@ -12,9 +12,9 @@ This script demonstrates how to:
 mitch.pelton@pnnl.gov
 """
 
-from cosim_toolbox.helicsConfig import Collect, HelicsPubGroup, HelicsSubGroup
-from cosim_toolbox.federation import FederateConfig, FederationConfig
-from cosim_toolbox.dockerRunner import DockerRunner
+from cosim_toolbox.sims import Collect, HelicsPubGroup, HelicsSubGroup
+from cosim_toolbox.sims import FederateConfig, FederationConfig
+from cosim_toolbox.sims import DockerRunner
 
 # Helper dictionary for defining publications and subscriptions
 fmt = {
