@@ -204,8 +204,8 @@ class Federate:
 
         Args:
             scenario_name (str): Name of scenario used to store configuration information in the dbConfigs
-            use_meta_db (bool, optional): Whether to use a metadata database (e.g., MongoDB). Defaults to True.
-            use_data_db (bool, optional): Whether to use a timeseries database (e.g., PostgreSQL). Defaults to True.
+            use_meta_db (str, optional): Whether to use a metadata database (e.g., MongoDB). Defaults to mongo.
+            use_data_db (str, optional): Whether to use a timeseries database (e.g., PostgreSQL). Defaults to postgres.
 
         Raises:
             NameError: Scenario name is undefined (`None`)
@@ -720,8 +720,8 @@ class Federate:
 
         Args:
             scenario_name (str): Name of scenario used to store configuration information in the dbConfigs
-            use_meta_db (bool, optional): Whether to use a metadata database (e.g., MongoDB). Defaults to True.
-            use_data_db (bool, optional): Whether to use a timeseries database (e.g., PostgreSQL). Defaults to True.
+            use_meta_db (str, optional): Whether to use a metadata database (e.g., MongoDB). Defaults to mongo.
+            use_data_db (str, optional): Whether to use a timeseries database (e.g., PostgreSQL). Defaults to postgres.
         """
         self.create_federate(scenario_name, use_meta_db, use_data_db)
         self.run_cosim_loop()
