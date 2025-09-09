@@ -16,14 +16,10 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-import os
-#import sys
-#sys.path.insert(0, os.path.abspath('.'))
-#sys.path.insert(0, os.path.abspath('../src/cosim_toolbox'))
-#sys.path.insert(0, os.path.abspath('../../install/Linux'))
-#sys.path.insert(0, os.path.abspath('../../install/MacOSX'))
-#sys.path.insert(0, os.path.abspath('../../install/Windows'))
+import subprocess
 
+cmd = "./make_apidoc.sh"
+subprocess.Popen(cmd, shell=True).wait()
 
 # -- General configuration ------------------------------------------------
 

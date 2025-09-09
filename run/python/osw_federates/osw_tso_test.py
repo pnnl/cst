@@ -29,7 +29,7 @@ from egret.data.model_data import ModelData
 from egret.models.unit_commitment import solve_unit_commitment, SlackType
 import pyenergymarket as pyen
 
-from cosim_toolbox.federate import Federate
+from cosim_toolbox.sims import Federate
 from osw_da_market import OSWDAMarket
 from osw_rt_market import OSWRTMarket
 # from osw_reserves_market import OSWReservesMarket

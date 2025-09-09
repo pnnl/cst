@@ -19,8 +19,8 @@ from pathlib import Path
 import pandas as pd
 
 import cosim_toolbox as env
-from cosim_toolbox.dbResults import DBResults
-from cosim_toolbox.dbConfigs import DBConfigs
+from cosim_toolbox.sims import DBResults
+from cosim_toolbox.sims import DBConfigs
 
 class ScenarioReader:
     def __init__(self, scenario_name: str):

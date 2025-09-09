@@ -10,8 +10,8 @@ import json
 import sys
 import time
 
-from cosim_toolbox.federate import Federate
-from cosim_toolbox.bench_profile import bench_profile
+from cosim_toolbox.sims import Federate
+from cosim_toolbox.sims.bench_profile import bench_profile
 
 class CST_Time:
     def __init__(self):
@@ -30,10 +30,10 @@ class CST_Time:
 
 @bench_profile
 class CST_Federate(Federate):
-    def __init__(self, fed_name="", use_mdb=True, use_pdb=True, **kwargs):
+    def __init__(self, fed_name="", **kwargs):
         self.tmp = 0.
         self.dummy = 0.
-        super().__init__(fed_name, use_mdb=use_mdb, use_pdb=use_pdb, **kwargs)
+        super().__init__(fed_name, **kwargs)
         self.path_csv = "federate_outputs/"
 
     def update_internal_model(self):
@@ -73,8 +73,11 @@ if __name__ == "__main__":
 
     t_ = CST_Time()
     t_.timing(True)
-    test_fed = CST_Federate(sys.argv[1], use_mdb=use_dbase, use_pdb=use_dbase)
-    test_fed.create_federate(sys.argv[2])
+    test_fed = CST_Federate(sys.argv[1])
+    if use_dbase:
+        test_fed.create_federate(sys.argv[2], "mongo", "postgres")
+    else:
+        test_fed.create_federate(sys.argv[2], "json", "csv")
     test_fed.run_cosim_loop()
     test_fed.destroy_federate()
     t_.timing(False)

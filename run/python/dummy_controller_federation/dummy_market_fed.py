@@ -8,7 +8,7 @@ will send dummy data to the federation, to test the dummy controller.
 shat.pratoomratana@pnnl.gov
 """
 import sys
-from cosim_toolbox.federate import Federate
+from cosim_toolbox.sims import Federate
 import json
 
 def DAM_clearing_info():

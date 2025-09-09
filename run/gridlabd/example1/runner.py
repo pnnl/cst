@@ -1,8 +1,8 @@
 """
 
 """
-from cosim_toolbox.dockerRunner import DockerRunner
-from cosim_toolbox.dbConfigs import DBConfigs
+from cosim_toolbox.sims import DockerRunner
+from cosim_toolbox.sims import DBConfigs
 from configurator import Configurator
 
 if __name__ == "__main__":

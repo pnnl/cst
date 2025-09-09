@@ -1,4 +1,4 @@
-from cosim_toolbox.federateGridlabD import FederateGridlabD
+from ..federateGridlabD import FederateGridlabD
 
 if __name__ == '__main__':
     gld = FederateGridlabD(fed_name="gld")

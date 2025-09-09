@@ -7,10 +7,9 @@ Copper.
 @author:
 mitch.pelton@pnnl.gov
 """
-import cosim_toolbox as env
-from cosim_toolbox.dbConfigs import DBConfigs
-from cosim_toolbox.helicsConfig import HelicsMsg
-from cosim_toolbox.dockerRunner import DockerRunner
+from cosim_toolbox.sims import HelicsMsg
+from cosim_toolbox.sims import DockerRunner
+from cosim_toolbox.dbms import create_metadata_manager
 
 
 class Runner:
@@ -20,7 +19,6 @@ class Runner:
         self.analysis_name = analysis_name
         self.federation_name = federation_name
         self.docker = docker
-        self.db = DBConfigs(env.cst_mongo, env.cst_mongo_db)
 
     def define_scenario(self):
         names = ["Battery", "EVehicle"]
@@ -63,18 +61,19 @@ class Runner:
         }
         # print(diction)
 
-        self.db.remove_document(env.cst_federations, None, self.federation_name)
-        self.db.add_dict(env.cst_federations, self.federation_name, diction)
-        # print(env.cst_federations, self.db.get_collection_document_names(env.cst_federations))
+        scenario = {
+            "analysis": self.analysis_name,
+            "federation": self.federation_name,
+            "start_time": "2023-12-07T15:31:27",
+            "stop_time": "2023-12-08T15:31:27",
+            "docker": self.docker
+        }
 
-        scenario = self.db.scenario(self.analysis_name,
-                                    self.federation_name,
-                                    "2023-12-07T15:31:27",
-                                    "2023-12-08T15:31:27",
-                                    self.docker)
-        self.db.remove_document(env.cst_scenarios, None, self.scenario_name)
-        self.db.add_dict(env.cst_scenarios, self.scenario_name, scenario)
-        # print(env.cst_scenarios, self.db.get_collection_document_names(env.cst_scenarios))
+        with create_metadata_manager() as mgr:
+            print(f"Writing configuration files to '{mgr.location}'...")
+            mgr.write_federation(self.federation_name, diction, overwrite=True)
+            mgr.write_scenario(self.scenario_name, scenario, overwrite=True)
+            print("Configuration files written successfully.")
 
 
 def main():

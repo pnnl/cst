@@ -7,13 +7,14 @@ Copper.
 @author:
 mitch.pelton@pnnl.gov
 """
+
 import sys
 
-from cosim_toolbox.federate import Federate
+from cosim_toolbox.sims import Federate
 
 
 class SimpleFederate(Federate):
-    def __init__(self, fed_name="", analysis="default", **kwargs):
+    def __init__(self, fed_name="", **kwargs):
         self.dummy = 0
         super().__init__(fed_name, **kwargs)
 

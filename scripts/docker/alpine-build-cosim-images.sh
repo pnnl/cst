@@ -22,12 +22,12 @@ fi
 
 paths=(
   "./"
-  "${CST_ROOT}/src/cosim_toolbox/"
-  "${CST_ROOT}/src/cosim_toolbox/"
+  "${CST_ROOT}/src/"
+  "${CST_ROOT}/src/"
   "./"
   "${CST_ROOT}/scripts/build/"
   "./"
-  "${CST_ROOT}/src/cosim_toolbox/"
+  "${CST_ROOT}/src/"
   "./"
   "./"
   "/home/d3j331/tesp/repository/mesp/"

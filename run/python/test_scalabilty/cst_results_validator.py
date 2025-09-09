@@ -22,8 +22,8 @@ import psutil
 import pandas as pd
 
 import cosim_toolbox as env
-from cosim_toolbox.dbResults import DBResults
-from cosim_toolbox.readConfig import ReadConfig
+from cosim_toolbox.sims import DBResults
+from cosim_toolbox.sims import ReadConfig
 
 logger = logging.getLogger(__name__)
 logger.setLevel(level=logging.INFO)
