@@ -7,7 +7,6 @@ mitch.pelton@pnnl.gov
 
 import simple_config
 import simple_config2
-#import cosim_toolbox.federation as fed
 from cosim_toolbox.sims import Collect
 from cosim_toolbox.sims import HelicsEndPtGroup
 from cosim_toolbox.sims import FederateConfig

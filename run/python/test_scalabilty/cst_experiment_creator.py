@@ -103,7 +103,7 @@ docker run \\
 
         # Add data logger federate
         # if scalability_def["use CST logger"]:
-        #     script += f"(exec python3 -c \"import cosim_toolbox.federateLogger as datalog; " \
+        #     script += f"(exec python3 -c \"import cosim_toolbox.sims.federateLogger as datalog; " \
         #               f"datalog.main('FederateLogger', '{analysis_name}', '{scenario_name}')\" &> logger.log &)\n"
 
         # add monitor to set semaphore

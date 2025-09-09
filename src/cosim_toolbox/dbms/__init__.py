@@ -16,23 +16,23 @@ Example Usage:
 """
 
 # Core data structures and abstract classes
-from cosim_toolbox.dbms.abstractions import (
+from .abstractions import (
     TSRecord,
     TimeSeriesManager,
     MetadataManager,
 )
 
 # Factory functions for easy instantiation
-from cosim_toolbox.dbms.factories import (
+from .factories import (
     create_timeseries_manager,
     create_metadata_manager,
 )
 
 # Concrete Manager implementations
-from cosim_toolbox.dbms.json_metadata import JSONMetadataManager
-from cosim_toolbox.dbms.mongo_metadata import MongoMetadataManager
-from cosim_toolbox.dbms.csv_timeseries import CSVTimeSeriesManager
-from cosim_toolbox.dbms.postgresql_timeseries import PostgreSQLTimeSeriesManager
+from .json_metadata import JSONMetadataManager
+from .mongo_metadata import MongoMetadataManager
+from .csv_timeseries import CSVTimeSeriesManager
+from .postgresql_timeseries import PostgreSQLTimeSeriesManager
 
 # Public API definition
 __all__ = [

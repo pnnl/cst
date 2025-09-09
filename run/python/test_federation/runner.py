@@ -106,7 +106,7 @@ class Runner:
 
 def main():
     remote = False
-    with_docker = False
+    with_docker = True
     r = Runner("test_scenario", "test_analysis", "test_federation", with_docker)
     r.define_scenario()
     if with_docker:
