@@ -5,7 +5,7 @@ This module provides a unified API for reading and writing co-simulation federat
 """
 
 # Core data structures and class for HELICS
-from cosim_toolbox.sims.helicsConfig import (
+from .helicsConfig import (
     HelicsPubGroup,
     HelicsSubGroup,
     HelicsEndPtGroup,
@@ -14,20 +14,20 @@ from cosim_toolbox.sims.helicsConfig import (
 )
 
 # Factory functions for easy instantiation
-from cosim_toolbox.sims.federation import (
+from .federation import (
     FederateConfig,
     FederationConfig,
 )
 
 # Concrete Manager implementations
-from cosim_toolbox.sims.federate import Federate
-from cosim_toolbox.sims.dockerRunner import DockerRunner
-from cosim_toolbox.sims.federateLogger import FederateLogger
+from .federate import Federate
+from .dockerRunner import DockerRunner
+from .federateLogger import FederateLogger
 
 # Deprecated apis
-from cosim_toolbox.sims.dbConfigs import DBConfigs
-from cosim_toolbox.sims.dbResults import DBResults
-from cosim_toolbox.sims.readConfig import ReadConfig
+from .dbConfigs import DBConfigs
+from .dbResults import DBResults
+from .readConfig import ReadConfig
 
 # Public API definition
 __all__ = [

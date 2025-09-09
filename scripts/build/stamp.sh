@@ -71,7 +71,7 @@ pip list > "${BUILD_DIR}/venv_pypi.id"
 
 echo "Stamping CoSimulation Toolbox $cosim_ver for install"
 cd "${CST_ROOT}" || exit
-echo "$cosim_ver" > "src/cosim_toolbox/version"
+echo "$cosim_ver" > "src/version"
 
 # un-comment for final version
 # git tag "v$cosim_ver"

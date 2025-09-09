@@ -20,13 +20,13 @@ Development Work Flow for cosim_toolbox
 =======================================
 
 * From this directory, 'pip install -e .' points Python to this cloned repository for any calls to cosim_toolbox functions
-* See the https://[github]/copper/tree/main/src/cosim_toolbox/cosim_toolbox for a roadmap of existing Python source files, and some documentation.  Any changes or additions to the code need to be made in this directory.
+* See the https://[github]/copper/tree/main/src/cosim_toolbox for a roadmap of existing Python source files, and some documentation.  Any changes or additions to the code need to be made in this directory.
 * Run tests from any other directory on this computer
 * When ready, edit the cosim_toolbox version number and dependencies in setup.py
 * To deploy follow the instructions in the Python Packaging Guide:
     1. Create an account on PyPI if you haven't yet.
     2. Install twine and build: pip install twine build
-    3. Create the source distribution, change to cosim_toolbox directory execute: python3 -m build .
+    3. Create the source distribution, change to 'src' directory execute: python3 -m build .
     4. Check your distribution files for errors: twine check dist/*
     5. (Optional) Upload to the PyPI test server first (note: separate user registration required): twine upload --repository-url https://test.pypi.org/legacy/ dist/*
     6. Upload to PyPI: twine upload dist/*
