@@ -23,7 +23,7 @@ import subprocess
 sys.path.insert(0, os.path.abspath('../src'))
 
 cmd = "./make_apidoc.sh"
-# subprocess.Popen(cmd, shell=True).wait()
+subprocess.Popen(cmd, shell=True).wait()
 
 # -- General configuration ------------------------------------------------
 
