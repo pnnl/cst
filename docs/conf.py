@@ -20,6 +20,8 @@ import subprocess
 
 cmd = "./make_apidoc.sh"
 subprocess.Popen(cmd, shell=True).wait()
+cmd = "pip3 install ../src -e ."
+subprocess.Popen(cmd, shell=True).wait()
 
 # -- General configuration ------------------------------------------------
 
