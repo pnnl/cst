@@ -16,15 +16,22 @@ from cosim_toolbox.federation import FederationConfig
 from cosim_toolbox.dockerRunner import DockerRunner
 
 fmt = {
-    "blank": {"fed": "",
-              "keys": ["", ""],
-              "indices": []},
-    "bt": {"fed": "Battery",
-           "keys": ["/", ""],
+    "bt": {"from_fed": "Battery",
+           "keys": ["", ""],
            "indices": []},
-    "ev": {"fed": "EVehicle",
-           "keys": ["/", ""],
-           "indices": []}
+    "ev": {"output_fed": True,
+           "from_fed": "Battery",
+           "to_fed": "EVehicle",
+           "keys": ["", ""],
+           "indices": []},
+    "ev1": {"from_fed": "EVehicle",
+            "keys": ["", ""],
+            "indices": []},
+    "bt1": {"output_fed": True,
+            "from_fed": "EVehicle",
+            "to_fed": "Battery",
+            "keys": ["", ""],
+            "indices": []},
 }
 
 class MyFederate1(FederateConfig):
@@ -39,16 +46,16 @@ class MyFederate1(FederateConfig):
 class MyFederate2(FederateConfig):
     def __init__(self, name: str, **kwargs):
         super().__init__(name, **kwargs)
-        self.outputs["voltage1"] = HelicsPubGroup("EV_voltage", "double", fmt["ev"], unit="V", globl=True)
-        self.inputs["current1"] = HelicsSubGroup("EV_current", "double", fmt["bt"], unit="A")
+        self.outputs["voltage1"] = HelicsPubGroup("EV_voltage", "double", fmt["ev1"], unit="V", globl=True)
+        self.inputs["current1"] = HelicsSubGroup("EV_current", "double", fmt["bt1"], unit="A")
 
         self.config("federate_type", "value")
         self.helics.collect(Collect.NO)
 
-def main():
+def  define_format():
     remote = False
     with_docker = False
-    federation = FederationConfig("MyScenario", "MySchema", "MyFederation", with_docker)
+    federation = FederationConfig("MyScenario", "MyAnalysis", "MyFederation", with_docker)
 
     f1 = federation.add_federate_config(MyFederate1("Battery", period=60))
     f2 = federation.add_federate_config(MyFederate2("EVehicle", period=60))
@@ -62,7 +69,7 @@ def main():
         f2.config("image", "cosim-cst:latest")
     f2.config("command", f"python3 simple_federate.py {f2.name} {federation.scenario_name}")
 
-    federation.define_scenario("2023-12-07T15:31:27", "2023-12-08T15:31:27")
+    federation.write_config("2023-12-07T15:31:27", "2023-12-08T15:31:27")
 
     if with_docker:
         DockerRunner.define_yaml(federation.scenario_name)
@@ -74,4 +81,4 @@ def main():
         DockerRunner.define_sh(federation.scenario_name)
 
 if __name__ == "__main__":
-    main()
+    define_format()

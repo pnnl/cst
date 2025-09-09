@@ -36,7 +36,7 @@ def get_new_battery(numBattery):
 
 
 class Battery(Federate):
-    # def __init__(self, fed_name="Battery", schema="default", **kwargs):
+    # def __init__(self, fed_name="Battery", analysis="default", **kwargs):
     #     super().__init__(fed_name, **kwargs)
     #     scenario_name = kwargs.get("scenario_name", "HelicsExampleDefault")
     #     self.create_federate(scenario_name)

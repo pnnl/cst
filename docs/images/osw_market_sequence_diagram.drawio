@@ -125,7 +125,7 @@
                 <mxCell id="110" value="" style="html=1;points=[];perimeter=orthogonalPerimeter;fillColor=#b1ddf0;strokeColor=#10739e;" parent="4" vertex="1">
                     <mxGeometry x="106" y="840" width="10" height="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="126" value="connect_to_helics_config" style="edgeStyle=orthogonalEdgeStyle;html=1;align=left;spacingLeft=2;endArrow=block;rounded=0;exitX=0.9;exitY=0.01;exitDx=0;exitDy=0;exitPerimeter=0;" parent="4" edge="1">
+                <mxCell id="126" value="get_helics_config" style="edgeStyle=orthogonalEdgeStyle;html=1;align=left;spacingLeft=2;endArrow=block;rounded=0;exitX=0.9;exitY=0.01;exitDx=0;exitDy=0;exitPerimeter=0;" parent="4" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="97.5" y="171.5" as="sourcePoint"/>
                         <Array as="points">

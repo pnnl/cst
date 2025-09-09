@@ -36,7 +36,7 @@ test:
   script:
     - export HTTPS_PROXY=http://proxy01.pnl.gov:3128
     - export https_proxy=http://proxy01.pnl.gov:3128
-    - make venv test
+    - make venv tests
   rules:
     # Rule 1: Run for MRs that are not draft
     - if: '$CI_MERGE_REQUEST_IID && $CI_MERGE_REQUEST_TITLE !~ /^Draft:/'

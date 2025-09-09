@@ -92,7 +92,7 @@ def get_new_battery(numBattery):
 
 
 class Charger(Federate):
-    # def __init__(self, fed_name="Charger", schema="default", **kwargs):
+    # def __init__(self, fed_name="Charger", analysis="default", **kwargs):
     #     super().__init__(fed_name, **kwargs)
     #     scenario_name = kwargs.get("scenario_name", "HelicsExampleDefault")
     #     print(f"scenario_name={scenario_name}")

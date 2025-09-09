@@ -78,7 +78,7 @@ docker run \\
             federation_def (dictionary): Definition of the federation diction
         """
 
-        schema_name = scenario_def["schema"]
+        analysis_name = scenario_def["analysis"]
         federation = federation_def["federation"]
         script = '#!/bin/bash\n\n'
 
@@ -104,7 +104,7 @@ docker run \\
         # Add data logger federate
         # if scalability_def["use CST logger"]:
         #     script += f"(exec python3 -c \"import cosim_toolbox.federateLogger as datalog; " \
-        #               f"datalog.main('FederateLogger', '{schema_name}', '{scenario_name}')\" &> logger.log &)\n"
+        #               f"datalog.main('FederateLogger', '{analysis_name}', '{scenario_name}')\" &> logger.log &)\n"
 
         # add monitor to set semaphore
         script += f"(exec ../../monitor.sh &)\n"
@@ -123,7 +123,7 @@ docker run \\
         # Collect all outputs
         collect = Collect.YES
 
-        schema_name = f"{self.cst_scalability}_f{federate_size}_s{subs_size}"
+        analysis_name = f"{self.cst_scalability}_f{federate_size}_s{subs_size}"
         scalability_name = f"{self.cst_scalability}_{count}"
         scenario_name = f"{self.cst_scalability}_s_{count}"
         federation_name = f"{self.cst_scalability}_f_{count}"  #_f{federate_size}_s{subs_size}_{endpoints}_{cst_logger}_{profiling}"
@@ -181,7 +181,7 @@ docker run \\
             # Uncomment for debug
             # print(env.cst_federations, self.db.get_collection_document_names(env.cst_federations))
 
-        scenario = self.db.scenario(schema_name,
+        scenario = self.db.scenario(analysis_name,
                                     federation_name,
                                     "2023-12-07T15:31:27",
                                     "2023-12-07T16:31:27",

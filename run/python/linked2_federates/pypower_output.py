@@ -16,9 +16,9 @@ class MyFederateMatch(FederateConfig):
         super().__init__(name, **kwargs)
 
         fmt = {
-            "blank": {"fed": "", "keys": ["", ""], "indices": []},
-            "gld_7": {"fed": "gld_7"},
-            "sub_7": {"fed": "sub_7"}
+            "blank": {"from_fed": "pypower", "keys": ["", ""], "indices": []},
+            "gld_7": {"from_fed": "pypower", "to_fed": "gld_7"},
+            "sub_7": {"from_fed": "pypower", "to_fed": "sub_7"}
         }
         self.outputs["pypower1"] = HelicsPubGroup("LMP_7", "double", fmt["blank"])
         self.outputs["pypower2"] = HelicsPubGroup("three_phase_voltage_7", "double", fmt["blank"])
@@ -42,9 +42,19 @@ class MyFederate(FederateConfig):
         super().__init__(name, **kwargs)
 
         fmt = {
-            "blank": { "fed": "", "keys": ["", ""], "indices": []},
-            "load": { "fed": "gld_7", "keys": ["/", ""], "indices": []},
-            "bid": { "fed": "sub_7", "keys": ["/", ""], "indices": []}
+            "blank": { "from_fed": "pypower",
+                       "keys": ["", ""],
+                       "indices": []},
+            "load": { "output_fed": True,
+                      "from_fed": "pypower",
+                      "to_fed": "gld_7",
+                      "keys": ["", ""],
+                      "indices": []},
+            "bid": { "output_fed": True,
+                     "from_fed": "pypower",
+                     "to_fed": "sub_7",
+                     "keys": ["", ""],
+                     "indices": []}
         }
 
         self.outputs["pypower1"] = HelicsPubGroup("LMP_7", "double", fmt["blank"])

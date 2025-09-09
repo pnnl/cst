@@ -2,7 +2,7 @@
 Created on 12/14/2023
 
 Federate class that defines the basic operations of Python-based federates in
-Copper.
+CoSim Toolbox (CST).
 
 @author: Trevor Hardy
 trevor.hardy@pnnl.gov
@@ -31,7 +31,7 @@ class Federate:
     and get a working federate.
 
     This class gets its configuration from the metadata database following
-    the standard Copper definition of the "federations" document.
+    the standard CST definition of the "federations" document.
 
     To be overly clear, this class is intended to be sub-classed and overloaded
     to allow users to customize it as necessary. If nothing else, the
@@ -56,13 +56,13 @@ class Federate:
 
     Attributes:
         hfed: The HELICS federate object used to access the HELICS interfaces
-        federate_name (str): The federate name
+            federate_name (str): The federate name
         federate (dict): Dictionary with all configuration information,
-         including but not limited to the HELICS JSON config string
+            including but not limited to the HELICS JSON config string
         federate_type (str): The federate type. Must be "value", "message", or "combo"
-        config: Valid HELICS config JSON string
-        granted_time: The last time granted to this federate
-        period: The size of the simulated time step takes when requesting the next time
+        config (dict): Valid HELICS config JSON string
+        granted_time (float): The last time granted to this federate
+        period (float): The size of the simulated time step takes when requesting the next time
         scenario_name (str): The scenario name
         scenario (dict): Dictionary with all scenario configuration information
         federation_name (str): The federation name
@@ -80,7 +80,7 @@ class Federate:
         self.federate: dict = None
         self.federate_type: str = None
         self.federate_name: str = fed_name
-        self.scheme_name: str = None
+        self.analysis_name: str = None
         self.start: str = None
         self.stop: str = None
         self.no_t_start = None
@@ -126,7 +126,7 @@ class Federate:
         self._use_timescale = self.dl.use_timescale
 
     def connect_to_metadataDB(self, uri: str, db_name: str) -> None:
-        """Connects to the Copper dbConfigs
+        """Connects to the CST metadata database
 
         The metadata database (dbConfigs) contains the HELICS configuration
         JSON along with other pieces of useful configuration or federation
@@ -145,9 +145,9 @@ class Federate:
         self.federation = self.federation["federation"]
 
     def connect_to_metadataJSON(self) -> None:
-        """Connects to the Copper json file
+        """Connects to the CST JSON configuration file
 
-        The Copper json file contains the HELICS configuration
+        The CST json file contains the HELICS configuration
         JSON along with other pieces of useful configuration or federation
         management data. This method connects to that database and makes it
         available for other methods in this class.
@@ -165,20 +165,20 @@ class Federate:
         self.dl.open_database_connections()
         # self.dl.check_version()
 
-        if not self.dl.schema_exist(self.scheme_name):
+        if not self.dl.analysis_exist(self.analysis_name):
             try:
-                self.dl.create_schema(self.scheme_name)
+                self.dl.create_analysis(self.analysis_name)
             except Exception as ex:
                 self.dl.data_db.rollback()
-                logger.exception(f"Rolling back: create schema!")
+                logger.exception(f"Rolling back: create analysis!")
                 return
-            if not self.dl.table_exist(self.scheme_name, 'hdt_double'):
+            if not self.dl.table_exist(self.analysis_name, 'hdt_double'):
                 try:
-                    self.dl.make_logger_database(self.scheme_name)
-                    self.dl.remove_scenario(self.scheme_name, self.scenario_name)
+                    self.dl.make_logger_database(self.analysis_name)
+                    self.dl.remove_scenario(self.analysis_name, self.scenario_name)
                 except Exception as ex:
                     self.dl.data_db.rollback()
-                    logger.exception(f"Rolling back: make tables for schema!")
+                    logger.exception(f"Rolling back: make tables for analysis!")
 
     def connect_to_dataCSV(self):
         if self.output_csv is None:
@@ -228,11 +228,11 @@ class Federate:
         self._s = datetime.datetime.strptime(self.start, '%Y-%m-%dT%H:%M:%S')
 
         # setting up data logging
-        self.scheme_name = self.scenario["schema"]
+        self.analysis_name = self.scenario["analysis"]
         if self.federation.get("tags"):
             self.fed_collect = self.federation["tags"].get("logger", self.fed_collect)
 
-    def connect_to_helics_config(self) -> None:
+    def get_helics_config(self) -> None:
         """Sets instance attributes to enable HELICS config query of dbConfigs
 
         HELICS configuration information is generally stored in the dbConfigs
@@ -247,7 +247,7 @@ class Federate:
         # self.image = self.federate["image"]
 
     def create_federate(self, scenario_name: str) -> None:
-        """Create Copper and HELICS federates
+        """Create CST and HELICS federates
 
         Creates and defines both the instance of this class,(the Co-Simulation
         federate) and the HELICS federate object (self.hfed). Any
@@ -271,7 +271,7 @@ class Federate:
         else:
             self.connect_to_metadataJSON()
         self.set_metadata()
-        self.connect_to_helics_config()
+        self.get_helics_config()
 
         # Provide internal copies of the HELICS interfaces for convenience during debugging.
         if "publications" in self.config.keys():
@@ -541,15 +541,18 @@ class Federate:
             self.data_to_federation["publications"][pub.name] = dummy_value
 
     def send_data_to_federation(self, reset=False) -> None:
-        """Sends specified outputs to rest of HELICS federation
+        """
+        Sends specified outputs to rest of HELICS federation
 
         This method provides an easy way for users to send out any data
         to the rest of the federation. Users pass in a dict structured the same
         as the "data_from_federation" with sub-dicts for publications and
-        endpoints and keys inside those dicts for the name of the pub or
-        endpoint. The value for the keys is slightly different, though:
-            - pubs: value is the data to send
-            - endpoints: value is a dictionary as follows
+        endpoints and keys inside those dicts for the name of the pub or endpoint.
+        The value for the keys is slightly different, though:
+
+            pubs: value is the data to send
+            endpoints: value is a dictionary as follows::
+
                 {
                     "destination": <target endpoint name, may be an empty string>
                     "payload": <data to send>
@@ -560,9 +563,9 @@ class Federate:
 
         Args:
             reset (bool, optional): When set erases published value which
-            prevents re-publication of the value until manually set to a 
-            non-`None` value. Any entry in this dictionary that is `None` is
-            not sent out via HELICS. Defaults to False.
+                prevents re-publication of the value until manually set to a
+                non-`None` value. Any entry in this dictionary that is `None`
+                is not sent out via HELICS. Defaults to False.
         """
 
         # Publications
@@ -637,7 +640,7 @@ class Federate:
         t = self.granted_time
         d = datetime.timedelta(seconds=int(self.granted_time))
         if self.use_pdb:
-            query = (f"INSERT INTO {self.scheme_name}.{table} "
+            query = (f"INSERT INTO {self.analysis_name}.{table} "
                    "(real_time, sim_time, scenario, federate, data_name, data_value)"
                    f" VALUES( to_timestamp('{self.no_t_start}','YYYY-MM-DD HH24:MI:SS') + interval '1s' * "
                    f"{self.granted_time}, {self.granted_time}, "

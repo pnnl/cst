@@ -1,4 +1,4 @@
-# Copyright (C) 2019-2023 Battelle Memorial Institute
+# Copyright (C) 2022-2025 Battelle Memorial Institute
 # file: make_include.py
 """Replaces the sphinx-apidoc call because did not want subpackages outline
 """
@@ -6,7 +6,7 @@
 import os
 
 
-t_inc = os.path.expandvars('$CST_ROOT/doc/references/cosim_toolboxs.inc')
+t_inc = os.path.expandvars('$CST_ROOT/docs/references/cosim_toolbox.inc')
 t_api = os.path.expandvars('$CST_ROOT/src/cosim_toolbox/cosim_toolbox')
 
 root = os.path.split(t_api)

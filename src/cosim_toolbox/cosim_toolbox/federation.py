@@ -13,7 +13,6 @@ import cosim_toolbox as env
 from cosim_toolbox.dbConfigs import DBConfigs
 from cosim_toolbox.helicsConfig import HelicsPubGroup
 from cosim_toolbox.helicsConfig import HelicsSubGroup
-from cosim_toolbox.helicsConfig import HelicsEndPtGroup
 from cosim_toolbox.helicsConfig import HelicsMsg
 
 
@@ -23,7 +22,7 @@ class FederateConfig:
     # prefix for export and other commands for docker and sh
     # command for docker and sh
     # federate_type -> value | combo | message,
-    config_var = {
+    _config_var = {
         "name": "",
         "logger": True,
         "image": "None",
@@ -55,7 +54,8 @@ class FederateConfig:
         return guid
 
     def config(self, _n: str, _v: any) -> dict:
-        """Adds key specified by first parameter with value specified
+        """
+        Adds key specified by first parameter with value specified
         by the second parameter to the federate config ("_fed_cnfg")
         attribute of this object
 
@@ -66,18 +66,18 @@ class FederateConfig:
         Returns:
             dict: Dictionary to which the new value was added.
         """
-        if HelicsMsg.verify(self.config_var, _n, _v):
+        if HelicsMsg.verify(self._config_var, _n, _v):
             self._fed_cnfg[_n] = _v
         return self._fed_cnfg
 
-    def find_output_group(self, key: str) -> (str, str):
+    def find_output_group(self, key: str) -> None | tuple:
         for name, group in self.outputs.items():
             for var in group.vars:
                 if var["key"] == key:
                     return self.name, group.name
         return None
 
-    def find_input_group(self, key: str) -> (str, str):
+    def find_input_group(self, key: str) -> None | tuple:
         for name, group in self.inputs.items():
             for var in group.vars:
                 if var["key"] == key:
@@ -103,9 +103,9 @@ class FederateConfig:
 
 class FederationConfig:
 
-    def __init__(self, scenario_name: str, schema_name: str, federation_name: str, docker: bool=False):
+    def __init__(self, scenario_name: str, analysis_name: str, federation_name: str, docker: bool=False):
         self.scenario_name = scenario_name
-        self.schema_name = schema_name   # analysis
+        self.analysis_name = analysis_name   # analysis
         self.federation_name = federation_name
         self.docker = docker
         self.address = 2
@@ -129,7 +129,7 @@ class FederationConfig:
             src_type = data_type
             if "datatype" in src_format:
                 src_type = src_format["datatype"]
-            pub_group = HelicsPubGroup(name, src_type, src_format)
+            pub_group = HelicsPubGroup(name, src_type, src_format, **kwargs)
             from_config.outputs[from_config.unique()] = pub_group
             if "des" in key_format:
                 for des_format in key_format["des"]:
@@ -137,7 +137,11 @@ class FederationConfig:
                     des_type = data_type
                     if "datatype" in des_format:
                         des_type = des_format["datatype"]
-                    sub_group = HelicsSubGroup(name, des_type, des_format)
+                    if "globl" in kwargs:
+                        kwargs.pop("globl")
+                    if "tags" in kwargs:
+                        kwargs.pop("tags")
+                    sub_group = HelicsSubGroup(name, des_type, des_format, **kwargs)
                     to_config.inputs[to_config.unique()] = sub_group
                     if "keys" not in des_format:
                         self.add_group_subs(pub_group, sub_group, des_format)
@@ -200,13 +204,14 @@ class FederationConfig:
             missing[sub_name]["Missmatch"] = miss_match
         return missing
 
-    def add_group_subs(self, pub_group:HelicsPubGroup, sub_group:HelicsSubGroup, des_format:dict):
+    @staticmethod
+    def add_group_subs(pub_group:HelicsPubGroup, sub_group:HelicsSubGroup, des_format:dict):
         pubs = pub_group.vars
         for pub in pubs:
             parts = pub["key"].split("/")
             property_name = parts[-1]
             sub = sub_group.diction.copy()
-            sub["key"] = des_format["fed"] + "/" + pub["key"]
+            sub["key"] = des_format["to_fed"] + "/" + pub["key"]
             if "info" in des_format:
                 obj = parts[len(parts) - 2]
                 sub["info"] = { "object": obj, "property": property_name }
@@ -231,11 +236,7 @@ class FederationConfig:
                             group.vars.append(sub)
                             break
 
-    def add_pub_sub(self, from_fed: HelicsMsg, to_fed: HelicsMsg, v_name:str, v_type: str, v_unit:str):
-        from_fed.pubs_e(from_fed.name + "/" + v_name, v_type, v_unit)
-        to_fed.subs_e(from_fed.name + "/" + v_name, v_type, v_unit)
-
-    def define_scenario(self, start, stop):
+    def write_config(self, start, stop):
         diction = {"federation": {}}
         for name, fed in self.federates.items():
             diction["federation"][name] = fed.config("HELICS_config", fed.helics.write_json())
@@ -245,32 +246,7 @@ class FederationConfig:
         db.add_dict(env.cst_federations, self.federation_name, diction)
         # print(env.cst_federations, db.get_collection_document_names(env.cst_federations))
 
-        scenario = db.scenario(self.schema_name,
-                                    self.federation_name,
-                                    "2023-12-07T15:31:27",
-                                    "2023-12-08T15:31:27",
-                                    self.docker)
+        scenario = db.scenario(self.analysis_name, self.federation_name, start, stop, self.docker)
         db.remove_document(env.cst_scenarios, None, self.scenario_name)
         db.add_dict(env.cst_scenarios, self.scenario_name, scenario)
         # print(env.cst_scenarios, db.get_collection_document_names(env.cst_scenarios))
-
-
-def main():
-    remote = False
-    with_docker = False
-    federation = FederationConfig("MyTestScenario", "MyTestSchema", "MyTestFederation", with_docker)
-    f1 = federation.add_federate_config(FederateConfig("Battery", period=30))
-    f2 = federation.add_federate_config(FederateConfig("EVehicle", period=30))
-
-    federation.add_pub_sub(f1, f2, "EV1_current", "double", "A")
-    f1.config("image", "cosim-cst:latest")
-    f1.config("command", f"python3 simple_federate.py {f1.name} {federation.scenario_name}")
-
-    federation.add_pub_sub(f2, f1, "EV1_voltage", "double", "V")
-    f2.config("image", "cosim-cst:latest")
-    f2.config("command", f"python3 simple_federate.py {f2.name} {federation.scenario_name}")
-
-    federation.define_scenario("2023-12-07T15:31:27", "2023-12-08T15:31:27")
-
-if __name__ == "__main__":
-    main()

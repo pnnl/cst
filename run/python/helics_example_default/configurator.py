@@ -13,12 +13,12 @@ class Configurator(DBConfigs):
 
     def __init__(self, 
                  scenario_name: str, 
-                 schema_name: str, 
+                 analysis_name: str,
                  federation_name: str, 
                  docker: bool = False, 
                  remote: bool = False):
         self.scenario_name = scenario_name
-        self.schema_name = schema_name
+        self.analysis_name = analysis_name
         self.federation_name = federation_name
         self.docker = docker
         self.remote = remote
@@ -88,7 +88,7 @@ class Configurator(DBConfigs):
     def store_scenario(
             self, 
             scenario_name: str = None,
-            schema_name: str = None, 
+            analysis_name: str = None, 
             federation_name: str = None, 
             start: str = "2023-12-07T12:00:00", 
             stop: str = "2023-12-08T12:00:00", 
@@ -96,12 +96,12 @@ class Configurator(DBConfigs):
         
         if scenario_name is None:
             scenario_name = self.scenario_name
-        if schema_name is None:
-            schema_name = self.schema_name
+        if analysis_name is None:
+            analysis_name = self.analysis_name
         if federation_name is None:
             federation_name = self.federation_name
         scenario = self.db.scenario(
-            schema_name, 
+            analysis_name, 
             federation_name, 
             start,
             stop,

@@ -71,7 +71,7 @@ def increment_boolean(original_value):
 
 
 class SimpleFederate(Federate):
-    def __init__(self, fed_name="", schema="default", **kwargs):
+    def __init__(self, fed_name="", analysis="default", **kwargs):
         super().__init__(fed_name, **kwargs)
 
     def update_internal_model(self):
