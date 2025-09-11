@@ -22,7 +22,6 @@ from .validation import validate_name, ValidationError, safe_name_log
 logger = logging.getLogger(__name__)
 
 
-# +++ A dedicated helper class for shared CSV logic +++
 class _CSVHelper:
     """Manages paths and data formatting logic for CSV time-series storage."""
 
@@ -47,7 +46,7 @@ class _CSVHelper:
         data and each data type is stored in its own file.
 
         Args:
-            federate_name (str): name of federate 
+            federate_name (str): name of federate
             data_type (str): data type
 
         Returns:
@@ -110,7 +109,7 @@ class _CSVHelper:
         return str(value)
 
     def parse_value_from_csv(self, value_str: str, data_type: str) -> Any:
-        """ Parse a value from CSV string back to appropriate Python type.
+        """Parse a value from CSV string back to appropriate Python type.
 
         Args:
             value_str (str): Numerical value as string to be converted
@@ -145,7 +144,6 @@ class _CSVHelper:
             return value_str
 
 
-# +++ Uses composition ("has-a" helper) instead of inheritance +++
 class CSVTimeSeriesWriter(TSDataWriter):
     """CSV file-based time-series data writer."""
 
@@ -178,7 +176,7 @@ class CSVTimeSeriesWriter(TSDataWriter):
         """Ensure the CSV file exists with proper headers.
 
         Args:
-            file_path (Path): Path to CSV file whose existence is being 
+            file_path (Path): Path to CSV file whose existence is being
                 evaluated.
 
         Returns:
@@ -194,7 +192,7 @@ class CSVTimeSeriesWriter(TSDataWriter):
         """Create directory structure if it doesn't exist.
 
         Returns:
-            bool: Flag indicating whether directory structure has been 
+            bool: Flag indicating whether directory structure has been
                 created.
         """
         try:
@@ -210,7 +208,7 @@ class CSVTimeSeriesWriter(TSDataWriter):
 
     def disconnect(self) -> None:
         """Close connection (no-op for files, but maintains consistency).
-        
+
         Returns:
             None
         """
@@ -231,7 +229,7 @@ class CSVTimeSeriesWriter(TSDataWriter):
         if not self.is_connected:
             logger.error("CSV writer not connected. Call connect() first.")
             return False
-        if not records: 
+        if not records:
             return True
         try:
             grouped_records: Dict[tuple[str, str], List[TSRecord]] = {}
@@ -300,7 +298,7 @@ class CSVTimeSeriesReader(TSDataReader):
         """Verify that the directory structure exists.
 
         Returns:
-            bool: flag indicated whether the connection to the data backend 
+            bool: flag indicated whether the connection to the data backend
                 exists
         """
         if not self.helper.analysis_path.exists():
@@ -422,24 +420,29 @@ class CSVTimeSeriesReader(TSDataReader):
             [p.name for p in self.helper.analysis_path.iterdir() if p.is_dir()]
         )
 
-    def list_data_types(self, federate_name: str) -> List[str]:
+    def list_data_types(self, federate_names: Optional[list[str]] = None) -> List[str]:
         """Provides a list of data types in data backend for a given federate
 
         Args:
-            federate_name (str): name of federate whose available 
+            federate_name (str): name of federate whose available
                 data types are being determined
 
         Returns:
             List[str]: list of data types in data backend
         """
+        data_types = []
         if not self.is_connected:
-            return []
-        federate_path = self.helper.analysis_path / federate_name
-        if not federate_path.exists():
-            return []
-        return sorted([f.stem for f in federate_path.glob("*.csv")])
+            return data_types
+        if federate_names is None:
+            federate_names = self.list_federates()
+        for federate_name in federate_names:
+            federate_path = self.helper.analysis_path / federate_name
+            if not federate_path.exists():
+                continue
+            data_types.extend(sorted([f.stem for f in federate_path.glob("*.csv")]))
+        return sorted(data_types)
 
-    def get_scenarios(self) -> List[str]:
+    def list_scenarios(self) -> List[str]:
         """Get list of unique scenarios in the data.
 
         Returns:
@@ -527,7 +530,7 @@ class CSVTimeSeriesManager(TSDataManager):
         """
         return self.reader.list_federates()
 
-    def list_data_types(self, federate_name: str) -> List[str]:
+    def list_data_types(self, federate_names: Optional[list[str]] = None) -> List[str]:
         """Lists data types for a given federate in the data backend
 
         Args:
@@ -536,15 +539,15 @@ class CSVTimeSeriesManager(TSDataManager):
         Returns:
             List[str]: list of data types in data backend
         """
-        return self.reader.list_data_types(federate_name)
+        return self.reader.list_data_types(federate_names)
 
-    def get_scenarios(self) -> List[str]:
+    def list_scenarios(self) -> List[str]:
         """List of scenarios in the data backend
 
         Returns:
             List[str]: list of scenarios in the data backend
         """
-        return self.reader.get_scenarios()
+        return self.reader.list_scenarios()
 
     def get_time_range(self, **kwargs) -> Dict[str, float]:
         """Get time range of data in data backend
@@ -564,14 +567,14 @@ class CSVTimeSeriesManager(TSDataManager):
 
     def delete_scenario_data(self, scenario_name: str) -> bool:
         """NOT IMPLEMENTED
-        
+
         Delete data from the data backend for the specified scenario
 
         Args:
             scenario_name (str): Name of scenario being deleted
 
         Raises:
-            NotImplementedError: 
+            NotImplementedError:
 
         Returns:
             bool: flag indicating whether data was deleted
