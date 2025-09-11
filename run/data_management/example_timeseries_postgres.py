@@ -36,11 +36,7 @@ records = [
     ),
 ]
 
-with create_timeseries_manager(
-    backend="postgres",
-    location="penny.pnl.gov",
-    analysis_name="example_data",
-) as mgr:
+with create_timeseries_manager(backend="postgres", analysis_name="example_data") as mgr:
     mgr.delete_scenario_data(scenario_name="test_scenario")
     mgr.write_records(records=records)
     print(f"scenarios: {mgr.list_scenarios()}")

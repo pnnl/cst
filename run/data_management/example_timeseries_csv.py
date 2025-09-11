@@ -37,12 +37,10 @@ records = [
     ),
 ]
 
-
-with create_timeseries_manager(
-    backend="csv",
-    location="./data",
-    analysis_name="example_data",
-) as mgr:
+# Defaults to storing in ./data_store
+# to change storage location supply path as "location" keyword argument 
+# to create_timeseries_manager.
+with create_timeseries_manager(backend="csv", analysis_name="example_data") as mgr:
     mgr.delete_federate_data(federate_name="test_fed")
     mgr.write_records(records=records)
     print(f"scenarios: {mgr.list_scenarios()}")
