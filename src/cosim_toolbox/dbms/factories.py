@@ -9,7 +9,9 @@ import cosim_toolbox as env
 from .abstractions import TimeSeriesManager, MetadataManager
 
 
-def create_timeseries_manager(backend: str="postgres", analysis: str="default", **kwargs) -> TimeSeriesManager:
+def create_timeseries_manager(
+    backend: str = "postgres", analysis_name: str = "default", **kwargs
+) -> TimeSeriesManager:
     """
     Factory function to create appropriate time-series data manager.
     Args:
@@ -28,7 +30,7 @@ def create_timeseries_manager(backend: str="postgres", analysis: str="default", 
         for key, value in kwargs.items():
             if key in env.csv_data_db:
                 env.csv_data_db[key] = value
-        return CSVTimeSeriesManager(**env.csv_data_db, analysis_name=analysis)
+        return CSVTimeSeriesManager(**env.csv_data_db, analysis_name=analysis_name)
     elif backend == "postgres":
         from cosim_toolbox.dbms import PostgreSQLTimeSeriesManager
 
@@ -36,14 +38,16 @@ def create_timeseries_manager(backend: str="postgres", analysis: str="default", 
         for key, value in kwargs.items():
             if key in env.pg_data_db:
                 env.pg_data_db[key] = value
-        return PostgreSQLTimeSeriesManager(**env.pg_data_db, analysis_name=analysis)
+        return PostgreSQLTimeSeriesManager(
+            **env.pg_data_db, analysis_name=analysis_name
+        )
     else:
         raise ValueError(
             f"Unknown time-series backend: {backend}. Supported: csv, postgres"
         )
 
 
-def create_metadata_manager(backend: str="mongo", **kwargs) -> MetadataManager:
+def create_metadata_manager(backend: str = "mongo", **kwargs) -> MetadataManager:
     """
     Factory function to create appropriate metadata manager.
     Args:
