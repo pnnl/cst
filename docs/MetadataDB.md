@@ -1,95 +1,118 @@
 # Metadata (Configuration) Management
-CST provides the metadata database as a centralized location for storing metadata related to the analysis. the database being used for this is MongoDB which can be thought of storing data as JSONs or Python dictionaries. This allows non-tabular but structured data to be stored and easily retrieved by any simulation entity or researcher (tabular data is stored in the time-series database). This allows federates to pull down their configuration information (rather than relying on a local configuration file) or a researcher that is making a comparison across scenarios to pull down particular parameter values when performing post-processing.
+It is not unusual for a study to include a sufficient number of scenarios (see the [Terminology page](./Terminology) for how CST uses these terms) that are defined over a sufficiently lengthy period of time that at the conclusion of the experiementation (_i.e._ simulation runs) there is less than absolutely clarity about which parameters applied to which scenarios. Even when the set of scenarios is well-defined in advance, it is not unusual for pre-liminary results to inspire new scenarios with new parameters not included in the original set. All of this is complicated in a co-simulation by the number of federates and the management of their configuration files. 
 
-The CST metadata database is a MongoDB instance with 
+To help manage this, CoSim Toolbox (CST) provides a metadata data store as a means for storing metadata related to the analysis.  CST provides two data stores: a MongoDB server and a local directory for CSVs; the MongoDB server and an inspector ("Mongo Express") are included as part of CST's "persistent services". CST provides identical APIs ("backends") for accessing both. CST itself uses these APIs to store and retrieve the configuration data for each federate, much of which is HELICS-specific. The APIs are also available for modelers to use to store their own custom data, allowing scenarios to be defined in ways that are helpful.
 
-CST has two sets of JSONs that it uses when building a co-simulation, "federations" and "scenarios". It is the responsibilty of the analysis team to create these and upload them to the metadata database prior to trying to run the co-simulation. This document is intended to help describe how the metadata database works and how these required JSONs are structured.
+## Data Schema
+OK, as you might guess, the key advanatage of storing JSON-like objects as records (Python dictionaries, "documents" in MongoDB parlance) is that they are not required to have a tabular structure. That is, each record is not required to have the same elements (columns). That said, there are two dictionaries that CST uses that do have a specific structure: the "federations" and "scenarios" dictionaries. It is the responsibilty of the analysis team to create these and upload them to the metadata data store prior to trying to run the co-simulation. These dictionaries are held in groups (called "collections" by MongoDB) of the same names.
 
+### "scenarios"
+Each dictionary in the "scenarios" defines a few key specific parameters that are needed to run the co-simulation:
+- "analysis" (str) - Name of the analysis to which this scenario belongs (see the [Terminology page](./Terminology) for further details)
+- "federations" (str) - Name of the federation dictionary use for this analysis
+- "start_time" (str) - Start of the simulation time in ISO 8601 format
+- "start_time" (str) -Stop of the simulation time in ISO 8601 format
+- "docker" (bool) - Indicates whether Docker containers are used to run any of the federates
+- "cst_007" (str) - **Not directly defined by user.** Name assigned to the scenario dictionary by the user when added to the metadata data store and added to the dictionary by CST
 
-## CST Data Structure
-
-### "federations" 
-**TODO** - Get rid of key names with underscores
-
-The "federations" collection holds the definitions for a given federation. 
-
-Each JSON in "federations" uses the federate name as the key and the provides the configuration information for that federate using the following structure with the required elements shown.
+In addition to these required parameters, modelers can add any number of custom parameters to the dictionary; these will not affect the operation of CST and will be stored in the metadata data store for later use by a modeler. An example scenario dicionary, including a few custom values, would look like the following:
 
 ```json
 {
-    "<federate_name>": {
-        "logger": true,
-        "image": "cosim-python:latest",
-        "command": "python3 example_federate.py",
-        "federate_type": "value",
-        "time_step": 120,
-        "<federate custom key>": "<federate custom value>",
-        "HELICS_config": {
-            "<HELICS configuration keys>": "<HELICS configuration values>" 
-        }
-    },
-    "<federation custom key>": "<federation custom value>"
+    "analysis": "MyAnalysis",
+    "federation": "MyFederation",
+    "start_time": "2023-12-07T15:31:27",
+    "stop_time": "2023-12-08T15:31:27",
+    "docker": false,
+    "cst_007": "MyScenario",
+    "EV penetration": 0.2,
+    "location": "California"
+}
+
+```
+
+This document must be added to the metadata data store prior to running a co-simulation as CST uses it to correctly instantiate the federates and run the co-simulation.
+
+
+### "federations" 
+The "federation" dictionary holds the definition of the federation being constructed to run the co-simulation. Virtually all of this information is a definition of each federate in the federation, including the commands to run to launch the federate as well as the HELICS configuration information. We're not going to go over all the possible HELICS configuration values here (HELICS documents that on their ["Configuration Options Reference" page](https://docs.helics.org/en/latest/references/configuration_options_reference.html) and provides [lots of examples](https://docs.helics.org/en/latest/user-guide/examples/examples_index.html)) but getting this configuration defined correctly is an essential part of having the co-simulation run correctly. The dictionary is structured as follows:
+
+```json
+{
+    "cst_007":,  
+    "federation": {
+        "federate1":{
+           "logger":, 
+            "image":, 
+            "command":, 
+            "HELICS_config":{
+            }
+        },
+
+    }
 }
 ```
 
-#### `logger`
-**TODO** - Need clarification on this. "federate.py" is showing the use of "tags" which I'm not seeing the in the configuration saved in Mongo.
+- "cst_007" (str) - **Not directly defined by user.** Name assigned to the scenario dictionary by the user when added to the metadata data store and added to the dictionary by CST
+- "federation (str) - Holds all the configuration information for the federation
+- "logger" (str) - Indicates whether any publications created by this federate should be automatically collected and put into the time-series data store
+- "image" (str) - The name of the Docker image containing the simulator for this federate. If a Docker image is not being used, this can be left as a null string ("").
+- "command" (str) - The command line run to execute the simulation for this federate. If using a Docker image, this is the command that will run when the image is stood up. If using a simulator installed on the host system, this is the command run on the system shell.
 
-Boolean to indicate whether this federate should have its outputs collected by CST's "Logger" federate.
+Below is an example of a more completely defined "federation" dictionary.
 
-#### `image`
-For federates that use a Docker image to install a simualtion tool, this defines which image to use.
+```json
+{
+    "cst_007": "ExampleFederation",
+    "federation": {
+        "Battery": {
+            "logger": false,
+            "image": "cosim-cst:latest",
+            "command": "python3 simple_federate.py Battery test_scenario",
+            "HELICS_config": {
+                "name": "Battery",
+                "log_level": "warning",
+                "period": 30,
+                "broker_address": "10.5.0.2",
+                "terminate_on_error": true,
+                "tags": {
+                    "logger": "yes"
+                },
+                "publications": {
+                    "key": "Battery/current",
+                    "type": "double",
+                    "unit": "A",
+                    "global": true,
+                    "tags": {
+                        "logger": "yes"
+                    }
+                },
+                "subscriptions": {
+                    "key": "EVehicle/voltage",
+                    "type": "double",
+                    "unit": "V"
+                },
+                "endpoints": {
 
-This information is not used if a Docker image is not used to instantiate a federate and can be left as an empty string (`""`) if this is the case.
+                }
 
-#### `command`
-Command to call to launch the federate. If using a Docker image this is the command that runs once inside the container created from the previously specified image. If not running inside a Docker container, this is the command that will be called on the hosts command line.
+            }
 
-#### `federate_type`
-Used by the CST Federate class to instantiate the correct type of HELICS federate. The string specified here must be one of the following:
+        },
+        "federate2": {
 
-- "value"
-- "message"
-- "combo"
+        }
+    }
+}
+```
 
-See the [HELICS documentation](https://docs.helics.org/en/latest/user-guide/fundamental_topics/federates.html) for further details.
 
-#### `time_step` 
-For federates that advance through time regularly, this is the default time-step size that is used by CST's Federate class. If this is not an integer multiple of `period` in the `HELICS_config` object HELICS will throw warning messages during runtime. 
+## Using CST's metadata data store
+There is comprehensive documentation on the metadata backend APIs provided by CST in the [API documentation section](./References.rst) and we're not going to replicate it all here. Virtually all of the "federation" and "scenario" dictionaries need only to be defined and written in once. For example, if you're conducting a study evaluating the impact on distribution system voltage as EV penetration increases, you may define five scenarios where the EV penetration is 0%, 20%, 40%, 60%, and 80%. Once you've defined the parameters for these scenarios and written them to the metadata data store, they don't need to be re-written every time you run one of the scenarios (unless a parameter value changes). 
 
-#### `<federate custom key>`
-Any custom configuration value needed by the federate can be added without disrupting CSTs use of the JSON.
+The following is an example of how to use the CST APIs to write a scenario dictionary into the CSV metadata data store.
 
-#### `HELICS_config`
-This is the HELICS configuration JSON and is directly stored here. Any content in this object needs to conform to what HELICS needs to create a federate. [Comprehensive documentation on the HELICS configuration JSON](https://docs.helics.org/en/latest/references/configuration_options_reference.html) can be found in HELICS documentation.
+```python
 
-### "scenarios"
-**TODO** - Get rid of key names with underscores
 
-As [previously defined](./Terminology.md#scenario), a scenario is a set of simulation parameter values that is named. Typically a given analysis will have multiple scenarios who's outputs are compared to reach a meaningful conclusion. The "scenarios" collection stores JSONs that hold any parameters that are used to define a given scenario as a whole. Like the "federations" collection, there are a few required values shown below but any additional custom value can be added without disrupting CST's use of the JSON.
-
-#### `analysis`
-This is the name of the Postgres schmea used in the time-series database and is used when configuring said database.
-
-#### `federation`
-This is the name of the federation and is used to access the configuration information for this particular federation stored in the "federations" object here in the metadata database.
-
-#### `start_time`
-Start time of the simulation specified using ISO 8601.
-
-#### `stop_time`
-Stop time of the simulation specified using ISO 8601.
-
-#### `docker`
-Setting to `true` will generation a docker-compose.yaml that will be used in launching any docker images used to launch simulation tools used by any of the federates. If any federate needs to use a Docker image to run, this should be set to `true`.
-
-#### `cst_007`
-`cst_007`  is a reserved word that is used to store the name of the JSON to allow for easier access (rather than using the MongoDB `_id`). When you write the JSON to the metadata database and give it a name, this is where that value is stored. When you retrieve a JSON from the metadata database by name, this is the field that is searched for. Generally, you shouldn't need to read or write this field directly.
-
-## Using CST's metadata database
- There is comprehensive documentation on the metadata database API provided by CST in the API documentation section (**TODO** add link to API documentation) and we're not going to replicate it all here. Most database operations can be thought of using the CRUD acronymn (create, read, update, delete) and the CST APIs support these operations. 
-
- Virtually all of the required CST metadata that is stored in these databases only needs to be defined and written in once. For example, if you're conducting a study evaluating the impact on distribution system voltage as EV penetration increases, you may define five scenarios where the EV penetration is 0%, 20%, 40%, 60%, and 80%. Once you've defined the parameters for these scenarios and written them to the metadata database, they don't need to be re-written every time you run one of the scenarios (unless a parameter value changes).  Though CST provides some APIs to help define the configuration (**TODO** - add link to documentation), it still takes some effort to get all the details right. The good news is once you have them done, you can push them up into the metadata database and then anybody who wants to run any of the scenarios or look at data from the scenarios has access to that configuration information.
-
- For those  
-
+```
