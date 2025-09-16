@@ -9,7 +9,15 @@ $ git clone https://www.github.com/pnnl/cst/cst.git
 ```
 
 ```shell
-$ cd ./cst/src/
+$ cd cst
+```
+
+```shell
+$ pip install -r requirements.txt
+```
+
+```shell
+$ cd src
 ```
 
 ```shell
@@ -24,11 +32,14 @@ Look for "cst" to be listed as installed by `pip`; this should show the location
 $ pip list
 ```
 
-You can verify that your Python installation is able to import cst.
+You can verify that your Python installation is able to `import cosim_toolbox` without error.
+```shell
+$ cd ../
+```
 
 ```shell
 $ python
->>> import cst
+>>> import cosim_toolbox
 ```
 
 ## Run the Writer and Reader Example
@@ -36,27 +47,67 @@ These examples create data, write them to the data stores (CSV for time-series, 
 
 From the root of the cloned CST repo, run the time-series CSV example
 ```shell
-$ python ./run/data_management/example_timeseries_csv.py
+$ cd run/data_management
+```
+
+```shell
+$ python example_timeseries_csv.py
 ```
 
 should produce
 ```shell
-scenarios:
-federates:
-data_types:
-analysis name:
+Federate directory not found: test_fed
+scenarios: ['test_scenario']
+federates: ['test_fed']
+data_types: ['hdt_boolean', 'hdt_double', 'hdt_integer', 'hdt_string']
+example_data
+                   real_time  sim_time       scenario  federate data_name   data_value
+0 2025-09-12 12:34:43.492862         0  test_scenario  test_fed     value          2.0
+1 2025-09-12 12:34:43.492854         0  test_scenario  test_fed     value            1
+2 2025-09-12 12:34:43.492866         0  test_scenario  test_fed     value  hello world
+3 2025-09-12 12:34:43.492865         0  test_scenario  test_fed     value         True
 ```
 
 Similarly, run the metadata example
 
 ```shell
-$ python ./run/data_management/example_metadata_json.py
+$ python example_metadata_json.py
 ```
 
 should produce
 ```shell
-scenarios:
-federations:
+scenarios: ['example_scenario']
+federations: []
+{'analysis': 'example_analysis', 'federation': 'example_federation', 'start_time': 0.0, 'stop_time': 10.0, 'docker': False}
 ```
 
 ## Run an Example Co-Simulation
+There are a number of examples in the "run" folder but the simplest is the "linked_federates". Assuming you are starting from the "data_management" folder from the previous section:
+```shell
+$ python ../python/linked_federates
+```
+
+The first script we run sets up the federation. Near the top of the file make sure the backends are configured to use "csv" for time-series and "json" for metadata
+
+```python
+use_meta_db = "json"
+use_data_db = "csv"
+```
+
+```shell
+$ python federate_config.py
+```
+
+This should print a message to console that the "Configuration files written successfully." In this case, the configuration file produced is a shell script "MyLinkScenario.sh". To run the co-simulation, run this shell script
+
+```shell
+$ ./MyLinkScenario.sh
+```
+
+This doesn't print anything to console but will create a few new folders where the time-series data ("data_store") and metadata ("meta_store") are recorded.
+
+To confirm that data was written correctly to these data stores, run the post-processing script.
+
+```shell
+$ python post_processing.py
+```
