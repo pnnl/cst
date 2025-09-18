@@ -20,6 +20,8 @@ class TSRecord:
     federate: str
     data_name: str
     data_value: Any
+    receiving_federate: Optional[str] = None
+    receiving_endpoint: Optional[str] = None
     data_type: Optional[str] = None  # "hdt_string", "hdt_endpoint", "hdt_double", etc.
 
     def __post_init__(self) -> None:
@@ -29,6 +31,11 @@ class TSRecord:
 
     def _auto_detect_type(self) -> str:
         """Auto-detect data type from value"""
+
+        if self.receiving_endpoint is not None:
+            return "hdt_endpoint"
+        if self.receiving_federate is not None:
+            return "hdt_endpoint"
         if isinstance(self.data_value, bool):
             return "hdt_boolean"
         if isinstance(self.data_value, int):
@@ -53,13 +60,13 @@ class TSDataWriter(ABC):
 
     def __init__(self) -> None:
         """Initializes the base writer state.
-        
-        Args: 
+
+        Args:
             None
 
         Returns:
             None
-        
+
         """
         self.helper: object
         self._buffer: list = []
@@ -68,7 +75,7 @@ class TSDataWriter(ABC):
     @abstractmethod
     def connect(self) -> bool:
         """Establish connection to the data store.
-        
+
         Returns:
             None
 
@@ -78,7 +85,7 @@ class TSDataWriter(ABC):
     @abstractmethod
     def disconnect(self) -> None:
         """Close connection to the data store.
-        
+
         Returns:
             None
 
@@ -89,10 +96,10 @@ class TSDataWriter(ABC):
     def write_records(self, records: list[TSRecord]) -> bool:
         """
         Write TSRecord objects to the data store.
-        
+
         Args:
             records (list[TSRecord]): List of time-series records to write
-        
+
         Returns:
             bool: True if write successful, False otherwise
         """
@@ -101,7 +108,7 @@ class TSDataWriter(ABC):
     def add_record(self, record: TSRecord) -> None:
         """
         Add a single TSRecord to the internal buffer.
-        
+
         Args:
             record (TSRecord): Time-series record to add
 
@@ -110,57 +117,59 @@ class TSDataWriter(ABC):
         """
         self._buffer.append(record)
 
+
     def flush(self) -> bool:
         """
         Write all buffered records to the data store and clear buffer.
-        
+
         Returns:
             bool: True if flush successful, False otherwise
         """
+        success = True
+        # Flush regular records
         if self._buffer:
             success = self.write_records(self._buffer)
             if success:
                 self._buffer.clear()
-            return success
-        return True
+        return success
 
     @property
     def buffer_size(self) -> int:
         """Get current buffer size.
-        
+
         Returns:
             int: number of elements in buffer list
-        
+
         """
         return len(self._buffer)
 
     @property
     def is_connected(self) -> bool:
         """Check if the writer is connected.
-        
+
         Returns:
             bool: True if writer is connected to data store
-        
+
         """
         return self._is_connected
 
     def __enter__(self):
         """Context manager entry.
-        
-        Args: 
+
+        Args:
             None
 
         Returns:
             None
-        
+
         """
         self.connect()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Context manager exit - disconnect from database.
-        
-        Args: 
+
+        Args:
             None
 
         Returns:
@@ -184,26 +193,26 @@ class TSDataReader(ABC):
     @abstractmethod
     def connect(self) -> bool:
         """Establish connection to the data store.
-        
+
         Returns:
             bool: flag indicated if the connection to the data store exists
         """
         raise NotImplementedError(
-                "TSDataReader.connect() is an abstract class and must be "
-                "subclassed and implemented."
-            )
+            "TSDataReader.connect() is an abstract class and must be "
+            "subclassed and implemented."
+        )
 
     @abstractmethod
     def disconnect(self) -> None:
         """Close connection to the data store.
-        
+
         Returns:
             bool: flag indicated if the connection to the data store exists
         """
         raise NotImplementedError(
-                "TSDataReader.disconnect() is an abstract class and must be"
-                "subclassed and implemented."
-            )
+            "TSDataReader.disconnect() is an abstract class and must be"
+            "subclassed and implemented."
+        )
 
     @abstractmethod
     def read_data(
@@ -232,7 +241,7 @@ class TSDataReader(ABC):
     @property
     def is_connected(self) -> bool:
         """Check if the reader is connected.
-        
+
         Returns:
             bool: flag indicated if the connection to the data store exists
         """
@@ -240,8 +249,8 @@ class TSDataReader(ABC):
 
     def __enter__(self):
         """Context manager entry.
-        
-        Args: 
+
+        Args:
             None
 
         Returns:
@@ -264,8 +273,8 @@ class MDDataWriter(ABC):
 
     def __init__(self) -> None:
         """Initializes the base writer state.
-        
-        Args: 
+
+        Args:
             None
 
         Returns:
@@ -277,7 +286,7 @@ class MDDataWriter(ABC):
     @abstractmethod
     def connect(self) -> bool:
         """Establish connection to the data store.
-        
+
         Returns:
             bool: flag indicated if the connection to the data store
                 was established
@@ -303,7 +312,7 @@ class MDDataWriter(ABC):
             name (str): Federation name
             federation_data (Dict[str, Any]): Federation configuration data
             overwrite (bool): Whether to overwrite existing data
-        
+
         Returns:
             bool: True if write successful, False otherwise
         """
@@ -315,12 +324,12 @@ class MDDataWriter(ABC):
     ) -> bool:
         """
         Write scenario metadata to the data store.
-        
+
         Args:
             name (str): Scenario name
             scenario_data (Dict[str, Any]): Scenario configuration data
             overwrite (bool): Whether to overwrite existing data
-        
+
         Returns:
             bool: True if write successful, False otherwise
         """
@@ -336,13 +345,13 @@ class MDDataWriter(ABC):
     ) -> bool:
         """
         Write metadata to the data store (generic method).
-        
+
         Args:
             collection_type (str): Collection/category name type
             name (str): Data identifier name
             data (Dict[str, Any]): Data to write
             overwrite (bool): Whether to overwrite existing data
-        
+
         Returns:
             bool: True if write successful, False otherwise
         """
@@ -351,7 +360,7 @@ class MDDataWriter(ABC):
     @property
     def is_connected(self) -> bool:
         """Check if the writer is connected.
-        
+
         Returns:
             bool: flag indicated if the connection to the data store exists
         """
@@ -359,8 +368,8 @@ class MDDataWriter(ABC):
 
     def __enter__(self):
         """Context manager entry.
-        
-        Args: 
+
+        Args:
             None
 
         Returns:
@@ -371,8 +380,8 @@ class MDDataWriter(ABC):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Context manager exit - disconnect from database.
-        
-        Args: 
+
+        Args:
             None
 
         Returns:
@@ -390,8 +399,8 @@ class MDDataReader(ABC):
 
     def __init__(self) -> None:
         """Initializes the base reader state.
-        
-        Args: 
+
+        Args:
             None
 
         Returns:
@@ -403,35 +412,35 @@ class MDDataReader(ABC):
     @abstractmethod
     def connect(self) -> bool:
         """Establish connection to the data store.
-        
+
         Returns:
             bool: flag indicated if the connection to the data store exists
         """
         raise NotImplementedError(
-                "MDDataReader.connect() is an abstract class and must be"
-                "subclassed and implemented."
-            )
+            "MDDataReader.connect() is an abstract class and must be"
+            "subclassed and implemented."
+        )
 
     @abstractmethod
     def disconnect(self) -> None:
         """Close connection to the data store.
-        
+
         Returns:
             bool: flag indicated if the connection to the data store exists
         """
         raise NotImplementedError(
-                "MDDataReader.disconnect() is an abstract class and must be" 
-                "subclassed and implemented."
-            )
+            "MDDataReader.disconnect() is an abstract class and must be"
+            "subclassed and implemented."
+        )
 
     @abstractmethod
     def read_federation(self, name: str) -> Optional[Dict[str, Any]]:
         """
         Read federation metadata from the data store.
-        
+
         Args:
             name (str): Federation name
-        
+
         Returns:
             Optional[Dict[str, Any]]: Federation data or None if not found
         """
@@ -441,10 +450,10 @@ class MDDataReader(ABC):
     def read_scenario(self, name: str) -> Optional[Dict[str, Any]]:
         """
         Read scenario metadata from the data store.
-        
+
         Args:
             name (str): Scenario name
-        
+
         Returns:
             Optional[Dict[str, Any]]: Scenario data or None if not found
         """
@@ -454,11 +463,11 @@ class MDDataReader(ABC):
     def read(self, collection_type: str, name: str) -> Optional[Dict[str, Any]]:
         """
         Read metadata from the data store (generic method).
-        
+
         Args:
             collection_type (str): Collection/category name type
             name (str): Data identifier name
-        
+
         Returns:
             Optional[Dict[str, Any]]: Data or None if not found
         """
@@ -467,7 +476,7 @@ class MDDataReader(ABC):
     @abstractmethod
     def list_federations(self) -> list[str]:
         """List available federation names.
-        
+
         Returns:
             list[str]: list of names of federations as strings
         """
@@ -476,7 +485,7 @@ class MDDataReader(ABC):
     @abstractmethod
     def list_scenarios(self) -> list[str]:
         """List available scenario names.
-        
+
         Returns:
             list[str]: list of names of scenarios as strings
         """
@@ -486,10 +495,10 @@ class MDDataReader(ABC):
     def list_items(self, collection_type: str) -> list[str]:
         """
         List available items in a collection (generic method).
-        
+
         Args:
             collection_type (str): Collection/category name
-        
+
         Returns:
             list[str]: List of item names
         """
@@ -499,7 +508,7 @@ class MDDataReader(ABC):
     def list_custom_collections(self) -> list[str]:
         """
         List available custom collection names.
-        
+
         Returns:
             list[str]: List of custom collection names
         """
@@ -508,7 +517,7 @@ class MDDataReader(ABC):
     @property
     def is_connected(self) -> bool:
         """Check if the reader is connected.
-        
+
         Returns:
             bool: flag indicating if data store is connected
         """
@@ -516,8 +525,8 @@ class MDDataReader(ABC):
 
     def __enter__(self):
         """Context manager entry.
-        
-        Args: 
+
+        Args:
             None
 
         Returns:
@@ -528,8 +537,8 @@ class MDDataReader(ABC):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Context manager exit - disconnect from database.
-        
-        Args: 
+
+        Args:
             None
 
         Returns:
@@ -553,7 +562,7 @@ class TSDataManager(ABC):
     @abstractmethod
     def connect(self) -> bool:
         """Establish connection for both reader and writer.
-        
+
         Returns:
             bool: flag indicating whether the connection to the store exist
         """
@@ -562,7 +571,7 @@ class TSDataManager(ABC):
     @abstractmethod
     def disconnect(self) -> None:
         """Close connection for both reader and writer.
-        
+
         Returns:
             None
 
@@ -648,7 +657,7 @@ class MDDataManager(ABC):
     @abstractmethod
     def connect(self) -> bool:
         """Establish connection for both reader and writer.
-        
+
         Returns:
             bool: flag indicating if connected to the data store
         """
@@ -657,7 +666,7 @@ class MDDataManager(ABC):
     @abstractmethod
     def disconnect(self) -> None:
         """Close connection for both reader and writer.
-        
+
         Returns:
             None
         """
@@ -672,12 +681,12 @@ class MDDataManager(ABC):
             name (str): **TODO**
             federation_data (Dict[str, Any]): federation data dictionary to be
                 written
-            overwrite (bool, optional): Flag indicating if any existing 
-                federation dictionary should be overwritten. Defaults to 
+            overwrite (bool, optional): Flag indicating if any existing
+                federation dictionary should be overwritten. Defaults to
                 False.
 
         Returns:
-            bool: flag indicating whether the federation dictionary was 
+            bool: flag indicating whether the federation dictionary was
                 successfully written to the data store
         """
         return self.writer.write_federation(name, federation_data, overwrite)
@@ -691,11 +700,11 @@ class MDDataManager(ABC):
             name (str): **TODO**
             scenario_data (Dict[str, Any]): scenario data dictionary to be
                 written
-            overwrite (bool, optional): Flag indicating if any existing 
+            overwrite (bool, optional): Flag indicating if any existing
                 scenario dictionary should be overwritten. Defaults to False.
 
         Returns:
-            bool: flag indicating whether the scenario dictionary was 
+            bool: flag indicating whether the scenario dictionary was
                 successfully written to the data store
         """
         return self.writer.write_scenario(name, scenario_data, overwrite)
@@ -713,7 +722,7 @@ class MDDataManager(ABC):
             collection_type (str): **TODO**
             name (str): **TODO**
             data (Dict[str, Any]): Data to be written to the data store
-            overwrite (bool, optional): Flag indicating if any existing 
+            overwrite (bool, optional): Flag indicating if any existing
                 dictionary should be overwritten. Defaults to False.
 
         Returns:
@@ -747,7 +756,7 @@ class MDDataManager(ABC):
         """Generic read method for data backend
 
         Args:
-            collection_type (str): Name of metadata collection from which to 
+            collection_type (str): Name of metadata collection from which to
                 read
             name (str): **TODO**
 
@@ -801,7 +810,7 @@ class MDDataManager(ABC):
     @property
     def is_connected(self) -> bool:
         """Check if the data store is connected
-        
+
         Returns:
             bool: True if writer is connected to data store
         """
