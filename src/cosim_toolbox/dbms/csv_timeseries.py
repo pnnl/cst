@@ -346,27 +346,26 @@ class CSVTimeSeriesReader(TSDataReader):
         data_type: Optional[str | list] = None,
     ) -> pd.DataFrame:
         """Read time-series data from CSV files.
-
         Args:
             start_time (Optional[float], optional): Start time (ordinal time
                 in seconds) for requested data. Defaults to None.
             duration (Optional[float], optional): Length of time (in seconds)
                 from the data to read . Defaults to None.
-            scenario_name (Optional[str], optional): Name of scenario to read.
+            scenario_name (Optional[str | list], optional): Name(s) of scenario to read.
                 Defaults to None.
-            federate_name (Optional[str], optional): Name of federation to
+            federate_name (Optional[str | list], optional): Name(s) of federate to
                 read. Defaults to None.
-            data_name (Optional[str], optional): Name of data to read.
+            data_name (Optional[str | list], optional): Name(s) of data to read.
                 Defaults to None.
-            data_type (Optional[str], optional): Data type to read. Defaults
+            data_type (Optional[str | list], optional): Data type(s) to read. Defaults
                 to None.
-
         Returns:
             pd.DataFrame: requested data
         """
         if not self.is_connected:
             logger.error("CSV reader not connected. Call connect() first.")
             return pd.DataFrame()
+
         scenario_names = scenario_name
         federate_names = federate_name
         data_names = data_name
@@ -424,17 +423,22 @@ class CSVTimeSeriesReader(TSDataReader):
 
         # Apply filters
         query_parts = []
-        if scenario_name:
-            for _scenario_name in scenario_names:
-                query_parts.append(f"scenario == '{_scenario_name}'")
-        if federate_name:
-            for _federate_name in federate_names:
-                query_parts.append(f"federate == '{_federate_name}'")
-        if data_name:
-            for _data_name in data_names:
-                query_parts.append(f"data_name == '{_data_name}'")
+
+        if scenario_names:
+            scenario_conditions = [f"scenario == '{name}'" for name in scenario_names]
+            query_parts.append(f"({' or '.join(scenario_conditions)})")
+
+        if federate_names:
+            federate_conditions = [f"federate == '{name}'" for name in federate_names]
+            query_parts.append(f"({' or '.join(federate_conditions)})")
+
+        if data_names:
+            data_name_conditions = [f"data_name == '{name}'" for name in data_names]
+            query_parts.append(f"({' or '.join(data_name_conditions)})")
+
         if start_time is not None:
             query_parts.append(f"sim_time >= {start_time}")
+
         if duration is not None:
             end_time = (start_time or 0) + duration
             query_parts.append(f"sim_time < {end_time}")
