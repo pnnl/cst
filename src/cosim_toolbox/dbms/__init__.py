@@ -6,7 +6,8 @@ time-series data and metadata to various storage backends.
 
 The primary entry points are the factory functions and the manager classes.
 
-Example Usage:
+Example Usage::
+
     from cosim_toolbox.dbms import create_timeseries_manager, TSRecord
 
     # Create a CSV-based manager

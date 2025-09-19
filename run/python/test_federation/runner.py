@@ -97,7 +97,7 @@ class Runner:
             "docker": self.docker
         }
 
-        with create_metadata_manager() as mgr:
+        with create_metadata_manager(backend="json") as mgr:
             print(f"Writing configuration files to '{mgr.location}'...")
             mgr.write_federation(self.federation_name, diction, overwrite=True)
             mgr.write_scenario(self.scenario_name, scenario, overwrite=True)
@@ -106,7 +106,7 @@ class Runner:
 
 def main():
     remote = False
-    with_docker = True
+    with_docker = False
     r = Runner("test_scenario", "test_analysis", "test_federation", with_docker)
     r.define_scenario()
     if with_docker:

@@ -81,7 +81,7 @@ class TestPerformance:
         """Compare MongoDB vs JSON performance (if MongoDB available)."""
         try:
             mongo_manager = create_metadata_manager(
-                "mongo", "mongodb://localhost:27017", db_name="test_perf"
+                "mongo", location="mongodb://localhost:27017", db_name="test_perf"
             )
 
             test_data = {"test": "data", "numbers": list(range(50))}

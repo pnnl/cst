@@ -5,18 +5,18 @@ Factory functions for creating data managers.
 """
 
 # Use relative imports within the module
-import cosim_toolbox as env
+from .. import csv_data_db, pg_data_db, json_meta_db, mongo_meta_db
 from .abstractions import TimeSeriesManager, MetadataManager
 
 
 def create_timeseries_manager(
-    backend: str = "postgres", analysis_name: str = "default", **kwargs
+        backend: str = "postgres", analysis_name: str = "default", **kwargs
 ) -> TimeSeriesManager:
     """
     Factory function to create appropriate time-series data manager.
     Args:
         backend (str): Backend type ("csv", "postgres").
-        analysis (str): Analysis name.
+        analysis_name (str): Analysis name.
         **kwargs: Backend-specific options.
 
     Returns:
@@ -24,23 +24,21 @@ def create_timeseries_manager(
     """
     backend = backend.lower()
     if backend == "csv":
-        from cosim_toolbox.dbms import CSVTimeSeriesManager
+        from . import CSVTimeSeriesManager
 
         # assign kwargs to backend option
         for key, value in kwargs.items():
-            if key in env.csv_data_db:
-                env.csv_data_db[key] = value
-        return CSVTimeSeriesManager(**env.csv_data_db, analysis_name=analysis_name)
+            if key in csv_data_db:
+                csv_data_db[key] = value
+        return CSVTimeSeriesManager(analysis_name=analysis_name, **csv_data_db)
     elif backend == "postgres":
-        from cosim_toolbox.dbms import PostgreSQLTimeSeriesManager
+        from . import PostgreSQLTimeSeriesManager
 
         # assign kwargs to backend option
         for key, value in kwargs.items():
-            if key in env.pg_data_db:
-                env.pg_data_db[key] = value
-        return PostgreSQLTimeSeriesManager(
-            **env.pg_data_db, analysis_name=analysis_name
-        )
+            if key in pg_data_db:
+                pg_data_db[key] = value
+        return PostgreSQLTimeSeriesManager(analysis_name=analysis_name, **pg_data_db)
     else:
         raise ValueError(
             f"Unknown time-series backend: {backend}. Supported: csv, postgres"
@@ -60,22 +58,22 @@ def create_metadata_manager(backend: str = "mongo", **kwargs) -> MetadataManager
 
     backend = backend.lower()
     if backend == "json":
-        from cosim_toolbox.dbms import JSONMetadataManager
+        from . import JSONMetadataManager
 
         # assign kwargs to backend option
         for key, value in kwargs.items():
-            if key in env.json_meta_db:
-                env.json_meta_db[key] = value
-        return JSONMetadataManager(**env.json_meta_db)
+            if key in json_meta_db:
+                json_meta_db[key] = value
+        return JSONMetadataManager(**json_meta_db)
 
     elif backend == "mongo":
-        from cosim_toolbox.dbms import MongoMetadataManager
+        from . import MongoMetadataManager
 
         # assign kwargs to backend option
         for key, value in kwargs.items():
-            if key in env.mongo_meta_db:
-                env.mongo_meta_db[key] = value
-        return MongoMetadataManager(**env.mongo_meta_db)
+            if key in mongo_meta_db:
+                mongo_meta_db[key] = value
+        return MongoMetadataManager(**mongo_meta_db)
 
     else:
         raise ValueError(f"Unknown metadata backend: {backend}. Supported: json, mongo")

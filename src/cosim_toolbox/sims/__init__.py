@@ -24,11 +24,6 @@ from .federate import Federate
 from .dockerRunner import DockerRunner
 from .federateLogger import FederateLogger
 
-# Deprecated apis
-from .dbConfigs import DBConfigs
-from .dbResults import DBResults
-from .readConfig import ReadConfig
-
 # Public API definition
 __all__ = [
     "Collect",
@@ -40,6 +35,4 @@ __all__ = [
     "Federate",
     "DockerRunner",
     "FederateLogger",
-    "DBConfigs",
-    "DBResults",
 ]

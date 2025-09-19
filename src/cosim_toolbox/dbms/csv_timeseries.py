@@ -65,7 +65,8 @@ class _CSVHelper:
         federate_path = self.analysis_path / federate_name
         return federate_path / f"{data_type}.csv"
 
-    def get_data_type(self, value: Any) -> str:
+    @staticmethod
+    def get_data_type(value: Any) -> str:
         """Determine the CST data type for a given value.
 
         Args:
@@ -101,7 +102,8 @@ class _CSVHelper:
             )
         return "hdt_string"  # Default for unknown types
 
-    def format_value_for_csv(self, value: Any) -> str:
+    @staticmethod
+    def format_value_for_csv(value: Any) -> str:
         """Format a value for CSV storage.
 
         Args:
@@ -118,7 +120,8 @@ class _CSVHelper:
             return value.isoformat()
         return str(value)
 
-    def parse_value_from_csv(self, value_str: str, data_type: str) -> Any:
+    @staticmethod
+    def parse_value_from_csv(value_str: str, data_type: str) -> Any:
         """Parse a value from CSV string back to appropriate Python type.
 
         Args:
@@ -164,8 +167,7 @@ class CSVTimeSeriesWriter(TSDataWriter):
         analysis_name: str = "default",
         helper: Optional[_CSVHelper] = None,
     ):
-        """
-        Initialize the CSV writer.
+        """Initialize the CSV writer.
 
         For standalone use:
             writer = CSVTimeSeriesWriter(location="/path/to/data", analysis_name="my_analysis")
@@ -346,6 +348,7 @@ class CSVTimeSeriesReader(TSDataReader):
         data_type: Optional[str | list] = None,
     ) -> pd.DataFrame:
         """Read time-series data from CSV files.
+
         Args:
             start_time (Optional[float], optional): Start time (ordinal time
                 in seconds) for requested data. Defaults to None.
@@ -359,6 +362,7 @@ class CSVTimeSeriesReader(TSDataReader):
                 Defaults to None.
             data_type (Optional[str | list], optional): Data type(s) to read. Defaults
                 to None.
+
         Returns:
             pd.DataFrame: requested data
         """
@@ -464,7 +468,7 @@ class CSVTimeSeriesReader(TSDataReader):
         """Provides a list of data types in data backend for a given federate
 
         Args:
-            federate_name (str): name of federate whose available
+            federate_names (str): name of federate whose available
                 data types are being determined
 
         Returns:
@@ -507,15 +511,17 @@ class CSVTimeSeriesReader(TSDataReader):
         """Get the time range (min and max simulation times) for the data.
 
         Args:
-            **kwargs
+            **kwargs (Dict[str, float]):
 
         Returns:
-            Dict[str, float]: Dictionary with the time range for a given
-                set of data. Returned dictionary is structured as
-                {
-                    "min_time": float value,
-                    "max_time": float value
-                }
+            Dict[str, float]: Dictionary with the time range for a given set of data.
+                Returned dictionary is structured as::
+
+                    {
+                        "min_time": float value,
+                        "max_time": float value
+                    }
+
         """
         df = self.read_data(**kwargs)
         if df.empty:
@@ -534,7 +540,7 @@ class CSVTimeSeriesManager(TSDataManager):
 
     def __init__(self, *, location: str, analysis_name: str = "default", **kwargs):
         """Initialize CSV time-series manager."""
-        super().__init__()
+        super().__init__(**kwargs)
         # The manager creates ONE helper and shares it.
         self.helper: _CSVHelper = _CSVHelper(location, analysis_name)
         self.writer: CSVTimeSeriesWriter = CSVTimeSeriesWriter(helper=self.helper)
@@ -574,7 +580,7 @@ class CSVTimeSeriesManager(TSDataManager):
         """Lists data types for a given federate in the data backend
 
         Args:
-            federate_name (str): Name of federate being queried
+            federate_names (str): Name of federate being queried
 
         Returns:
             List[str]: list of data types in data backend
@@ -593,15 +599,17 @@ class CSVTimeSeriesManager(TSDataManager):
         """Get time range of data in data backend
 
         Args:
-            **kwargs
+            **kwargs Dict[str, any]:
 
         Returns:
-            Dict[str, float]: Dictionary with the time range for a given
-                set of data. Returned dictionary is structured as
-                {
-                    "min_time": float value,
-                    "max_time": float value
-                }
+            Dict[str, float]: Dictionary with the time range for a given set of data.
+                Returned dictionary is structured as::
+
+                    {
+                        "min_time": float value,
+                        "max_time": float value
+                    }
+
         """
         return self.reader.get_time_range(**kwargs)
 

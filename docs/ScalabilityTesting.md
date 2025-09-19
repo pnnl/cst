@@ -40,80 +40,80 @@ The CST scalability experiment will have the following parameters and values:
 
 A full factorial version of this study is as follows:
 
-| Scenario | Fed. Count | Pub Count | Endpoints | Use CST | Use Profiling |
-| -------- |----------- | --------- | --------- | ------- | ------------- |
-| 1        | 5          | 1         | false     | false   | false         |
-| 2        | 50         | 1         | false     | false   | false         |
-| 3        | 500        | 1         | false     | false   | false         |
-| 4        | 5          | 10        | false     | false   | false         |
-| 5        | 50         | 10        | false     | false   | false         |
-| 6        | 500        | 10        | false     | false   | false         |
-| 7        | 5          | 100       | false     | false   | false         |
-| 8        | 50         | 100       | false     | false   | false         |
-| 9        | 500        | 100       | false     | false   | false         |
-| 10       | 5          | 1         | true      | false   | false         |
-| 11       | 50         | 1         | true      | false   | false         |
-| 12       | 500        | 1         | true      | false   | false         |
-| 13       | 5          | 10        | true      | false   | false         |
-| 14       | 50         | 10        | true      | false   | false         |
-| 15       | 500        | 10        | true      | false   | false         |
-| 16       | 5          | 100       | true      | false   | false         |
-| 17       | 50         | 100       | true      | false   | false         |
-| 18       | 500        | 100       | true      | false   | false         |
-| 19       | 5          | 1         | false     | true    | false         |
-| 20       | 50         | 1         | false     | true    | false         |
-| 21       | 500        | 1         | false     | true    | false         |
-| 22       | 5          | 10        | false     | true    | false         |
-| 23       | 50         | 10        | false     | true    | false         |
-| 24       | 500        | 10        | false     | true    | false         |
-| 25       | 5          | 100       | false     | true    | false         |
-| 26       | 50         | 100       | false     | true    | false         |
-| 27       | 500        | 100       | false     | true    | false         |
-| 28       | 5          | 1         | true      | true    | false         |
-| 29       | 50         | 1         | true      | true    | false         |
-| 30       | 500        | 1         | true      | true    | false         |
-| 31       | 5          | 10        | true      | true    | false         |
-| 32       | 50         | 10        | true      | true    | false         |
-| 33       | 500        | 10        | true      | true    | false         |
-| 34       | 5          | 100       | true      | true    | false         |
-| 35       | 50         | 100       | true      | true    | false         |
-| 36       | 500        | 100       | true      | true    | false         |
-| 37       | 5          | 1         | false     | false   | true          |
-| 38       | 50         | 1         | false     | false   | true          |
-| 39       | 500        | 1         | false     | false   | true          |
-| 40       | 5          | 10        | false     | false   | true          |
-| 41       | 50         | 10        | false     | false   | true          |
-| 42       | 500        | 10        | false     | false   | true          |
-| 43       | 5          | 100       | false     | false   | true          |
-| 44       | 50         | 100       | false     | false   | true          |
-| 45       | 500        | 100       | false     | false   | true          |
-| 46       | 5          | 1         | true      | false   | true          |
-| 47       | 50         | 1         | true      | false   | true          |
-| 48       | 500        | 1         | true      | false   | true          |
-| 49       | 5          | 10        | true      | false   | true          |
-| 50       | 50         | 10        | true      | false   | true          |
-| 51       | 500        | 10        | true      | false   | true          |
-| 52       | 5          | 100       | true      | false   | true          |
-| 53       | 50         | 100       | true      | false   | true          |
-| 54       | 500        | 100       | true      | false   | true          |
-| 55       | 5          | 1         | false     | true    | true          |
-| 56       | 50         | 1         | false     | true    | true          |
-| 57       | 500        | 1         | false     | true    | true          |
-| 58       | 5          | 10        | false     | true    | true          |
-| 59       | 50         | 10        | false     | true    | true          |
-| 60       | 500        | 10        | false     | true    | true          |
-| 61       | 5          | 100       | false     | true    | true          |
-| 62       | 50         | 100       | false     | true    | true          |
-| 63       | 500        | 100       | false     | true    | true          |
-| 64       | 5          | 1         | true      | true    | true          |
-| 65       | 50         | 1         | true      | true    | true          |
-| 66       | 500        | 1         | true      | true    | true          |
-| 67       | 5          | 10        | true      | true    | true          |
-| 68       | 50         | 10        | true      | true    | true          |
-| 69       | 500        | 10        | true      | true    | true          |
-| 70       | 5          | 100       | true      | true    | true          |
-| 71       | 50         | 100       | true      | true    | true          |
-| 72       | 500        | 100       | true      | true    | true          |
+|Scenario|Fed. Count|Pub Count|Endpoints|Use CST|Use Profiling|
+|--------|-----------|---------|---------|-------|-------------|
+|1|5|1|true|true|true|
+|2|5|1|true|true|false|
+|3|5|1|true|false|true|
+|4|5|1|true|false|false|
+|5|5|1|false|true|true|
+|6|5|1|false|true|false|
+|7|5|1|false|false|true|
+|8|5|1|false|false|false|
+|9|5|10|true|true|true|
+|10|5|10|true|true|false|
+|11|5|10|true|false|true|
+|12|5|10|true|false|false|
+|13|5|10|false|true|true|
+|14|5|10|false|true|false|
+|15|5|10|false|false|true|
+|16|5|10|false|false|false|
+|17|5|100|true|true|true|
+|18|5|100|true|true|false|
+|19|5|100|true|false|true|
+|20|5|100|true|false|false|
+|21|5|100|false|true|true|
+|22|5|100|false|true|false|
+|23|5|100|false|false|true|
+|24|5|100|false|false|false|
+|25|50|1|true|true|true|
+|26|50|1|true|true|false|
+|27|50|1|true|false|true|
+|28|50|1|true|false|false|
+|29|50|1|false|true|true|
+|30|50|1|false|true|false|
+|31|50|1|false|false|true|
+|32|50|1|false|false|false|
+|33|50|10|true|true|true|
+|34|50|10|true|true|false|
+|35|50|10|true|false|true|
+|36|50|10|true|false|false|
+|37|50|10|false|true|true|
+|38|50|10|false|true|false|
+|39|50|10|false|false|true|
+|40|50|10|false|false|false|
+|41|50|100|true|true|true|
+|42|50|100|true|true|false|
+|43|50|100|true|false|true|
+|44|50|100|true|false|false|
+|45|50|100|false|true|true|
+|46|50|100|false|true|false|
+|47|50|100|false|false|true|
+|48|50|100|false|false|false|
+|49|500|1|true|true|true|
+|50|500|1|true|true|false|
+|51|500|1|true|false|true|
+|52|500|1|true|false|false|
+|53|500|1|false|true|true|
+|54|500|1|false|true|false|
+|55|500|1|false|false|true|
+|56|500|1|false|false|false|
+|57|500|10|true|true|true|
+|58|500|10|true|true|false|
+|59|500|10|true|false|true|
+|60|500|10|true|false|false|
+|61|500|10|false|true|true|
+|62|500|10|false|true|false|
+|63|500|10|false|false|true|
+|64|500|10|false|false|false|
+|65|500|100|true|true|true|
+|66|500|100|true|true|false|
+|67|500|100|true|false|true|
+|68|500|100|true|false|false|
+|69|500|100|false|true|true|
+|70|500|100|false|true|false|
+|71|500|100|false|false|true|
+|72|500|100|false|false|false|
 
 The use of profiling is a stretch goal for this effort so the bottom half of the scenarios may not be evaluated. 
 
@@ -126,34 +126,74 @@ To stress test CST, the test federation will be simple. A ring of federates will
 To run a given scenario, the following files will need to be created on disk (_x_ is the number of federates and _m_ is the scenario test designator)
 
 1. **federate_x_config.json** - HELICS configuration JSON for a given federate
-2. **cst_federate.json** - Federate defintion information used by CST
+2. **cst_federate.json** - Federate definition information used by CST
 3. **cst_federation.json** - Federation definition information used by CST
 4. **cst_scenario_m.json** - Scenario definition information used by CST
-5. **cst_scenario_m_runner.py** - Launch script for the execution of this scenario
+5. **cst_scenario_m_runner.sh** - Launch script for the execution of this scenario
 
+By setting "Use CST=false" theCST DBMS manager will use json and csv to write the files.
 The files will be arranged as follows (for example when scenario m = 7)
 ```
-cst_scalability_experiment
-|---...
-|---scenario_7
-    |---federate_configs
-        |---federate_1_config.json
-        |---federate_2_config.json
-        |---federate_3_config.json
-        ...
-    |---cst_federate.json
-    |---cst_federation.json
-    |---cst_scenario_7.json
-    |---cst_scenario_7_runner.py
-    |---cst_scalability_fed.py
-    |---cst_results_validator.py
-    |---outputs
-        |---timing_results.csv
-        |---cst_scalability_fed_1_output.csv
-        |---cst_scalability_fed_2_output.csv
-        |---cst_scalability_fed_3_output.csv
-        ...
-|---...
+
+|---cst_scalability_experiment  (analysis_name)
+    |---test_6
+        |...
+    |---test_7
+        |-o-data_store
+            |-o--cst_scalability_experiment_f5_s1
+                |-o-fed_0_hdt_douple.csv
+                |-o-fed_1_hdt_douple.csv
+                |-o-fed_1_hdt_endpoint.csv
+                |-o-fed_1_hdt_endpoint.csv
+                ...
+        |---meta_store
+            |---cst_scalability_experiment
+                |---cst_scalability_experiment_7.json
+            |---federations
+                |---cst_scalability_experiment_f_7.json
+            |---scenarios
+                |---cst_scalability_experiment_s_7.json
+        |---federate_outputs
+            |---fed_0_timing.csv
+            |---fed_1_timing.csv
+            |---fed_2_timing.csv
+            |---...n federate timing csv's
+        |-o-broker.log
+        |---cst_scalability_experiment_s_7.sh
+        |-o-fed_1.log
+        |-o-fed_2.log
+        |-o-fed_3.log
+        |-o-...n federates.log's
+        |-o-finished.txt
+        |-o-hostname
+    |---test_8
+        |...
+```
+
+By setting "Use CST=True" the CST DBMS manager will use Mongo and Postgres to write the files.
+The files will be arranged as follows (for example when scenario m = 5). 
+All other files are to be writen by Mongo or Postgres.
+```
+
+|---cst_scalability_experiment
+    |---test4
+        |---...
+    |---test_5
+        |---federate_outputs
+            |---fed_0_timing.csv
+            |---fed_1_timing.csv
+            |---fed_2_timing.csv
+            |---...n federate timing csv's
+        |-o-broker.log
+        |---cst_scalability_experiment_s_5.sh
+        |-o-fed_1.log
+        |-o-fed_2.log
+        |-o-fed_3.log
+        |-o-...n federate log's
+        |-o-finished.txt
+        |-o-hostname
+    |---test6
+        |---...
 
 ```
 

@@ -75,9 +75,9 @@ if __name__ == "__main__":
     t_.timing(True)
     test_fed = CST_Federate(sys.argv[1])
     if use_dbase:
-        test_fed.create_federate(sys.argv[2], "mongo", "postgres")
+        test_fed.create_federate(sys.argv[2], use_meta_db="mongo", use_data_db="postgres")
     else:
-        test_fed.create_federate(sys.argv[2], "json", "csv")
+        test_fed.create_federate(sys.argv[2], use_meta_db="json", use_data_db="csv")
     test_fed.run_cosim_loop()
     test_fed.destroy_federate()
     t_.timing(False)

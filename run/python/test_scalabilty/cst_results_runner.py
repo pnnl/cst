@@ -20,16 +20,14 @@ import time
 import psutil
 
 from cst_federate import CST_Time
+from cosim_toolbox.dbms import create_metadata_manager
 
 logger = logging.getLogger(__name__)
 
-def run_scenarios(cst_scalability: str):
+def run_scenarios(cst_scalability: str, run_only: list):
     lt = CST_Time()
     rt = CST_Time()
     semaphore = "finished.txt"
-    run_only = list(range(1, 4))
-    # run_only = list(range(49, 73))
-    # run_only = list(range(1, 73))
     os.chdir(cst_scalability)
     for run in run_only:
         scenario_dir_name = f"test_{run}"
@@ -40,14 +38,21 @@ def run_scenarios(cst_scalability: str):
         # change to scenario directory to run test
         os.chdir(scenario_dir_name)
         scenario_name = f"{cst_scalability}_s_{run}"
-        name = f"{cst_scalability}_{run}.json"
-        with open(name, "r") as f:
-            scalability = json.load(f)
-            _f = scalability["number of feds"]
-            _s = scalability["number of pubs"]
-            _e = scalability["use endpoints"]
-            _d = scalability["use CST logger"]
-            _p = scalability["use profiling"]
+        scale_name = f"{cst_scalability}_{run}"
+
+        mgr = create_metadata_manager()
+        mgr.connect()
+        scalability = mgr.read(cst_scalability, scale_name)
+        if scalability is None:
+            mgr = create_metadata_manager("json")
+            mgr.connect()
+            scalability = mgr.read(cst_scalability, scale_name)
+
+        _f = scalability["number of feds"]
+        _s = scalability["number of pubs"]
+        _e = scalability["use endpoints"]
+        _d = scalability["use CST logger"]
+        _p = scalability["use profiling"]
 
         print(f"  Scalability name:{scenario_name}", flush=True)
         print(f"    Running settings: feds:{_f}, subs:{_s}, end_pts:{_e}, cst_log:{_d}, profile:{_p}", flush=True)
@@ -102,14 +107,8 @@ def run_scenarios(cst_scalability: str):
 
         # return to scenario directory to write results
         os.chdir("..")
-        scalability = {}
-        name = f"{cst_scalability}_{run}.json"
-        with open(name, "r") as f:
-            scalability = json.load(f)
-            scalability['results'] = timing
-        with open(name, "w") as f:
-            json.dump(scalability, f, ensure_ascii=False, indent=2)
-
+        scalability['results'] = timing
+        mgr.write(cst_scalability, scale_name, scalability, overwrite=True)
         # return to root experiment directory
         os.chdir("..")
         print("~~~~~~~~~~ Done with scenario ~~~~~~~~~~~~", flush=True)
@@ -130,7 +129,11 @@ def kill_helics():
             proc.kill()
 
 if __name__ == '__main__':
+    # runs = list(range(1, 4))
+    # runs = list(range(49, 73))
+    runs = list(range(1, 41))
+    test_name = 'cst_scale1'
     if len(sys.argv) > 1:
-        run_scenarios(sys.argv[1])
+        run_scenarios(sys.argv[1], runs)
     else:
-        run_scenarios('cst_scale_z1')
+        run_scenarios(test_name, runs)
