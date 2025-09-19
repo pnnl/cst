@@ -103,7 +103,7 @@ with create_timeseries_manager(backend="csv", analysis_name="example_data") as m
     print(mgr.helper.analysis_name)
     df = mgr.read_data(
         scenario_name="test_scenario",
-        # federate_name=["test_fed", "test_fed2"],
+        federate_name=["test_fed", "test_fed2"],
     )
 
-print(df)
+print(df.sort_values("real_time"))

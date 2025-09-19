@@ -640,10 +640,10 @@ class Federate:
                         item_collect = _endpts["tags"].get("logger", item_collect)
                     if self.fed_collect == "no":
                         if item_collect == "yes":
-                            self.write_to_logger(key, ep.default_destination, msg, table="hdt_endpoint")
+                            self.write_to_logger(self.federate_name, key, msg, table="hdt_endpoint", receiving_endpoint=ep.default_destination)
                     else:  # self.fed_collect == "yes" or "maybe"
                         if item_collect == "yes" or item_collect == "maybe":
-                            self.write_to_logger(key, ep.default_destination, msg, table="hdt_endpoint")
+                            self.write_to_logger(self.federate_name, key, msg, table="hdt_endpoint", receiving_endpoint=ep.default_destination)
 
                 logger.debug(
                     f" {self.federate_name} endpoint: {key}, default destination: {ep.default_destination}, messages: {messages}")
@@ -651,7 +651,7 @@ class Federate:
                 if reset:
                     self.data_to_federation["endpoints"][key] = None
 
-    def write_to_logger(self, name, key, value, table=None, message_time=None):
+    def write_to_logger(self, name, key, value, table=None, message_time=None, receiving_federate=None, receiving_endpoint=None):
         # The 'table' argument is no longer needed as the manager handles types.
         if self.timeseries_manager:
             # Construct the real_time timestamp
@@ -669,6 +669,8 @@ class Federate:
                 federate=name,
                 data_name=key,
                 data_value=value,
+                receiving_federate=receiving_federate
+                receiving_endpoint=receiving_endpoint
                 data_type=table,
             )
 
