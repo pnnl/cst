@@ -89,7 +89,7 @@ records = [
 ]
 
 with create_timeseries_manager(
-    backend="postgres", analysis_name="example_data", location="penny.pnl.gov"
+    backend="postgres", analysis_name="example_data"
 ) as mgr:
     mgr.delete_scenario_data(scenario_name="test_scenario")
     mgr.write_records(records=records)
