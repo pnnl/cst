@@ -129,8 +129,6 @@ def kill_helics():
             proc.kill()
 
 if __name__ == '__main__':
-    # runs = list(range(1, 4))
-    # runs = list(range(49, 73))
     runs = list(range(1, 41))
     test_name = 'cst_scale1'
     if len(sys.argv) > 1:

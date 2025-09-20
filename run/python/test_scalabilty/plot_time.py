@@ -40,6 +40,8 @@ def get_times(cst_scalability: str, run_only: list):
         results = scalability.get("results", {})
         proc_time = results.get("max_and_total", {}).get("federate_process_time")
         wall_time = results.get("max_and_total", {}).get("federate_wall_time")
+
+        print(f"Scenario: {scenario_name} Test: {scenario_dir_path} -> results:{results}")
         data = [[cnt, n_feds, n_subs, n_feds * n_subs, use_epts, use_db, use_pf, wall_time]]
         mdf = pd.concat([pd.DataFrame(data, columns=mdf.columns), mdf], ignore_index=True)
         if change:
@@ -50,34 +52,33 @@ def get_times(cst_scalability: str, run_only: list):
 
 def plot_times(name: str, run_only):
     tic = time.perf_counter()
-    df = get_times(test_name, run_only)
-    df = df.sort_values(by="name", ignore_index=True)
+    df = get_times(name, run_only)
     toc = time.perf_counter()
     print(f"elapsed time: {toc - tic}")
 
-    df.to_csv(f"{test_name}_timing_data.csv")
-    N = end-beg
-    flop = 0
-    colors = []
-    for i in range(0, N):
-        if flop < 2:
-            colors.append('b')
-            flop = flop+1
-        else:
-            colors.append('r')
-            flop = flop+1
-            if flop == 4:
-                flop = 0
+    df.to_csv(f"{name}/timing_data.csv")
 
-    plt.scatter("time", "name", data=df, c=colors)
+    colors = {True: 'red', False: 'blue'}
+    ax = df.plot(kind='scatter', x="time", y="name", c=df['use_db'].map(colors))
+    ax.set_xlabel('Time(secs)')
+    ax.set_ylabel('Scenario')
     plt.show()
 
-    plt.bar("time", "name", width=0.1, data=df, color=colors)
+    ax = df.plot(kind='scatter', x="n_fedsxsubs", y="time", c=df['use_db'].map(colors))
+    ax.set_xlabel('Number of Outputs')
+    ax.set_ylabel('Time(secs)')
+    plt.show()
+
+    df = df.sort_values(by=["use_epts", "n_fedsxsubs", "use_db", "use_pf"], ignore_index=True)
+    print(df)
+    ax = df.plot(kind='bar', x="name", y="time", width=0.3, color=df['use_db'].map(colors))
+    ax.set_ylabel('Time(secs)')
+    ax.set_xlabel('Scenario')
     plt.show()
 
 if __name__ == '__main__':
     beg = 1
-    end = 49
+    end = 41
     runs = list(range(beg, end))
     test_name = "cst_scale1"
     if len(sys.argv) > 1:

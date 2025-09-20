@@ -635,13 +635,6 @@ def read_scenarios(cst_scalability: str, run_only: list):
         _d = scalability["use CST logger"]
         _p = scalability["use profiling"]
         logger.info(f"{scenario_name} -> feds:{_f}, subs:{_s}, end_pts:{_e}, cst_log:{_d}, profile:{_p}")
-        # if not _d:
-        #     if change:
-        #         change = False
-        #         os.chdir(cur)
-        #     continue
-
-        logger.info(f"{scenario_name} -> feds:{_f}, subs:{_s}, end_pts:{_e}, cst_log:{_d}, profile:{_p}")
         dr = DataReader(mgr, scenario_name)
         analysis_rows = dr.get_length_of_analysis(analysis_name=dr.analysis_name, data_type=ValueType.DOUBLE.value)
         """
@@ -671,11 +664,11 @@ def read_scenarios(cst_scalability: str, run_only: list):
             df = pd.concat([df, pd.DataFrame(data, columns=df.columns)], ignore_index=True)
             # 3. Reading a given set of federates  for a non-exhaustive time slice.
             tic = time.perf_counter()
-            # df_sub_db = tmgr.read_data(duration=300, federate_name=["fed_0", "fed_1", "fed_2"], data_type=ValueType.DOUBLE.value)
-            # toc = time.perf_counter()
-            # n_lines = df_sub_db.shape[0]
-            # data = [[scenario_name, dr.analysis_name, "3 feds", analysis_rows, n_lines, toc - tic]]
-            # df = pd.concat([df, pd.DataFrame(data, columns=df.columns)], ignore_index=True)
+            df_sub_db = tmgr.read_data(duration=300, federate_name=["fed_0", "fed_1", "fed_2"], data_type=ValueType.DOUBLE.value)
+            toc = time.perf_counter()
+            n_lines = df_sub_db.shape[0]
+            data = [[scenario_name, dr.analysis_name, "3 feds", analysis_rows, n_lines, toc - tic]]
+            df = pd.concat([df, pd.DataFrame(data, columns=df.columns)], ignore_index=True)
         if change:
             change = False
             os.chdir(cur)
@@ -683,13 +676,13 @@ def read_scenarios(cst_scalability: str, run_only: list):
 
 
 def comp_validate(test_scalability):
-    fh = logging.FileHandler(f"validate_{test_scalability}.log", mode="w")
+    fh = logging.FileHandler(f"{test_scalability}/comp_validate_.log", mode="w")
     fh.setLevel(level=logging.INFO)
     logger.addHandler(fh)
 
     # run multiples of 8
     beg = 1
-    end = 49
+    end = 41
     runs = list(range(beg, end))
 
     tic = time.perf_counter()
@@ -700,7 +693,7 @@ def comp_validate(test_scalability):
 
 
 def read_validate(test_scalability):
-    fh = logging.FileHandler(f"read_time_{test_scalability}.log", mode="w")
+    fh = logging.FileHandler(f"{test_scalability}/time_validate.log", mode="w")
     fh.setLevel(level=logging.INFO)
     logger.addHandler(fh)
 
