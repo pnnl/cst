@@ -135,16 +135,18 @@ By setting "Use CST=false" theCST DBMS manager will use json and csv to write th
 The files will be arranged as follows (for example when scenario m = 7)
 ```
 
-|---cst_scalability_experiment  (analysis_name)
+|---cst_scale1  (analysis_name)
     |---test_6
         |...
     |---test_7
         |-o-data_store
-            |-o--cst_scalability_experiment_f5_s1
-                |-o-fed_0_hdt_douple.csv
-                |-o-fed_1_hdt_douple.csv
-                |-o-fed_1_hdt_endpoint.csv
-                |-o-fed_1_hdt_endpoint.csv
+            |-o-cst_scale1_f5_s1
+                |-o-fed_0
+                    |-o-hdt_douple.csv
+                    |-o-hdt_endpoint.csv
+                |-o-fed_1
+                    |-o-hdt_douple.csv
+                    |-o-hdt_endpoint.csv
                 ...
         |---meta_store
             |---cst_scalability_experiment
@@ -163,7 +165,7 @@ The files will be arranged as follows (for example when scenario m = 7)
         |-o-fed_1.log
         |-o-fed_2.log
         |-o-fed_3.log
-        |-o-...n federates.log's
+        |-o-...n federates log's
         |-o-finished.txt
         |-o-hostname
     |---test_8
@@ -223,12 +225,12 @@ Additionally, cst_experiment_creator needs to create an entry in the "cst scalab
 
 cst_experiment_creator needs only one execution parameter: the path to the "cst_scalability_experiment" folder on disk. The filenames it needs to load will follow the naming convention and folder structure as defined above and the location in the metadata database each needs to be loaded into is pre-defined by CST.
 
-### cst_scalability_fed.py
+### cst_federate.py
 This is the generic federate used to stress test CST and it literally does nothing except send and receive data via HELICS. Specifically, it will receive data from the federate behind it in the ring on its subscriptions and endpoint (if applicable for the given scenario). It will also use its defined publication(s) and endpoint (if applicable for the given scenario) to send the current timestep value to the federate next in the ring.  In the CST-enable case these published values are logged by the time-series database via logger.py; in the CST-disabled case, each federate will will log the values it receives to an output CSV in the "outputs" folder of the previously defined file structure. The CSV will be of the following format:
 
 ```
-sim time, real time, pub 1, pub 2, pub 3, ...., pub n
-1, <<datetime string>>, 0, 0, 0, ...., 0
+real_time,sim_time,scenario,federate,data_name,data_value
+2023-12-07T15:31:57,30.0,cst_scale1_s_4,fed_0,fed_0/v_0,0.0
 ```
 
 To increase the efficiency of HELICS when using endpoints, each endpoint should target the endpoint in front of it. This targeting is specified as part of the JSON configuration of the endpoint:
@@ -316,9 +318,10 @@ The execution order for the entire experiment will be as follows:
 
 ```sh
 cst_experiment_creator.py # Creates the folder structure for all the scenarios and creates necessary documents in the metadata database
-cst_scenario_m_runner.sh # Execute the runner for each scenario.
+cst_results_runner.py # Executes the runner for each scenario.
 cst_results_validator.py # After all scenarios are complete, validate their results
-cst_scalability_post_processing.py # After results have been validated, create the results graphs
+cst_exploration.ipynb # After results have been validated, create the results graphs
+cst_plots.py # After results have been validated, create the results graphs
 ```
 
 ## Results
