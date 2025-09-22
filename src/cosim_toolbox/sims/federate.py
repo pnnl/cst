@@ -589,15 +589,9 @@ class Federate:
                 # data logger
                 _pub = self.pubs[key]
                 table = f"hdt_{_pub['type'].lower()}"
-                item_collect = "maybe"
-                if _pub.get("tags"):
-                    item_collect = _pub["tags"].get("logger", item_collect)
-                if self.fed_collect == "no":
-                    if item_collect == "yes":
-                        self.write_to_logger(self.federate_name, key, value, table=table)
-                else:  # self.fed_collect == "yes" or "maybe"
-                    if item_collect == "yes" or item_collect == "maybe":
-                        self.write_to_logger(self.federate_name, key, value, table=table)
+                item_collect = _pub.get("tags", {}).get("logger", "maybe")
+                if item_collect == "yes" or (item_collect == "maybe" and self.fed_collect != "no"):
+                    self.write_to_logger(self.federate_name, key, value, table=table)
 
                 if reset:
                     self.data_to_federation["publications"][key] = None
@@ -608,18 +602,14 @@ class Federate:
                 ep = self.hfed.get_endpoint_by_name(key)
                 for msg in messages:
                     ep.send_data(msg, ep.default_destination)
-
+                    receiving_endpoint = ep.default_destination
+                    receiving_federate = ep.default_destination.split("/")[0] if "/" in receiving_endpoint else ""
                     # data logger
                     _endpts = self.endpoints[key]
-                    item_collect = "maybe"
-                    if _endpts.get("tags"):
-                        item_collect = _endpts["tags"].get("logger", item_collect)
-                    if self.fed_collect == "no":
-                        if item_collect == "yes":
-                            self.write_to_logger(self.federate_name, key, msg, table="hdt_endpoint", receiving_endpoint=ep.default_destination)
-                    else:  # self.fed_collect == "yes" or "maybe"
-                        if item_collect == "yes" or item_collect == "maybe":
-                            self.write_to_logger(self.federate_name, key, msg, table="hdt_endpoint", receiving_endpoint=ep.default_destination)
+                    item_collect = _endpts.get("tags", {}).get("logger", "maybe")
+                    # Log if: item is "yes", OR item is "maybe" and federate is not "no".
+                    if item_collect == "yes" or (item_collect == "maybe" and self.fed_collect != "no"):
+                        self.write_to_logger(self.federate_name, key, msg, table="hdt_endpoint", receiving_federate=receiving_federate, receiving_endpoint=receiving_endpoint)
 
                 logger.debug(
                     f" {self.federate_name} endpoint: {key}, default destination: {ep.default_destination}, messages: {messages}")
