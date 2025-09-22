@@ -61,12 +61,8 @@ class TSDataWriter(ABC):
     def __init__(self) -> None:
         """Initializes the base writer state.
 
-        Args:
-            None
-
         Returns:
             None
-
         """
         self.helper: object
         self._buffer: list = []
@@ -78,7 +74,6 @@ class TSDataWriter(ABC):
 
         Returns:
             None
-
         """
         pass
 
@@ -88,14 +83,12 @@ class TSDataWriter(ABC):
 
         Returns:
             None
-
         """
         pass
 
     @abstractmethod
     def write_records(self, records: list[TSRecord]) -> bool:
-        """
-        Write TSRecord objects to the data store.
+        """Write TSRecord objects to the data store.
 
         Args:
             records (list[TSRecord]): List of time-series records to write
@@ -106,8 +99,7 @@ class TSDataWriter(ABC):
         pass
 
     def add_record(self, record: TSRecord) -> None:
-        """
-        Add a single TSRecord to the internal buffer.
+        """Add a single TSRecord to the internal buffer.
 
         Args:
             record (TSRecord): Time-series record to add
@@ -119,8 +111,7 @@ class TSDataWriter(ABC):
 
 
     def flush(self) -> bool:
-        """
-        Write all buffered records to the data store and clear buffer.
+        """Write all buffered records to the data store and clear buffer.
 
         Returns:
             bool: True if flush successful, False otherwise
@@ -139,7 +130,6 @@ class TSDataWriter(ABC):
 
         Returns:
             int: number of elements in buffer list
-
         """
         return len(self._buffer)
 
@@ -149,28 +139,20 @@ class TSDataWriter(ABC):
 
         Returns:
             bool: True if writer is connected to data store
-
         """
         return self._is_connected
 
     def __enter__(self):
         """Context manager entry.
 
-        Args:
-            None
-
         Returns:
             None
-
         """
         self.connect()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Context manager exit - disconnect from database.
-
-        Args:
-            None
 
         Returns:
             None
@@ -224,8 +206,8 @@ class TSDataReader(ABC):
         data_name: Optional[str] = None,
         data_type: Optional[str] = None,
     ) -> pd.DataFrame:
-        """
-        Read time-series data from the data store.
+        """Read time-series data from the data store.
+
         Args:
             start_time (Optional[float]): Starting time for data query
             duration (Optional[float]): Duration in seconds for data query
@@ -233,6 +215,7 @@ class TSDataReader(ABC):
             federate_name (Optional[str]): Filter by federate name
             data_name (Optional[str]): Filter by data name
             data_type (Optional[str]): Filter by data type
+
         Returns:
             pd.DataFrame: Time-series data as a Pandas DataFrame
         """
@@ -249,9 +232,6 @@ class TSDataReader(ABC):
 
     def __enter__(self):
         """Context manager entry.
-
-        Args:
-            None
 
         Returns:
             None
@@ -274,9 +254,6 @@ class MDDataWriter(ABC):
     def __init__(self) -> None:
         """Initializes the base writer state.
 
-        Args:
-            None
-
         Returns:
             None
         """
@@ -296,6 +273,7 @@ class MDDataWriter(ABC):
     @abstractmethod
     def disconnect(self) -> None:
         """Close connection to the data store.
+
         Returns:
             None
         """
@@ -305,8 +283,7 @@ class MDDataWriter(ABC):
     def write_federation(
         self, name: str, federation_data: Dict[str, Any], overwrite: bool = False
     ) -> bool:
-        """
-        Write federation metadata to the data store.
+        """Write federation metadata to the data store.
 
         Args:
             name (str): Federation name
@@ -322,8 +299,7 @@ class MDDataWriter(ABC):
     def write_scenario(
         self, name: str, scenario_data: Dict[str, Any], overwrite: bool = False
     ) -> bool:
-        """
-        Write scenario metadata to the data store.
+        """Write scenario metadata to the data store.
 
         Args:
             name (str): Scenario name
@@ -343,8 +319,7 @@ class MDDataWriter(ABC):
         data: Dict[str, Any],
         overwrite: bool = False,
     ) -> bool:
-        """
-        Write metadata to the data store (generic method).
+        """Write metadata to the data store (generic method).
 
         Args:
             collection_type (str): Collection/category name type
@@ -369,9 +344,6 @@ class MDDataWriter(ABC):
     def __enter__(self):
         """Context manager entry.
 
-        Args:
-            None
-
         Returns:
             None
         """
@@ -380,9 +352,6 @@ class MDDataWriter(ABC):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Context manager exit - disconnect from database.
-
-        Args:
-            None
 
         Returns:
             None
@@ -399,9 +368,6 @@ class MDDataReader(ABC):
 
     def __init__(self) -> None:
         """Initializes the base reader state.
-
-        Args:
-            None
 
         Returns:
             None
@@ -435,8 +401,7 @@ class MDDataReader(ABC):
 
     @abstractmethod
     def read_federation(self, name: str) -> Optional[Dict[str, Any]]:
-        """
-        Read federation metadata from the data store.
+        """Read federation metadata from the data store.
 
         Args:
             name (str): Federation name
@@ -448,8 +413,7 @@ class MDDataReader(ABC):
 
     @abstractmethod
     def read_scenario(self, name: str) -> Optional[Dict[str, Any]]:
-        """
-        Read scenario metadata from the data store.
+        """Read scenario metadata from the data store.
 
         Args:
             name (str): Scenario name
@@ -461,8 +425,7 @@ class MDDataReader(ABC):
 
     @abstractmethod
     def read(self, collection_type: str, name: str) -> Optional[Dict[str, Any]]:
-        """
-        Read metadata from the data store (generic method).
+        """Read metadata from the data store (generic method).
 
         Args:
             collection_type (str): Collection/category name type
@@ -493,8 +456,7 @@ class MDDataReader(ABC):
 
     @abstractmethod
     def list_items(self, collection_type: str) -> list[str]:
-        """
-        List available items in a collection (generic method).
+        """List available items in a collection (generic method).
 
         Args:
             collection_type (str): Collection/category name
@@ -526,9 +488,6 @@ class MDDataReader(ABC):
     def __enter__(self):
         """Context manager entry.
 
-        Args:
-            None
-
         Returns:
             None
         """
@@ -538,9 +497,6 @@ class MDDataReader(ABC):
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Context manager exit - disconnect from database.
 
-        Args:
-            None
-
         Returns:
             None
         """
@@ -549,9 +505,7 @@ class MDDataReader(ABC):
 
 # Joint Manager Classes (composition-based)
 class TSDataManager(ABC):
-    """
-    Abstract base class for combined time-series data management.
-    """
+    """Abstract base class for combined time-series data management."""
 
     def __init__(self, **kwargs) -> None:
         self._is_connected = False
@@ -574,7 +528,6 @@ class TSDataManager(ABC):
 
         Returns:
             None
-
         """
         pass
 

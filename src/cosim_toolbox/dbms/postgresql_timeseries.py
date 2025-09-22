@@ -11,9 +11,9 @@ import logging
 from typing import Any, Dict, List, Optional, Tuple
 
 import pandas as pd
+import psycopg2
 
 try:
-    import psycopg2
     from psycopg2 import sql
     from psycopg2.extras import RealDictCursor, execute_values
 
@@ -28,7 +28,6 @@ from .abstractions import (
     TSRecord,
 )
 from .validation import ValidationError, validate_database_identifier
-from .validation import validate_name, ValidationError, safe_name_log
 
 logger = logging.getLogger(__name__)
 
@@ -118,9 +117,6 @@ class _PostgresConnectionHelper:
     def _ensure_analysis_exists(self) -> None:
         """Checks to see if schema exists in current PostgreSQL database
 
-        Args:
-            None
-
         Returns:
             None
         """
@@ -172,7 +168,8 @@ class _PostgresConnectionHelper:
                 )
         self.connection.commit()
 
-    def get_data_type_info(self, record: TSRecord) -> Tuple[str, str]:
+    @staticmethod
+    def get_data_type_info(record: TSRecord) -> Tuple[str, str]:
         """
         Get table name and PostgreSQL column type from TSRecord.
 
@@ -185,9 +182,10 @@ class _PostgresConnectionHelper:
         # If data_type is explicitly set, use it
         table_name = record.data_type.lower()
         postgres_type = type_mapping.get(table_name, "TEXT")
-        return (table_name, postgres_type)
+        return table_name, postgres_type
 
-    def format_value_for_db(self, value: Any) -> Any:
+    @staticmethod
+    def format_value_for_db(value: Any) -> Any:
         """Formats passed in value for writing to PostgreSQL
 
         Args:
@@ -202,7 +200,8 @@ class _PostgresConnectionHelper:
             return str(value)
         return value
 
-    def parse_value_from_db(self, value: Any, table_suffix: str) -> Any:
+    @staticmethod
+    def parse_value_from_db(value: Any, table_suffix: str) -> Any:
         """Formats read data from PostgreSQL into Python data types
 
         Only used to handle "hdt_complex", "hdt_vector", "hdt_complex_vector".
@@ -295,8 +294,7 @@ class PostgreSQLTimeSeriesWriter(TSDataWriter):
         """Checks to see specified PostgreSQL table exists
 
         Args:
-            table_suffix (str): **TODO**
-            postgres_type (str): **TODO**
+            table_name (str): **TODO**
 
         Returns:
             None
@@ -381,8 +379,10 @@ class PostgreSQLTimeSeriesWriter(TSDataWriter):
 
     def write_records(self, records: List[TSRecord]) -> bool:
         """Writes records (rows) to PostgreSQL database
+
         Args:
             records (List[TSRecord]): data to be written to database
+
         Returns:
             bool: Flag indicating data was successfully written to
                 PostgreSQL database.
@@ -561,6 +561,7 @@ class PostgreSQLTimeSeriesReader(TSDataReader):
 
     def _get_tables_to_query(self, data_types: Optional[List[str]]) -> List[str]:
         """Gets list of tables in the PostgreSQL database
+
         Args:
             data_types (Optional[List[str]]): CST data types to be read
         Returns:
@@ -589,6 +590,7 @@ class PostgreSQLTimeSeriesReader(TSDataReader):
         data_type: Optional[str | list] = None,
     ) -> pd.DataFrame:
         """Generic PostgreSQL data read
+
         Args:
             start_time (Optional[float], optional): Start time (ordinal time
                 in seconds) for requested data. Defaults to None.
@@ -602,6 +604,7 @@ class PostgreSQLTimeSeriesReader(TSDataReader):
                 Defaults to None.
             data_type (Optional[str | list], optional): Data type(s) to read. Defaults
                 to None.
+
         Returns:
             pd.DataFrame: requested data
         """
@@ -695,7 +698,7 @@ class PostgreSQLTimeSeriesReader(TSDataReader):
             return pd.DataFrame()
 
     def _query_distinct_column(self, column_name: str) -> List[str]:
-        """**TODO** Document API
+        """Produces a list of distinct values stored in the metadata store
 
         Args:
             column_name (str): _description_
@@ -825,13 +828,14 @@ class PostgreSQLTimeSeriesManager(TSDataManager):
         """Produces time range of data in PostgreSQL database
 
         Returns:
-            Dict[str, float]: Time range information as
+            Dict[str, float]: Time range information as::
+
                 {
                     "min_time": float
                     "max_time": float
                 }
 
-                Time values are in ordinal time
+            Time values are in ordinal time
         """
         if not self._is_connected:
             return {"min_time": 0.0, "max_time": 0.0}

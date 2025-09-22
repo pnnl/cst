@@ -274,8 +274,6 @@ class Federate:
         needs to be defined as an instance attribute to enable the correct API
         to be called.
 
-        Args:
-
         Raises:
             ValueError: Invalid value for self.federate_type
 
@@ -297,8 +295,6 @@ class Federate:
 
         By default, no functionality is implemented
 
-        Args:
-
         Returns:
             None
         """
@@ -309,8 +305,6 @@ class Federate:
 
         By default, no functionality is implemented
 
-        Args:
-
         Returns:
             None
         """
@@ -320,8 +314,6 @@ class Federate:
         """Functionality executed after entering executing mode
 
         By default, no functionality is implemented
-
-        Args:
 
         Returns:
             None
@@ -336,8 +328,6 @@ class Federate:
         self.enter_executing_mode(), and self. simulate_next_step
         have been implemented and should be overloaded/redefined as necessary
         to fit the needs of a given federate and/or federation.
-
-        Args:
 
         Returns:
             None
@@ -364,8 +354,6 @@ class Federate:
         of entering initializing mode. If you need something more complex,
         overload or redefine this method.
 
-        Args:
-
         Returns:
             None
         """
@@ -379,8 +367,6 @@ class Federate:
         simplest. If you need something more complex or specific, overload
         or redefine this method.
 
-        Args:
-
         Returns:
             None
         """
@@ -393,8 +379,6 @@ class Federate:
         request is made and once granted, data from the rest of the federation
         is collected and used to update the internal model before sending out
         new data for the rest of the federation to use.
-
-        Args:
 
         Returns:
             None
@@ -413,8 +397,6 @@ class Federate:
         time may be more dynamic and this method provides a place for users
         to overload the default calculation method if they need something more
         complex.
-
-        Args:
 
         Returns:
             self.next_requested_time: Calculated time for the next HELICS time
@@ -455,8 +437,6 @@ class Federate:
         not need to be re-sent. This also helps manage the data being logged in
         the time-series database.
 
-        Args:
-
         Returns:
             None
         """
@@ -475,8 +455,6 @@ class Federate:
         interfaces via the HELICS federate (hfed object) provides a much richer
         set of metadata associated with these interfaces. The implementation
         here is vanilla and is expected to be sufficient for many use cases.
-
-        Args:
 
         Returns:
             None
@@ -540,8 +518,6 @@ class Federate:
 
         This is entirely user-defined code and is intended to be defined by
         sub-classing and/or overloading.
-
-        Args:
 
         Returns:
             None
@@ -669,9 +645,9 @@ class Federate:
                 federate=name,
                 data_name=key,
                 data_value=value,
-                receiving_federate=receiving_federate
-                receiving_endpoint=receiving_endpoint
-                data_type=table,
+                receiving_federate=receiving_federate,
+                receiving_endpoint=receiving_endpoint,
+                data_type=table
             )
 
             # Add the record to the manager's buffer
