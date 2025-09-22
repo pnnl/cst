@@ -601,15 +601,23 @@ class Federate:
             if messages is not None:
                 ep = self.hfed.get_endpoint_by_name(key)
                 for msg in messages:
-                    ep.send_data(msg, ep.default_destination)
-                    receiving_endpoint = ep.default_destination
-                    receiving_federate = ep.default_destination.split("/")[0] if "/" in receiving_endpoint else ""
+                    if isinstance(msg, dict) and "payload" in msg:
+                        # New documented format: msg is {"payload": ..., "destination": ...}
+                        payload = msg["payload"]
+                        destination = msg.get("destination", ep.default_destination)
+                    else:
+                        # Legacy format: msg is the payload itself
+                        payload = msg
+                        destination = ep.default_destination
+                    ep.send_data(payload, destination)
+                    receiving_endpoint = destination
+                    receiving_federate = receiving_endpoint.split("/")[0] if "/" in receiving_endpoint else ""
                     # data logger
                     _endpts = self.endpoints[key]
                     item_collect = _endpts.get("tags", {}).get("logger", "maybe")
                     # Log if: item is "yes", OR item is "maybe" and federate is not "no".
                     if item_collect == "yes" or (item_collect == "maybe" and self.fed_collect != "no"):
-                        self.write_to_logger(self.federate_name, key, msg, table="hdt_endpoint", receiving_federate=receiving_federate, receiving_endpoint=receiving_endpoint)
+                        self.write_to_logger(self.federate_name, key, payload, table="hdt_endpoint", receiving_federate=receiving_federate, receiving_endpoint=receiving_endpoint)
 
                 logger.debug(
                     f" {self.federate_name} endpoint: {key}, default destination: {ep.default_destination}, messages: {messages}")
