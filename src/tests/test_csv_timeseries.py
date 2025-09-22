@@ -77,8 +77,8 @@ class TestCSVTimeSeriesWriter:
         with writer:
             assert writer.write_records(sample_ts_records)
             battery_file = writer.helper.get_file_path("Battery", "hdt_double")
-            evehicle_file = writer.helper.get_file_path("EVehicle", "hdt_double")
-            assert battery_file.exists() and evehicle_file.exists()
+            vehicle_file = writer.helper.get_file_path("EVehicle", "hdt_double")
+            assert battery_file.exists() and vehicle_file.exists()
             df = pd.read_csv(battery_file)
             assert len(df) == 2
 
@@ -135,8 +135,8 @@ class TestCSVTimeSeriesReader:
         )
         with reader:
             assert reader.list_federates() == []
-            assert reader.list_data_types("nonexistent") == []
-            assert reader.get_scenarios() == []
+            assert reader.list_data_types(["nonexistent"]) == []
+            assert reader.list_scenarios() == []
             assert reader.get_time_range() == {"min_time": 0.0, "max_time": 0.0}
 
 
@@ -174,8 +174,8 @@ class TestCSVTimeSeriesManager:
         with manager:
             manager.write_records(sample_ts_records)
             assert set(manager.list_federates()) == {"Battery", "EVehicle"}
-            assert "hdt_double" in manager.list_data_types("Battery")
-            assert "TestScenario" in manager.get_scenarios()
+            assert "hdt_double" in manager.list_data_types(["Battery"])
+            assert "TestScenario" in manager.list_scenarios()
             time_range = manager.get_time_range()
             assert time_range["min_time"] == 0.0
             assert time_range["max_time"] == 60.0
