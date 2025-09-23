@@ -116,3 +116,10 @@ The following is an example of how to use the CST APIs to write a scenario dicti
 
 
 ```
+
+
+##  Exploring Metadata
+
+### JSON Backend (local files)
+
+### Mongo Backend (database)

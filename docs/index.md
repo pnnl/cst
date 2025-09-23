@@ -34,8 +34,8 @@ This site provides the documentation on CoSim Toolbox. The major components of t
    Installation
    Terminology
    Federate
-   TimeSeriesDB
-   MetadataDB
+   TimeSeriesData
+   Metadata
    UseCaseDevelopment
    examples/index
    References

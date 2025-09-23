@@ -12,3 +12,6 @@ docs/_build/
 docs/_static/
 docs/_template/
 cst.code-workspace
+data_store/
+run/python/test_scalabilty/
+

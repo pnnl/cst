@@ -58,6 +58,51 @@ with create_timeseries_manager(backend="csv", location="", analysis_name="exampl
     # Returns this as a Pandas DataFrame
     df = mgr.read_data(scenario_name="test_scenario")
 ```
+## Exploring Time-Series Data
+The time-series data can be manually explored using any of the backends. 
 
+### CSV Backend (local files)
+The CSV backend for time-series writes the data produced by the federates to special folders on the local disk where the federate runs. The "data_store" folder is created in the same directory as the federate itself (if it doesn't already exist) and inside that (if it doesn't exist), a folder of the analysis name is created. Lastly, inside the analysis folder, a folder for each federate running in that directory is created. Inside this folder is one file for each data type being written; these file names correspond exactly to the table names in the Posgres data store (_e.g._ "hdt_bool" has the same data as the file "hdt_bool.csv"). The complete folder heirachy looks like this:
+
+```shell
+├── data_store
+│   └── <analysis name>
+│       ├── <federate 1 name>
+│       │   ├── hdt_boolean.csv
+│       │   ├── hdt_complex.csv
+│       │   ├── hdt_double.csv
+│       │   ├── hdt_endpoint.csv
+│       │   └── hdt_string.csv
+│       └── <federate 2 name>
+│           └── hdt_endpoint.csv
+```
+
+If you want to manually look through the data without using the CST APIs for accessing it, you can navigate through this folder heirarchy and open any of these files with any tool you desire. Note that the preservation of the heirarchy and the structure of these files is necessary for the CST's CSV backend to continue to operate correctly. Modification of these files in any way puts the operation of the backend at jeopardy so tread carefully.
+
+### Postgres Backed (database)
+The Postgres backed for CST writes the time-series data to a Postgres database. Included in the persistent services, alongside the database itself, is a service that provides a web interface to inspect the database: "pgadmin". Configuring this service takes a little bit of work.
+
+First, get the IP address of the pgadmin server by looking for the value of the environment variable "POSTGRES_HOST". On Linux and Mac you can get to this simply
+
+```shell
+$ printenv | grep POSTGRES_HOST
+```
+
+The value this environment variable is set to is the IP address you can use to connect to pgadmin on port 80. Just put the following string into a web browser of your choice: `<IP address>:80`.
+
+You should see a login screen and can use the following credentials to access pgadmin
+- username: user@domain.com
+- password: SuperSecret
+
+After logging in, you'll need to connect pgadmin to the Postgres database where the data to be inspected resides. Click on the "Add New Server" button in the center pane to do so.
+
+A dialog box will pop up on the "General" tab where the name of the server needs to be defined. Pick a name you like.
+
+Next, go to the "Connection" tab and fill in the following values:
+- "Host name/address" - Use the same IP address you used to access pgadmin
+- "Username" - "worker"
+- "Password" - "worker"
+
+Click on the "Save" button and a new database should show up in the left-hand pane under the name you've defined. Click on the disclosure triangle for that new database, then "Databases, then "copper", then "Schemas", then the name of the analysis you're interested in. Finally, to look at the tables, open the "Tables" disclosure triangle and right-click on the table (data type) you're interested in viewing and select "View/Edit data" and pick the rows you want to view.
 
 
