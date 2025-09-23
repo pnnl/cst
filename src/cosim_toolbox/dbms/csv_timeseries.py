@@ -33,6 +33,16 @@ class _CSVHelper:
         "data_name",
         "data_value",
     ]
+    ENDPOINT_CSV_HEADERS = [
+        "real_time",
+        "sim_time",
+        "scenario",
+        "federate",
+        "data_name",
+        "receiving_federate",
+        "receiving_endpoint",
+        "data_value",
+    ]
 
     def __init__(self, location: str, analysis_name: str):
         validate_name(analysis_name, context="analysis")
@@ -55,7 +65,8 @@ class _CSVHelper:
         federate_path = self.analysis_path / federate_name
         return federate_path / f"{data_type}.csv"
 
-    def get_data_type(self, value: Any) -> str:
+    @staticmethod
+    def get_data_type(value: Any) -> str:
         """Determine the CST data type for a given value.
 
         Args:
@@ -91,7 +102,8 @@ class _CSVHelper:
             )
         return "hdt_string"  # Default for unknown types
 
-    def format_value_for_csv(self, value: Any) -> str:
+    @staticmethod
+    def format_value_for_csv(value: Any) -> str:
         """Format a value for CSV storage.
 
         Args:
@@ -108,7 +120,8 @@ class _CSVHelper:
             return value.isoformat()
         return str(value)
 
-    def parse_value_from_csv(self, value_str: str, data_type: str) -> Any:
+    @staticmethod
+    def parse_value_from_csv(value_str: str, data_type: str) -> Any:
         """Parse a value from CSV string back to appropriate Python type.
 
         Args:
@@ -154,8 +167,7 @@ class CSVTimeSeriesWriter(TSDataWriter):
         analysis_name: str = "default",
         helper: Optional[_CSVHelper] = None,
     ):
-        """
-        Initialize the CSV writer.
+        """Initialize the CSV writer.
 
         For standalone use:
             writer = CSVTimeSeriesWriter(location="/path/to/data", analysis_name="my_analysis")
@@ -182,11 +194,14 @@ class CSVTimeSeriesWriter(TSDataWriter):
         Returns:
             None
         """
+        headers = self.helper.CSV_HEADERS
+        if file_path.name == "hdt_endpoint.csv":
+            headers = self.helper.ENDPOINT_CSV_HEADERS
         if not file_path.exists():
             file_path.parent.mkdir(parents=True, exist_ok=True)
             with open(file_path, "w", newline="", encoding="utf-8") as f:
                 writer = csv.writer(f)
-                writer.writerow(self.helper.CSV_HEADERS)
+                writer.writerow(headers)
 
     def connect(self) -> bool:
         """Create directory structure if it doesn't exist.
@@ -250,8 +265,15 @@ class CSVTimeSeriesWriter(TSDataWriter):
                             record.scenario,
                             record.federate,
                             record.data_name,
-                            self.helper.format_value_for_csv(record.data_value),
                         ]
+                        if data_type == "hdt_endpoint":
+                            row.extend(
+                                [
+                                    record.receiving_federate,
+                                    record.receiving_endpoint,
+                                ]
+                            )
+                        row.append(self.helper.format_value_for_csv(record.data_value))
                         writer.writerow(row)
             logger.debug(f"Wrote {len(records)} records to CSV files")
             return True
@@ -320,10 +342,10 @@ class CSVTimeSeriesReader(TSDataReader):
         self,
         start_time: Optional[float] = None,
         duration: Optional[float] = None,
-        scenario_name: Optional[str] = None,
-        federate_name: Optional[str] = None,
-        data_name: Optional[str] = None,
-        data_type: Optional[str] = None,
+        scenario_name: Optional[str | list] = None,
+        federate_name: Optional[str | list] = None,
+        data_name: Optional[str | list] = None,
+        data_type: Optional[str | list] = None,
     ) -> pd.DataFrame:
         """Read time-series data from CSV files.
 
@@ -332,13 +354,13 @@ class CSVTimeSeriesReader(TSDataReader):
                 in seconds) for requested data. Defaults to None.
             duration (Optional[float], optional): Length of time (in seconds)
                 from the data to read . Defaults to None.
-            scenario_name (Optional[str], optional): Name of scenario to read.
+            scenario_name (Optional[str | list], optional): Name(s) of scenario to read.
                 Defaults to None.
-            federate_name (Optional[str], optional): Name of federation to
+            federate_name (Optional[str | list], optional): Name(s) of federate to
                 read. Defaults to None.
-            data_name (Optional[str], optional): Name of data to read.
+            data_name (Optional[str | list], optional): Name(s) of data to read.
                 Defaults to None.
-            data_type (Optional[str], optional): Data type to read. Defaults
+            data_type (Optional[str | list], optional): Data type(s) to read. Defaults
                 to None.
 
         Returns:
@@ -348,22 +370,36 @@ class CSVTimeSeriesReader(TSDataReader):
             logger.error("CSV reader not connected. Call connect() first.")
             return pd.DataFrame()
 
+        scenario_names = scenario_name
+        federate_names = federate_name
+        data_names = data_name
+        data_types = data_type
+        if isinstance(scenario_name, str):
+            scenario_names = [scenario_name]
+        if isinstance(federate_name, str):
+            federate_names = [federate_name]
+        if isinstance(data_name, str):
+            data_names = [data_name]
+        if isinstance(data_type, str):
+            data_types = [data_type]
+
         if not self.helper.analysis_path.exists():
             return pd.DataFrame()
 
-        all_dataframes = []
         federate_dirs = (
-            [self.helper.analysis_path / federate_name]
+            (self.helper.analysis_path / _fed_name for _fed_name in federate_names)
             if federate_name
             else self.helper.analysis_path.iterdir()
         )
+
+        all_dataframes = []
 
         for federate_path in federate_dirs:
             if not federate_path.is_dir():
                 continue
 
             csv_files = (
-                [federate_path / f"{data_type}.csv"]
+                (federate_path / f"{_data_type}.csv" for _data_type in data_types)
                 if data_type
                 else federate_path.glob("*.csv")
             )
@@ -391,14 +427,22 @@ class CSVTimeSeriesReader(TSDataReader):
 
         # Apply filters
         query_parts = []
-        if scenario_name:
-            query_parts.append(f"scenario == '{scenario_name}'")
-        if federate_name:
-            query_parts.append(f"federate == '{federate_name}'")
-        if data_name:
-            query_parts.append(f"data_name == '{data_name}'")
+
+        if scenario_names:
+            scenario_conditions = [f"scenario == '{name}'" for name in scenario_names]
+            query_parts.append(f"({' or '.join(scenario_conditions)})")
+
+        if federate_names:
+            federate_conditions = [f"federate == '{name}'" for name in federate_names]
+            query_parts.append(f"({' or '.join(federate_conditions)})")
+
+        if data_names:
+            data_name_conditions = [f"data_name == '{name}'" for name in data_names]
+            query_parts.append(f"({' or '.join(data_name_conditions)})")
+
         if start_time is not None:
             query_parts.append(f"sim_time >= {start_time}")
+
         if duration is not None:
             end_time = (start_time or 0) + duration
             query_parts.append(f"sim_time < {end_time}")
@@ -424,7 +468,7 @@ class CSVTimeSeriesReader(TSDataReader):
         """Provides a list of data types in data backend for a given federate
 
         Args:
-            federate_name (str): name of federate whose available
+            federate_names (str): name of federate whose available
                 data types are being determined
 
         Returns:
@@ -467,15 +511,17 @@ class CSVTimeSeriesReader(TSDataReader):
         """Get the time range (min and max simulation times) for the data.
 
         Args:
-            **kwargs
+            **kwargs (Dict[str, float]):
 
         Returns:
-            Dict[str, float]: Dictionary with the time range for a given
-                set of data. Returned dictionary is structured as
-                {
-                    "min_time": float value,
-                    "max_time": float value
-                }
+            Dict[str, float]: Dictionary with the time range for a given set of data.
+                Returned dictionary is structured as::
+
+                    {
+                        "min_time": float value,
+                        "max_time": float value
+                    }
+
         """
         df = self.read_data(**kwargs)
         if df.empty:
@@ -494,7 +540,7 @@ class CSVTimeSeriesManager(TSDataManager):
 
     def __init__(self, *, location: str, analysis_name: str = "default", **kwargs):
         """Initialize CSV time-series manager."""
-        super().__init__()
+        super().__init__(**kwargs)
         # The manager creates ONE helper and shares it.
         self.helper: _CSVHelper = _CSVHelper(location, analysis_name)
         self.writer: CSVTimeSeriesWriter = CSVTimeSeriesWriter(helper=self.helper)
@@ -534,7 +580,7 @@ class CSVTimeSeriesManager(TSDataManager):
         """Lists data types for a given federate in the data backend
 
         Args:
-            federate_name (str): Name of federate being queried
+            federate_names (str): Name of federate being queried
 
         Returns:
             List[str]: list of data types in data backend
@@ -553,15 +599,17 @@ class CSVTimeSeriesManager(TSDataManager):
         """Get time range of data in data backend
 
         Args:
-            **kwargs
+            **kwargs Dict[str, any]:
 
         Returns:
-            Dict[str, float]: Dictionary with the time range for a given
-                set of data. Returned dictionary is structured as
-                {
-                    "min_time": float value,
-                    "max_time": float value
-                }
+            Dict[str, float]: Dictionary with the time range for a given set of data.
+                Returned dictionary is structured as::
+
+                    {
+                        "min_time": float value,
+                        "max_time": float value
+                    }
+
         """
         return self.reader.get_time_range(**kwargs)
 

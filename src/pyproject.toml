@@ -50,4 +50,4 @@ api = ["*"]
 #"api.datafiles" = ["*.json", "*.db"]
 
 [project.scripts]
-#tesp_components = "cosim_toolbox.api.data:tesp_component"
+cosim_toolbox = "cosim_toolbox._commands:cosim_toolbox"

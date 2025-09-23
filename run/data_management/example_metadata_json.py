@@ -15,8 +15,8 @@ with create_metadata_manager(backend="json") as mgr:
     mgr.writer.write_scenario(
         name="example_scenario", scenario_data=scenario_in, overwrite=True
     )
-    print(f"scenarios: {mgr.reader.list_scenarios()}")
-    print(f"federations: {mgr.reader.list_federations()}")
-    scenario_out = mgr.reader.read_scenario(name="example_scenario")
+    print(f"scenarios: {mgr.list_scenarios()}")
+    print(f"federations: {mgr.list_federations()}")
+    scenario_out = mgr.read_scenario(name="example_scenario")
 
 print(scenario_out)
