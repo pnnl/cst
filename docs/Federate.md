@@ -26,7 +26,7 @@ There is one method that must be overloaded: `update_internal_model()`. If you o
 ```
 
 ## Federate class methods
-
+Most of the class methods below are effectively internal APIs that most modelers will not have a reason to call. Seeing what they are doing, though, is helpful in understanding how HELICS federates operate in general and how this class implements that functionality.
 
 
 ### `create_federate()`
@@ -42,7 +42,7 @@ The JSON/dictionary that is pulled in is stored in the `federation` attribute.
 Pulls in start and stop time strings in the configuration information and converts them to [Python datetime](TODO add link) data types. Also defines the analysis name and whether the CST Logger needs to collect its outputs for publication.
 
 #### `get_helics_config()`
-This method looks at the "federation" attribute to define a few HELICS-specific attributes of this federate: `name` (federate name), `federate_type` (HELICS federate type, _i.e._ value, message or combo), `period` (size of timestep), and `config` (comprehensive HELICS configuration)
+This method looks at the "federation" attribute to define a few HELICS-specific attributes of this federate: `name` (federate name), `federate_type` (HELICS federate type, _i.e._ value, message or combo), `period` (size of timestep), and `config` (comprehensive HELICS configuration).
 
 #### `connect_to_dataDB` or `connect_to_dataCSV()`
 Depending on whether the time-series database is being used to collect data from the 'federate' (indicated by the `use_data_db` attribute, defined when this 'federate' was instantiated), one of these methods is used to set up the output data collection.
@@ -76,7 +76,15 @@ Using the output of `calculate_next_requested_time()`, the request for the next 
 ### `get_data_from_federation()`
 This method simply makes the HELICS API calls necessary to get the inputs and messages from the federation this federate has received and stores them in a dictionary ("data_from_federation"). This method saves the user of this class from the bookkeeping and having to learn the (not too complicated) HELICS APIs. There could be a reason to overload this method but one is not springing quickly to mind so probably not?
 
-Data previously stored in the dictionary is erased before being updated to ensure the values are only from the latest granted simulation time.
+Data previously stored in the dictionary is erased before being updated to ensure the values are only from the latest granted simulation time. Data is accessed using the name of the HELICS subscription or endpoint as the key in the dictionary. The format of the value being sent out from each publication or endpoint is as follows:
+- pubs: value of data type as defined for this input
+- endpoints: value is a dictionary
+```json
+    {
+        "sending endpoint": "<sending endpoint name>",
+        "payload": "<data received>"
+    }
+```
 
 ### `update_internal_model()`
 OK, this method **must** be overloaded; if you don't CST throws an error. This is where all the non-co-simulation stuff of the federate takes place; this is where all the logic and functionality the federate provides in the co-simulation is executed. If this federate is a thermostat, this is where the logic to determine whether to turn the HVAC system off or on is implemented. If this federate exists to solve a fluid dynamics problem, this is where all those fun differential equations are solved.
@@ -91,6 +99,16 @@ Though this assignment is generally the final step in this method, it doesn't ha
 
 ### `send_data_to_federation()`
 Like `get_data_from_federation()`, this method takes the data in the dictionary and sends it out to the rest of the federation via HELICS. This is mostly tedious work, and it is unlikely this method will need to be overloaded. See the API documentation to see how to format the output value depending on whether the output in question is a publication or endpoint.
+
+Data is sent using the name of the HELICS subscription or endpoint as the key in the dictionary. The format of the value associated with this key is as follows:
+- pubs: value of data type as defined for this input
+- endpoints: value is a dictionary
+```json
+    {
+        "sending endpoint": "<sending endpoint name>",
+        "payload": "<data received>"
+    }
+```
 
 ### `destroy_federate()`
 After "run_cosim_loop()" has reached the terminal simulation time (as indicated in the object attribute "stop_time"), that loop exits and this method is called. Though not strictly necessary, this method does the clean-up work to exit the co-simulation cleanly and avoid generating any nuisance warning messages.
