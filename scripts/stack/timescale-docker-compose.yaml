@@ -102,10 +102,11 @@ services:
     depends_on:
       - mongodb
     environment:
+      ME_CONFIG_BASICAUTH: false
+      ME_CONFIG_MONGODB_ENABLE_ADMIN: false
       ME_CONFIG_MONGODB_AUTH_USERNAME: "${CST_USER}"
       ME_CONFIG_MONGODB_AUTH_PASSWORD: "${CST_USER}"
       ME_CONFIG_MONGODB_SERVER: mongodb
-      ME_CONFIG_MONGODB_ENABLE_ADMIN: false
       ME_CONFIG_MONGODB_AUTH_DATABASE: "${CST_DB}"
     networks:
       - sim_net
