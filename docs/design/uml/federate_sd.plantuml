@@ -6,13 +6,14 @@ participant main
 participant federate
 
 main -> federate: <<create>>
-main -> federate: create_federate()
 activate federate
+main -> federate: create_federate()
 federate -> federate: create_metadata_manager()
 federate -> metadata_manager: <<create>>
-activate metadata_manager #Gray
+activate metadata_manager #Blue
 metadata_manager -> metadata_manager: connect()
 metadata_manager -> metadata_manager: read_scenario()
+metadata_manager -> metadata_manager: read_federation()
 deactivate metadata_manager
 federate -> federate: set_metadata()
 federate -> federate: get_helics_config()
@@ -32,21 +33,18 @@ federate -> federate: on_enter_initialization_mode()
 federate -> federate: enter_executing_mode()
 federate -> federate: on_enter_executing_mode()
 federate -> federate: simulate_next_step()
-activate federate #Blue
+activate federate #Gray
 federate -> federate: calculate_next_requested_time()
 federate -> federate: request_time()
 federate -> federate: get_data_from_federation()
 federate -> federate: update_internal_model()
 federate -> federate: send_data_to_federation()
-federate -> timeseries_manager : write_to_logger()
-activate timeseries_manager #Green
-deactivate timeseries_manager
+federate -> federate : write_to_logger()
 deactivate federate
 main -> federate: destroy_federate
 activate federate
 federate -> metadata_manager
-activate metadata_manager #Gray
-metadata_manager -> metadata_manager: flush()
+activate metadata_manager #Blue
 metadata_manager -> metadata_manager: disconnect()
 deactivate metadata_manager
 federate -> timeseries_manager
