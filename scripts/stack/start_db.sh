@@ -11,7 +11,7 @@ fi
 #docker network create $NETWORK_NAME
 # or hardcode the network name from the YAML file
 
-image1=$(docker images -q "cosim-airflow:latest")
+image1=$(docker images -q "cosim-juptyer:latest")
 if [[ $image1 == "" ]]; then
   echo "Please build-cosim-images in scripts/docker"
   echo "Then run this script in this directory"
