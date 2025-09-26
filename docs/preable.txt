@@ -1,7 +1,0 @@
-=====================
-CoSim Toolbox License
-=====================
-
-Version 1.0, Sept 2025
-https://github.com/pnnl/cst
-
