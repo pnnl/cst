@@ -104,9 +104,6 @@ class Federate:
         self.stop_time = -1.0
         self.granted_time = -1.0
         self.next_requested_time = -1.0
-        self.pubs = {}
-        self.inputs = {}
-        self.endpoints = {}
         self.debug = True
 
         # Internal State Attributes
@@ -217,19 +214,20 @@ class Federate:
             raise NameError("scenario_name is None")
         self.scenario_name = scenario_name
 
-        with create_metadata_manager(use_meta_db) as mgr:
-            self.scenario = mgr.read_scenario(self.scenario_name)
-            if not self.scenario:
-                raise ValueError(f"Scenario '{self.scenario_name}' not found in metadata store.")
-            self.analysis_name = self.scenario.get("analysis")
-            if not self.analysis_name:
-                raise ValueError(f"Scenario '{self.scenario_name}' does not specify a 'analysis'.")
-            self.federation_name = self.scenario.get("federation")
-            if not self.federation_name:
-                raise ValueError(f"Scenario '{self.scenario_name}' does not specify a 'federation'.")
-            self.federation = mgr.read_federation(self.federation_name)['federation']
-            if not self.federation:
-                raise ValueError(f"Federation '{self.federation_name}' not found in metadata store.")
+        md_mgr = create_metadata_manager(use_meta_db)
+        self.metadata_manager = md_mgr
+        self.scenario = md_mgr.read_scenario(self.scenario_name)
+        if not self.scenario:
+            raise ValueError(f"Scenario '{self.scenario_name}' not found in metadata store.")
+        self.analysis_name = self.scenario.get("analysis")
+        if not self.analysis_name:
+            raise ValueError(f"Scenario '{self.scenario_name}' does not specify a 'analysis'.")
+        self.federation_name = self.scenario.get("federation")
+        if not self.federation_name:
+            raise ValueError(f"Scenario '{self.scenario_name}' does not specify a 'federation'.")
+        self.federation = md_mgr.read_federation(self.federation_name)['federation']
+        if not self.federation:
+            raise ValueError(f"Federation '{self.federation_name}' not found in metadata store.")
 
         self.set_metadata()
         self.get_helics_config()
