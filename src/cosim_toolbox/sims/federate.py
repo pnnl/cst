@@ -670,6 +670,8 @@ class Federate:
         if self.timeseries_manager:
             self.timeseries_manager.flush()
             self.timeseries_manager.disconnect()
+        if self.metadata_manager:
+            self.metadata_manager.disconnect()
         h.helicsFederateClearMessages(self.hfed)
         # TODO: there is a bug for h.helicsFederateRequestTime
         # requested_time = int(h.helicsFederateRequestTime)
