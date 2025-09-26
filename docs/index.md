@@ -31,13 +31,13 @@ This site provides the documentation on CoSim Toolbox. The major components of t
    :caption: Contents:
 
    
+   QuickStart
    Installation
    Terminology
    Federate
    TimeSeriesData
    Metadata
-   UseCaseDevelopment
-   examples/index
+   PostProcessing
    References
 
 ```

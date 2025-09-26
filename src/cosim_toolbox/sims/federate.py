@@ -104,9 +104,6 @@ class Federate:
         self.stop_time = -1.0
         self.granted_time = -1.0
         self.next_requested_time = -1.0
-        self.pubs = {}
-        self.inputs = {}
-        self.endpoints = {}
         self.debug = True
 
         # Internal State Attributes
@@ -146,7 +143,8 @@ class Federate:
         self._use_timescale = value
 
     def set_metadata(self) -> None:
-        """Sets instance attributes to enable HELICS config query of metadataDB
+        """Sets instance attributes to enable HELICS config query of metadata
+        data store.
 
         HELICS configuration information is generally stored in the metadataDB
         and is copied into the `self.federation` attribute. This method pulls
@@ -625,7 +623,31 @@ class Federate:
                 if reset:
                     self.data_to_federation["endpoints"][key] = None
 
-    def write_to_logger(self, name, key, value, table=None, message_time=None, receiving_federate=None, receiving_endpoint=None):
+    def write_to_logger(self, name: str, 
+                        key: str, 
+                        value: Any, 
+                        table: str = None, 
+                        message_time: float = None, 
+                        receiving_federate: str = None, 
+                        receiving_endpoint: str = None):
+        """Populates a TSRecord object with the output of a publication or 
+        endpoint and adds it to the timeseries data manager queue of data to
+        write.
+
+        Args:
+            name (str): Name of the federate sending the data
+            key (str): Name of the key associated with the data (pub or 
+            endpoint name)
+            value (Any): Value being sent
+            table (str, optional): DEPRECATED. Defaults to None.
+            message_time (float, optional): Simulation ordinal time when data
+              is being sent. Defaults to None.
+            receiving_federate (str, optional): Name of federate being sent
+              the message (endpoint only). Defaults to None.
+            receiving_endpoint (str, optional): Name of endpoint receiving
+              the message (endpoint only). Defaults to None.
+        """
+
         # The 'table' argument is no longer needed as the manager handles types.
         if self.timeseries_manager:
             # Construct the real_time timestamp

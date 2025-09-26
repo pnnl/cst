@@ -8,15 +8,29 @@ participant federate
 main -> federate: <<create>>
 main -> federate: create_federate()
 activate federate
-federate -> federate: connect_to_metadataDB()
-federate -> federate: connect_to_helics_config()
+federate -> federate: create_metadata_manager()
+federate -> metadata_manager: <<create>>
+activate metadata_manager #Gray
+metadata_manager -> metadata_manager: connect()
+metadata_manager -> metadata_manager: read_scenario()
+deactivate metadata_manager
+federate -> federate: set_metadata()
+federate -> federate: get_helics_config()
+federate -> federate: create_timeseries_manager()
+federate -> timeseries_manager: <<create>>
+activate timeseries_manager #Green
+timeseries_manager -> timeseries_manager: connect()
+deactivate timeseries_manager
 federate -> federate: create_helics_fed()
 deactivate federate
 
 main -> federate: run_cosim_loop()
 activate federate
+federate -> federate: on_start()
 federate -> federate: enter_initialization()
+federate -> federate: on_enter_initialization_mode()
 federate -> federate: enter_executing_mode()
+federate -> federate: on_enter_executing_mode()
 federate -> federate: simulate_next_step()
 activate federate #Blue
 federate -> federate: calculate_next_requested_time()
@@ -24,9 +38,21 @@ federate -> federate: request_time()
 federate -> federate: get_data_from_federation()
 federate -> federate: update_internal_model()
 federate -> federate: send_data_to_federation()
-deactivate federate
+federate -> timeseries_manager : write_to_logger()
+activate timeseries_manager #Green
+deactivate timeseries_manager
 deactivate federate
 main -> federate: destroy_federate
-
+activate federate
+federate -> metadata_manager
+activate metadata_manager #Gray
+metadata_manager -> metadata_manager: flush()
+metadata_manager -> metadata_manager: disconnect()
+deactivate metadata_manager
+federate -> timeseries_manager
+activate timeseries_manager #Green
+timeseries_manager -> timeseries_manager: flush()
+timeseries_manager -> timeseries_manager: disconnect()
+deactivate timeseries_manager
 
 @enduml
