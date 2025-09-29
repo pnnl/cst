@@ -215,19 +215,20 @@ class Federate:
             raise NameError("scenario_name is None")
         self.scenario_name = scenario_name
 
-        with create_metadata_manager(use_meta_db) as mgr:
-            self.scenario = mgr.read_scenario(self.scenario_name)
-            if not self.scenario:
-                raise ValueError(f"Scenario '{self.scenario_name}' not found in metadata store.")
-            self.analysis_name = self.scenario.get("analysis")
-            if not self.analysis_name:
-                raise ValueError(f"Scenario '{self.scenario_name}' does not specify a 'analysis'.")
-            self.federation_name = self.scenario.get("federation")
-            if not self.federation_name:
-                raise ValueError(f"Scenario '{self.scenario_name}' does not specify a 'federation'.")
-            self.federation = mgr.read_federation(self.federation_name)['federation']
-            if not self.federation:
-                raise ValueError(f"Federation '{self.federation_name}' not found in metadata store.")
+        self.metadata_manager = create_metadata_manager(use_meta_db)
+        self.metadata_manager.connect()
+        self.scenario = self.metadata_manager.read_scenario(self.scenario_name)
+        if not self.scenario:
+            raise ValueError(f"Scenario '{self.scenario_name}' not found in metadata store.")
+        self.analysis_name = self.scenario.get("analysis")
+        if not self.analysis_name:
+            raise ValueError(f"Scenario '{self.scenario_name}' does not specify a 'analysis'.")
+        self.federation_name = self.scenario.get("federation")
+        if not self.federation_name:
+            raise ValueError(f"Scenario '{self.scenario_name}' does not specify a 'federation'.")
+        self.federation = self.metadata_manager.read_federation(self.federation_name)['federation']
+        if not self.federation:
+            raise ValueError(f"Federation '{self.federation_name}' not found in metadata store.")
 
         self.set_metadata()
         self.get_helics_config()
@@ -694,6 +695,8 @@ class Federate:
         if self.timeseries_manager:
             self.timeseries_manager.flush()
             self.timeseries_manager.disconnect()
+        if self.metadata_manager:
+            self.metadata_manager.disconnect()
         h.helicsFederateClearMessages(self.hfed)
         # TODO: there is a bug for h.helicsFederateRequestTime
         # requested_time = int(h.helicsFederateRequestTime)
