@@ -18,7 +18,7 @@ source "$CID_ENV"
 echo "Starting Cosim stacks..."
 cd "$CID_ROOT/scripts/stack"
 ./start_db.sh
-docker ps
+#docker ps
 
 #
 # Run tests in local env

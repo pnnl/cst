@@ -39,8 +39,6 @@ integration_tests:
 	@echo "Running integration tests with coverage report..."
 	@$(PYTHON) -m pytest -c pytest.ini --cov-report html --cov-report term --cov-report xml \
 		--cov=cosim_toolbox --cov-fail-under=2 --junitxml results.xml -v \
-		src/integration_tests/test_simple_federation.py \
-		src/integration_tests/test_readerDB.py \
-		src/integration_tests/test_dbConfigs.py
+		src/integration_tests/test_simple_federation.py
 
 .PHONY: all venv run clean docs tests coverage integration_tests

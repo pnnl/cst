@@ -15,11 +15,6 @@ source $CID_ENV
 #
 # Build new images
 #
-printf "Stop existing running stack...\n"
-cd $CID_ROOT/scripts/stack
-./stop_cu.sh
-docker network prune -f
-
 printf "Building Cosim Docker images locally with tag latest...\n"
 cd $CID_ROOT/scripts/docker
 ./build-cosim-images.sh
@@ -31,7 +26,7 @@ source ./config.sh
 tag_and_push_images() {
   local name path build_flag image_tag
   local commit_hash
-  commit_hash=$(get_git_commit_hash)
+#  commit_hash=$(get_git_commit_hash)
   version=$(load_version)
 
   if [[ -z "$commit_hash" ]]; then
@@ -44,10 +39,17 @@ tag_and_push_images() {
     build_flag="${CONFIG_BUILDS[i+2]}"
 
     local image_name="cosim-${name}:latest"
-    image_tag="${IMAGE_PATH}cosim-${name}:${version}-${commit_hash}"
+    image_tag="pnnl/cst:${name}-latest"
+    image_tag2="pnnl/cst:${name}-${version}"
+#    image_tag3="pnnl/cst:${name}-${commit_hash}"
 
     printf "**** Tagging and publishing %s as %s\n" "$image_name" "$image_tag"
     docker tag "$image_name" "$image_tag"
+    if ! docker push "$image_tag"; then
+      printf "Failed to push %s\n" "$image_tag" >&2
+      exit 1
+    fi
+    docker tag2 "$image_name" "$image_tag2"
     if ! docker push "$image_tag"; then
       printf "Failed to push %s\n" "$image_tag" >&2
       exit 1
