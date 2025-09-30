@@ -294,7 +294,8 @@ class PostgreSQLTimeSeriesWriter(TSDataWriter):
         """Checks to see specified PostgreSQL table exists
 
         Args:
-            table_name (str): **TODO**
+            table_name (str): Name of table whose existance is
+            being checked
 
         Returns:
             None
@@ -848,14 +849,15 @@ class PostgreSQLTimeSeriesManager(TSDataManager):
         }
 
     def _delete_by_column(self, column_name: str, value: str) -> bool:
-        """**TODO** Document API
+        """ Deletes records (rows) where specified column matches specified 
+        value
 
         Args:
-            column_name (str): _description_
-            value (str): _description_
+            column_name (str): Name of column used to check for target value
+            value (str): Target value being evaluated
 
         Returns:
-            bool: _description_
+            bool: Flag indicating whether data was deleted
         """
         if not self._is_connected:
             logger.error("PostgreSQL manager not connected.")
