@@ -47,7 +47,8 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.todo',
               'sphinx-jsonschema',
               'sphinxcontrib.bibtex',
-              'myst_parser'
+              'sphinxcontrib.plantuml',
+              'myst_parser',
               ]
 
 # This project uses the MyST parser for converting .md to .rst
@@ -173,3 +174,15 @@ texinfo_documents = [
      author, 'CST', 'One line description of project.',
      'Miscellaneous'),
 ]
+
+# on_rtd = os.environ.get('READTHEDOCS') == 'True'
+# if on_rtd:
+#     plantuml = 'java -Djava.awt.headless=true -jar /usr/share/plantuml/plantuml.jar'
+# else:
+#     plantuml = 'java -jar %s' % os.path.join(os.path.dirname(__file__), "utils", "plantuml-bsd-1.2025.4.jar")
+#     plantuml.strip()
+
+plantuml = f'java -jar {os.path.join(os.path.dirname(__file__), "utils", "plantuml-bsd-1.2025.4.jar")}' 
+plantuml.strip()
+
+plantuml_output_format = 'png'

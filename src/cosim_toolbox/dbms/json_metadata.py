@@ -597,8 +597,6 @@ class JSONMetadataManager(MDDataManager):
         except Exception as e:
             logger.error(f"Failed to backup collection {collection_type}: {e}")
             return False
-        
-    # **TODO** - Need a method to load a backup database
 
     @property
     def location(self) -> Path:

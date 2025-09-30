@@ -15,11 +15,6 @@ source $CID_ENV
 # Load configuration from config.sh
 source ./docker/config.sh
 
-printf "Stop existing running stack...\n"
-cd $CID_ROOT/scripts/stack
-./stop_db.sh
-docker network prune -f
-
 # Function to download images, delete existing local tags, and re-tag downloaded images
 process_images() {
   local name path build_flag image_tag image_name
@@ -38,7 +33,7 @@ process_images() {
     path="${CONFIG_BUILDS[i+1]}"
     build_flag="${CONFIG_BUILDS[i+2]}"
 
-    image_tag="${IMAGE_PATH}cosim-${name}:${version}-${commit_hash}"
+    image_tag="pnnl/cst:${name}-${version}"
     image_name="cosim-${name}:latest"
 
     printf "**** Downloading and processing %s\n" "$image_tag"

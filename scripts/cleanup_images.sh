@@ -18,7 +18,7 @@ cleanup_tagged_images() {
     path="${CONFIG_BUILDS[i+1]}"
     build_flag="${CONFIG_BUILDS[i+2]}"
 
-    image_tag="${IMAGE_PATH}cosim-${name}"
+    image_tag="${name}:latest"
 
     printf "**** Cleaning up %s\n" "$image_tag"
 

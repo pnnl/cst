@@ -10,19 +10,19 @@ if [[ -z ${CST_ROOT} ]]; then
 fi
 
 # standard use
-cst_ver=$(cat "${CST_ROOT}/scripts/cst_version")
+cst_ver=$(cosim_toolbox --version)
 grid_ver=$(cat "${CST_ROOT}/scripts/grid_version")
-docker_tag=${cst_ver}_ubuntu_${grid_ver}
-IMAGE=pnnl/cst:${docker_tag}
+
+# distributed version
+#IMAGE=pnnl/cst:ubuntu-${cst_ver}
+#IMAGE=pnnl/cst:cst-${cst_ver}
+#IMAGE=pnnl/cst:gridlabd-${cst_ver}
 
 # for custom use
-#IMAGE=cosim-ubuntu:cst_${grid_ver}
-#IMAGE=cosim-library:cst_${grid_ver}
-#IMAGE=cosim-build:cst_${grid_ver}
-IMAGE=cosim-cplex:cst_${grid_ver}
-#IMAGE=cosim-user:cst_${grid_ver}
-
+#IMAGE=cosim-ubuntu:latest
 IMAGE=cosim-cst:latest
+#IMAGE=cosim-griblabd:latest
+#IMAGE=cosim-cplex:latest
 
 echo "Should always confirm that you are logged in to docker using 'docker login'"
 

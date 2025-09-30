@@ -631,7 +631,8 @@ class MDDataManager(ABC):
         """Writes passed in federation data to the data store
 
         Args:
-            name (str): **TODO**
+            name (str): Name of federation; unique identifier for this
+            dictionary
             federation_data (Dict[str, Any]): federation data dictionary to be
                 written
             overwrite (bool, optional): Flag indicating if any existing
@@ -650,7 +651,8 @@ class MDDataManager(ABC):
         """Writes passed in scenario data to the data store
 
         Args:
-            name (str): **TODO**
+            name (str): Name of scenario; unique identifier for this
+            dictionary
             scenario_data (Dict[str, Any]): scenario data dictionary to be
                 written
             overwrite (bool, optional): Flag indicating if any existing
@@ -671,9 +673,16 @@ class MDDataManager(ABC):
     ) -> bool:
         """Generic write method for data backend
 
+        This method allows users to write arbitrary metadata in a 
+        hierarchy that is helpful for them.
+
         Args:
-            collection_type (str): **TODO**
-            name (str): **TODO**
+            collection_type (str): Name of collection (folder or group)
+            into which this dictionary is added. Default values for 
+            CST are "federation" and "scenario" but users can define
+            custom collections with this method.
+            name (str): Name of dictionary being added; serves as a
+            unique identifier.
             data (Dict[str, Any]): Data to be written to the data store
             overwrite (bool, optional): Flag indicating if any existing
                 dictionary should be overwritten. Defaults to False.
@@ -687,7 +696,7 @@ class MDDataManager(ABC):
         """Reads the federation dictionary from the data store
 
         Args:
-            name (str): **TODO**
+            name (str): Name of federation dictionary to read
 
         Returns:
             Optional[Dict[str, Any]]: requested federation dictionary
@@ -698,7 +707,7 @@ class MDDataManager(ABC):
         """Reads the scenario dictionary from the data store
 
         Args:
-            name (str): **TODO**
+            name (str): Name of scenario to read
 
         Returns:
             Optional[Dict[str, Any]]: requested scenario dictionary
@@ -708,10 +717,14 @@ class MDDataManager(ABC):
     def read(self, collection_type: str, name: str) -> Optional[Dict[str, Any]]:
         """Generic read method for data backend
 
+        Allows users to access any dictionary saved in the metadata store as
+        long as they know the name of the dictionary and the collection in
+        which it resides.
+
         Args:
             collection_type (str): Name of metadata collection from which to
                 read
-            name (str): **TODO**
+            name (str): Name of dictionary to be read
 
         Returns:
             Optional[Dict[str, Any]]: Requested data
@@ -735,13 +748,14 @@ class MDDataManager(ABC):
         return self.reader.list_scenarios()
 
     def list_items(self, collection_type: str) -> list[str]:
-        """**TODO**
+        """Lists the names of the dictionaries in the specified collection
 
         Args:
-            collection_type (str): **TODO**
+            collection_type (str): Name of collection whose dictionaries
+            are to be listed
 
         Returns:
-            list[str]: **TODO**
+            list[str]: List dictionary names in specified collection
         """
         return self.reader.list_items(collection_type)
 

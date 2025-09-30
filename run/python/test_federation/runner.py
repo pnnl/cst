@@ -116,7 +116,7 @@ def main():
         else:
             DockerRunner.run_yaml(r.scenario_name)
     else:
-        DockerRunner.define_sh(r.scenario_name)
+        DockerRunner.define_sh(r.scenario_name, use_meta_db="json", use_data_db="csv")
 
 if __name__ == "__main__":
     main()
