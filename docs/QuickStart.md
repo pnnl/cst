@@ -1,5 +1,5 @@
 # Quick Start
-This page provides the simplest method of installing CoSim Toolbox (CST) and running a few examples. This effectively tests many of the CST APIs and functionality. This set of examples assumes you're running from macOS or Linux or in WSL on Windows. If running Linux, you may have to use `python3` everywhere you see `python` below (depending on your distribution).
+This page provides the simplest method of installing CoSim Toolbox (CST) and running a few examples. This effectively tests many of the CST APIs and functionality. This set of examples assumes you're running from macOS or Linux or in WSL on Windows. If running Linux, you may have to use `python3` everywhere you see `python` below (or vice versa, depending on your distribution).
 
 ## Download and Install CST
 This install is for just the APIs and none of the persistent services you may want to use. (For further details see the [full installation page](./Installation.md) )
@@ -38,6 +38,12 @@ You can verify that your Python installation is able to `import cosim_toolbox` w
 ```shell
 $ python3
 >>> import cosim_toolbox
+```
+
+You can also check the current version directly from the command line
+
+```shell
+$ cosim_toolbox --version
 ```
 
 ## Run the Writer and Reader Example
@@ -114,7 +120,7 @@ There are a number of examples in the "run" folder but the simplest is the "link
 $ cd ../python/linked_federates
 ```
 
-The first script we run sets up the federation. Before we run it, we need to ensure that is uses the CSV and JSON backends for time-series data and metadata, respectively. Near the top of the "federate_config.py" file make sure the backends are configured to use "csv" for time-series and "json" for metadata. 
+The first script we run sets up the federation. Before we run it, we need to ensure that is uses the CSV and JSON backends for time-series data and metadata, respectively. Near the top of the "federates_config.py" file make sure the backends are configured to use "csv" for time-series and "json" for metadata. 
 
 ```python
 use_meta_db = "json"
@@ -138,7 +144,7 @@ This doesn't print anything to console while running and takes a few seconds to 
 To confirm that data was written correctly to these data stores, run the post-processing script.
 
 ```shell
-$ python link_post_processing.py
+$ python linked_post_processing.py
 ```
 
 You should get the following results printed to console:
@@ -275,37 +281,47 @@ Time-series data types list: ['hdt_boolean', 'hdt_complex', 'hdt_double', 'hdt_e
 4 2023-12-07 15:31:57      30.0  MyLinkScenario  Battery          current3                NaN                NaN        False
 ```
 
-### Set-Up and Run Tests or Create Documentation
+## **BONUS:** Running Test
+CST comes with a suite of tests primarily used in development but can be useful to further test an installation and/or serve a diagnostic purpose. 
 
-An IDE, PyCharm or VSC, can also utilize this virtual environment to set up the development environment with all required package dependencies installed.
-
-Note that `make` can be run without activating virtual environment since it internally uses the virtual environment automatically by adding 'venv' to the commandline.
-
-### Run unit tests
-```commandline
-make tests
-```
-or use new virtual environment by using this commandline  
-```commandline
+To make a virtual environment and run the tests, run the following from the root of the repository (where the "Makefile" lives):
+```shell
 make venv tests
 ```
-The unit test run will also generate the code coverage report in both XML and HTML. XML report will be used by the pipeline.
 
-### Create Documentation
-```commandline
-make docs
+To just to run the tests (once you have the virtual environment in place):
+```shell
+make tests
 ```
-or use new virtual environment by using this commandline  
-```commandline
-make venv docs
-```
-The documentation will generate and be place in the docs/_build directory.  You can open the index.html on your local browser and browse the documention. 
+This will return an extensive report on which tests have passed, been skipped, or failed.
 
-### Clean up
-The clean-up will delete venv, *.pyc, coverage and built documentation file and folders.
-```commandline
+To delete the virtual environment after running the tests run:
+
+```shell
 make clean
 ```
+
+
+## **BONUS:** Create Documentation
+The CST documentations are published online on a [ReadTheDocs](https://cst.readthedocs.io/en/latest/) but for those that want to build the documentation locally, you can do so.
+
+To make the virtual environment and build the documentation, run the following from the root of the repository (where the "Makefile" lives):
+```shell
+make venv docs
+```
+
+To just build the documentation (once you have the virtual environment in place):
+```shell
+make docs
+```
+The documentation will be generated and be place in the "docs/_build directory".  You can open the "index.html" on your local browser and browse the documention. 
+
+To delete the virtual environment and the built documentation run:
+```shell
+make clean
+```
+
+
 
 
 
