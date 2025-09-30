@@ -275,5 +275,37 @@ Time-series data types list: ['hdt_boolean', 'hdt_complex', 'hdt_double', 'hdt_e
 4 2023-12-07 15:31:57      30.0  MyLinkScenario  Battery          current3                NaN                NaN        False
 ```
 
+### Set-Up and Run Tests or Create Documentation
+
+An IDE, PyCharm or VSC, can also utilize this virtual environment to set up the development environment with all required package dependencies installed.
+
+Note that `make` can be run without activating virtual environment since it internally uses the virtual environment automatically by adding 'venv' to the commandline.
+
+### Run unit tests
+```commandline
+make tests
+```
+or use new virtual environment by using this commandline  
+```commandline
+make venv tests
+```
+The unit test run will also generate the code coverage report in both XML and HTML. XML report will be used by the pipeline.
+
+### Create Documentation
+```commandline
+make docs
+```
+or use new virtual environment by using this commandline  
+```commandline
+make venv docs
+```
+The documentation will generate and be place in the docs/_build directory.  You can open the index.html on your local browser and browse the documention. 
+
+### Clean up
+The clean-up will delete venv, *.pyc, coverage and built documentation file and folders.
+```commandline
+make clean
+```
+
 
 
