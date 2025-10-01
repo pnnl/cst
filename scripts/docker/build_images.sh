@@ -45,7 +45,7 @@ for ((i = 0; i < ${#CONFIG_BUILDS[@]}; i+=3)); do
     image2=$(docker images -q "${IMAGE_NAME}")
     if [ "$image1" != "$image2" ]; then
       printf "Deleting old image Id: %s " "$image1"
-      docker rmi "${image1}"
+#      docker rmi "${image1}"
     fi
   fi
 done
