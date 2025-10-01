@@ -25,17 +25,13 @@ jobs:
       - name: Build
         run: |
           cd scripts/docker
-          # ls -las
-          # git update-index --chmod=+x build_images.sh
-          cat ./build_images.sh
           ./build_images.sh
           
       - name: Test
         run: |
+          make venv
+          source ./venv/bin/activate
           cd scripts
-          ls -las
-          # git update-index --chmod=+x build_images.sh
-          cat ./integration_test.sh
           ./integration_test.sh
 
       - name: Publish
