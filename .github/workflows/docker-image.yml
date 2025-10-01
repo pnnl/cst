@@ -24,16 +24,15 @@ jobs:
           
       - name: Build and Publish
         run: |
-          echo "$pwd"
-          cd
+          echo "(pwd)
           source ./cosim.env
           cd scripts/docker
           ./build_publish_images.sh
           
       - name: Test
         run: |
-          cd
-          source ./cosim.env
-          cd scripts/docker
+          # cd ../..
+          # source ./cosim.env
+          # cd scripts/docker
           ./intergration_test.sh
 
