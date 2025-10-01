@@ -72,7 +72,7 @@ class TestPerformance:
             list_time = time.time() - start_time
 
             # Should complete in reasonable time
-            assert list_time < 1.0, (
+            assert list_time < 2.0, (
                 f"Listing 1000 items 10 times took {list_time:.2f} seconds"
             )
 

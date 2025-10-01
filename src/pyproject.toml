@@ -38,9 +38,8 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://devops.pnnl.gov/e-comp/thrust-3/copper"
 Documentation = "https://cosim_toolbox.readthedocs.io"
-Repository = "https://devops.pnnl.gov/e-comp/thrust-3/copper"
+Repository = "https://github.com/pnnl/cst"
 
 [tool.setuptools.packages.find]
 where = [".","cosim_toolbox"]
