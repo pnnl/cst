@@ -25,6 +25,7 @@ jobs:
       - name: Build
         run: |
           cd scripts/docker
+          ls
           ./build_images.sh
           
       - name: Test
