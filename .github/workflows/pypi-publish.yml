@@ -1,3 +1,5 @@
+name: Deploy PYPI Project CI
+
 on:
   push:
     tags:
@@ -30,5 +32,5 @@ jobs:
           TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}  # Use your PyPI username
           TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}  # Store your token in GitHub secrets
         run: |
-          printf "Deploying
-          # twine upload dist/*
+          printf "Deploying PYPI project"
+          twine upload dist/*
