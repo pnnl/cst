@@ -24,7 +24,7 @@ jobs:
           
       - name: Build and Publish
         run: |
-          echo "(pwd)
+          echo $(pwd)
           source ./cosim.env
           cd scripts/docker
           ./build_publish_images.sh
