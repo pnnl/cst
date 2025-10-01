@@ -33,7 +33,10 @@ jobs:
       - name: Test
         run: |
           cd scripts
-          ./intergration_test.sh
+          ls -las
+          # git update-index --chmod=+x build_images.sh
+          cat ./integration_test.sh
+          ./integration_test.sh
 
       - name: Publish
         run: |
