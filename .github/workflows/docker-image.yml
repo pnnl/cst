@@ -19,7 +19,7 @@ jobs:
       - name: login to hub
         env:
           API_KEY: ${{ secrets.DOCKER_PASSWORD }}
-        run: echo "Using API key $API_KEY"
+        run: echo Using API key "$API_KEY"
         # echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
           
       - name: Build and Publish
