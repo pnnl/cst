@@ -9,36 +9,22 @@
 set -eo pipefail
 
 CID_ROOT=$(realpath ..)
-CID_ENV=$CID_ROOT/cosim.env
-source $CID_ENV
-
-#
-# Build new images
-#
-printf "Building Cosim Docker images locally with tag latest...\n"
-cd $CID_ROOT/scripts/docker
-./build-cosim-images.sh
+source "$CID_ROOT/cosim.env"
 
 # Load configuration from config.sh
+cd "$DOCKER_DIR"
 source ./config.sh
+cd ..
 
 # Tag and push images
 tag_and_push_images() {
-  local name path build_flag image_tag
-  local commit_hash
-#  commit_hash=$(get_git_commit_hash)
+  local name image_name image_tag image_tag2
+
   version=$(load_version)
-
-  if [[ -z "$commit_hash" ]]; then
-    exit 1
-  fi
-
   for ((i = 0; i < ${#CONFIG_BUILDS[@]}; i+=3)); do
     name="${CONFIG_BUILDS[i]}"
-    path="${CONFIG_BUILDS[i+1]}"
-    build_flag="${CONFIG_BUILDS[i+2]}"
 
-    local image_name="cosim-${name}:latest"
+    image_name="cosim-${name}:latest"
     image_tag="pnnl/cst:${name}-latest"
     image_tag2="pnnl/cst:${name}-${version}"
 #    image_tag3="pnnl/cst:${name}-${commit_hash}"
@@ -49,11 +35,12 @@ tag_and_push_images() {
       printf "Failed to push %s\n" "$image_tag" >&2
       exit 1
     fi
-    docker tag2 "$image_name" "$image_tag2"
+    docker tag "$image_name" "$image_tag2"
     if ! docker push "$image_tag"; then
       printf "Failed to push %s\n" "$image_tag" >&2
       exit 1
     fi
+    docker rmi "$image_tag" "$image_tag2"
   done
 }
 
@@ -61,3 +48,5 @@ printf "==== Start tagging and publishing images...\n"
 tag_and_push_images
 
 printf "Build and publish images completed.\n"
+
+cd "$CID_ROOT"

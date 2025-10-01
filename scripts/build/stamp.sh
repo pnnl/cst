@@ -10,12 +10,12 @@ if [[ -z ${INSTDIR} ]]; then
 fi
 
 cd "$DOCKER_DIR" || exit
-cosim_ver=$(cat ../cosim_version)
+cosim_ver=$(cat ../../src/version)
 grid_ver=$(cat ../grid_version)
 
 echo
 echo "Stamping CoSimulation Toolbox ${cosim_ver} and grid applications ${grid_ver}."
-echo "If you want to change the version, edit 'scripts/cst_version' or 'scripts/grid_version' file."
+echo "If you want to change the version, edit 'src/cst_version' or 'scripts/grid_version' file."
 echo "You should also update any documentation CHANGELOG.TXT or README.rst before stamping."
 echo "The command below can show the branch and merge history to help you update documentation."
 echo

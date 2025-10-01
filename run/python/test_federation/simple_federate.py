@@ -128,4 +128,4 @@ class SimpleFederate(Federate):
 if __name__ == "__main__":
     if sys.argv.__len__() > 2:
         test_fed = SimpleFederate(sys.argv[1])
-        test_fed.run(sys.argv[2], use_meta_db="json", use_data_db="csv")
+        test_fed.run(sys.argv[2], use_meta_db="mongo", use_data_db="postgres")
