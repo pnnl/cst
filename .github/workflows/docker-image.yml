@@ -26,6 +26,7 @@ jobs:
         run: |
           cd scripts/docker
           ls -las
+          git update-index --chmod=+x build_images.sh
           ./build_images.sh
           
       - name: Test
