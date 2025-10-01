@@ -22,17 +22,17 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           
-      - name: Build and Publish
+      - name: Build
         run: |
-          echo $(pwd)
-          source ./cosim.env
-          cd scripts
-          ./build_publish_images.sh
+          cd scripts/docker
+          ./build_images.sh
           
       - name: Test
         run: |
-          # cd ../..
-          # source ./cosim.env
-          # cd scripts/docker
+          cd scripts
           ./intergration_test.sh
 
+      - name: Publish
+        run: |
+          cd scripts
+          ./publish_images.sh
