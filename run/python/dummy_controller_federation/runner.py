@@ -8,9 +8,9 @@ shat.pratoomratana@pnnl.gov
 """
 
 import cosim_toolbox as env
-from cosim_toolbox.dbConfigs import DBConfigs
-from cosim_toolbox.dockerRunner import DockerRunner
-from cosim_toolbox.helicsConfig import HelicsMsg
+from cosim_toolbox.sims import DBConfigs
+from cosim_toolbox.sims import DockerRunner
+from cosim_toolbox.sims import HelicsMsg
 
 
 class Runner:
@@ -87,18 +87,18 @@ class Runner:
             }
         }
 
-        self.db.remove_document(env.cst_federations, None, self.federation_name)
+        self.db.remove_dict(env.cst_federations, None, self.federation_name)
         self.db.add_dict(env.cst_federations, self.federation_name, diction)
-        # print(env.cst_federations, self.db.get_collection_document_names(env.cst_federations))
+        # print(env.cst_federations, self.db.get_dict_names_in_collection(env.cst_federations))
 
         scenario = self.db.scenario(self.analysis_name,
                                     self.federation_name,
                                     "2023-12-07T15:31:27",
                                     "2023-12-08T15:31:27",
                                     self.docker)
-        self.db.remove_document(env.cst_scenarios, None, self.scenario_name)
+        self.db.remove_dict(env.cst_scenarios, None, self.scenario_name)
         self.db.add_dict(env.cst_scenarios, self.scenario_name, scenario)
-        # print(env.cst_scenarios, self.db.get_collection_document_names(env.cst_scenarios))
+        # print(env.cst_scenarios, self.db.get_dict_names_in_collection(env.cst_scenarios))
 
 def main():
     remote = False
@@ -108,8 +108,8 @@ def main():
     _federation_name = "test_ControllerMarketFederation"
     r = Runner(_scenario_name, _analysis_name, _federation_name, with_docker)
     r.define_scenario()
-    # print(r.db.get_collection_document_names(env.cst_scenarios))
-    # print(r.db.get_collection_document_names(env.cst_federations))
+    # print(r.db.get_dict_names_in_collection(env.cst_scenarios))
+    # print(r.db.get_dict_names_in_collection(env.cst_federations))
     if with_docker:
         DockerRunner.define_yaml(r.scenario_name)
         if remote:

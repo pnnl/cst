@@ -1,7 +1,7 @@
 # Optional Jupyter Notebook service
 services:
   jupyter_notebook:
-    image: "cosim-jupyter:latest"
+    image: "jupyter/minimal-notebook:python-3.11"
     container_name: ${CONTAINER_NAME:-jupyter_notebook}
     environment:
       JUPYTER_ENABLE_LAB: "yes"
@@ -14,7 +14,7 @@ services:
     ports:
       - "8888:8888"
     volumes:
-      - ${AIRFLOW_PROJ_DIR}:/home/jovyan/work
+      - ${PROJ_DIR}:/home/jovyan/work
     depends_on:
       - database
     links:
@@ -102,10 +102,11 @@ services:
     depends_on:
       - mongodb
     environment:
+      ME_CONFIG_BASICAUTH: false
+      ME_CONFIG_MONGODB_ENABLE_ADMIN: false
       ME_CONFIG_MONGODB_AUTH_USERNAME: "${CST_USER}"
       ME_CONFIG_MONGODB_AUTH_PASSWORD: "${CST_USER}"
       ME_CONFIG_MONGODB_SERVER: mongodb
-      ME_CONFIG_MONGODB_ENABLE_ADMIN: false
       ME_CONFIG_MONGODB_AUTH_DATABASE: "${CST_DB}"
     networks:
       - sim_net

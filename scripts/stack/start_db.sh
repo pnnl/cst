@@ -11,12 +11,12 @@ fi
 #docker network create $NETWORK_NAME
 # or hardcode the network name from the YAML file
 
-image1=$(docker images -q "cosim-airflow:latest")
-if [[ $image1 == "" ]]; then
-  echo "Please build-cosim-images in scripts/docker"
-  echo "Then run this script in this directory"
-  exit
-fi
+#image1=$(docker images -q "cosim-jupyter:latest")
+#if [[ $image1 == "" ]]; then
+#  echo "Please build-cosim-images in scripts/docker"
+#  echo "Then run this script in this directory"
+#  exit
+#fi
 
 cd "$CST_ROOT/run" || exit
 docker compose -f "$STACK_DIR/timescale-docker-compose.yaml" up -d --remove-orphans
