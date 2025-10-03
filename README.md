@@ -1,6 +1,7 @@
 # CoSim Toolbox Overview
+Co-simulation is an analysis technique that allows multiple simulation tools, generally from different domains, to exchange data during runtime. This allows the development of larger and/or more complex models than what a single simulation tool traditionally covers. [HELICS](https://github.com/GMLC-TDC/HELICS) is a co-simulation platform developed under funding from the United States Department of Energy ([summary paper](https://ieeexplore.ieee.org/document/10424422) and [documentation](https://docs.helics.org/en/latest/)). HELICS has been used various studies such as those evaluating a [transactive retail market in power systems](https://ieeexplore.ieee.org/document/10472237), evaulating the roles of [distributed power inverters on power system frequency response](https://ieeexplore.ieee.org/document/9966492), and [cyber-security analysis of power system](https://spectrum.library.concordia.ca/id/eprint/987690/1/Lardier_MASc_S2021.pdf). Due to its origins as a power system tool, many of the existing studies are connected to that domain but HELICS itself is domain agnostic and is suitable for use in any time-series simulation.
 
-CoSim Toolbox (CST) is a suite of Dockerized tools and libraries that make it easier to build, run, and analyze HELICS-based co-simulations. Some of these applications are web-based services (_e.g._ databases for storing configuration and simulation data) and some of these are simulation tools themselves. Additionally, CST provides a Python HELICS federate class that makes writing a HELICs federate easier and provides access to some CST functionality with no additional coding.
+CoSim Toolbox (CST) is a suite of Dockerized tools and libraries that make it easier to build, run, and analyze any HELICS-based co-simulations, particularly where new simulation tools written in Python are being developed. Some of these tools CST provides are web-based services (_e.g._ databases for storing configuration and simulation data) and some of these are simulation tools themselves. Additionally, CST provides a Python HELICS federate class that makes writing a HELICS federate easier and provides access to some CST functionality with no additional coding.
 
 ## Major Features
 CoSim Toolbox has the following key features:
@@ -17,5 +18,9 @@ Full documentation is available on [ReadTheDocs](https://cst.readthedocs.io/en/l
 
 
 ## Trying Out CST
-
 The easiest way to install and try out CST is using walking through our [Quick Start page](https://cst.readthedocs.io/en/latest/QuickStart.html).
+
+## Contributing
+Bug reports and feature requests are welcome via the [repository page on Github](https://github.com/pnnl/cst); for new CST users, read through the [existing documentation](https://cst.readthedocs.io/en/latest/) prior to asking a support question. 
+
+For those wishing to contribute code, please look through the [existing issues first](https://github.com/pnnl/cst/issues) to see if something like your proposed change is already on the virtual to-do list. If not, [start a discussion](https://github.com/pnnl/cst/discussions) so that we can work together as a team to plan out the feature and make sure CST remains cohesive as a tool. When working on developing a new feature, we use Github's [fork-and-PR technique](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request-from-a-fork) for those working outside the United States Department of Energy's national labs. For those at one of the national labs, please contact [Trevor Hardy](https://www.pnnl.gov/people/trevor-hardy) to make arranagements to join the formal development team.
