@@ -13,9 +13,9 @@ CoSim Toolbox has the following key features:
 The time-series data logging, configuration management, and monitoring are considered "persistent services" that can be installed and run locally on the user's computer via Docker or can be installed in a centralized location for a group or team to use collectively. The former can be useful for initial development or where data is meant to be kept private. The latter is useful when working on a team with centralized computation infrastructure for both data-sharing or co-simulation performance reasons.
 
 ## Documentation
-Full documentation is available on [ReadTheDocs](./docs/index.md).
+Full documentation is available on [ReadTheDocs](https://cst.readthedocs.io/en/latest/).
 
 
 ## Trying Out CST
 
-The easiest way to install and try out CST is using walking through our [Quick Start page](./docs/QuickStart.md).
+The easiest way to install and try out CST is using walking through our [Quick Start page](https://cst.readthedocs.io/en/latest/QuickStart.html).
