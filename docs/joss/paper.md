@@ -44,6 +44,6 @@ CoSim Toolbox (CST) is built on top of HELICS and has the goal of making HELICS-
 - **Metadata and Configuration Management** - HELICS federates require significant configuration which has historically been accomplished by JSON files on disk. Particuarly for larger federations, this leads to a significant number of JSON files, sometimes leading to confusion about which files correspond to the data produced in a given co-simulation run. To help manage this configuration data, CST uses MongoDB to store and the configuration information with the CST federate class designed to automatically retrieve a given federates configuration. The MongoDB database is implemented as a Docker container along with Mongo Express to provide a a web interface for inspecting the MongoDB database.
 
 # Acknowlegements
-This work was funded under the E-COMP, a laboratory-directed research and development initiative at the Pacific Northwest National Laboratory, part of the United States Department of Energy
+This work was funded under the E-COMP, a laboratory-directed research and development initiative at the Pacific Northwest National Laboratory, part of the United States Department of Energy.
 
 # References
