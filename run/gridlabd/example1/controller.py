@@ -5,7 +5,7 @@ import helics as h
 import matplotlib.pyplot as plt
 import logging
 import numpy as np
-from cosim_toolbox.federate import Federate
+from cosim_toolbox.sims import Federate
 import json
 
 logger = logging.getLogger(__name__)

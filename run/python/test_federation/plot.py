@@ -22,13 +22,13 @@ def open_logger():
 
 _federate_name = "Battery"
 _scenario_name = "test_scenario"
-_schema_name = "test_schema"
+_analysis_name = "test_analysis"
 
 names = ["Battery", "EVehicle"]
 items = ["current", "voltage"]
 _data_name = names[0] + "/" + items[0]
 
-qry = f"SELECT sim_time, data_value FROM {_schema_name}.HDT_DOUBLE WHERE " \
+qry = f"SELECT sim_time, data_value FROM {_analysis_name}.HDT_DOUBLE WHERE " \
       f"time > 30 AND " \
       f"scenario = '{_scenario_name}' AND " \
       f"federate = '{_federate_name}' AND " \

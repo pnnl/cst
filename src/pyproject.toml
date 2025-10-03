@@ -1,0 +1,52 @@
+[build-system]
+requires = ['setuptools']
+build-backend = 'setuptools.build_meta'
+
+[project]
+name = "cosim_toolbox"
+dynamic = ["version"]
+authors = [{name = "Trevor Hardy", email = "trevor.hardy@pnnl.gov"}]
+maintainers = [
+    {name = "Mitch Pelton", email = "mitch.pelton@pnnl.gov"},
+    {name = "Fred Rutz", email = "fredrick.rutz@pnnl.gov"},
+    {name = "Nathan Gray", email = "nathan.gray@pnnl.gov"},
+    {name = "Trevor Hardy", email = "trevor.hardy@pnnl.gov"}
+]
+description = "Python support for the CoSimulation Toolbox"
+readme = "README.rst"
+license = "BSD-2-Clause"
+license-files = ["LICEN[S]E"]
+keywords = ["power system", "transactive", "energy"]
+requires-python = ">=3.10"
+dependencies = [
+    "helics~=3.6.1",
+    "pandas~=2.3.1",
+    "psycopg2-binary~=2.9.10",
+    "pymongo~=4.13.2"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Education",
+    "Intended Audience :: Science/Research",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.10",
+    "Topic :: Scientific/Engineering"
+]
+
+[project.urls]
+Documentation = "https://cosim_toolbox.readthedocs.io"
+Repository = "https://github.com/pnnl/cst"
+
+[tool.setuptools.packages.find]
+where = [".","cosim_toolbox"]
+
+[tool.setuptools.package-data]
+api = ["*"]
+#"api.datafiles" = ["*.json", "*.db"]
+
+[project.scripts]
+cosim_toolbox = "cosim_toolbox._commands:cosim_toolbox"

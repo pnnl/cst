@@ -11,26 +11,23 @@ See full definition in "scalability_testing.md" in the "docs" folder
 in the repo.
 
 """
-import json
 import logging
 import os
 import sys
 import time
 from enum import Enum
 from pathlib import Path
+
 import numpy as np
-import psutil
 import pandas as pd
+from psycopg2 import connect
 
 import cosim_toolbox as env
-from cosim_toolbox.dbResults import DBResults
-from cosim_toolbox.readConfig import ReadConfig
+from cosim_toolbox.dbms import create_metadata_manager
+from cosim_toolbox.dbms import create_timeseries_manager
 
 logger = logging.getLogger(__name__)
 logger.setLevel(level=logging.INFO)
-fh = logging.FileHandler("validation_scale2.log", mode="w")
-fh.setLevel(level=logging.INFO)
-logger.addHandler(fh)
 ch = logging.StreamHandler()
 ch.setLevel(level=logging.INFO)
 logger.addHandler(ch)
@@ -50,16 +47,34 @@ class ValueType(Enum):
     ENDPOINT = 'HDT_ENDPOINT'
 
 
-class DataReader(DBResults):
+class DataReader:
     """
-    alternative to ResultsDB
+    alternative to deprecated ResultsDB
     """
-    def __init__(self, scenario_name):
-        super().__init__()
-        self.is_connected = self.open_database_connections()
-        self.scenario_reader = ReadConfig(scenario_name)
-        self.scenario = self.scenario_reader.scenario
+    _hdt_type = {'HDT_STRING': 'text',
+                 'HDT_DOUBLE': 'double precision',
+                 'HDT_INTEGER': 'bigint',
+                 'HDT_COMPLEX': 'VARCHAR (255)',
+                 'HDT_VECTOR': 'text',
+                 'HDT_COMPLEX_VECTOR': 'text',
+                 'HDT_NAMED_POINT': 'VARCHAR (255)',
+                 'HDT_BOOLEAN': 'boolean',
+                 'HDT_TIME': 'TIMESTAMP',
+                 'HDT_JSON': 'text',
+                 'HDT_ENDPOINT': 'text'}
+
+    def __init__(self, mgr, scenario_name):
+        self.mgr = mgr
+        self.is_connected = self.mgr.connect()
+        self.scenario = self.mgr.read_scenario(scenario_name)
+        self.analysis_name = self.scenario["analysis"]
         self.scenario_name = scenario_name
+        try:
+            db = connect(**env.cst_data_db)
+        except Exception as ex:
+            logger.exception(f"{ex}\nFailed to create PostgresDB instance.")
+            raise RuntimeError("Something bad happened")
+        self.data_db = db
 
     def __enter__(self):
         return self  # The object returned here will be assigned to the variable after 'as' in the 'with' statement
@@ -70,6 +85,33 @@ class DataReader(DBResults):
             print(f"An exception occurred: {exc_type}, {exc_value}")
         # Return False to propagate the exception, True to suppress it
         return False
+
+    @staticmethod
+    def get_time_select_string(start_time: int, duration: int) -> str:
+        """This method creates the time filter portion of the query string
+
+        Args:
+            start_time (int): the lowest time step in seconds to start the filtering
+                If None is entered for the start_time the query will
+                return only times that are less than the duration entered
+            duration (int): the number of seconds to be queried
+                If None is entered for the duration the query will
+                return only times that are greater than the start time entered
+                If None is entered for both the start_time and duration all times will be returned
+
+        Returns:
+            qry_string (str): string containing the time filter portion of the
+                sql query 'sim_time>=start_time AND sim_time<= end_time'
+        """
+        if start_time is None and duration is None:
+            return ""
+        elif start_time is not None and duration is None:
+            return "sim_time>=" + str(start_time)
+        elif start_time is None and duration is not None:
+            return "sim_time<=" + str(duration)
+        else:
+            end_time = start_time + duration
+        return "sim_time>=" + str(start_time) + " AND sim_time<=" + str(end_time)
 
     def get_query_string(self, start_time: int,
                          duration: int,
@@ -107,10 +149,8 @@ class DataReader(DBResults):
             qry_string (string) - string representing the query to be used in pulling time series
             data from logger database
         """
-        scheme = self.get_scenario(scenario_name)
-        scheme_name = scheme["schema"]
-        qry_string = self.get_select_string(scheme_name, data_type)
-        time_string = self.get_time_select_string(start_time, duration)
+        qry_string = "SELECT * FROM " + self.analysis_name + "." + data_type + " WHERE "
+        time_string = DataReader.get_time_select_string(start_time, duration)
         scenario_string = f"scenario='{scenario_name}'" if scenario_name is not None and scenario_name != "" else ""
         federate_string = f"federate='{federate_name}'" if federate_name is not None and federate_name != "" else ""
         data_string = f"data_name='{data_name}'" if data_name is not None and data_name != "" else ""
@@ -134,8 +174,18 @@ class DataReader(DBResults):
                 qry_string += " AND " + data_string
             else:
                 qry_string += data_string
-        qry_string += "ORDER BY sim_time;"
+        qry_string += " ORDER BY sim_time;"
         return qry_string
+
+    def get_federate_list(self, analysis_name: str, data_type: str) -> list:
+        qry_string = f"SELECT DISTINCT federate FROM {analysis_name}.{data_type};"
+        with self.data_db.cursor() as cur:
+            cur.execute(qry_string)
+            column_names = ["federate"]
+            data = cur.fetchall()
+            dataframe = pd.DataFrame(data, columns=column_names)
+        federate_list = dataframe.to_numpy().flatten().tolist()
+        return federate_list
 
     def get_results(
             self,
@@ -146,84 +196,104 @@ class DataReader(DBResults):
             data_type: ValueType | str = ValueType.DOUBLE):
         if isinstance(data_type, ValueType):
             data_type = data_type.value
-        data_name_list = self.get_data_name_list(self.scenario_reader.schema_name, data_type=data_type).to_numpy()
-        federate_list = self.get_federate_list(self.scenario_reader.schema_name, data_type=data_type).to_numpy()
+        qry_string = f"SELECT DISTINCT data_name FROM {self.analysis_name}.{data_type};"
+        with self.data_db.cursor() as cur:
+            cur.execute(qry_string)
+            column_names = ["data_name"]
+            data = cur.fetchall()
+            dataframe = pd.DataFrame(data, columns=column_names)
+        data_name_list = dataframe.to_numpy()
+        federate_list = self.get_federate_list(self.analysis_name, data_type=data_type)
         if data_name is not None and data_name not in data_name_list:
             logger.warning(f"data_name, {data_name}, not in {data_name_list}")
         if federate_name is not None and federate_name not in federate_list:
             logger.warning(f"federate_name, {federate_name} not in {federate_list}")
-        if data_type not in self.hdt_type.keys():
-            logger.warning(f"data_type, {data_type} not in {list(self.hdt_type.keys())}")
-        return self.query_scenario_federate_times(start_time, duration, self.scenario_name, federate_name,
-                                      data_name, data_type)
+        if data_type not in self._hdt_type.keys():
+            logger.warning(f"data_type, {data_type} not in {list(self._hdt_type.keys())}")
 
-    def get_maximum_data_value(self, scheme_name: str, federate_name: str, data_name: str, data_type: str):
-        if type(scheme_name) is not str:
+        qry_string = self.get_query_string(start_time, duration, self.scenario_name, federate_name, data_name,
+                                           data_type)
+        if qry_string:
+            with self.data_db.cursor() as cur:
+                cur.execute(qry_string)
+                column_names = [desc[0] for desc in cur.description]
+                data = cur.fetchall()
+                dataframe = pd.DataFrame(data, columns=column_names)
+                return dataframe
+        return None
+
+    def get_maximum_data_value(self, analysis_name: str, federate_name: str, data_name: str, data_type: str):
+        if type(analysis_name) is not str:
             return None
         if type(data_type) is not str:
             return None
         if type(federate_name) is not str:
             return None
-        qry_string = (f"SELECT MAX(CAST(data_value AS FLOAT)) FROM {scheme_name}.{data_type} "
+        qry_string = (f"SELECT MAX(CAST(data_value AS FLOAT)) FROM {analysis_name}.{data_type} "
                       f"WHERE scenario='{self.scenario_name}' AND federate='{federate_name}' AND data_name='{data_name}'")
         with self.data_db.cursor() as cur:
             cur.execute(qry_string)
-            column_names = ["data_name"]
             data = cur.fetchall()
-            # dataframe = pd.DataFrame(data, columns=column_names)
             return data[0][0]
 
-    def get_maximum_sim_time(self, scheme_name: str, federate_name: str, data_name: str, data_type: str):
-        if type(scheme_name) is not str:
+    def get_maximum_sim_time(self, analysis_name: str, federate_name: str, data_name: str, data_type: str):
+        if type(analysis_name) is not str:
             return None
         if type(data_type) is not str:
             return None
         if type(federate_name) is not str:
             return None
-        qry_string = (f"SELECT MAX(CAST(sim_time AS FLOAT)) FROM {scheme_name}.{data_type} "
+        qry_string = (f"SELECT MAX(CAST(sim_time AS FLOAT)) FROM {analysis_name}.{data_type} "
                       f"WHERE scenario='{self.scenario_name}' AND federate='{federate_name}' AND data_name='{data_name}'")
         with self.data_db.cursor() as cur:
             cur.execute(qry_string)
-            column_names = ["data_name"]
             data = cur.fetchall()
-            # dataframe = pd.DataFrame(data, columns=column_names)
             return data[0][0]
 
-    def get_length_data_value(self, scheme_name: str, federate_name: str, data_name: str, data_type: str):
-        if type(scheme_name) is not str:
+    def get_length_data_value(self, analysis_name: str, federate_name: str, data_name: str, data_type: str):
+        if type(analysis_name) is not str:
             return None
         if type(data_type) is not str:
             return None
         if type(federate_name) is not str:
             return None
-        qry_string = (f"SELECT COUNT(CAST(data_value AS FLOAT)) FROM {scheme_name}.{data_type} "
+        qry_string = (f"SELECT COUNT(CAST(data_value AS FLOAT)) FROM {analysis_name}.{data_type} "
                       f"WHERE scenario='{self.scenario_name}' AND federate='{federate_name}' AND data_name='{data_name}'")
         with self.data_db.cursor() as cur:
             cur.execute(qry_string)
-            column_names = ["data_name"]
             data = cur.fetchall()
-            # dataframe = pd.DataFrame(data, columns=column_names)
             return data[0][0]
 
-    def get_federate_subscription_list(self, scheme_name: str, federate_name: str, data_type: str) -> pd.DataFrame:
+    def get_length_of_analysis(self, analysis_name: str, data_type: str):
+        if type(analysis_name) is not str:
+            return None
+        qry_string = f"SELECT COUNT(CAST(data_value AS FLOAT)) FROM {analysis_name}.{data_type}"
+        with self.data_db.cursor() as cur:
+            cur.execute(qry_string)
+            data = cur.fetchall()
+            return data[0][0]
+
+    def get_federate_subscription_list(self, analysis_name: str, federate_name: str,
+                                       data_type: str) -> None | pd.DataFrame:
         """This function queries the distinct list of data names from the database table
-        defined by scheme_name and data_type
+        defined by analysis_name and data_type
 
         Args:
-            scheme_name (string) - the name of the schema to filter the query results by
+            analysis_name (string) - the name of the analysis to filter the query results by
+            federate_name (string) -
             data_type (string) - the id of the database table that will be queried. Must be
 
         Returns:
             dataframe (pandas dataframe object) - dataframe that contains the result records
             returned from the query of the database
         """
-        if type(scheme_name) is not str:
+        if type(analysis_name) is not str:
             return None
         if type(data_type) is not str:
             return None
         if type(federate_name) is not str:
             return None
-        qry_string = (f"SELECT DISTINCT data_name FROM {scheme_name}.{data_type} "
+        qry_string = (f"SELECT DISTINCT data_name FROM {analysis_name}.{data_type} "
                       f"WHERE scenario='{self.scenario_name}' AND federate='{federate_name}'")
         with self.data_db.cursor() as cur:
             cur.execute(qry_string)
@@ -232,8 +302,9 @@ class DataReader(DBResults):
             dataframe = pd.DataFrame(data, columns=column_names)
             return dataframe
 
-    def get_max_val_diff(self, scheme_name: str, federate_name: str, data_name: str, data_type: str, start_time:int=0):
-        if type(scheme_name) is not str:
+    def get_max_val_diff(self, analysis_name: str, federate_name: str, data_name: str, data_type: str,
+                         start_time: int = 0):
+        if type(analysis_name) is not str:
             return None
         if type(data_type) is not str:
             return None
@@ -246,7 +317,7 @@ class DataReader(DBResults):
                 ORDER BY sim_time
             ) 
             AS diff
-            FROM {scheme_name}.{data_type}
+            FROM {analysis_name}.{data_type}
             WHERE scenario='{self.scenario_name}'
             AND federate='{federate_name}'
             AND data_name='{data_name}'
@@ -256,13 +327,12 @@ class DataReader(DBResults):
         """
         with self.data_db.cursor() as cur:
             cur.execute(qry_string)
-            column_names = ["data_name"]
             data = cur.fetchall()
-            # dataframe = pd.DataFrame(data, columns=column_names)
             return data[0][0]
 
-    def get_min_val_diff(self, scheme_name: str, federate_name: str, data_name: str, data_type: str, start_time:int=0):
-        if type(scheme_name) is not str:
+    def get_min_val_diff(self, analysis_name: str, federate_name: str, data_name: str, data_type: str,
+                         start_time: int = 0):
+        if type(analysis_name) is not str:
             return None
         if type(data_type) is not str:
             return None
@@ -275,7 +345,7 @@ class DataReader(DBResults):
                 ORDER BY sim_time
             ) 
             AS diff
-            FROM {scheme_name}.{data_type}
+            FROM {analysis_name}.{data_type}
             WHERE scenario='{self.scenario_name}'
             AND federate='{federate_name}'
             AND data_name='{data_name}'
@@ -285,9 +355,7 @@ class DataReader(DBResults):
         """
         with self.data_db.cursor() as cur:
             cur.execute(qry_string)
-            column_names = ["data_name"]
             data = cur.fetchall()
-            # dataframe = pd.DataFrame(data, columns=column_names)
             return data[0][0]
 
     @property
@@ -335,84 +403,15 @@ class DataReader(DBResults):
         return self.get_results(data_type=ValueType.ENDPOINT)
 
     def close(self):
-        self.close_database_connections()
-
-def scenario_map(cst_scalability: str):
-    cst_scalability = Path(cst_scalability)
-    # os.chdir(cst_scalability)
-    scenario_dict = {}
-    for scenario_dir_path in cst_scalability.iterdir():
-        scenario_dir_name = scenario_dir_path.name
-        cnt = int(scenario_dir_name.split("_")[-1])
-        scenario_name = f"scenario_{cnt}"
-        name = f"{scenario_dir_path}/scalability_{cnt}.json"
-        with open(name, "r") as f:
-            scalability = json.load(f)
-        _f = scalability["number of feds"]
-        _s = scalability["number of pubs"]
-        _e = scalability["use endpoints"]
-        _d = scalability["use CST logger"]
-        _p = scalability["use profiling"]
-        scenario_dict[f"{_f}:{_s}:{_e}:{_d}:{_p}"] = scenario_dir_path / "federate_outputs"
-    return scenario_dict
-
-
-def validate_scenarios(cst_scalability: str):
-    cst_scalability = Path(cst_scalability)
-    scenario_dict = scenario_map(cst_scalability)
-    # run_only = None
-    run_only = list(range(1, 2))
-
-    for scenario_dir_path in cst_scalability.iterdir():
-        scenario_dir_name = scenario_dir_path.name
-        cnt = int(scenario_dir_name.split("_")[-1])
-        if run_only is not None and cnt not in run_only:
-            continue
-        scenario_name = f"scenario_{cnt}"
-        name = scenario_dir_path/f"scalability_{cnt}.json"
-        with open(name, "r") as f:
-            scalability = json.load(f)
-        _f = scalability["number of feds"]
-        _s = scalability["number of pubs"]
-        _e = scalability["use endpoints"]
-        _d = scalability["use CST logger"]
-        _p = scalability["use profiling"]
-        logger.info(f"{scenario_name} -> feds:{_f}, subs:{_s}, end_pts:{_e}, cst_log:{_d}, profile:{_p}")
-        if not _d:
-            continue
-
-        time_step = 30
-        n_steps = 2880
-        end_time = 86400
-        dr = DataReader(scenario_name)
-        if "ts_scale_test3" in dr.scenario_reader.schema_name:
-            dr.scenario_reader.schema_name = dr.scenario_reader.schema_name.replace("ts_scale_test3", "scale_test2")
-        csv_dir_path = scenario_dict[f"{_f}:{_s}:{_e}:{False}:{_p}"]
-        for out_csv in csv_dir_path.iterdir():
-            if out_csv.suffix != ".csv":
-                continue
-            federate = out_csv.stem.strip("_outputs")
-            df = pd.read_csv(out_csv)
-            # df_ept = df.loc[df.data_name.str.contains("pt_"), :]
-            df_sub = df.loc[df.data_name.str.contains("v_"), :].copy()
-            df_sub.real_time = pd.to_datetime(df_sub.real_time, utc=True)
-            # df_ept_db = dr.get_results(federate_name=federate, data_type=ValueType.ENDPOINT)
-            df_sub_db = dr.get_results(federate_name=federate, data_type=ValueType.DOUBLE)
-            df_sub_db.index = df_sub_db.sim_time
-            df_sub.index = df_sub.sim_time
-            assert all(df_sub.loc[:86400].data_value.to_numpy() == df_sub_db.data_value.to_numpy())
-        # if _e:
-            # validate_endpoints_db(_f, dr, end_time, n_steps, time_step)
-        validate_subs_db(_f, _s, dr, end_time, n_steps)
+        self.data_db.close()
 
 
 def validate_subs_db(_f, _s, dr: DataReader, end_time, n_steps):
-    federate_list = dr.get_federate_list(dr.scenario_reader.schema_name, data_type=ValueType.DOUBLE.value)
-    federate_list = np.sort(federate_list.to_numpy().flatten())
+    federate_list = dr.get_federate_list(dr.analysis_name, data_type=ValueType.DOUBLE.value)
     assert len(federate_list) == _f
     for federate in federate_list:
         sub_list = dr.get_federate_subscription_list(
-            dr.scenario_reader.schema_name,
+            dr.analysis_name,
             federate_name=federate,
             data_type=ValueType.DOUBLE.value
         )
@@ -423,24 +422,23 @@ def validate_subs_db(_f, _s, dr: DataReader, end_time, n_steps):
                 dr, federate, sub, ValueType.DOUBLE
             )
             try:
-                assert max_val == n_rows - 2
-                # assert n_rows == n_steps
-                # assert final_time == end_time
-                assert diff_max == 1.0
-                assert diff_min == 1.0
+                assert max_val == 7140.0
+                assert n_rows == n_steps
+                assert final_time == end_time
+                assert diff_max == 119.0
+                assert diff_min == 2.0
             except AssertionError as er:
                 logger.error(f"\t{federate}:{sub} test failed")
 
 
 def validate_endpoints_db(_f, dr, end_time, n_steps, time_step):
-    fed_ept_list = dr.get_federate_list(dr.scenario_reader.schema_name, data_type=ValueType.ENDPOINT.value)
-    fed_ept_list = np.sort(fed_ept_list.to_numpy().flatten())
+    fed_ept_list = dr.get_federate_list(dr.analysis_name, data_type=ValueType.ENDPOINT.value)
     fed_list = np.unique(np.array([fed_ept.split("/")[0] for fed_ept in fed_ept_list]))
     ept_list = np.unique(np.array([fed_ept.split("/")[1] for fed_ept in fed_ept_list]))
     assert len(fed_list) == _f
     for federate in fed_ept_list:
         destination_list = dr.get_federate_subscription_list(
-            dr.scenario_reader.schema_name,
+            dr.scenario_reader.analysis_name,
             federate_name=federate,
             data_type=ValueType.ENDPOINT.value
         )
@@ -463,32 +461,32 @@ def validate_endpoints_db(_f, dr, end_time, n_steps, time_step):
 
 def query_validation_values(dr, federate, data_name, value_type):
     max_val = dr.get_maximum_data_value(
-        dr.scenario_reader.schema_name,
+        dr.analysis_name,
         federate_name=federate,
         data_name=data_name,
         data_type=value_type.value
     )
     n_rows = dr.get_length_data_value(
-        dr.scenario_reader.schema_name,
+        dr.analysis_name,
         federate_name=federate,
         data_name=data_name,
         data_type=value_type.value
     )
     final_time = dr.get_maximum_sim_time(
-        dr.scenario_reader.schema_name,
+        dr.analysis_name,
         federate_name=federate,
         data_name=data_name,
         data_type=value_type.value
     )
     diff_max = dr.get_max_val_diff(
-        dr.scenario_reader.schema_name,
+        dr.analysis_name,
         federate_name=federate,
         data_name=data_name,
         data_type=value_type.value,
         start_time=60,
     )
     diff_min = dr.get_min_val_diff(
-        dr.scenario_reader.schema_name,
+        dr.analysis_name,
         federate_name=federate,
         data_name=data_name,
         data_type=value_type.value,
@@ -497,50 +495,222 @@ def query_validation_values(dr, federate, data_name, value_type):
     return diff_max, diff_min, final_time, max_val, n_rows
 
 
-def wait_for_helics():
-    helics_procs = []
-    for proc in psutil.process_iter(['pid', 'name', 'username']):
-        if proc.info["name"] == "helics_broker":
-            helics_procs.append(proc)
-    psutil.wait_procs(helics_procs)
+def scenario_map(cst_scalability: str, run_only: list):
+    dir_scalability = Path("./" + cst_scalability)
+    change = False
+    cur = os.getcwd()
+    scenario_dict = {}
+    for scenario_dir_path in dir_scalability.iterdir():
+        if not scenario_dir_path.is_dir():
+            continue
+        scenario_dir_name = scenario_dir_path.name
+        cnt = int(scenario_dir_name.split("_")[-1])
+        if cnt not in run_only:
+            continue
+        scalability_name = f"{cst_scalability}_{cnt}"
+        if (scenario_dir_path / Path("meta_store")).is_dir():
+            change = True
+            os.chdir(scenario_dir_path)
+            mgr = create_metadata_manager("json")
+        else:
+            mgr = create_metadata_manager("mongo")
+        mgr.connect()
+
+        scalability = mgr.read(cst_scalability, scalability_name)
+        _f = scalability["number of feds"]
+        _s = scalability["number of pubs"]
+        _e = scalability["use endpoints"]
+        _d = scalability["use CST logger"]
+        _p = scalability["use profiling"]
+        scenario_dict[f"{_f}:{_s}:{_e}:{_d}:{_p}"] = scenario_dir_path / f"data_store/{cst_scalability}_f{_f}_s{_s}"
+        if change:
+            change = False
+            os.chdir(cur)
+    return scenario_dict
 
 
-def kill_helics():
-    for proc in psutil.process_iter(['pid', 'name', 'username']):
-        if proc.info["name"] == "helics_broker":
-            proc.kill()
+def validate_scenarios(cst_scalability: str, run_only: list):
+    dir_scalability = Path("./" + cst_scalability)
+    scenario_dict = scenario_map(cst_scalability, run_only)
 
-#
-# def validate_scenario(scenario_name, n_federates, n_publications):
-#     dr = DataReader(scenario_name)
-#     df = dr.double_df.loc[dr.double_df.scenario == scenario_name].loc[dr.double_df.data_value >= -1e40].loc[
-#         dr.double_df.data_value <= 1e40]
-#
-#     federate_list = np.unique(df.federate.to_numpy())
-#     logger.info(federate_list)
-#     assert len(federate_list) == n_federates
-#     for federate in federate_list:
-#         dff = df.loc[df.federate == federate]
-#         pub_list = np.unique(dff.data_name.to_numpy())
-#         assert len(pub_list) == n_publications
-#         for pub in pub_list:
-#             logger.debug(f"Publication: {pub}")
-#             dffp = dff.loc[dff.data_name == pub]
-#             dffp = dffp.sort_values(by="sim_time", ignore_index=True)
-#             dx = dffp.data_value.diff()
-#             assert np.max(dx.to_numpy()[1:]) == 1.0
-#             assert np.min(dx.to_numpy()[1:]) == 1.0
-#             logger.info(f"steps: {len(dffp.sim_time) + 1}, simulation time: {np.max(dffp.sim_time)}s")
+    change = False
+    cur = os.getcwd()
+    for scenario_dir_path in dir_scalability.iterdir():
+        if not scenario_dir_path.is_dir():
+            continue
+        scenario_dir_name = scenario_dir_path.name
+        cnt = int(scenario_dir_name.split("_")[-1])
+        if cnt not in run_only:
+            continue
+        scenario_name = f"{cst_scalability}_s_{cnt}"
+        scalability_name = f"{cst_scalability}_{cnt}"
+        if (scenario_dir_path / Path("meta_store")).is_dir():
+            change = True
+            os.chdir(scenario_dir_path)
+            mgr = create_metadata_manager("json")
+        else:
+            mgr = create_metadata_manager("mongo")
+        mgr.connect()
 
-if __name__ == '__main__':
-    env.cst_mg_host = "mongodb://maxwell.pnl.gov"
-    env.cst_mongo = env.cst_mg_host + ":" + env.cst_mg_port
-    env.cst_pg_host = "maxwell.pnl.gov"
-    env.cst_postgres = env.cst_pg_host + ":" + env.cst_pg_port
+        scalability = mgr.read(cst_scalability, scalability_name)
+        _f = scalability["number of feds"]
+        _s = scalability["number of pubs"]
+        _e = scalability["use endpoints"]
+        _d = scalability["use CST logger"]
+        _p = scalability["use profiling"]
+        logger.info(f"{scenario_name} -> feds:{_f}, subs:{_s}, end_pts:{_e}, cst_log:{_d}, profile:{_p}")
+        if not _d:
+            if change:
+                change = False
+                os.chdir(cur)
+            continue
+
+        time_step = 30
+        n_steps = 120
+        end_time = 3600
+        dr = DataReader(mgr, scenario_name)
+        csv_dir_path = scenario_dict[f"{_f}:{_s}:{_e}:{False}:{_p}"]
+        for fed_out in csv_dir_path.iterdir():
+            for out_csv in fed_out.iterdir():
+                if out_csv.suffix != ".csv":
+                    continue
+                federate = fed_out.stem
+                type_dict = {"real_time": str, "sim_time": float, "scenario": str, "federate": str, "data_name": str,
+                             "data_value": float}
+                df = pd.read_csv(out_csv, dtype=type_dict)
+                # df_ept = df.loc[df.data_name.str.contains("pt_"), :]
+                df_sub = df.loc[df.data_name.str.contains("v_"), :].copy()
+                df_sub.real_time = pd.to_datetime(df_sub.real_time, utc=True)
+                df_sub['data_value'] = pd.to_numeric(df['data_value'], errors='coerce')
+                # df_ept_db = dr.get_results(federate_name=federate, data_type=ValueType.ENDPOINT)
+                df_sub_db = dr.get_results(federate_name=federate, data_type=ValueType.DOUBLE)
+                df_sub_db.index = df_sub_db.sim_time
+                df_sub.index = df_sub.sim_time
+                assert all(df_sub.data_value.to_numpy() == df_sub_db.data_value.to_numpy())
+                # if _e:
+                #     validate_endpoints_db(_f, dr, end_time, n_steps, time_step)
+                # for i in range(_s):  # for each subscription per federate
+                #     if _e:
+                #         df_ept_db = dr.get_results(federate_name=f"{federate}/pt_{i}", data_type=ValueType.ENDPOINT)
+                #         assert all(df_ept_db.data_value.to_numpy().astype(float) == df_sub.loc[df_sub.data_name==f" {federate}/v_{i}", "data_value"].to_numpy())
+                #     assert np.nanmax(df_sub.loc[df_sub.data_name==f" {federate}/v_{i}", "data_value"].diff().diff().to_numpy()) == 1
+                #     assert np.nanmin(df_sub.loc[df_sub.data_name==f" {federate}/v_{i}", "data_value"].diff().diff().to_numpy()) == 1
+
+        validate_subs_db(_f, _s, dr, end_time, n_steps)
+        if change:
+            change = False
+            os.chdir(cur)
+
+
+def read_scenarios(cst_scalability: str, run_only: list):
+    df = pd.DataFrame(data=[], columns=["scenario", "analysis", "federate", "analysis_rows", "selected_rows", "time"])
+    dir_scalability = Path("./" + cst_scalability)
+
+    change = False
+    cur = os.getcwd()
+    for scenario_dir_path in dir_scalability.iterdir():
+        if not scenario_dir_path.is_dir():
+            continue
+        scenario_dir_name = scenario_dir_path.name
+        cnt = int(scenario_dir_name.split("_")[-1])
+        if cnt not in run_only:
+            continue
+        scenario_name = f"{cst_scalability}_s_{cnt}"
+        scalability_name = f"{cst_scalability}_{cnt}"
+        if (scenario_dir_path / Path("meta_store")).is_dir():
+            change = True
+            os.chdir(scenario_dir_path)
+            mgr = create_metadata_manager("json")
+            tmgr = create_timeseries_manager("csv")
+        else:
+            mgr = create_metadata_manager("mongo")
+            tmgr = create_timeseries_manager("postgres")
+        mgr.connect()
+        tmgr.connect()
+
+        scalability = mgr.read(cst_scalability, scalability_name)
+        _f = scalability["number of feds"]
+        _s = scalability["number of pubs"]
+        _e = scalability["use endpoints"]
+        _d = scalability["use CST logger"]
+        _p = scalability["use profiling"]
+        logger.info(f"{scenario_name} -> feds:{_f}, subs:{_s}, end_pts:{_e}, cst_log:{_d}, profile:{_p}")
+        dr = DataReader(mgr, scenario_name)
+        analysis_rows = dr.get_length_of_analysis(analysis_name=dr.analysis_name, data_type=ValueType.DOUBLE.value)
+        """
+            We need to compare read times for Standard Postgres using new federate.py vs TimescaleDB using new federate.py in the following way:
+            1.	Reading all times for a given federate
+            2.	Reading all federates for a given (non-exhaustive) time slice.
+            3.	Reading a given set of federates  for a non-exhaustive time slice.
+        """
+        for fed_number in range(5):
+            federate = f"fed_{fed_number}"
+            # All times for a 'federate'
+            # 1. Reading all times for a given federate
+            tic = time.perf_counter()
+            df_sub_db = tmgr.read_data(federate_name=federate, data_type=ValueType.DOUBLE.value)
+            toc = time.perf_counter()
+            n_lines = df_sub_db.shape[0]
+            logger.info(
+                f"{federate}: time to read-all {n_lines} records from {analysis_rows} items in analysis: {toc - tic}s")
+            data = [[scenario_name, dr.analysis_name, federate, analysis_rows, n_lines, toc - tic]]
+            df = pd.concat([df, pd.DataFrame(data, columns=df.columns)], ignore_index=True)
+            # 2. Reading all federates for a given (non-exhaustive) time slice.
+            tic = time.perf_counter()
+            df_sub_db = tmgr.read_data(duration=300, data_type=ValueType.DOUBLE.value)
+            toc = time.perf_counter()
+            n_lines = df_sub_db.shape[0]
+            data = [[scenario_name, dr.analysis_name, "all", analysis_rows, n_lines, toc - tic]]
+            df = pd.concat([df, pd.DataFrame(data, columns=df.columns)], ignore_index=True)
+            # 3. Reading a given set of federates  for a non-exhaustive time slice.
+            tic = time.perf_counter()
+            df_sub_db = tmgr.read_data(duration=300, federate_name=["fed_0", "fed_1", "fed_2"], data_type=ValueType.DOUBLE.value)
+            toc = time.perf_counter()
+            n_lines = df_sub_db.shape[0]
+            data = [[scenario_name, dr.analysis_name, "3 feds", analysis_rows, n_lines, toc - tic]]
+            df = pd.concat([df, pd.DataFrame(data, columns=df.columns)], ignore_index=True)
+        if change:
+            change = False
+            os.chdir(cur)
+        df.to_csv(f"{dir_scalability}/read_test_{cnt}.csv")
+
+
+def comp_validate(test_scalability):
+    fh = logging.FileHandler(f"{test_scalability}/comp_validate_.log", mode="w")
+    fh.setLevel(level=logging.INFO)
+    logger.addHandler(fh)
+
+    # run multiples of 8
+    beg = 1
+    end = 41
+    runs = list(range(beg, end))
+
     tic = time.perf_counter()
-    if len(sys.argv) > 1:
-        validate_scenarios(sys.argv[1])
-    else:
-        validate_scenarios('scale_test2')
+    validate_scenarios(test_scalability, runs)
     toc = time.perf_counter()
     logger.info(f"elapsed time: {toc - tic}")
+    logger.removeHandler(fh)
+
+
+def read_validate(test_scalability):
+    fh = logging.FileHandler(f"{test_scalability}/time_validate.log", mode="w")
+    fh.setLevel(level=logging.INFO)
+    logger.addHandler(fh)
+
+    beg = 5
+    end = 10
+    runs = list(range(beg, end))
+
+    tic = time.perf_counter()
+    read_scenarios(test_scalability, runs)
+    toc = time.perf_counter()
+    logger.info(f"elapsed time: {toc - tic}")
+    logger.removeHandler(fh)
+
+
+if __name__ == '__main__':
+    test_name = "cst_scale1"
+    if len(sys.argv) > 1:
+        test_name = sys.argv[1]
+    comp_validate(test_name)
+    read_validate(test_name)

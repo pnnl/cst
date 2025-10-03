@@ -5,9 +5,9 @@ import plotly.graph_objs as go
 
 
 def read_time5x():
-    df9 = pd.read_csv(f"scale_test9_read_test5x.csv")
-    df7 = pd.read_csv(f"scale_test7_read_test5x.csv")
-    df8 = pd.read_csv(f"scale_test8_read_test5x.csv")
+    df9 = pd.read_csv(f"time_scale/scale_test9_read_test5x.csv")
+    df7 = pd.read_csv(f"time_scale/scale_test7_read_test5x.csv")
+    df8 = pd.read_csv(f"time_scale/scale_test8_read_test5x.csv")
     df9["time_scale"] = 0
     df7["time_scale"] = 1
     df8["time_scale"] = 1
@@ -28,7 +28,7 @@ def read_time5x():
     df = df.groupby(["scenario", "schema", "schema_rows", "selected_rows", "time_scale", "test", "ts_indexes",
                      "federate"]).time.mean().rename_axis().reset_index()
     df['t'] = df["time"] - 0.0548
-    df["per_schema_row"] = df.time / df.schema_rows
+    df["per_analysis_row"] = df.time / df.schema_rows
     df["per_selected_row"] = df.time / df.selected_rows
     df["a"] = df.t / df.schema_rows
     df["id"] = df.scenario.str[12:]
@@ -46,16 +46,16 @@ def read_time5x():
         labels={"mult": "1 index", "mult2": "2 index", "value": "Slowdown"}
     )
     fig.show(renderer="browser")
-    # fig = px.scatter_matrix(df, dimensions=["time_scale", "ts_indexes", "schema_rows", "selected_rows", "time", "per_schema_row", "per_selected_row"])
+    # fig = px.scatter_matrix(df, dimensions=["time_scale", "ts_indexes", "schema_rows", "selected_rows", "time", "per_analysis_row", "per_selected_row"])
     # fig.show(renderer="browser")
-    # corr = df.loc[:, ["time_scale", "ts_indexes", "schema_rows", "selected_rows", "time", "per_schema_row", "per_selected_row"]].corr().time
-    # corr = corr.loc[["time_scale", "ts_indexes", "schema_rows", "selected_rows", "per_schema_row", "per_selected_row"]]
+    # corr = df.loc[:, ["time_scale", "ts_indexes", "schema_rows", "selected_rows", "time", "per_analysis_row", "per_selected_row"]].corr().time
+    # corr = corr.loc[["time_scale", "ts_indexes", "schema_rows", "selected_rows", "per_analysis_row", "per_selected_row"]]
     # fig = px.bar(corr)
     # fig.show(renderer="browser")
     fig = px.histogram(
         df,
         # x="schema_rows",
-        x="per_schema_row",
+        x="per_analysis_row",
         color="ts_indexes",
         nbins=100,
         barmode="group",
@@ -65,12 +65,12 @@ def read_time5x():
     fig = px.scatter(
         df,
         x="schema_rows",
-        y="per_schema_row",
+        y="per_analysis_row",
         color="ts_indexes",
         symbol="ts_indexes",
         log_y=False,
         log_x=True,
-        labels={"schema_rows": "Schema Rows", "per_schema_row": "Query Time Per Row in Schema"},
+        labels={"schema_rows": "analysis Rows", "per_analysis_row": "Query Time Per Row in Schema"},
     )
     fig.show(renderer="browser")
     df.ts_indexes = df.ts_indexes.astype(str)
@@ -82,7 +82,7 @@ def read_time5x():
         symbol="ts_indexes",
         log_y=True,
         log_x=True,
-        labels={"schema_rows": "Schema Rows", "per_schema_row": "Query Time Per Row in Schema"},
+        labels={"schema_rows": "analysis Rows", "per_analysis_row": "Query Time Per Row in Schema"},
     )
     x = 240 * 10 ** (np.array(list(range(1, 6, 1))))
     y1 = 4.6e-7 * x + 0.0548
@@ -99,11 +99,11 @@ def read_time5x():
 
 
 def read_time():
-    df5 = pd.read_csv(f"scale_test5_read_test.csv")
-    df6 = pd.read_csv(f"scale_test6_read_test.csv")
-    df7 = pd.read_csv(f"scale_test7_read_test.csv")
-    df8 = pd.read_csv(f"scale_test8_read_test.csv")
-    df9 = pd.read_csv(f"scale_test9_read_test.csv")
+    df5 = pd.read_csv(f"time_scale/scale_test5_read_test.csv")
+    df6 = pd.read_csv(f"time_scale/scale_test6_read_test.csv")
+    df7 = pd.read_csv(f"time_scale/scale_test7_read_test.csv")
+    df8 = pd.read_csv(f"time_scale/scale_test8_read_test.csv")
+    df9 = pd.read_csv(f"time_scale/scale_test9_read_test.csv")
     df5["time_scale"] = 1
     df6["time_scale"] = 0
     df7["time_scale"] = 1
@@ -120,39 +120,39 @@ def read_time():
     df8["ts_indexes"] = 2
     df9["ts_indexes"] = 0
     df = pd.concat([df5, df6, df7, df8, df9], ignore_index=True)
-    df["per_schema_row"] = df.time / df.schema_rows
+    df["per_analysis_row"] = df.time / df.schema_rows
     df["per_selected_row"] = df.time / df.selected_rows
     print("max")
-    print(f"test5 {df.loc[df.test == 5, 'per_schema_row'].max():.3g}")
-    print(f"test6 {df.loc[df.test == 6, 'per_schema_row'].max():.3g}")
-    print(f"test7 {df.loc[df.test == 7, 'per_schema_row'].max():.3g}")
-    print(f"test8 {df.loc[df.test == 8, 'per_schema_row'].max():.3g}")
-    print(f"test9 {df.loc[df.test == 9, 'per_schema_row'].max():.3g}")
+    print(f"test5 {df.loc[df.test == 5, 'per_analysis_row'].max():.3g}")
+    print(f"test6 {df.loc[df.test == 6, 'per_analysis_row'].max():.3g}")
+    print(f"test7 {df.loc[df.test == 7, 'per_analysis_row'].max():.3g}")
+    print(f"test8 {df.loc[df.test == 8, 'per_analysis_row'].max():.3g}")
+    print(f"test9 {df.loc[df.test == 9, 'per_analysis_row'].max():.3g}")
     print("min")
-    print(f"test5 {df.loc[df.test == 5, 'per_schema_row'].min():.3g}")
-    print(f"test6 {df.loc[df.test == 6, 'per_schema_row'].min():.3g}")
-    print(f"test7 {df.loc[df.test == 7, 'per_schema_row'].min():.3g}")
-    print(f"test8 {df.loc[df.test == 8, 'per_schema_row'].min():.3g}")
-    print(f"test9 {df.loc[df.test == 9, 'per_schema_row'].min():.3g}")
+    print(f"test5 {df.loc[df.test == 5, 'per_analysis_row'].min():.3g}")
+    print(f"test6 {df.loc[df.test == 6, 'per_analysis_row'].min():.3g}")
+    print(f"test7 {df.loc[df.test == 7, 'per_analysis_row'].min():.3g}")
+    print(f"test8 {df.loc[df.test == 8, 'per_analysis_row'].min():.3g}")
+    print(f"test9 {df.loc[df.test == 9, 'per_analysis_row'].min():.3g}")
     print("mean")
-    print(f"test5 {df.loc[df.test == 5, 'per_schema_row'].mean():.3g}")
-    print(f"test6 {df.loc[df.test == 6, 'per_schema_row'].mean():.3g}")
-    print(f"test7 {df.loc[df.test == 7, 'per_schema_row'].mean():.3g}")
-    print(f"test8 {df.loc[df.test == 8, 'per_schema_row'].mean():.3g}")
-    print(f"test9 {df.loc[df.test == 9, 'per_schema_row'].mean():.3g}")
+    print(f"test5 {df.loc[df.test == 5, 'per_analysis_row'].mean():.3g}")
+    print(f"test6 {df.loc[df.test == 6, 'per_analysis_row'].mean():.3g}")
+    print(f"test7 {df.loc[df.test == 7, 'per_analysis_row'].mean():.3g}")
+    print(f"test8 {df.loc[df.test == 8, 'per_analysis_row'].mean():.3g}")
+    print(f"test9 {df.loc[df.test == 9, 'per_analysis_row'].mean():.3g}")
 
     fig = px.scatter_matrix(df, dimensions=["time_scale", "ts_indexes", "schema_rows", "selected_rows", "time",
-                                            "per_schema_row", "per_selected_row"])
+                                            "per_analysis_row", "per_selected_row"])
     fig.show(renderer="browser")
-    corr = df.loc[:, ["time_scale", "ts_indexes", "schema_rows", "selected_rows", "time", "per_schema_row",
+    corr = df.loc[:, ["time_scale", "ts_indexes", "schema_rows", "selected_rows", "time", "per_analysis_row",
                       "per_selected_row"]].corr().time
-    corr = corr.loc[["time_scale", "ts_indexes", "schema_rows", "selected_rows", "per_schema_row", "per_selected_row"]]
+    corr = corr.loc[["time_scale", "ts_indexes", "schema_rows", "selected_rows", "per_analysis_row", "per_selected_row"]]
     fig = px.bar(corr)
     fig.show(renderer="browser")
     fig = px.histogram(
         df,
         # x="schema_rows",
-        x="per_schema_row",
+        x="per_analysis_row",
         color="ts_indexes",
         nbins=100,
         barmode="group",
@@ -172,11 +172,11 @@ def read_time():
 
 
 def analyze_run_time_db_vs_csv():
-    df5 = pd.read_csv(f"scale_test5_timing_data.csv")
-    df6 = pd.read_csv(f"scale_test6_timing_data.csv")
-    df7 = pd.read_csv(f"scale_test7_timing_data.csv")
-    df8 = pd.read_csv(f"scale_test8_timing_data.csv")
-    df9 = pd.read_csv(f"scale_test9_timing_data.csv")
+    df5 = pd.read_csv(f"time_scale/scale_test5_timing_data.csv")
+    df6 = pd.read_csv(f"time_scale/scale_test6_timing_data.csv")
+    df7 = pd.read_csv(f"time_scale/scale_test7_timing_data.csv")
+    df8 = pd.read_csv(f"time_scale/scale_test8_timing_data.csv")
+    df9 = pd.read_csv(f"time_scale/scale_test9_timing_data.csv")
     df5["time_scale"] = 1
     df6["time_scale"] = 0
     df7["time_scale"] = 1
@@ -223,11 +223,11 @@ def analyze_run_time_db_vs_csv():
 
 
 def analyze_run_time_timescaledb():
-    df5 = pd.read_csv(f"scale_test5_timing_data.csv")
-    df6 = pd.read_csv(f"scale_test6_timing_data.csv")
-    df7 = pd.read_csv(f"scale_test7_timing_data.csv")
-    df8 = pd.read_csv(f"scale_test8_timing_data.csv")
-    df9 = pd.read_csv(f"scale_test9_timing_data.csv")
+    df5 = pd.read_csv(f"time_scale/scale_test5_timing_data.csv")
+    df6 = pd.read_csv(f"time_scale/scale_test6_timing_data.csv")
+    df7 = pd.read_csv(f"time_scale/scale_test7_timing_data.csv")
+    df8 = pd.read_csv(f"time_scale/scale_test8_timing_data.csv")
+    df9 = pd.read_csv(f"time_scale/scale_test9_timing_data.csv")
     df5["time_scale"] = True
     df6["time_scale"] = False
     df7["time_scale"] = True
@@ -281,7 +281,7 @@ def analyze_run_time_timescaledb():
 def run_time():
     for i in [5, 6, 7, 8, 9]:
         print(f"Test {i}")
-        df = pd.read_csv(f"scale_test{i}_timing_data.csv")
+        df = pd.read_csv(f"time_scale/scale_test{i}_timing_data.csv")
         df = df.sort_values(by="name", ignore_index=True)
         df["total_inputs"] = df.n_fedsxsubs + df.use_epts * df.n_fedsxsubs
         df["log_time"] = df.time.apply(np.log)

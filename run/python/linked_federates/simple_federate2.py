@@ -8,7 +8,7 @@ Python-based logger federate in CoSimulation Toolbox.
 """
 import sys
 
-from cosim_toolbox.federate import Federate
+from cosim_toolbox.sims import Federate
 
 
 def increment_double(original_value):
@@ -71,7 +71,7 @@ def increment_boolean(original_value):
 
 
 class SimpleFederate(Federate):
-    def __init__(self, fed_name="", schema="default", **kwargs):
+    def __init__(self, fed_name="", **kwargs):
         super().__init__(fed_name, **kwargs)
 
     def update_internal_model(self):
@@ -126,6 +126,6 @@ class SimpleFederate(Federate):
 
 
 if __name__ == "__main__":
-    if sys.argv.__len__() > 2:
+    if sys.argv.__len__() > 4:
         test_fed = SimpleFederate(sys.argv[1])
-        test_fed.run(sys.argv[2])
+        test_fed.run(sys.argv[2],sys.argv[3],sys.argv[4])

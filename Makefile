@@ -11,7 +11,7 @@ $(VENV)/bin/activate:
 	@python3.12 -m venv $(VENV)
 	@echo "Installing requirements..."
 	@./$(PIP) install -r requirements.txt
-	@./$(PIP) install src/cosim_toolbox/.
+	@./$(PIP) install src/.
 
 # venv is a shortcut target
 venv: $(VENV)/bin/activate
@@ -22,24 +22,23 @@ run: venv
 clean:
 	@echo "Deleting venv, *.pyc, and test coverage data..."
 	@rm -rf $(VENV)
-	@rm -rf .coverage coverage.xml results.xml .pytest_cache htmlcov docs/_build
+	@rm -rf .coverage coverage.xml results.xml .pytest_cache htmlcov
+	@rm -rf  docs/_build src/build src/cosim_toolbox.egg-info
 	@find . -type f -name '*.pyc' -delete
 
 docs:
 	@echo "Creating HTML "read the docs" website"
 	@. $(VENV)/bin/activate; cd ./docs; make html
 
-test:
+tests:
 	@echo "Running tests with coverage report..."
 	@$(PYTHON) -m pytest -c pytest.ini --cov-report html --cov-report term --cov-report xml \
-		--cov=cosim_toolbox --cov-fail-under=20 --junitxml results.xml -v src/cosim_toolbox/tests
+		--cov=cosim_toolbox --cov-fail-under=20 --junitxml results.xml -v src/tests
 
-integration-test:
+integration_tests:
 	@echo "Running integration tests with coverage report..."
 	@$(PYTHON) -m pytest -c pytest.ini --cov-report html --cov-report term --cov-report xml \
 		--cov=cosim_toolbox --cov-fail-under=2 --junitxml results.xml -v \
-		src/cosim_toolbox/integration_tests/test_simple_federation.py \
-		src/cosim_toolbox/integration_tests/test_readerDB.py \
-		src/cosim_toolbox/integration_tests/test_dbConfigs.py
+		src/integration_tests/test_simple_federation.py
 
-.PHONY: all venv run clean docs test coverage integration-test
+.PHONY: all venv run clean docs tests coverage integration_tests

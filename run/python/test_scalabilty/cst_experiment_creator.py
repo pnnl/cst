@@ -16,8 +16,8 @@ import stat
 import sys
 
 import cosim_toolbox as env
-from cosim_toolbox.dbConfigs import DBConfigs
-from cosim_toolbox.helicsConfig import HelicsMsg, Collect
+from cosim_toolbox.sims import HelicsMsg, Collect
+from cosim_toolbox.dbms import create_metadata_manager
 
 class Runner:
 
@@ -25,12 +25,10 @@ class Runner:
         self.cst_scalability = scalability_name
         self.docker = docker
         print(env.cst_mongo)
-        self.db = DBConfigs(env.cst_mongo, env.cst_mongo_db)
 
-        # Uncomment the next three lines for debug
-        # DBConfigs.federation_database(True)
-        # self.db.db[self.cst_scalability].drop()
-        # self.db.add_collection(self.cst_scalability)
+        # Uncomment the next three lines for debug for removal of dictionaries
+        # with create_metadata_manager("mongo") as mgr:
+        #     mgr.helper.get_collection("cst_scale_z1").drop()
 
     @staticmethod
     def define_runner():
@@ -78,7 +76,7 @@ docker run \\
             federation_def (dictionary): Definition of the federation diction
         """
 
-        schema_name = scenario_def["schema"]
+        analysis_name = scenario_def["analysis"]
         federation = federation_def["federation"]
         script = '#!/bin/bash\n\n'
 
@@ -103,8 +101,8 @@ docker run \\
 
         # Add data logger federate
         # if scalability_def["use CST logger"]:
-        #     script += f"(exec python3 -c \"import cosim_toolbox.federateLogger as datalog; " \
-        #               f"datalog.main('FederateLogger', '{schema_name}', '{scenario_name}')\" &> logger.log &)\n"
+        #     script += f"(exec python3 -c \"import cosim_toolbox.sims.federateLogger as datalog; " \
+        #               f"datalog.main('FederateLogger', '{analysis_name}', '{scenario_name}')\" &> logger.log &)\n"
 
         # add monitor to set semaphore
         script += f"(exec ../../monitor.sh &)\n"
@@ -123,10 +121,14 @@ docker run \\
         # Collect all outputs
         collect = Collect.YES
 
-        schema_name = f"{self.cst_scalability}_f{federate_size}_s{subs_size}"
+        analysis_name = f"{self.cst_scalability}_f{federate_size}_s{subs_size}"
         scalability_name = f"{self.cst_scalability}_{count}"
         scenario_name = f"{self.cst_scalability}_s_{count}"
         federation_name = f"{self.cst_scalability}_f_{count}"  #_f{federate_size}_s{subs_size}_{endpoints}_{cst_logger}_{profiling}"
+
+        # Uncomment the next three lines for debug for removal of dictionaries
+        # sn = f"scale_t1_s_{count}"
+        # fn = f"scale_t1_f_{count}"
 
         _p = "fed_"
         os.makedirs("federate_outputs")
@@ -137,10 +139,7 @@ docker run \\
             t1 = HelicsMsg(name, period=30)
             if self.docker:
                 t1.config("broker_address", "10.5.0.2")
-            t1.config("core_type", "zmq")
             t1.config("log_level", "warning")
-            t1.config("period", 30)  # maybe different interval for testing
-            t1.config("uninterruptible", False)
             t1.config("terminate_on_error", True)
             #        t1.config("wait_for_current_time_update", True)
             t1.collect(collect)
@@ -156,11 +155,10 @@ docker run \\
 
             command = f"exec python3 ../../cst_federate.py {name} {scenario_name} {cst_logger}"
             federation["federation"][name] = {
+                "logger": False,
                 "image": "cosim-cst:latest",
                 "command": command,
                 "federate_type": "combo",
-                "time_step": 120,
-                "profile": profiling,
                 "HELICS_config": t1.write_json()
             }
             if prv == federate_size-1:
@@ -172,29 +170,13 @@ docker run \\
         #     with open(f"{name}.json", "w") as f:
         #         json.dump(t1.write_json(), f, ensure_ascii=False, indent=2)
 
-        # Always output federation file to disk:
-        with open(f"{federation_name}.json", "w") as f:
-            json.dump(federation['federation'], f, ensure_ascii=False, indent=2)
-        if cst_logger:
-            self.db.remove_document(env.cst_federations, None, federation_name)
-            self.db.add_dict(env.cst_federations, federation_name, federation)
-            # Uncomment for debug
-            # print(env.cst_federations, self.db.get_collection_document_names(env.cst_federations))
-
-        scenario = self.db.scenario(schema_name,
-                                    federation_name,
-                                    "2023-12-07T15:31:27",
-                                    "2023-12-07T16:31:27",
-                                    self.docker)
-        # Always output scenario file to disk:
-        with open(f"{scenario_name}.json", "w") as f:
-            json.dump(scenario, f, ensure_ascii=False, indent=2)
-        if cst_logger:
-            self.db.remove_document(env.cst_scenarios, None, scenario_name)
-            self.db.add_dict(env.cst_scenarios, scenario_name, scenario)
-            # Uncomment the next two lines for debug
-            # print(env.cst_scenarios, self.db.get_collection_document_names(env.cst_scenarios))
-            # print(scenario_name, self.db.get_dict(env.cst_scenarios, None, scenario_name))
+        scenario = {
+            "analysis": analysis_name,
+            "federation": federation_name,
+            "start_time": "2023-12-07T15:31:27",
+            "stop_time": "2023-12-07T16:31:27",
+            "docker": self.docker
+        }
 
         scalability = {
             "number of feds": federate_size,
@@ -204,15 +186,32 @@ docker run \\
             "use profiling": profiling,
             "results": {}
         }
-        # Always output scalability file to disk:
-        with open(f"{scalability_name}.json", "w") as f:
-            json.dump(scalability, f, ensure_ascii=False, indent=2)
+
         if cst_logger:
-            self.db.remove_document(self.cst_scalability, None, scalability_name)
-            self.db.add_dict(self.cst_scalability, scalability_name, scalability)
-            # Uncomment the next two lines for debug
-            # print(self.cst_scalability, self.db.get_collection_document_names(self.cst_scalability))
-            # print(scenario_name, self.db.get_dict(self.cst_scalability, None, scenario_name))
+            backend = "mongo"
+            # # Always output federation file to disk:
+            # with open(f"{federation_name}.json", "w") as f:
+            #     json.dump(federation['federation'], f, ensure_ascii=False, indent=2)
+            # # Always output scenario file to disk:
+            # with open(f"{scenario_name}.json", "w") as f:
+            #     json.dump(scenario, f, ensure_ascii=False, indent=2)
+            # # Always output scalability file to disk:
+            # with open(f"{scalability_name}.json", "w") as f:
+            #     json.dump(scalability, f, ensure_ascii=False, indent=2)
+        else:
+            backend = "json"
+
+        with create_metadata_manager(backend) as mgr:
+            print(f"Writing configuration files to '{mgr.location}'...")
+            mgr.write_federation(federation_name, federation, overwrite=True)
+            mgr.write_scenario(scenario_name, scenario, overwrite=True)
+            mgr.write(self.cst_scalability, scalability_name, scalability, overwrite=True)
+
+            # Uncomment the next three lines for debug for removal of dictionaries
+            # mgr.delete_federation(f"cst_scale_z1_f_{count}")
+            # mgr.delete_scenario(f"cst_scale_z1_s_{count}")
+
+            print("Configuration files written successfully.")
 
         self.define_shell(scenario_name, scenario, scalability, federation)
 #        self.define_runner()
@@ -248,19 +247,14 @@ docker run \\
                             os.chdir("..")
 
 
-def main():
-    if len(sys.argv) > 2:
-        tmp_docker = True
-        if sys.argv[2].lower() in ['false', '0', 'f', 'n', 'no', 'nope', 'nada', 'noway', 'uh-uh']:
-            tmp_docker = False
-        r = Runner(sys.argv[1], tmp_docker)
-    else:
-        r = Runner("cst_scale_z1", False)
+def create_tests(scalability_name: str):
+    tmp_docker = False
+    if len(sys.argv) > 1:
+        scalability_name = sys.argv[1]
+    r = Runner(scalability_name, tmp_docker)
     r.define_scenarios()
-    print(r.db.get_collection_document_names(env.cst_scenarios))
-    print(r.db.get_collection_document_names(r.cst_scalability))
-    print(r.db.get_collection_document_names(env.cst_federations))
 
 
 if __name__ == "__main__":
-    main()
+    test_name="cst_scale1"
+    create_tests(test_name)

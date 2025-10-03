@@ -1,0 +1,53 @@
+ @startuml   
+    class Federate {
+        hfed: HelicsFederate
+        metadata_manager: MetadataManager
+        timeseries_manager: TimeSeriesManager
+        config: dict
+        scenario: dict
+        scenario_name: str
+        federation: dict
+        federation_name: str
+        federate: dict
+        federate_type: str
+        federate_name: str
+        analysis_name: str
+        start: str
+        stop: str
+        no_t_start
+        period: float
+        stop_time: float
+        granted_time: float
+        next_requested_time: float
+        debug: bool 
+        interval: float
+        fed_collect: str
+        pubs: dict
+        inputs: dict
+        endpoints: dict
+        data_from_federation: dict
+        data_to_federation: dict
+        
+        use_timescale()
+        set_metadata()
+        get_helics_config()
+        create_federate(scenario_name: str, use_meta_db: str, use_data_db: str)
+        create_helics_fed()
+        on_start()
+        on_enter_initialization_mode()
+        on_enter_executing_mode()
+        run_cosim_loop()
+        enter_initialization()
+        enter_executing_mode()
+        simulate_next_step()
+        calculate_next_requested_time()
+        request_time(requested_time: float)
+        reset_data_to_federation()
+        get_data_from_federation()
+        update_internal_model()
+        send_data_to_federation(reset: bool)
+        write_to_logger(name: str, key: str, value: str, table: Any, message_time: float, receiving_federate: str, receiving_endpoint: str)
+        destroy_federate()
+        run()
+    }
+@enduml

@@ -13,23 +13,13 @@ SKIP="0"
 
 # Image build configration
 CONFIG_BUILDS=(
-  "ubuntu" "${CST_ROOT}/src/cosim_toolbox/" "$BUILD"
-  "cst" "${CST_ROOT}/src/cosim_toolbox/" "$BUILD"
+  "ubuntu" "${CST_ROOT}/src/" "$BUILD"
+  "cst" "${CST_ROOT}/src/" "$BUILD"
   "gridlabd" "${CST_ROOT}/scripts/build/" "$BUILD"
-#  "jupyter" "${CST_ROOT}/src/cosim_toolbox/" "$BUILD"
-#  "airflow" "${CST_ROOT}/src/cosim_toolbox/" "$BUILD"
-#  "tesp-ubuntu" "./" "$SKIP"
-#  "tesp-library" "./" "$SKIP"
-#  "tesp-build" "${CST_ROOT}/scripts/build/" "$SKIP"
-#  "tesp-api" "./" "$SKIP"
-#  "julia" "./" "$SKIP"
 )
 
-# Image full path on the remote registry
-IMAGE_PATH="devops-registry.pnnl.gov/e-comp/thrust-3/copper/"
-
 # Version file
-VERSION_FILE="${CST_ROOT}/src/cosim_toolbox/version"
+VERSION_FILE="${CST_ROOT}/src/version"
 
 # Function to get the latest git commit hash (first 8 characters)
 get_git_commit_hash() {

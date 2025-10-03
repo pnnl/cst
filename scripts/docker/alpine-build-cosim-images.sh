@@ -22,12 +22,12 @@ fi
 
 paths=(
   "./"
-  "${CST_ROOT}/src/cosim_toolbox/"
-  "${CST_ROOT}/src/cosim_toolbox/"
+  "${CST_ROOT}/src/"
+  "${CST_ROOT}/src/"
   "./"
   "${CST_ROOT}/scripts/build/"
   "./"
-  "${CST_ROOT}/src/cosim_toolbox/"
+  "${CST_ROOT}/src/"
   "./"
   "./"
   "/home/d3j331/tesp/repository/mesp/"
@@ -59,7 +59,7 @@ done
 rm -f "$BUILD_DIR/*.logs" "$BUILD_DIR/out.txt"
 # Make directories and set permissions
 cd "$CST_ROOT/run" || exit
-mkdir -p ./dags ./logs ./plugins ./config ./python ../src/cosim_toolbox/cosim_toolbox.egg-info
+mkdir -p ./dags ./logs ./plugins ./config ./python ../src/cosim_toolbox.egg-info
 # Make wide open for now
 sudo chmod -R 777 ./dags ./logs ./plugins ./config ./python ../src
 

@@ -1,2 +1,3 @@
-import cosim_toolbox.federateLogger as datalog
-datalog.main('FederateLogger', 'HelicsExampleDefaultSchema', 'HelicsExampleDefault')
+import cosim_toolbox.sims.federateLogger as datalog
+
+datalog.main('FederateLogger', 'HelicsExampleDefaultAnalysis')
