@@ -368,7 +368,7 @@ class post_process_example:
         print(tab)
 
 if __name__ == "__main__":
-    # ex_data.create_csv_files_meta_data("tests/SAM_data")
-    # ex_data.write_csv_files_to_store("tests/SAM_data","rooftop solar")
+    # ex_data.create_csv_files_meta_data("SAM_data")
+    # ex_data.write_csv_files_to_store("SAM_data","rooftop solar")
     ex_data = post_process_example()
     ex_data.process_output("SAM_data","rooftop solar")
