@@ -289,7 +289,7 @@ To make a virtual environment and run the tests, run the following from the root
 make venv tests
 ```
 
-To just to run the tests (once you have the virtual environment in place):
+To run the tests (once you have the virtual environment in place):
 ```shell
 make tests
 ```

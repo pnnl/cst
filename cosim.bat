@@ -36,19 +36,7 @@ set MONGO_PORT=27017
 set MONGODB_INITDB_ROOT_USERNAME=admin
 set MONGODB_INITDB_ROOT_PASSWORD=SuperSecret
 
-@REM Airflow
-@REM add user id for linux
-@REM set AIRFLOW_UID=$(id -u)
-@REM add user id for windows
-@REM set AIRFLOW_UID=50000
-@REM set AIRFLOW_GID=0
-@REM set AIRFLOW_PROJ_DIR=%SIM_DIR%/run
-@REM set _AIRFLOW_WWW_USER_USERNAME=
-@REM set _AIRFLOW_WWW_USER_PASSWORD=
-
 @REM Populate environment variables to docker files
-@REM envsubst < %DOCKER_DIR/env/airflow.Dockerfile > %DOCKER_DIR/airflow.Dockerfile
-@REM envsubst < %DOCKER_DIR/env/jupyter.Dockerfile > %DOCKER_DIR/jupyter.Dockerfile
 @REM envsubst < %DOCKER_DIR/env/python.Dockerfile > %DOCKER_DIR/python.Dockerfile
 @REM envsubst < %STACK_DIR/env/init-mongo.js > %STACK_DIR/init-mongo.js
 @REM envsubst < %STACK_DIR/env/init-db.sql > %STACK_DIR/init-db.sql

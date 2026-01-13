@@ -631,13 +631,10 @@ class MDDataManager(ABC):
         """Writes passed in federation data to the data store
 
         Args:
-            name (str): Name of federation; unique identifier for this
-            dictionary
-            federation_data (Dict[str, Any]): federation data dictionary to be
-                written
+            name (str): Name of federation; unique identifier for this dictionary
+            federation_data (Dict[str, Any]): federation data dictionary to be written
             overwrite (bool, optional): Flag indicating if any existing
-                federation dictionary should be overwritten. Defaults to
-                False.
+                federation dictionary should be overwritten. Defaults to False.
 
         Returns:
             bool: flag indicating whether the federation dictionary was
@@ -651,10 +648,8 @@ class MDDataManager(ABC):
         """Writes passed in scenario data to the data store
 
         Args:
-            name (str): Name of scenario; unique identifier for this
-            dictionary
-            scenario_data (Dict[str, Any]): scenario data dictionary to be
-                written
+            name (str): Name of scenario; unique identifier for this dictionary
+            scenario_data (Dict[str, Any]): scenario data dictionary to be written
             overwrite (bool, optional): Flag indicating if any existing
                 scenario dictionary should be overwritten. Defaults to False.
 
@@ -678,11 +673,10 @@ class MDDataManager(ABC):
 
         Args:
             collection_type (str): Name of collection (folder or group)
-            into which this dictionary is added. Default values for 
-            CST are "federation" and "scenario" but users can define
-            custom collections with this method.
-            name (str): Name of dictionary being added; serves as a
-            unique identifier.
+                into which this dictionary is added. Default values for
+                CST are "federation" and "scenario" but users can define
+                custom collections with this method.
+            name (str): Name of dictionary being added; serves as a unique identifier.
             data (Dict[str, Any]): Data to be written to the data store
             overwrite (bool, optional): Flag indicating if any existing
                 dictionary should be overwritten. Defaults to False.
@@ -722,8 +716,7 @@ class MDDataManager(ABC):
         which it resides.
 
         Args:
-            collection_type (str): Name of metadata collection from which to
-                read
+            collection_type (str): Name of metadata collection from which to read
             name (str): Name of dictionary to be read
 
         Returns:
@@ -751,8 +744,7 @@ class MDDataManager(ABC):
         """Lists the names of the dictionaries in the specified collection
 
         Args:
-            collection_type (str): Name of collection whose dictionaries
-            are to be listed
+            collection_type (str): Name of collection whose dictionaries are to be listed
 
         Returns:
             list[str]: List dictionary names in specified collection

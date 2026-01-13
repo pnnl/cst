@@ -146,9 +146,8 @@ def sample_ts_records():
 # Skip MongoDB tests if pymongo is not available
 def pytest_configure(config):
     """Configure pytest with custom markers."""
-    config.addinivalue_line(
-        "markers", "mongo: mark test as requiring MongoDB (pymongo)"
-    )
+    config.addinivalue_line("markers", "mongo: mark test as requiring MongoDB (pymongo)")
+    config.addinivalue_line("markers", "postgres: mark test as requiring Postgres (psycopg2)")
 
 def pytest_collection_modifyitems(config, items):
     """Skip MongoDB tests if pymongo is not available."""
