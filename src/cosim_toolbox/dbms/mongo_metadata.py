@@ -210,8 +210,7 @@ class MongoMetadataWriter(MDDataWriter):
                 metadata. Defaults to False.
 
         Returns:
-            bool: Flag indicating data was successfully added to MongoDB 
-                database
+            bool: Flag indicating data was successfully added to MongoDB database
         """
         return self.write("federations", name, federation_data, overwrite)
 

@@ -2,6 +2,7 @@ name: Deploy PYPI Project CI
 
 on:
   push:
+    branches: ["main"]
     tags:
       - 'v*'  # Triggers on version tags
 
@@ -33,4 +34,4 @@ jobs:
           TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}  # Store your token in GitHub secrets
         run: |
           printf "Deploying PYPI project"
-          twine upload dist/*
+          twine upload src/dist/*

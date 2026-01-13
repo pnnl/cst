@@ -46,23 +46,21 @@ class _JSONPathHelper:
 
 
 class JSONMetadataWriter(MDDataWriter):
-    """JSON file-based metadata writer."""
-
-    def __init__(
-        self,
-        *,
-        location: Optional[Union[str, Path]] = None,
-        helper: Optional[_JSONPathHelper] = None,
-    ):
-        """
-        Initialize the JSON writer.
+    """JSON file-based metadata writer.
 
         For standalone use:
             writer = JSONMetadataWriter(location="/path/to/data")
         For managed use (by JSONMetadataManager):
             helper = _JSONPathHelper(...)
             writer = JSONMetadataWriter(helper=helper)
-        """
+    """
+    def __init__(
+        self,
+        *,
+        location: Optional[Union[str, Path]] = None,
+        helper: Optional[_JSONPathHelper] = None,
+    ):
+        """ Initialize the JSON writer. """
         super().__init__()
         if not (location or helper):
             raise ValueError("Either 'location' or 'helper' must be provided.")
@@ -74,8 +72,7 @@ class JSONMetadataWriter(MDDataWriter):
         """Create directory structure if it doesn't exist.
         
         Returns:
-            bool: Flag indicating success in creating the necessary
-                folders for storing the JSON files.
+            bool: Flag indicating success in creating the necessary folders for storing the JSON files.
         """
         try:
             self.helper.location.mkdir(parents=True, exist_ok=True)
@@ -175,7 +172,14 @@ class JSONMetadataWriter(MDDataWriter):
 
 
 class JSONMetadataReader(MDDataReader):
-    """JSON file-based metadata reader."""
+    """JSON file-based metadata reader.
+
+    For standalone use:
+        reader = JSONMetadataReader(location="/path/to/data")
+    For managed use (by JSONMetadataManager):
+        helper = _JSONPathHelper(...)
+        reader = JSONMetadataReader(helper=helper)
+    """
 
     def __init__(
         self,
@@ -183,15 +187,7 @@ class JSONMetadataReader(MDDataReader):
         location: Optional[Union[str, Path]] = None,
         helper: Optional[_JSONPathHelper] = None,
     ):
-        """
-        Initialize the JSON reader.
-
-        For standalone use:
-            reader = JSONMetadataReader(location="/path/to/data")
-        For managed use (by JSONMetadataManager):
-            helper = _JSONPathHelper(...)
-            reader = JSONMetadataReader(helper=helper)
-        """
+        """ Initialize the JSON reader. """
         super().__init__()
         if not (location or helper):
             raise ValueError("Either 'location' or 'helper' must be provided.")
@@ -205,8 +201,7 @@ class JSONMetadataReader(MDDataReader):
         """Verify that the directory structure exists.
         
         Returns:
-            bool: Flag indicating whether the JSON files able to be
-                accessed or not.
+            bool: Flag indicating whether the JSON files able to be accessed or not.
         """
         try:
             if not self.helper.location.exists():
