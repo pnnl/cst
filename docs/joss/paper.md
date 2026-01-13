@@ -12,6 +12,7 @@ authors:
   - name: Mitch Pelton
     equal-contrib: true
     affiliation: 1
+    orcid:  0009-0000-3465-7279
   - name: Nathan Gray
     orcid: 0009-0008-0234-7207
     equal-contrib: true
