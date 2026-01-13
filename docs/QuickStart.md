@@ -17,7 +17,7 @@ $ pip install -r requirements.txt
 ```
 
 ```shell
-$ cd src/cosim_toolbox
+$ cd src
 ```
 
 ```shell
@@ -183,14 +183,14 @@ You may see a warning about a Python virtual environment not being set; don't wo
 The above example is run using the data backend that writes to local disk. This requires the least effort to get up and running to test the installation. Alternatively, you can use the CST databases as your data store by doing a local installation of said databases and changing your configuration to use the backend that writes to them. To get this up and running, you'll need something to run Docker containers. For in most cases, that means installing Docker; [here's how to do that](https://docs.docker.com/engine/install/).
 
 ### Build images
-Next, a few Docker images need to be built, using a script in the CST repository. Assuming you're starting from the "linked_federates" folder go to the "docker" folder in scripts and run the "build_cosim_images.sh" script; the build will likely take a few minutes.
+Next, a few Docker images need to be built, using a script in the CST repository. Assuming you're starting from the "linked_federates" folder go to the "docker" folder in scripts and run the "build_images.sh" script; the build will likely take a few minutes.
 
 ```shell
 $ cd ../../../scripts/docker
 ```
 
 ```shell
-$ ./build-cosim-images.sh
+$ ./build-images.sh
 ```
 
 ### Instantiate the Persistent Services
