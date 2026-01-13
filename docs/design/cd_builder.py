@@ -111,7 +111,7 @@ class ClassDiagramGenerator(ast.NodeVisitor):
                         attr_name = stmt.target.attr
                         if isinstance(stmt, ast.AnnAssign):
                             if hasattr(stmt.annotation, "id"):
-                                # Annontation is a direct Python data type
+                                # Annotation is a direct Python data type
                                 attr_type = stmt.annotation.id
                             elif hasattr(stmt.annotation, "attr"):
                                 # Annotation is some other data type, e.g. "dt.datetime"
@@ -229,7 +229,7 @@ if __name__ == '__main__':
     #                     nargs='?',
     #                     default="hvac_new_agent.py")
     parser.add_argument('-o', '--output_plantuml_file',
-                        help="configuration JSON for the HVAC agnet",
+                        help="configuration JSON for the HVAC agent",
                         nargs='?',
                         default="hvac_agent_class_definitions.plantuml")
     myargs = parser.parse_args()
