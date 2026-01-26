@@ -1,0 +1,34 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: co-sim-toolbox
+  title: CoSim Toolbox
+  description: |
+    CoSim Toolbox (CST) is a suite of Dockerized tools and libraries that make it easier to build, run, and analyze any HELICS-based co-simulations, particularly where new simulation tools written in Python are being developed.
+  annotations:
+    github.com/project-slug: pnnl/cst
+  links:
+    - title: CST repository
+      url: https://github.com/pnnl/cst
+  tags:
+    - ldrd
+    - co-simulations
+    - helics
+    - python
+    - docker
+spec:
+  type: library
+  owner: user:default/trevor.hardy_pnnl.gov # Project PI
+  visibility: private # to expose this item in the catalog to others at PNNL, change the visibility to 'public'
+  # system: e-comp
+  lifecycle: development
+
+  # TODO: does pymoods depend on another resource or component?
+  # dependsOn:
+
+  # TODO: does another resource depend on pymoods? 
+  # dependencyOf:
+
+  # No current APIs to document
+
+  # providesApis:
