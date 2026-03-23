@@ -24,7 +24,7 @@ authors:
     orcid: 0009-0001-9644-5797
     affiliation: 1
 affiliations:
- - name: Pacific Northwest National Laboratory
+ - name: Pacific Northwest National Laboratory, USA
    index: 1
    ror: 05h992307
 date: 22 August 2025
