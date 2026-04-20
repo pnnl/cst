@@ -120,9 +120,9 @@ class SimpleFederate(Federate):
                 dummy = 1.0
                 for msg in self.data_from_federation["endpoints"][inkey]:
                     dummy = float(msg.data)
-                self.data_to_federation["endpoints"][key].append(str(increment_double(dummy)))
+                self.data_to_federation["endpoints"][key].append({"payload": str(increment_double(dummy)), "destination": "EVehicle/voltage1"})
             else:
-                self.data_to_federation["endpoints"][key].append("1.0")
+                self.data_to_federation["endpoints"][key].append({"payload": "1.0", "destination": "EVehicle/voltage1"})
 
 
 if __name__ == "__main__":

@@ -34,6 +34,7 @@ from .json_metadata import JSONMetadataManager
 from .mongo_metadata import MongoMetadataManager
 from .csv_timeseries import CSVTimeSeriesManager
 from .postgresql_timeseries import PostgreSQLTimeSeriesManager
+from .hybrid_timeseries import HybridCSVtoPostgresManager
 
 # Public API definition
 __all__ = [
@@ -46,4 +47,5 @@ __all__ = [
     "PostgreSQLTimeSeriesManager",
     "JSONMetadataManager",
     "MongoMetadataManager",
+    "HybridCSVtoPostgresManager",
 ]

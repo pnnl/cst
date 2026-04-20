@@ -14,3 +14,8 @@ docs/_template/
 cst.code-workspace
 data_store/
 run/python/test_scalabilty/
+.vscode/
+scripts/stack/init-db.sql
+scripts/stack/init-mongo.js
+poetry.lock
+uv.lock
