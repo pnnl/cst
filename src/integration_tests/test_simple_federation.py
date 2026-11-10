@@ -1,15 +1,11 @@
+import collections
 import logging
 import os
 import time
 import unittest
 
-import cosim_toolbox as env
-#from cosim_toolbox.sims import DBConfigs
-#from cosim_toolbox.sims import DBResults
-from cosim_toolbox.dbms import create_metadata_manager
-from cosim_toolbox.dbms import create_timeseries_manager
+from cosim_toolbox.dbms import create_metadata_manager, create_timeseries_manager
 
-import collections
 collections.Callable = collections.abc.Callable
 logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO").upper())
 logger = logging.getLogger(__name__)
@@ -62,7 +58,7 @@ class TestSimpleFederation(unittest.TestCase):
     def _check_complete(self, interval: int, timeout: int):
         start_time = time.time()
         while True:
-            logging.info(f"Checking test federation completion with internal: {interval}; timeout: {timeout}")
+            logger.info(f"Checking test federation completion with internal: {interval}; timeout: {timeout}")
             df = self.tmgr.read_data(
                 start_time=86400,
 #                duration=0,
@@ -72,11 +68,11 @@ class TestSimpleFederation(unittest.TestCase):
                 data_type="hdt_complex",
             )
             if not df.empty:
-                logging.info("Test federation completed")
+                logger.info("Test federation completed")
                 break
             if time.time() - start_time > timeout:
                 raise ValueError(f"Polling timed out in {timeout} without receiving non-empty DataFrame.")
-            logging.info(f"Test federation is still in progress. Waiting to retry in {interval}")
+            logger.info(f"Test federation is still in progress. Waiting to retry in {interval}")
             time.sleep(interval)
 
     def tearDown(self):

@@ -1,8 +1,9 @@
-import helics as h
 import multiprocessing as mp
 
+import helics as h
+from pyjulia_federates import PyJulia_Fed, Python_Fed
+
 from cosim_toolbox.sims import DBConfigs
-from pyjulia_federates import Python_Fed, PyJulia_Fed
 
 """
 This example use case demonstrates how to use julia functions in a Federate using PyJulia. 
@@ -106,17 +107,17 @@ if __name__ == "__main__":
     try:
         metadb.add_collection(collection_name)
         metadb.add_dict(collection_name, dict_to_add=collection_scenarios, dict_name="current scenario")
-    except NameError as e:
+    except NameError:
         metadb.remove_collection(collection_name)
         metadb.add_collection(collection_name)
         metadb.add_dict(collection_name, dict_to_add=collection_scenarios, dict_name="current scenario")
     # create and begin a broker for the cosim
-    broker = h.helicsCreateBroker("zmq", "mainbroker", f"-f 2")
+    broker = h.helicsCreateBroker("zmq", "mainbroker", "-f 2")
     #  add a DB collection for the first test federation, and add the federation to the collection
     try:
         metadb.add_collection(federation_name)
         metadb.add_dict(federation_name, "federation", federation_dict)
-    except NameError as e:
+    except NameError:
         metadb.remove_collection(federation_name)
         metadb.add_collection(federation_name)
         metadb.add_dict(federation_name, "federation", federation_dict)

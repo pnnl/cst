@@ -5,21 +5,25 @@ testability, and maintainability.
 """
 
 import logging
-from typing import Any, Dict, Optional, List
 import re
+from typing import Any
 
 try:
     from pymongo import MongoClient
+    from pymongo.collection import Collection, InsertOneResult, UpdateResult
     from pymongo.database import Database
-    from pymongo.collection import Collection, UpdateResult, InsertOneResult
-    from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError, PyMongoError
+    from pymongo.errors import (
+        ConnectionFailure,
+        PyMongoError,
+        ServerSelectionTimeoutError,
+    )
 
     PYMONGO_AVAILABLE = True
 except ImportError:
     PYMONGO_AVAILABLE = False
 
-from .abstractions import MDDataWriter, MDDataReader, MDDataManager
-from .validation import validate_name, ValidationError, safe_name_log
+from .abstractions import MDDataManager, MDDataReader, MDDataWriter
+from .validation import ValidationError, safe_name_log, validate_name
 
 logger = logging.getLogger(__name__)
 
@@ -31,9 +35,9 @@ class _MongoConnectionHelper:
         self,
         location: str,
         database: str,
-        port: Optional[int] = None,  # Port can still be an override
-        user: Optional[str] = None,
-        password: Optional[str] = None,
+        port: int | None = None,  # Port can still be an override
+        user: str | None = None,
+        password: str | None = None,
     ):
         if not PYMONGO_AVAILABLE:
             raise ImportError(
@@ -49,7 +53,7 @@ class _MongoConnectionHelper:
         match = uri_pattern.match(location)
         if match:
             # The location string is a full or partial URI
-            protocol, uri_user, uri_pass, uri_host, uri_port, uri_db = match.groups()
+            protocol, uri_user, uri_pass, uri_host, uri_port, _uri_db = match.groups()
             # Arguments passed to the function override what's in the URI string
             final_user = user or uri_user
             final_pass = password if password is not None else uri_pass
@@ -76,8 +80,8 @@ class _MongoConnectionHelper:
         self.uri = f"{protocol}://{auth_part}{final_host}{port_part}"
         self.db_name = database
 
-        self.client: Optional[MongoClient] = None
-        self.db: Optional[Database] = None
+        self.client: MongoClient | None = None
+        self.db: Database | None = None
         self.cst_name_field = "cst_007"
 
     def connect(self) -> bool:
@@ -151,12 +155,12 @@ class MongoMetadataWriter(MDDataWriter):
     def __init__(
         self,
         *,  # Everything must be keyword
-        location: Optional[str] = None,
-        port: Optional[int] = None,
-        user: Optional[str] = None,
-        password: Optional[str] = None,
+        location: str | None = None,
+        port: int | None = None,
+        user: str | None = None,
+        password: str | None = None,
         db_name: str = "cst",
-        helper: Optional[_MongoConnectionHelper] = None,
+        helper: _MongoConnectionHelper | None = None,
     ):
         """Initializes the Mongo writer for standalone or managed use."""
         super().__init__()
@@ -178,9 +182,8 @@ class MongoMetadataWriter(MDDataWriter):
         Returns:
             bool: Flag indicating successful connection to the Mongo database
         """
-        if self._owns_connection:
-            if not self.helper.connect():
-                return False
+        if self._owns_connection and not self.helper.connect():
+            return False
 
         # In both cases, verify the connection exists before setting state
         if self.helper.client:
@@ -199,7 +202,7 @@ class MongoMetadataWriter(MDDataWriter):
         self._is_connected = False
 
     def write_federation(
-        self, name: str, federation_data: Dict[str, Any], overwrite: bool = False
+        self, name: str, federation_data: dict[str, Any], overwrite: bool = False
     ) -> bool:
         """Write federation metadata to MongoDB
 
@@ -215,7 +218,7 @@ class MongoMetadataWriter(MDDataWriter):
         return self.write("federations", name, federation_data, overwrite)
 
     def write_scenario(
-        self, name: str, scenario_data: Dict[str, Any], overwrite: bool = False
+        self, name: str, scenario_data: dict[str, Any], overwrite: bool = False
     ) -> bool:
         """Write scenario metadata to MongoDB
 
@@ -235,7 +238,7 @@ class MongoMetadataWriter(MDDataWriter):
         self,
         collection_type: str,
         name: str,
-        data: Dict[str, Any],
+        data: dict[str, Any],
         overwrite: bool = False,
     ) -> bool:
         """Writes arbitrary data to MongoDB database
@@ -312,12 +315,12 @@ class MongoMetadataReader(MDDataReader):
     def __init__(
         self,
         *,  # Everything must be keyword
-        location: Optional[str] = None,
-        port: Optional[int] = None,
-        user: Optional[str] = None,
-        password: Optional[str] = None,
+        location: str | None = None,
+        port: int | None = None,
+        user: str | None = None,
+        password: str | None = None,
         db_name: str = "cst",
-        helper: Optional[_MongoConnectionHelper] = None,
+        helper: _MongoConnectionHelper | None = None,
     ):
         """Initializes the Mongo reader for standalone or managed use."""
         super().__init__()
@@ -339,9 +342,8 @@ class MongoMetadataReader(MDDataReader):
         Returns:
             bool: Flag indicating database connection has been established
         """
-        if self._owns_connection:
-            if not self.helper.connect():
-                return False
+        if self._owns_connection and not self.helper.connect():
+            return False
         if self.helper.client:
             self._is_connected = True
             return True
@@ -357,7 +359,7 @@ class MongoMetadataReader(MDDataReader):
             self.helper.disconnect()
         self._is_connected = False
 
-    def read_federation(self, name: str) -> Optional[Dict[str, Any]]:
+    def read_federation(self, name: str) -> dict[str, Any] | None:
         """Reads the specified federation metadata from MongoDB
 
         Args:
@@ -368,7 +370,7 @@ class MongoMetadataReader(MDDataReader):
         """
         return self.read("federations", name)
 
-    def read_scenario(self, name: str) -> Optional[Dict[str, Any]]:
+    def read_scenario(self, name: str) -> dict[str, Any] | None:
         """Reads the specified scenario metadata from MongoDB
 
         Args:
@@ -379,7 +381,7 @@ class MongoMetadataReader(MDDataReader):
         """
         return self.read("scenarios", name)
 
-    def read(self, collection_type: str, name: str) -> Optional[Dict[str, Any]]:
+    def read(self, collection_type: str, name: str) -> dict[str, Any] | None:
         """General read from MongoDB
 
         Args:
@@ -423,7 +425,7 @@ class MongoMetadataReader(MDDataReader):
             logger.error(f"Available scenarios: {self.list_scenarios()}")
             return None
 
-    def list_federations(self) -> List[str]:
+    def list_federations(self) -> list[str]:
         """Produces a list of federations stored in the metadata store
 
         Returns:
@@ -431,7 +433,7 @@ class MongoMetadataReader(MDDataReader):
         """
         return self.list_items("federations")
 
-    def list_scenarios(self) -> List[str]:
+    def list_scenarios(self) -> list[str]:
         """Produces a list of scenarios stored in the metadata store
 
         Returns:
@@ -439,7 +441,7 @@ class MongoMetadataReader(MDDataReader):
         """
         return self.list_items("scenarios")
 
-    def list_items(self, collection_type: str) -> List[str]:
+    def list_items(self, collection_type: str) -> list[str]:
         """Produces a list of the named data in the collection in the metadata
         store.
 
@@ -469,7 +471,7 @@ class MongoMetadataReader(MDDataReader):
             logger.error(f"Unexpected error listing {collection_type}: {e}")
             return []
 
-    def list_custom_collections(self) -> List[str]:
+    def list_custom_collections(self) -> list[str]:
         """Lists custom collection names in metadata store
 
         Returns:
@@ -502,9 +504,9 @@ class MongoMetadataManager(MDDataManager):
         self,
         *,  # Everything must be keyword
         location: str,
-        port: Optional[int] = None,
-        user: Optional[str] = None,
-        password: Optional[str] = None,
+        port: int | None = None,
+        user: str | None = None,
+        password: str | None = None,
         database: str = "cst",
     ):
         super().__init__()
@@ -654,7 +656,7 @@ class MongoMetadataManager(MDDataManager):
         coll = self.helper.get_collection(collection_type)
         return coll.count_documents({self.helper.cst_name_field: name}) > 0
 
-    def get_database_stats(self) -> Dict[str, Any]:
+    def get_database_stats(self) -> dict[str, Any]:
         """Gets MongoDB stats
 
         Returns:

@@ -2,11 +2,15 @@
 Tests for updated timeseries factory with PostgreSQL support.
 """
 
-import pytest
 from pathlib import Path
-from cosim_toolbox.dbms import create_timeseries_manager
-from cosim_toolbox.dbms import CSVTimeSeriesManager
-from cosim_toolbox.dbms import PostgreSQLTimeSeriesManager
+
+import pytest
+
+from cosim_toolbox.dbms import (
+    CSVTimeSeriesManager,
+    PostgreSQLTimeSeriesManager,
+    create_timeseries_manager,
+)
 
 
 class TestTimeSeriesFactory:

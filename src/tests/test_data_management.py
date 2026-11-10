@@ -1,7 +1,8 @@
 """
 Tests for core data management abstractions.
 """
-from datetime import datetime
+from datetime import datetime, timezone
+
 from cosim_toolbox.dbms import TSRecord
 
 
@@ -11,7 +12,7 @@ class TestTSRecord:
     def test_tsrecord_creation(self):
         """Test basic TSRecord creation."""
         record = TSRecord(
-            real_time=datetime.now(),
+            real_time=datetime.now(timezone.utc),
             sim_time=120.5,
             scenario="TestScenario",
             federate="Battery",
@@ -28,7 +29,7 @@ class TestTSRecord:
     
     def test_tsrecord_different_data_types(self):
         """Test TSRecord with different data value types."""
-        base_time = datetime.now()
+        base_time = datetime.now(timezone.utc)
         
         records = [
             TSRecord(base_time, 0.0, "test", "fed1", "voltage", 120.5),  # float
@@ -48,8 +49,8 @@ class TestTSRecord:
     
     def test_tsrecord_equality(self):
         """Test TSRecord equality comparison."""
-        time1 = datetime(2023, 1, 1, 12, 0, 0)
-        time2 = datetime(2023, 1, 1, 12, 0, 0)
+        time1 = datetime(2023, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
+        time2 = datetime(2023, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
         
         record1 = TSRecord(time1, 0.0, "test", "fed", "data", 100)
         record2 = TSRecord(time2, 0.0, "test", "fed", "data", 100)

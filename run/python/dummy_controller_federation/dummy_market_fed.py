@@ -7,9 +7,11 @@ will send dummy data to the federation, to test the dummy controller.
 @author: Shat Pratoomratana
 shat.pratoomratana@pnnl.gov
 """
-import sys
-from cosim_toolbox.sims import Federate
 import json
+import sys
+
+from cosim_toolbox.sims import Federate
+
 
 def DAM_clearing_info():
     market_info = {

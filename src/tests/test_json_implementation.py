@@ -2,16 +2,16 @@
 Test script for JSON metadata management implementation.
 """
 
-import tempfile
 import shutil
-from pathlib import Path
 
 # Add the source path so we can import our modules
 import sys
+import tempfile
+from pathlib import Path
+
 sys.path.insert(0, 'src/cosim_toolbox')
 
-from cosim_toolbox.dbms import TSRecord
-from cosim_toolbox.dbms import JSONMetadataManager
+from cosim_toolbox.dbms import JSONMetadataManager, TSRecord
 
 
 def test_basic_functionality():
@@ -306,7 +306,6 @@ def test_with_federation_runner_data():
                 print(f"  - Scenario references federation: {read_scenario['federation']}")
                 print(f"  - Time range: {read_scenario['start_time']} to {read_scenario['stop_time']}")
                 
-                # Verify the data can be used like the original DBConfigs
                 # This simulates what a federate would do to get its config
                 federation_name = read_scenario["federation"]
                 federation_config = manager.read_federation(federation_name)
@@ -333,11 +332,11 @@ def test_tsrecord():
     
     print("\n=== Testing TSRecord ===")
     
-    from datetime import datetime
+    from datetime import datetime, timezone
     
     # Create a sample record
     record = TSRecord(
-        real_time=datetime.now(),
+        real_time=datetime.now(timezone.utc),
         sim_time=120.5,
         scenario="MyScenario",
         federate="Battery",
@@ -355,12 +354,12 @@ def test_tsrecord():
     
     # Test with different data types
     records = [
-        TSRecord(datetime.now(), 0.0, "test", "fed1", "voltage", 120.5),  # float
-        TSRecord(datetime.now(), 1.0, "test", "fed1", "count", 42),      # int
-        TSRecord(datetime.now(), 2.0, "test", "fed1", "status", "active"), # string
-        TSRecord(datetime.now(), 3.0, "test", "fed1", "flag", True),     # bool
-        TSRecord(datetime.now(), 4.0, "test", "fed1", "complex", 3+4j),  # complex
-        TSRecord(datetime.now(), 5.0, "test", "fed1", "vector", [1,2,3]), # list
+        TSRecord(datetime.now(timezone.utc), 0.0, "test", "fed1", "voltage", 120.5),  # float
+        TSRecord(datetime.now(timezone.utc), 1.0, "test", "fed1", "count", 42),      # int
+        TSRecord(datetime.now(timezone.utc), 2.0, "test", "fed1", "status", "active"), # string
+        TSRecord(datetime.now(timezone.utc), 3.0, "test", "fed1", "flag", True),     # bool
+        TSRecord(datetime.now(timezone.utc), 4.0, "test", "fed1", "complex", 3+4j),  # complex
+        TSRecord(datetime.now(timezone.utc), 5.0, "test", "fed1", "vector", [1,2,3]), # list
     ]
     
     print(f"\nTested {len(records)} records with different data types:")

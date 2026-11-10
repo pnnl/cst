@@ -5,11 +5,10 @@ Created on 7/7/2023
 mitch.pelton@pnnl.gov
 """
 
-from cosim_toolbox.sims import Collect
-from cosim_toolbox.sims import HelicsPubGroup
-from cosim_toolbox.sims import HelicsSubGroup
-from cosim_toolbox.sims import FederateConfig
 from tesp_support.api.modify_GLM import GLMModifier
+
+from cosim_toolbox.sims import Collect, FederateConfig, HelicsPubGroup, HelicsSubGroup
+
 
 class MyFederateMatch(FederateConfig):
     def __init__(self, name: str, **kwargs):
@@ -46,7 +45,7 @@ class MyFederateMatch(FederateConfig):
 
         self.config("federate_type", "value")
         self.config("image", "cosim-cst:latest")
-        self.config("command", f"gridlabd -D USE_HELICS -D METRICS_FILE=test_metrics.json test.glm")
+        self.config("command", "gridlabd -D USE_HELICS -D METRICS_FILE=test_metrics.json test.glm")
         self.helics.config("only_update_on_change", True)
         self.helics.config("only_transmit_on_change", True)
         self.helics.collect(Collect.YES)
@@ -126,7 +125,7 @@ class MyFederate(FederateConfig):
 
         self.config("federate_type", "value")
         self.config("image", "cosim-cst:latest")
-        self.config("command", f"gridlabd -D USE_HELICS -D METRICS_FILE=test_metrics.json test.glm")
+        self.config("command", "gridlabd -D USE_HELICS -D METRICS_FILE=test_metrics.json test.glm")
         self.helics.config("only_update_on_change", True)
         self.helics.config("only_transmit_on_change", True)
         self.helics.collect(Collect.YES)

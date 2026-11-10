@@ -8,7 +8,7 @@ testability, and maintainability.
 
 import json
 import logging
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import pandas as pd
 import psycopg2
@@ -22,8 +22,8 @@ except ImportError:
     PSYCOPG2_AVAILABLE = False
 
 from .abstractions import (
-    TSDataReader,
     TSDataManager,
+    TSDataReader,
     TSDataWriter,
     TSRecord,
 )
@@ -46,7 +46,7 @@ type_mapping = {
 }
 
 
-class _PostgresConnectionHelper:
+class PostgresConnectionHelper:
     """Manages the connection and common logic for PostgreSQL."""
 
     def __init__(
@@ -73,7 +73,7 @@ class _PostgresConnectionHelper:
         }
         self.analysis_name = analysis_name
         self.use_timescale = use_timescale
-        self.connection: Optional[psycopg2.extensions.connection] = None
+        self.connection: psycopg2.extensions.connection | None = None
 
     def connect(self) -> bool:
         """Establishes and validates the PostgreSQL connection.
@@ -169,7 +169,7 @@ class _PostgresConnectionHelper:
         self.connection.commit()
 
     @staticmethod
-    def get_data_type_info(record: TSRecord) -> Tuple[str, str]:
+    def get_data_type_info(record: TSRecord) -> tuple[str, str]:
         """
         Get table name and PostgreSQL column type from TSRecord.
 
@@ -228,20 +228,20 @@ class PostgreSQLTimeSeriesWriter(TSDataWriter):
     def __init__(
         self,
         *,  # Everything must be keyword
-        location: Optional[str] = None,
-        port: Optional[int] = None,
-        database: Optional[str] = None,
-        user: Optional[str] = None,
-        password: Optional[str] = None,
-        analysis_name: Optional[str] = None,
+        location: str | None = None,
+        port: int | None = None,
+        database: str | None = None,
+        user: str | None = None,
+        password: str | None = None,
+        analysis_name: str | None = None,
         use_timescale: bool = False,
         batch_size: int = 1000,
-        helper: Optional[_PostgresConnectionHelper] = None,
+        helper: PostgresConnectionHelper | None = None,
     ):
         super().__init__()
         self.batch_size = batch_size
         self._table_cache: set = set()
-        self.helper: _PostgresConnectionHelper
+        self.helper: PostgresConnectionHelper
         if helper:
             self.helper = helper
             self._owns_connection = False
@@ -253,7 +253,7 @@ class PostgreSQLTimeSeriesWriter(TSDataWriter):
             and password is not None
             and analysis_name is not None
         ):
-            self.helper = _PostgresConnectionHelper(
+            self.helper = PostgresConnectionHelper(
                 location, port, database, user, password, analysis_name, use_timescale
             )
             self._owns_connection = True
@@ -268,9 +268,8 @@ class PostgreSQLTimeSeriesWriter(TSDataWriter):
         Returns:
             bool: Flag indicating success of connection to MongoDB
         """
-        if self._owns_connection:
-            if not self.helper.connect():
-                return False
+        if self._owns_connection and not self.helper.connect():
+            return False
         if self.helper.connection and not self.helper.connection.closed:
             self._is_connected = True
             return True
@@ -378,7 +377,7 @@ class PostgreSQLTimeSeriesWriter(TSDataWriter):
         self.helper.connection.commit()
         self._table_cache.add(table_key)
 
-    def write_records(self, records: List[TSRecord]) -> bool:
+    def write_records(self, records: list[TSRecord]) -> bool:
         """Writes records (rows) to PostgreSQL database
 
         Args:
@@ -395,10 +394,10 @@ class PostgreSQLTimeSeriesWriter(TSDataWriter):
         if not records:
             return True
         try:
-            grouped_records: Dict[str, List[tuple]] = {}
+            grouped_records: dict[str, list[tuple]] = {}
             for record in records:
                 table_name = str(record.data_type)
-                data_tuple: Tuple
+                data_tuple: tuple
                 if record.data_type == "hdt_endpoint":
                     # Endpoint records have additional fields
                     data_tuple = (
@@ -502,16 +501,16 @@ class PostgreSQLTimeSeriesReader(TSDataReader):
     def __init__(
         self,
         *,  # Everything must be keyword
-        location: Optional[str] = None,
-        port: Optional[int] = None,
-        database: Optional[str] = None,
-        user: Optional[str] = None,
-        password: Optional[str] = None,
-        analysis_name: Optional[str] = None,
-        helper: Optional[_PostgresConnectionHelper] = None,
+        location: str | None = None,
+        port: int | None = None,
+        database: str | None = None,
+        user: str | None = None,
+        password: str | None = None,
+        analysis_name: str | None = None,
+        helper: PostgresConnectionHelper | None = None,
     ):
         super().__init__()
-        self.helper: _PostgresConnectionHelper
+        self.helper: PostgresConnectionHelper
         if helper:
             self.helper = helper
             self._owns_connection = False
@@ -523,7 +522,7 @@ class PostgreSQLTimeSeriesReader(TSDataReader):
             and password is not None
             and analysis_name is not None
         ):
-            self.helper = _PostgresConnectionHelper(
+            self.helper = PostgresConnectionHelper(
                 location, port, database, user, password, analysis_name
             )
             self._owns_connection = True
@@ -539,9 +538,8 @@ class PostgreSQLTimeSeriesReader(TSDataReader):
             bool: Flag indicating successful connection to the PostgreSQL
                 database
         """
-        if self._owns_connection:
-            if not self.helper.connect():
-                return False
+        if self._owns_connection and not self.helper.connect():
+            return False
         if self.helper.connection and not self.helper.connection.closed:
             self._is_connected = True
             return True
@@ -560,7 +558,7 @@ class PostgreSQLTimeSeriesReader(TSDataReader):
             self.helper.disconnect()
         self._is_connected = False
 
-    def _get_tables_to_query(self, data_types: Optional[List[str]]) -> List[str]:
+    def _get_tables_to_query(self, data_types: list[str] | None) -> list[str]:
         """Gets list of tables in the PostgreSQL database
 
         Args:
@@ -583,12 +581,12 @@ class PostgreSQLTimeSeriesReader(TSDataReader):
 
     def read_data(
         self,
-        start_time: Optional[float] = None,
-        duration: Optional[float] = None,
-        scenario_name: Optional[str | list] = None,
-        federate_name: Optional[str | list] = None,
-        data_name: Optional[str | list] = None,
-        data_type: Optional[str | list] = None,
+        start_time: float | None = None,
+        duration: float | None = None,
+        scenario_name: str | list | None = None,
+        federate_name: str | list | None = None,
+        data_name: str | list | None = None,
+        data_type: str | list | None = None,
     ) -> pd.DataFrame:
         """Generic PostgreSQL data read
 
@@ -698,7 +696,7 @@ class PostgreSQLTimeSeriesReader(TSDataReader):
             logger.error(f"Failed to read data from PostgreSQL: {e}")
             return pd.DataFrame()
 
-    def _query_distinct_column(self, column_name: str) -> List[str]:
+    def _query_distinct_column(self, column_name: str) -> list[str]:
         """Produces a list of distinct values stored in the metadata store
 
         Args:
@@ -721,9 +719,9 @@ class PostgreSQLTimeSeriesReader(TSDataReader):
                 )
                 cursor.execute(query)
                 all_values.update(row[0] for row in cursor.fetchall())
-        return sorted(list(all_values))
+        return sorted(all_values)
 
-    def list_scenarios(self) -> List[str]:
+    def list_scenarios(self) -> list[str]:
         """Produces a list of scenarios stored in the metadata store
 
         Returns:
@@ -731,7 +729,7 @@ class PostgreSQLTimeSeriesReader(TSDataReader):
         """
         return self._query_distinct_column("scenario")
 
-    def list_federates(self) -> List[str]:
+    def list_federates(self) -> list[str]:
         """Produces a list of federations stored in the metadata store
 
         Returns:
@@ -739,7 +737,7 @@ class PostgreSQLTimeSeriesReader(TSDataReader):
         """
         return self._query_distinct_column("federate")
 
-    def list_data_types(self) -> List[str]:
+    def list_data_types(self) -> list[str]:
         """Produces the list of data types in PostgreSQL database
 
         Returns:
@@ -766,7 +764,7 @@ class PostgreSQLTimeSeriesManager(TSDataManager):
         **kwargs,
     ):
         super().__init__()
-        self.helper: _PostgresConnectionHelper = _PostgresConnectionHelper(
+        self.helper: PostgresConnectionHelper = PostgresConnectionHelper(
             location, port, database, user, password, analysis_name, use_timescale
         )
         self.writer: PostgreSQLTimeSeriesWriter = PostgreSQLTimeSeriesWriter(
@@ -801,7 +799,7 @@ class PostgreSQLTimeSeriesManager(TSDataManager):
         self.reader.disconnect()
         self._is_connected = False
 
-    def list_scenarios(self) -> List[str]:
+    def list_scenarios(self) -> list[str]:
         """Produces a list of scenarios stored in the metadata store
 
         Returns:
@@ -809,7 +807,7 @@ class PostgreSQLTimeSeriesManager(TSDataManager):
         """
         return self.reader.list_scenarios()
 
-    def list_federates(self) -> List[str]:
+    def list_federates(self) -> list[str]:
         """Produces a list of federations stored in the metadata store
 
         Returns:
@@ -817,7 +815,7 @@ class PostgreSQLTimeSeriesManager(TSDataManager):
         """
         return self.reader.list_federates()
 
-    def list_data_types(self) -> List[str]:
+    def list_data_types(self) -> list[str]:
         """Produces a list of data types in the PostgreSQL database
 
         Returns:
@@ -825,7 +823,7 @@ class PostgreSQLTimeSeriesManager(TSDataManager):
         """
         return self.reader.list_data_types()
 
-    def get_time_range(self, **kwargs) -> Dict[str, float]:
+    def get_time_range(self, **kwargs) -> dict[str, float]:
         """Produces time range of data in PostgreSQL database
 
         Returns:

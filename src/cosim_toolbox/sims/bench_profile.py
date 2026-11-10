@@ -29,7 +29,7 @@ def bench_profile(func):
                     ('ru_oublock', 'Block outputs')]
                 logger.critical('Resource usage:')
                 for name, desc in RESOURCES:
-                    logger.critical('  {:<25} ({:<10}) = {}'.format(desc, name, getattr(usage, name)))
+                    logger.critical(f'  {desc:<25} ({name:<10}) = {getattr(usage, name)}')
 
         logger = logging.getLogger(__name__)
         logger.addHandler(logging.StreamHandler())

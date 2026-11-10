@@ -1,5 +1,5 @@
 # Federate Class
-To aid in making of new Python-based federates and to provide a common integration point for some of the CoSim Toolbox (CST) functionality, a [Federate class](../src/cosim_toolbox/sims/federate.py) has been created. The class has been defined in such a way that, for many simple federates, it will be largely useable as-is, though some degree of customization is always required. Like all programming with classes, to customize the Federate class code, it is expected that the developer will sub-class the CST Federate class and then overload the necessary functions. In some cases you'll want to call the Federate class code first and then add customization, in other cases you'll want to scrap all of a particular method and do your own thing. Its common that some of the customization will involve doing something different with HELICS and thus learning more about HELICS and its APIs.
+To aid in making of new Python-based federates and to provide a common integration point for some of the CoSim Toolbox (CST) functionality, a [Federate class](../src/cosim_toolbox/sims/federate.py) has been created. The class has been defined in such a way that, for many simple federates, it will be largely usable as-is, though some degree of customization is always required. Like all programming with classes, to customize the Federate class code, it is expected that the developer will subclass the CST Federate class and then overload the necessary functions. In some cases you'll want to call the Federate class code first and then add customization, in other cases you'll want to scrap all of a particular method and do your own thing. It is common that some of the customization will involve doing something different with HELICS and thus learning more about HELICS and its APIs.
 
 :::seealso
 If you're new to classes and sub-classing has you confused, there are a lot of resources online for getting up to speed. Here's a [website pretty comprehensively covering it](https://www.pythontutorial.net/python-oop/) and a [YouTube playlist](https://www.youtube.com/watch?v=ZDa-Z5JzLYM&list=PL-osiE80TeTsqhIuOqKhwlXsIBIdSeYtc) doing the same.
@@ -30,10 +30,10 @@ Most of the class methods below are effectively internal APIs that most modelers
 
 
 ### `create_federate()`
-Alot goes into getting a CST 'federate' stood up and this method takes care of it all. First, the method connects to the metadata database using the URI and database name and, among other things, pulls down the HELICS configuration information. The "publications", "subscriptions", "inputs" and "endpoints" attribute dictionaries are then populated with the names, keys, and destinations in the HELICS config file. Lastly, the HELICS federate itself is created. What follows are the details of the methods called in `create_federate()`
+There is a lot that goes into getting a CST 'federate' stood up and this method takes care of it all. First, the method connects to the metadata database using the URI and database name and, among other things, pulls down the HELICS configuration information. The "publications", "subscriptions", "inputs" and "endpoints" attribute dictionaries are then populated with the names, keys, and destinations in the HELICS config file. Lastly, the HELICS federate itself is created. What follows are the details of the methods called in `create_federate()`
 
 #### `connect_to_metadataDB()` or `connect_to_metadataJSON()`
-Both of these methods gather the configuration metadata needed to create the 'federate'. In the first case a connection is made to the metadata database to pull this information down. Alternatively, the configuration information can be read from a local configuration file. In either case, the same configuration schema is used and is defined as in the ["Configuration Schema" reference document](./ConfigurationSchema.md). 
+Both of these methods gather the configuration metadata needed to create the 'federate'. In the first case a connection is made to the metadata database to pull this information down. Alternatively, the configuration information can be read from a local configuration file. In either case, the same configuration schema is used and is defined as in the ["Metadata (Configuration) Management"](Metadata.md). 
 
 The JSON/dictionary that is pulled in is stored in the `federation` attribute.
 
@@ -47,7 +47,7 @@ This method looks at the "federation" attribute to define a few HELICS-specific 
 #### `connect_to_dataDB` or `connect_to_dataCSV()`
 Depending on whether the time-series database is being used to collect data from the 'federate' (indicated by the `use_data_db` attribute, defined when this 'federate' was instantiated), one of these methods is used to set up the output data collection.
 
-If the time-series database is being used (`use_data_db` set to `True`), a check is made to determine if the existing analysis name is used in the time-series database. If it doesn't, appropriate database structures are instantiated. See the page on the [time-series database under the hood](TimeSeriesDB.md) for further details.
+If the time-series database is being used (`use_data_db` set to `True`), a check is made to determine if the existing analysis name is used in the time-series database. If it doesn't, appropriate database structures are instantiated. See the page on the [Time-Series Data Logging](TimeSeriesData.md) for further details.
 
 If the output data is being written to a CSV file than that file is created and opened for writing.
 
@@ -95,7 +95,7 @@ After reading these inputs and assigning them to appropriate variables in the in
 
 After this logic is executed and any relevant equations are solved, the outputs this provides to the federation need to be assigned. To do this, the process is the inverse of getting the data from the federation: the variables from the solved equations that hold the relevant keys need to be assigned to the appropriate keys in the `data_to_federation` dictionary. The names in this dictionary are the those defined for "publications" and "endpoints" in this federate's HELICS configuration JSON. 
 
-Though this assignment is generally the final step in this method, it doesn't have to be. For example, clean-up activities after solving equations may be needed or logging diagnostic messages or writing something to file may still need to take place. 
+Though this assignment is generally the final step in this method, it doesn't have to be. For example, cleanup activities after solving equations may be needed or logging diagnostic messages or writing something to file may still need to take place. 
 
 ### `send_data_to_federation()`
 Like `get_data_from_federation()`, this method takes the data in the dictionary and sends it out to the rest of the federation via HELICS. This is mostly tedious work, and it is unlikely this method will need to be overloaded. See the API documentation to see how to format the output value depending on whether the output in question is a publication or endpoint.
@@ -111,4 +111,4 @@ Data is sent using the name of the HELICS subscription or endpoint as the key in
 ```
 
 ### `destroy_federate()`
-After "run_cosim_loop()" has reached the terminal simulation time (as indicated in the object attribute "stop_time"), that loop exits and this method is called. Though not strictly necessary, this method does the clean-up work to exit the co-simulation cleanly and avoid generating any nuisance warning messages.
+After "run_cosim_loop()" has reached the terminal simulation time (as indicated in the object attribute "stop_time"), that loop exits and this method is called. Though not strictly necessary, this method does the cleanup work to exit the co-simulation cleanly and avoid generating any nuisance warning messages.

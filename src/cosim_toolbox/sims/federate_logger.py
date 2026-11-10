@@ -1,4 +1,3 @@
-#
 """
 Created on 12/14/2023
 
@@ -12,11 +11,11 @@ Federate class.
 mitch.pelton@pnnl.gov
 """
 
-import sys
 import logging
+import sys
 
 from .federate import Federate
-from .helicsConfig import HelicsMsg
+from .helics_config import HelicsMsg
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler())
@@ -62,11 +61,11 @@ class FederateLogger(Federate):
                 self.fed_pubs[fed] = []
                 self.fed_pts[fed] = []
                 config = self.federation[fed]["HELICS_config"]
-                if "publications" in config.keys():
+                if "publications" in config:
                     for pub in config["publications"]:
                         publications.append(pub)
                         self.fed_pubs[fed].append(pub["key"])
-                if "endpoints" in config.keys():
+                if "endpoints" in config:
                     for pts in config["endpoints"]:
                         source_targets.append(pts["key"])
                         self.fed_pts[fed].append(pts["key"])
@@ -80,7 +79,7 @@ class FederateLogger(Federate):
                     fed_collect = self.federation[fed]["tags"].get("logger", fed_collect)
                 logger.debug("fed_collect -> " + fed_collect)
 
-                if "publications" in config.keys():
+                if "publications" in config:
                     for pub in config["publications"]:
                         item_collect = "maybe"
                         if pub.get("tags"):
@@ -95,7 +94,7 @@ class FederateLogger(Federate):
                             if item_collect == "yes" or item_collect == "maybe":
                                 publications.append(pub)
                                 self.fed_pubs[fed].append(pub["key"])
-                if "endpoints" in config.keys():
+                if "endpoints" in config:
                     for pts in config["endpoints"]:
                         item_collect = "maybe"
                         if pts.get("tags"):

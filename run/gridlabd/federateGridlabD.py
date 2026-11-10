@@ -1,7 +1,9 @@
-from glmpy import Gridlabd
-from pathlib import Path
 import logging
-from typing import Optional, Dict, Any
+from pathlib import Path
+from typing import Any
+
+from glmpy import Gridlabd
+
 from cosim_toolbox.dbms import create_metadata_manager
 
 logger = logging.getLogger(__name__)
@@ -36,11 +38,11 @@ class FederateGridlabD:
         """
         self.federate_name: str = fed_name
         self.backend: str = backend
-        self.backend_config: Dict[str, Any] = backend_config
-        self.config: Optional[Dict[str, Any]] = None
-        self.federate: Optional[Dict[str, Any]] = None
-        self.model_path: Optional[str] = None
-        self.glm: Optional[Gridlabd] = None
+        self.backend_config: dict[str, Any] = backend_config
+        self.config: dict[str, Any] | None = None
+        self.federate: dict[str, Any] | None = None
+        self.model_path: str | None = None
+        self.glm: Gridlabd | None = None
 
     def create_federate(self, scenario_name: str) -> None:
         """

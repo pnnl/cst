@@ -8,7 +8,8 @@ Provides TSRecord dataclass and abstract base classes for data I/O.
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any
+
 import pandas as pd
 
 
@@ -20,9 +21,9 @@ class TSRecord:
     federate: str
     data_name: str
     data_value: Any
-    receiving_federate: Optional[str] = None
-    receiving_endpoint: Optional[str] = None
-    data_type: Optional[str] = None  # "hdt_string", "hdt_endpoint", "hdt_double", etc.
+    receiving_federate: str | None = None
+    receiving_endpoint: str | None = None
+    data_type: str | None = None  # "hdt_string", "hdt_endpoint", "hdt_double", etc.
 
     def __post_init__(self) -> None:
         # Auto-detect type if not provided
@@ -50,6 +51,29 @@ class TSRecord:
             return "hdt_vector"  # Could be enhanced for complex vectors
         return "hdt_string"  # Default fallback
 
+    def json(self, func):
+        if self.data_type == "hdt_endpoint":
+            params = {
+                'real_time': self.real_time,
+                'sim_time': self.sim_time,
+                'scenario': self.scenario,
+                'federate': self.federate,
+                'data_name': self.data_name,
+                'receiving_federate': self.receiving_federate,
+                'receiving_endpoint': self.receiving_endpoint,
+                'data_value': func(self.data_value),
+            }
+        else:
+            params = {
+                'real_time': self.real_time,
+                'sim_time': self.sim_time,
+                'scenario': self.scenario,
+                'federate': self.federate,
+                'data_name': self.data_name,
+                'data_value': func(self.data_value),
+            }
+        return params
+
 
 class TSDataWriter(ABC):
     """
@@ -75,7 +99,6 @@ class TSDataWriter(ABC):
         Returns:
             None
         """
-        pass
 
     @abstractmethod
     def disconnect(self) -> None:
@@ -84,7 +107,6 @@ class TSDataWriter(ABC):
         Returns:
             None
         """
-        pass
 
     @abstractmethod
     def write_records(self, records: list[TSRecord]) -> bool:
@@ -96,7 +118,6 @@ class TSDataWriter(ABC):
         Returns:
             bool: True if write successful, False otherwise
         """
-        pass
 
     def add_record(self, record: TSRecord) -> None:
         """Add a single TSRecord to the internal buffer.
@@ -199,12 +220,12 @@ class TSDataReader(ABC):
     @abstractmethod
     def read_data(
         self,
-        start_time: Optional[float] = None,
-        duration: Optional[float] = None,
-        scenario_name: Optional[str] = None,
-        federate_name: Optional[str] = None,
-        data_name: Optional[str] = None,
-        data_type: Optional[str] = None,
+        start_time: float | None = None,
+        duration: float | None = None,
+        scenario_name: str | None = None,
+        federate_name: str | None = None,
+        data_name: str | None = None,
+        data_type: str | None = None,
     ) -> pd.DataFrame:
         """Read time-series data from the data store.
 
@@ -219,7 +240,6 @@ class TSDataReader(ABC):
         Returns:
             pd.DataFrame: Time-series data as a Pandas DataFrame
         """
-        pass
 
     @property
     def is_connected(self) -> bool:
@@ -268,7 +288,6 @@ class MDDataWriter(ABC):
             bool: flag indicated if the connection to the data store
                 was established
         """
-        pass
 
     @abstractmethod
     def disconnect(self) -> None:
@@ -277,11 +296,10 @@ class MDDataWriter(ABC):
         Returns:
             None
         """
-        pass
 
     @abstractmethod
     def write_federation(
-        self, name: str, federation_data: Dict[str, Any], overwrite: bool = False
+        self, name: str, federation_data: dict[str, Any], overwrite: bool = False
     ) -> bool:
         """Write federation metadata to the data store.
 
@@ -293,11 +311,10 @@ class MDDataWriter(ABC):
         Returns:
             bool: True if write successful, False otherwise
         """
-        pass
 
     @abstractmethod
     def write_scenario(
-        self, name: str, scenario_data: Dict[str, Any], overwrite: bool = False
+        self, name: str, scenario_data: dict[str, Any], overwrite: bool = False
     ) -> bool:
         """Write scenario metadata to the data store.
 
@@ -309,14 +326,13 @@ class MDDataWriter(ABC):
         Returns:
             bool: True if write successful, False otherwise
         """
-        pass
 
     @abstractmethod
     def write(
         self,
         collection_type: str,
         name: str,
-        data: Dict[str, Any],
+        data: dict[str, Any],
         overwrite: bool = False,
     ) -> bool:
         """Write metadata to the data store (generic method).
@@ -330,7 +346,6 @@ class MDDataWriter(ABC):
         Returns:
             bool: True if write successful, False otherwise
         """
-        pass
 
     @property
     def is_connected(self) -> bool:
@@ -400,7 +415,7 @@ class MDDataReader(ABC):
         )
 
     @abstractmethod
-    def read_federation(self, name: str) -> Optional[Dict[str, Any]]:
+    def read_federation(self, name: str) -> dict[str, Any] | None:
         """Read federation metadata from the data store.
 
         Args:
@@ -409,10 +424,9 @@ class MDDataReader(ABC):
         Returns:
             Optional[Dict[str, Any]]: Federation data or None if not found
         """
-        pass
 
     @abstractmethod
-    def read_scenario(self, name: str) -> Optional[Dict[str, Any]]:
+    def read_scenario(self, name: str) -> dict[str, Any] | None:
         """Read scenario metadata from the data store.
 
         Args:
@@ -421,10 +435,9 @@ class MDDataReader(ABC):
         Returns:
             Optional[Dict[str, Any]]: Scenario data or None if not found
         """
-        pass
 
     @abstractmethod
-    def read(self, collection_type: str, name: str) -> Optional[Dict[str, Any]]:
+    def read(self, collection_type: str, name: str) -> dict[str, Any] | None:
         """Read metadata from the data store (generic method).
 
         Args:
@@ -434,7 +447,6 @@ class MDDataReader(ABC):
         Returns:
             Optional[Dict[str, Any]]: Data or None if not found
         """
-        pass
 
     @abstractmethod
     def list_federations(self) -> list[str]:
@@ -443,7 +455,6 @@ class MDDataReader(ABC):
         Returns:
             list[str]: list of names of federations as strings
         """
-        pass
 
     @abstractmethod
     def list_scenarios(self) -> list[str]:
@@ -452,7 +463,6 @@ class MDDataReader(ABC):
         Returns:
             list[str]: list of names of scenarios as strings
         """
-        pass
 
     @abstractmethod
     def list_items(self, collection_type: str) -> list[str]:
@@ -464,7 +474,6 @@ class MDDataReader(ABC):
         Returns:
             list[str]: List of item names
         """
-        pass
 
     @abstractmethod
     def list_custom_collections(self) -> list[str]:
@@ -474,7 +483,6 @@ class MDDataReader(ABC):
         Returns:
             list[str]: List of custom collection names
         """
-        pass
 
     @property
     def is_connected(self) -> bool:
@@ -520,7 +528,6 @@ class TSDataManager(ABC):
         Returns:
             bool: flag indicating whether the connection to the store exist
         """
-        pass
 
     @abstractmethod
     def disconnect(self) -> None:
@@ -529,7 +536,6 @@ class TSDataManager(ABC):
         Returns:
             None
         """
-        pass
 
     def write_records(self, records: list[TSRecord]) -> bool:
         """Writes records to the data store
@@ -614,7 +620,6 @@ class MDDataManager(ABC):
         Returns:
             bool: flag indicating if connected to the data store
         """
-        pass
 
     @abstractmethod
     def disconnect(self) -> None:
@@ -623,10 +628,9 @@ class MDDataManager(ABC):
         Returns:
             None
         """
-        pass
 
     def write_federation(
-        self, name: str, federation_data: Dict[str, Any], overwrite: bool = False
+        self, name: str, federation_data: dict[str, Any], overwrite: bool = False
     ) -> bool:
         """Writes passed in federation data to the data store
 
@@ -643,7 +647,7 @@ class MDDataManager(ABC):
         return self.writer.write_federation(name, federation_data, overwrite)
 
     def write_scenario(
-        self, name: str, scenario_data: Dict[str, Any], overwrite: bool = False
+        self, name: str, scenario_data: dict[str, Any], overwrite: bool = False
     ) -> bool:
         """Writes passed in scenario data to the data store
 
@@ -663,7 +667,7 @@ class MDDataManager(ABC):
         self,
         collection_type: str,
         name: str,
-        data: Dict[str, Any],
+        data: dict[str, Any],
         overwrite: bool = False,
     ) -> bool:
         """Generic write method for data backend
@@ -686,7 +690,7 @@ class MDDataManager(ABC):
         """
         return self.writer.write(collection_type, name, data, overwrite)
 
-    def read_federation(self, name: str) -> Optional[Dict[str, Any]]:
+    def read_federation(self, name: str) -> dict[str, Any] | None:
         """Reads the federation dictionary from the data store
 
         Args:
@@ -697,7 +701,7 @@ class MDDataManager(ABC):
         """
         return self.reader.read_federation(name)
 
-    def read_scenario(self, name: str) -> Optional[Dict[str, Any]]:
+    def read_scenario(self, name: str) -> dict[str, Any] | None:
         """Reads the scenario dictionary from the data store
 
         Args:
@@ -708,7 +712,7 @@ class MDDataManager(ABC):
         """
         return self.reader.read_scenario(name)
 
-    def read(self, collection_type: str, name: str) -> Optional[Dict[str, Any]]:
+    def read(self, collection_type: str, name: str) -> dict[str, Any] | None:
         """Generic read method for data backend
 
         Allows users to access any dictionary saved in the metadata store as

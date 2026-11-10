@@ -1,18 +1,19 @@
-from cosim_toolbox.dbms import create_metadata_manager
-from prettytable import PrettyTable
-from pprint import pprint
-from cosim_toolbox.dbms import create_timeseries_manager
-from cosim_toolbox.dbms import TSRecord
-from cosim_toolbox.dbms.csv_timeseries import (
-    CSVTimeSeriesWriter,
-    CSVTimeSeriesReader,
-    CSVTimeSeriesManager,
-    _CSVHelper,
-)
-from datetime import datetime
-import time as t
-import pandas as pd
 import os
+import time as t
+from datetime import datetime
+from pprint import pprint
+
+import pandas as pd
+from prettytable import PrettyTable
+
+from cosim_toolbox.dbms import (
+    TSRecord,
+    create_metadata_manager,
+    create_timeseries_manager,
+)
+from cosim_toolbox.dbms.csv_timeseries import (
+    CSVTimeSeriesManager,
+)
 
 
 class post_process_example:
@@ -319,8 +320,7 @@ class post_process_example:
             total_production = df["data_value"].sum()
             result_dict["total_production"] = total_production
             #check scenario's total production against the last best case total
-            if total_production > best_case_total:
-                best_case_total = total_production
+            best_case_total = max(best_case_total, total_production)
             #get start and end data time data for June 21, 2025
             start_date_time = datetime(2025, 1, 1, 0, 0, 0, 0)
             end_date_time = datetime(2025, 6, 21, 0, 0, 0, 0)

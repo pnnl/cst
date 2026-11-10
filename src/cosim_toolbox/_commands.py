@@ -8,6 +8,5 @@ def version():
     print(_version)
 
 def cosim_toolbox():
-    if sys.argv.__len__() == 2:
-        if sys.argv[1] == "-v" or sys.argv[1] == "--version":
+    if sys.argv.__len__() == 2 and (sys.argv[1] == "-v" or sys.argv[1] == "--version"):
             version()

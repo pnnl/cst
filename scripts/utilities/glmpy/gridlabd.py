@@ -1,17 +1,15 @@
 import json
-import warnings
-from glmpy import glmanip, graph
-import shutil
-import subprocess
-from pathlib import Path
-import pandas as pd
-import numpy as np
 import os
-import networkx as nx
-import matplotlib.pyplot as plt
-from networkx.drawing.nx_agraph import graphviz_layout
-from copy import deepcopy, copy
+import subprocess
 import tempfile
+import warnings
+from pathlib import Path
+
+import networkx as nx
+import numpy as np
+import pandas as pd
+
+from glmpy import glmanip, graph
 
 _link_types = [
     'link', 'overhead_line', 'underground_line', 'triplex_line', 'transformer',

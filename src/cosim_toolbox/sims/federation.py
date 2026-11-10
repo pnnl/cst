@@ -9,27 +9,28 @@ using helicsMsg class and write it out to a federation configuration JSON.
 mitch.pelton@pnnl.gov
 """
 
-from .helicsConfig import HelicsPubGroup, HelicsSubGroup, HelicsMsg
 from cosim_toolbox.dbms import create_metadata_manager
+
+from .helics_config import HelicsMsg, HelicsPubGroup, HelicsSubGroup
 
 
 class FederateConfig:
-    # logger for federate logger
-    # image for docker
-    # prefix for export and other commands for docker and sh
-    # command for docker and sh
-    # federate_type -> value | combo | message,
-    _config_var = {
-        "name": "",
-        "logger": True,
-        "image": "None",
-        "prefix": "",
-        "command": "None",
-        "federate_type": "combo",
-        "HELICS_config": {}
-    }
-
     def __init__(self, name: str, **kwargs):
+        # logger for federate logger
+        # image for docker
+        # prefix for export and other commands for docker and sh
+        # command for docker and sh
+        # federate_type -> value | combo | message,
+        self._config_var = {
+            "name": "",
+            "logger": True,
+            "image": "None",
+            "prefix": "",
+            "command": "None",
+            "federate_type": "combo",
+            "HELICS_config": {}
+        }
+
         self._unique_id = 0
         self.name = name
         self.outputs = {}
@@ -68,14 +69,14 @@ class FederateConfig:
         return self._fed_cnfg
 
     def find_output_group(self, key: str) -> None | tuple:
-        for name, group in self.outputs.items():
+        for group in self.outputs.values():
             for var in group.vars:
                 if var["key"] == key:
                     return self.name, group.name
         return None
 
     def find_input_group(self, key: str) -> None | tuple:
-        for name, group in self.inputs.items():
+        for group in self.inputs.values():
             for var in group.vars:
                 if var["key"] == key:
                     return group.fed, group.name
@@ -86,13 +87,13 @@ class FederateConfig:
             self.helics.config("broker_address", f"10.5.0.{address}")
 
     def define_io(self):
-        for name, group in self.outputs.items():
+        for group in self.outputs.values():
             for i in group.vars:
                 self.helics.publication(i)
-        for name, group in self.inputs.items():
+        for group in self.inputs.values():
             for i in group.vars:
                 self.helics.subscription(i)
-        for name, group in self.endpoints.items():
+        for group in self.endpoints.values():
             for i in group.vars:
                 self.helics.end_point(i)
         # uncomment for debugging
@@ -152,7 +153,7 @@ class FederationConfig:
                         self.add_group_subs(pub_group, sub_group, des_format)
 
     def define_io(self):
-        for name, fed in self.federates.items():
+        for fed in self.federates.values():
             fed.define_io()
 
     def check_pubs(self) -> dict:
@@ -226,12 +227,12 @@ class FederationConfig:
         fed_from: FederateConfig = self.federates[from_fed]
         for to_fed in to_fed_list:
             fed_to = self.federates[to_fed]
-            for pub_name, pub_group in fed_to.outputs.items():
+            for pub_group in fed_to.outputs.values():
                 pubs = pub_group.vars
                 for pub in pubs:
                     parts = pub["key"].split("/")
                     property_name = parts[-1]
-                    for name, group in fed_from.inputs.items():
+                    for group in fed_from.inputs.values():
                         if group.name in property_name:
                             sub = group.diction.copy()
                             sub["key"] = to_fed + "/" + pub["key"]
@@ -309,7 +310,6 @@ class FederationConfig:
 
 
 def _mytest():
-    remote = False
     with_docker = False
     federation = FederationConfig("MyTestScenario", "MyTestAnalysis", "MyTestFederation", with_docker)
     f1 = federation.add_federate_config(FederateConfig("Battery", period=30))

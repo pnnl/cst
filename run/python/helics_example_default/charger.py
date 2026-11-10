@@ -1,9 +1,9 @@
-import argparse
-from cosim_toolbox.sims import Federate
-import helics as h
-import logging
-import numpy as np
 import json
+import logging
+
+import numpy as np
+
+from cosim_toolbox.sims import Federate
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler())

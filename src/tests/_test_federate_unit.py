@@ -7,6 +7,7 @@ Unit tests for Python federate
 trevor.hardy@pnnl.gov
 """
 import collections
+
 collections.Callable = collections.abc.Callable
 
 import logging
@@ -15,9 +16,11 @@ logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler())
 logger.setLevel(logging.ERROR)
 
-from unittest.mock import patch
 import unittest
+from unittest.mock import patch
+
 from cosim_toolbox.sims import Federate
+
 
 class MockHelicsInput:
     def __init__(self):

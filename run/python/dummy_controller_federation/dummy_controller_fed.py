@@ -8,9 +8,11 @@ software interfaces for a controller for the ECOMP Offshore Wind (OSW) Usecase
 shat.pratoomratana@pnnl.gov
 """
 
-import sys
-from cosim_toolbox.sims import Federate
 import json
+import sys
+
+from cosim_toolbox.sims import Federate
+
 
 class DummyControllerFederate(Federate):
     

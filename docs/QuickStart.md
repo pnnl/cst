@@ -2,7 +2,7 @@
 This page provides the simplest method of installing CoSim Toolbox (CST) and running a few examples. This effectively tests many of the CST APIs and functionality. This set of examples assumes you're running from macOS or Linux or in WSL on Windows. If running Linux, you may have to use `python3` everywhere you see `python` below (or vice versa, depending on your distribution).
 
 ## Download and Install CST
-This install is for just the APIs and none of the persistent services you may want to use. (For further details see the [full installation page](./Installation.md) )
+This installation is for just the APIs and none of the persistent services you may want to use. (For further details see the [full installation page](./Installation.md) )
 
 ```shell
 $ git clone https://www.github.com/pnnl/cst.git
@@ -225,7 +225,7 @@ c0618eaa3795   cosim-jupyter:latest                              "tini -g -- sta
 ```
 
 ### Set-Up and Run Example
-The last step before running is to change the back-end used by this example. The previous example wrote to local disk using the CSV and JSON backend; we'll be writing to the Postres and Mongo databases to achieve the same functionality. To make this change, head back to the "linked_federates" folder to edit the "federate_config.py" file to use "postgres" for time-series and "mongo" for metadata.
+The last step before running is to change the back-end used by this example. The previous example wrote to local disk using the CSV and JSON backend; we'll be writing to the Postgres and Mongo databases to achieve the same functionality. To make this change, head back to the "linked_federates" folder to edit the "federate_config.py" file to use "postgres" for time-series and "mongo" for metadata.
 
 ```shell
 $ cd ../../run/python/linked_federates
@@ -236,7 +236,7 @@ use_meta_db = "mongo"
 use_data_db = "postgres"
 ```
 
-Once that change is made, just run "federates_config.py" to set-up the co-simulation proper and the "MyLinkScenario.sh" to run it. The result from running the script should show it has written configuration files to the Mongo data store successfully (the IP for mongodb will depend on your particular install)
+Once that change is made, just run "federates_config.py" to set up the co-simulation proper and the "MyLinkScenario.sh" to run it. The result from running the script should show it has written configuration files to the Mongo data store successfully (the IP for mongodb will depend on your particular installation)
 
 
 ```shell
@@ -314,7 +314,7 @@ To just build the documentation (once you have the virtual environment in place)
 ```shell
 make docs
 ```
-The documentation will be generated and be place in the "docs/_build directory".  You can open the "index.html" on your local browser and browse the documention. 
+The documentation will be generated and be place in the "docs/_build directory".  You can open the "index.html" on your local browser and browse the documentation. 
 
 To delete the virtual environment and the built documentation run:
 ```shell

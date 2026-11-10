@@ -2,16 +2,17 @@
 Pytest configuration and shared fixtures.
 """
 
-import pytest
-import tempfile
 import shutil
-from pathlib import Path
-from datetime import datetime
-from typing import Dict, Any
+import tempfile
+from datetime import datetime, timezone
+from typing import Any
+
+import pytest
+
 
 # Test data fixtures
 @pytest.fixture
-def sample_federation_data() -> Dict[str, Any]:
+def sample_federation_data() -> dict[str, Any]:
     """Sample federation configuration data."""
     return {
         "federation": {
@@ -79,7 +80,7 @@ def sample_federation_data() -> Dict[str, Any]:
     }
 
 @pytest.fixture
-def sample_scenario_data() -> Dict[str, Any]:
+def sample_scenario_data() -> dict[str, Any]:
     """Sample scenario configuration data."""
     return {
         "analysis": "MyAnalysis",
@@ -90,7 +91,7 @@ def sample_scenario_data() -> Dict[str, Any]:
     }
 
 @pytest.fixture
-def sample_custom_data() -> Dict[str, Any]:
+def sample_custom_data() -> dict[str, Any]:
     """Sample custom configuration data."""
     return {
         "voltage_range": [110, 130],
@@ -114,7 +115,7 @@ def sample_ts_records():
     """Sample time-series records for testing."""
     from cosim_toolbox.dbms import TSRecord
     
-    base_time = datetime(2023, 12, 7, 15, 31, 27)
+    base_time = datetime(2023, 12, 7, 15, 31, 27, tzinfo=timezone.utc)
     
     return [
         TSRecord(
@@ -151,6 +152,7 @@ def pytest_configure(config):
 
 def pytest_collection_modifyitems(config, items):
     """Skip MongoDB tests if pymongo is not available."""
+
     try:
         import pymongo
         mongo_available = True

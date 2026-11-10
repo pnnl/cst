@@ -6,16 +6,16 @@ mitch.pelton@pnnl.gov
 """
 
 import gridlabd_output
-import substation_output
 import pypower_output
+import substation_output
 import weather_output
-from cosim_toolbox.sims import FederateConfig
-from cosim_toolbox.sims import FederationConfig
-from cosim_toolbox.sims import DockerRunner
 from tesp_support.api.modify_GLM import GLMModifier
 
+from cosim_toolbox.sims import DockerRunner, FederateConfig, FederationConfig
+
 use_meta_db = "json"
-use_data_db = "csv"
+# use_data_db = "csv"
+use_data_db = "parquet"
 remote = False
 with_docker = False
 
@@ -191,15 +191,15 @@ def define_federation_list():
         f3.config("image", "cosim-cst:latest")
         f4.config("image", "cosim-cst:latest")
 
-    f1.config("command", f"gridlabd -D USE_HELICS -D METRICS_FILE=test_metrics.json test.glm")
+    f1.config("command", "gridlabd -D USE_HELICS -D METRICS_FILE=test_metrics.json test.glm")
     f2.config("command", f"python3 -c \"import tesp_support.api.substation as tesp;tesp.substation_loop('test_agent_dict.json','test',helicsConfig='{names[1]}.json')\"")
     f3.config("command", f"python3 -c \"import tesp_support.api.tso_PYPOWER as tesp;tesp.tso_pypower_loop('test_pp.json','test',helicsConfig='{names[2]}.json')\"")
     f4.config("prefix", "export WEATHER_CONFIG=test_weather.json")
-    f4.config("command", f"python3 -c \"import tesp_support.weather.weather_agent as tesp;tesp.startWeatherAgent('weather.dat')\"")
+    f4.config("command", "python3 -c \"import tesp_support.weather.weather_agent as tesp;tesp.startWeatherAgent('weather.dat')\"")
 
     federation.write_config("2023-12-07T15:31:27", "2023-12-08T15:31:27")
     federation.write_file_helics_configs()
-    DockerRunner.define_sh("MyLink2Scenario")
+    DockerRunner.define_sh("MyLink2Scenario", use_meta_db, use_data_db)
 
 def define_federation():
     names = ["gld_7", "sub_7", "pypower", "localWeather"]
@@ -335,11 +335,11 @@ def define_federation():
         f3.config("image", "cosim-cst:latest")
         f4.config("image", "cosim-cst:latest")
 
-    f1.config("command", f"gridlabd -D USE_HELICS -D METRICS_FILE=test_metrics.json test.glm")
+    f1.config("command", "gridlabd -D USE_HELICS -D METRICS_FILE=test_metrics.json test.glm")
     f2.config("command", f"python3 -c \"import tesp_support.api.substation as tesp;tesp.substation_loop('test_agent_dict.json','test',helicsConfig='{names[1]}.json')\"")
     f3.config("command", f"python3 -c \"import tesp_support.api.tso_PYPOWER as tesp;tesp.tso_pypower_loop('test_pp.json','test',helicsConfig='{names[2]}.json')\"")
     f4.config("prefix", "export WEATHER_CONFIG=test_weather.json")
-    f4.config("command", f"python3 -c \"import tesp_support.weather.weather_agent as tesp;tesp.startWeatherAgent('weather.dat')\"")
+    f4.config("command", "python3 -c \"import tesp_support.weather.weather_agent as tesp;tesp.startWeatherAgent('weather.dat')\"")
 
     federation.write_config("2023-12-07T15:31:27", "2023-12-08T15:31:27")
     federation.write_file_helics_configs()

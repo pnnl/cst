@@ -2,8 +2,10 @@
 Performance tests for data management system.
 """
 
-import pytest
 import time
+
+import pytest
+
 from cosim_toolbox.dbms import create_metadata_manager
 
 

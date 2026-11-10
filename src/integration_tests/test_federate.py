@@ -1,12 +1,13 @@
 # setup and definitions
-import threading
-import helics as h
 import collections
+import threading
+
+import helics as h
 
 collections.Callable = collections.abc.Callable
 
-from cosim_toolbox.sims import Federate
-from cosim_toolbox.sims import DBConfigs
+from cosim_toolbox.dbms import create_metadata_manager
+from cosim_toolbox.sims import DBConfigs, Federate
 
 # create a db for a simple federation
 local_default_uri = 'mongodb://localhost:27017'
@@ -124,7 +125,6 @@ def add_federation_collection(test_federation_name, test_federation_dict, num_fe
 def federate_cosim(fed: Federate):
     fed.run_cosim_loop()
     fed.destroy_federate()
-    return
 
 
 def cleanup(broker, test_federation_name):
@@ -174,7 +174,7 @@ def run_multiple_federates():
 if __name__ == "__main__":
     try:
         metadb.add_collection(collection_name)
-    except NameError as e:
+    except NameError:
         metadb.remove_collection(collection_name)
         metadb.add_collection(collection_name)
     run_single_federate()

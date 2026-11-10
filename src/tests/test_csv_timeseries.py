@@ -2,24 +2,25 @@
 Tests for CSV time-series data management with composition-based approach.
 """
 
-import pytest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
-import pandas as pd
 
-from cosim_toolbox.dbms.csv_timeseries import (
-    CSVTimeSeriesWriter,
-    CSVTimeSeriesReader,
-    CSVTimeSeriesManager,
-    _CSVHelper,
-)
+import pytest
+from pandas import read_csv
+
 from cosim_toolbox.dbms import TSRecord
+from cosim_toolbox.dbms.csv_timeseries import (
+    CSVHelper,
+    CSVTimeSeriesManager,
+    CSVTimeSeriesReader,
+    CSVTimeSeriesWriter,
+)
 
 
 @pytest.fixture
 def sample_ts_records():
     """Sample time-series records for testing."""
-    now = datetime.now()
+    now = datetime.now(timezone.utc)
     return [
         TSRecord(now, 0.0, "TestScenario", "Battery", "Battery/voltage", 120.5),
         TSRecord(
@@ -42,7 +43,7 @@ class TestCSVTimeSeriesWriter:
         writer = CSVTimeSeriesWriter(
             location=temp_directory, analysis_name="test_analysis"
         )
-        assert isinstance(writer.helper, _CSVHelper)
+        assert isinstance(writer.helper, CSVHelper)
         assert writer.helper.location == Path(temp_directory)
         assert writer.helper.analysis_name == "test_analysis"
         assert not writer.is_connected
@@ -60,7 +61,7 @@ class TestCSVTimeSeriesWriter:
 
     def test_data_type_classification(self, temp_directory):
         """Test data type classification via the helper."""
-        helper = _CSVHelper(temp_directory, "test")
+        helper = CSVHelper(temp_directory, "test")
         assert helper.get_data_type(12.5) == "hdt_double"
         assert helper.get_data_type(42) == "hdt_integer"
         assert helper.get_data_type("test") == "hdt_string"
@@ -79,7 +80,7 @@ class TestCSVTimeSeriesWriter:
             battery_file = writer.helper.get_file_path("Battery", "hdt_double")
             vehicle_file = writer.helper.get_file_path("EVehicle", "hdt_double")
             assert battery_file.exists() and vehicle_file.exists()
-            df = pd.read_csv(battery_file)
+            df = read_csv(battery_file)
             assert len(df) == 2
 
     def test_buffered_writing(self, temp_directory):
@@ -88,14 +89,14 @@ class TestCSVTimeSeriesWriter:
             location=temp_directory, analysis_name="TestAnalysis"
         )
         with writer:
-            writer.add_record(TSRecord(datetime.now(), 0.0, "Test", "Fed", "v", 1.0))
-            writer.add_record(TSRecord(datetime.now(), 1.0, "Test", "Fed", "v", 2.0))
+            writer.add_record(TSRecord(datetime.now(timezone.utc), 0.0, "Test", "Fed", "v", 1.0))
+            writer.add_record(TSRecord(datetime.now(timezone.utc), 1.0, "Test", "Fed", "v", 2.0))
             assert writer.buffer_size == 2
             assert writer.flush()
             assert writer.buffer_size == 0
             test_file = writer.helper.get_file_path("Fed", "hdt_double")
             assert test_file.exists()
-            df = pd.read_csv(test_file)
+            df = read_csv(test_file)
             assert len(df) == 2
 
     def test_invalid_federate_name(self, temp_directory):
@@ -103,7 +104,7 @@ class TestCSVTimeSeriesWriter:
         writer = CSVTimeSeriesWriter(
             location=temp_directory, analysis_name="TestAnalysis"
         )
-        invalid_record = TSRecord(datetime.now(), 0.0, "Test", "invalid\name", "v", 1.0)
+        invalid_record = TSRecord(datetime.now(timezone.utc), 0.0, "Test", "invalid\name", "v", 1.0)
         with writer:
             assert not writer.write_records([invalid_record])
 
@@ -116,7 +117,7 @@ class TestCSVTimeSeriesReader:
         reader = CSVTimeSeriesReader(
             location=temp_directory, analysis_name="test_analysis"
         )
-        assert isinstance(reader.helper, _CSVHelper)
+        assert isinstance(reader.helper, CSVHelper)
         assert not reader.is_connected
 
     def test_read_data_empty(self, temp_directory):
@@ -196,9 +197,8 @@ class TestCSVTimeSeriesManager:
         manager = CSVTimeSeriesManager(
             location=temp_directory, analysis_name="TestAnalysis"
         )
-        with manager:
-            with pytest.raises(NotImplementedError):
-                manager.delete_scenario_data("TestScenario")
+        with manager, pytest.raises(NotImplementedError):
+            manager.delete_scenario_data("TestScenario")
 
     def test_analysis_name_property(self, temp_directory):
         """Test that the analysis_name property updates the shared helper."""

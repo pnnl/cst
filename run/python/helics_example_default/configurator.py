@@ -1,10 +1,10 @@
 import json
 import logging
+
 logger = logging.getLogger(__name__)
 
 import cosim_toolbox as env
-from cosim_toolbox.sims import DBConfigs
-from cosim_toolbox.sims import DockerRunner
+from cosim_toolbox.sims import DBConfigs, DockerRunner
 
 PYTHON_CMD_PREFIX = "python3 "
 GRIDLABD_CMD_PREFIX = "gridlabd "
@@ -29,13 +29,13 @@ class Configurator(DBConfigs):
         has_publications = False
         has_subscriptions = False
         has_endpoints = False
-        if "publications" in config.keys():
+        if "publications" in config:
             if len(config["publications"]) > 0:
                 has_publications = True
-        if "subscriptions" in config.keys():
+        if "subscriptions" in config:
             if len(config["subscriptions"]) > 0:
                 has_subscriptions = True
-        if "endpoints" in config.keys():
+        if "endpoints" in config:
             if len(config["endpoints"]) > 0:
                 has_endpoints = True
         if not (has_publications or has_subscriptions):

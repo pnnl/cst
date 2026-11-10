@@ -1,12 +1,8 @@
-# -*- coding: utf-8 -*-
-import helics as h
 # import time
 # import struct
-import matplotlib.pyplot as plt
 import logging
-import numpy as np
+
 from cosim_toolbox.sims import Federate
-import json
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler())

@@ -33,6 +33,7 @@ from .factories import (
 from .json_metadata import JSONMetadataManager
 from .mongo_metadata import MongoMetadataManager
 from .csv_timeseries import CSVTimeSeriesManager
+from .parquet_timeseries import ParquetTimeSeriesManager
 from .postgresql_timeseries import PostgreSQLTimeSeriesManager
 
 # Public API definition
@@ -43,7 +44,9 @@ __all__ = [
     "create_timeseries_manager",
     "create_metadata_manager",
     "CSVTimeSeriesManager",
+    "ParquetTimeSeriesManager",
     "PostgreSQLTimeSeriesManager",
     "JSONMetadataManager",
     "MongoMetadataManager",
 ]
+

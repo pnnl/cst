@@ -1,5 +1,6 @@
-from cosim_toolbox.dbms import create_timeseries_manager, TSRecord
 from datetime import datetime
+
+from cosim_toolbox.dbms import TSRecord, create_timeseries_manager
 
 records = [
     TSRecord(

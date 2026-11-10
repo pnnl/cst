@@ -5,9 +5,7 @@ import json
 import os
 import unittest
 
-from cosim_toolbox.sims import HelicsMsg
-from cosim_toolbox.sims import FederateConfig
-from cosim_toolbox.sims import FederationConfig
+from cosim_toolbox.sims import FederateConfig, FederationConfig, HelicsMsg
 
 
 class TestHelicsMsg(unittest.TestCase):
@@ -60,12 +58,12 @@ class TestHelicsMsg(unittest.TestCase):
 
         f1.config("image", "cosim-cst:latest")
         f2.config("image", "cosim-cst:latest")
-        f1.config("command", f"gridlabd -D USE_HELICS -D METRICS_FILE=test_metrics.json test.glm")
+        f1.config("command", "gridlabd -D USE_HELICS -D METRICS_FILE=test_metrics.json test.glm")
         f2.config("command", f"python3 -c \"import tesp_support.api.substation as tesp;tesp.substation_loop('test_agent_dict.json','test',helicsConfig='{names[1]}.json')\"")
 
         self.assertEqual(f1._fed_cnfg["image"], "cosim-cst:latest")
         self.assertEqual(f2._fed_cnfg["image"], "cosim-cst:latest")
-        self.assertEqual(f1._fed_cnfg["command"], f"gridlabd -D USE_HELICS -D METRICS_FILE=test_metrics.json test.glm")
+        self.assertEqual(f1._fed_cnfg["command"], "gridlabd -D USE_HELICS -D METRICS_FILE=test_metrics.json test.glm")
         self.assertEqual(f2._fed_cnfg["command"],
                          f"python3 -c \"import tesp_support.api.substation as tesp;tesp.substation_loop('test_agent_dict.json','test',helicsConfig='{names[1]}.json')\"")
         # print(f1.helics.write_json())

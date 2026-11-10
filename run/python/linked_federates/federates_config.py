@@ -7,14 +7,18 @@ mitch.pelton@pnnl.gov
 
 import simple_config
 import simple_config2
-from cosim_toolbox.sims import Collect
-from cosim_toolbox.sims import HelicsEndPtGroup
-from cosim_toolbox.sims import FederateConfig
-from cosim_toolbox.sims import FederationConfig
-from cosim_toolbox.sims import DockerRunner
+
+from cosim_toolbox.sims import (
+    Collect,
+    DockerRunner,
+    FederateConfig,
+    FederationConfig,
+    HelicsEndPtGroup,
+)
 
 use_meta_db = "json"
-use_data_db = "csv"
+#use_data_db = "csv"
+use_data_db = "parquet"
 remote = False
 with_docker = False
 
@@ -81,13 +85,13 @@ def define_federation():
     federation.write_config("2023-12-07T15:31:27", "2023-12-08T15:31:27")
 
     if with_docker:
-        DockerRunner.define_yaml(federation.scenario_name, use_meta_db)
+        DockerRunner.define_yaml(federation.scenario_name, use_meta_db, use_data_db)
         if remote:
             DockerRunner.run_remote_yaml(federation.scenario_name)
         else:
             DockerRunner.run_yaml(federation.scenario_name)
     else:
-        DockerRunner.define_sh(federation.scenario_name, use_meta_db)
+        DockerRunner.define_sh(federation.scenario_name, use_meta_db, use_data_db)
 
 
 def define_format():
@@ -111,13 +115,13 @@ def define_format():
     federation.write_config("2023-12-07T15:31:27", "2023-12-08T15:31:27")
 
     if with_docker:
-        DockerRunner.define_yaml(federation.scenario_name, use_meta_db)
+        DockerRunner.define_yaml(federation.scenario_name, use_meta_db, use_data_db)
         if remote:
             DockerRunner.run_remote_yaml(federation.scenario_name)
         else:
             DockerRunner.run_yaml(federation.scenario_name)
     else:
-        DockerRunner.define_sh(federation.scenario_name, use_meta_db)
+        DockerRunner.define_sh(federation.scenario_name, use_meta_db, use_data_db)
 
 
 if __name__ == "__main__":

@@ -1,6 +1,7 @@
 import warnings
-import networkx as nx
+
 import matplotlib.pyplot as plt
+import networkx as nx
 from networkx.drawing.nx_agraph import graphviz_layout
 
 
@@ -151,11 +152,11 @@ def analyze(model):
         if obj_type in model.keys():
             for mtrid in model.get(obj_type):
                 if model[obj_type][mtrid].get('bustype') == 'SWING':
-                    print(f'Swing bus: ', mtrid)
+                    print(f'Swing bus: {mtrid}')
                     swing_buses.append(mtrid)
     print("----------------------------------")
     print('Analyzing isolated compoonents of the system graph:')
-    print('')
+    print()
     print("----------------------------------")
     print('removing open switches ...')
     model_ = delete_open(model)

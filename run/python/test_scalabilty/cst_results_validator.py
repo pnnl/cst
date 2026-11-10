@@ -70,7 +70,7 @@ class DataReader:
         self.analysis_name = self.scenario["analysis"]
         self.scenario_name = scenario_name
         try:
-            db = connect(**env.cst_data_db)
+            db = connect(**env.pg_data_db)
         except Exception as ex:
             logger.exception(f"{ex}\nFailed to create PostgresDB instance.")
             raise RuntimeError("Something bad happened")

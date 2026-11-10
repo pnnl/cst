@@ -5,8 +5,7 @@ Created on 7/7/2023
 mitch.pelton@pnnl.gov
 """
 
-from cosim_toolbox.sims import Collect
-from cosim_toolbox.sims import FederateConfig
+from cosim_toolbox.sims import Collect, FederateConfig
 
 
 class MyFederate(FederateConfig):
@@ -17,5 +16,5 @@ class MyFederate(FederateConfig):
         self.config("federate_type", "value")
         self.config("image", "cosim-cst:latest")
         self.config("prefix", "export WEATHER_CONFIG=test_weather.json")
-        self.config("command", f"python3 -c \"import tesp_support.weather.weather_agent as tesp;tesp.startWeatherAgent('weather.dat')\"")
+        self.config("command", "python3 -c \"import tesp_support.weather.weather_agent as tesp;tesp.startWeatherAgent('weather.dat')\"")
         self.helics.collect(Collect.YES)

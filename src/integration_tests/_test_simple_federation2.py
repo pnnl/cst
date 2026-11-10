@@ -1,12 +1,12 @@
+import collections
 import logging
 import os
+import shutil
+import tempfile
 import time
 import unittest
-import collections
-import tempfile
-import shutil
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any
 
 # --- NEW API Imports ---
 from cosim_toolbox.dbms import create_metadata_manager, create_timeseries_manager
@@ -29,7 +29,7 @@ METADATA_CONFIG = {"backend": "json"}
 TIMESERIES_CONFIG = {"backend": "csv"}
 
 
-def _create_test_scenario_doc() -> Dict[str, Any]:
+def _create_test_scenario_doc() -> dict[str, Any]:
     """Helper function to create a consistent test scenario document."""
     return {
         "analysis": ANALYSIS_NAME,
@@ -40,7 +40,7 @@ def _create_test_scenario_doc() -> Dict[str, Any]:
     }
 
 
-def _create_mock_federation_doc() -> Dict[str, Any]:
+def _create_mock_federation_doc() -> dict[str, Any]:
     """Helper to create a mock federation file needed by the test scenario."""
     # This mock only needs to contain the federates mentioned in the test queries.
     return {
@@ -149,7 +149,7 @@ class TestSimpleFederation(unittest.TestCase):
         """Polls the filesystem for a signal file indicating the simulation has finished."""
         start_time = time.time()
         while True:
-            logger.info(f"Checking for federation completion signal...")
+            logger.info("Checking for federation completion signal...")
 
             # For a file-based system, we poll for the existence of the expected result files.
             df = self.timeseries_manager.read_data(

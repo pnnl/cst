@@ -4,9 +4,8 @@ Validation utilities for data management components.
 @author Nathan Gray
 """
 
-import re
 import logging
-from typing import Optional
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +13,6 @@ logger = logging.getLogger(__name__)
 class ValidationError(ValueError):
     """Custom exception for validation errors."""
 
-    pass
 
 
 def validate_name(name: str, context: str = "name", max_length: int = 255) -> None:
@@ -140,7 +138,7 @@ def safe_name_log(name: str, max_length: int = 50) -> str:
 
 
 def validate_connection_string(
-    connection_string: str, expected_analysis: Optional[str] = None
+    connection_string: str, expected_analysis: str | None = None
 ) -> None:
     """
     Validate a connection string format.

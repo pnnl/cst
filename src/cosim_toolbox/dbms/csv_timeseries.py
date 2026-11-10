@@ -12,43 +12,44 @@ import logging
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import pandas as pd
 
-from .abstractions import TSDataWriter, TSDataReader, TSDataManager, TSRecord
-from .validation import validate_name, ValidationError, safe_name_log
+from .abstractions import TSDataManager, TSDataReader, TSDataWriter, TSRecord
+from .validation import ValidationError, safe_name_log, validate_name
 
 logger = logging.getLogger(__name__)
 
 
-class _CSVHelper:
+class CSVHelper:
     """Manages paths and data formatting logic for CSV time-series storage."""
 
-    CSV_HEADERS = [
-        "real_time",
-        "sim_time",
-        "scenario",
-        "federate",
-        "data_name",
-        "data_value",
-    ]
-    ENDPOINT_CSV_HEADERS = [
-        "real_time",
-        "sim_time",
-        "scenario",
-        "federate",
-        "data_name",
-        "receiving_federate",
-        "receiving_endpoint",
-        "data_value",
-    ]
-
     def __init__(self, location: str, analysis_name: str):
+
+        self.CSV_HEADERS = [
+            "real_time",
+            "sim_time",
+            "scenario",
+            "federate",
+            "data_name",
+            "data_value",
+        ]
+        self.ENDPOINT_CSV_HEADERS = [
+            "real_time",
+            "sim_time",
+            "scenario",
+            "federate",
+            "data_name",
+            "receiving_federate",
+            "receiving_endpoint",
+            "data_value",
+        ]
+
         validate_name(analysis_name, context="analysis")
-        self.location = Path(location)
-        self.analysis_name = analysis_name
-        self.analysis_path = self.location / self.analysis_name
+        self.location : Path = Path(location)
+        self.analysis_name : str = analysis_name
+        self.analysis_path : Path = self.location / self.analysis_name
 
     def get_file_path(self, federate_name: str, data_type: str) -> Path:
         """Get the file path for a specific federate and data type.
@@ -128,12 +129,9 @@ class _CSVHelper:
             value_str (str): Numerical value as string to be converted
             data_type (str): defines data type of string to be converted
                 Must be one of the following values:
-                    "hdt_boolean"
-                    "hdt_integer"
-                    "hdt_double"
-                    "hdt_complex"
-                    "hdt_complex_vector"
-                    "hdt_vector"
+                "hdt_boolean", "hdt_integer"
+                "hdt_double", "hdt_complex"
+                "hdt_complex_vector", "hdt_vector"
 
         Returns:
             Any: Data from passed in string as the specified data type
@@ -163,24 +161,24 @@ class CSVTimeSeriesWriter(TSDataWriter):
     def __init__(
         self,
         *,
-        location: Optional[str] = None,
+        location: str | None = None,
         analysis_name: str = "default",
-        helper: Optional[_CSVHelper] = None,
+        helper: CSVHelper | None = None,
     ):
         """Initialize the CSV writer.
 
         For standalone use:
             writer = CSVTimeSeriesWriter(location="/path/to/data", analysis_name="my_analysis")
         For managed use (by CSVTimeSeriesManager):
-            helper = _CSVHelper(...)
+            helper = CSVHelper(...)
             writer = CSVTimeSeriesWriter(helper=helper)
         """
         super().__init__()
-        self.helper: _CSVHelper
+        self.helper: CSVHelper
         if helper:
             self.helper = helper
         elif location:
-            self.helper = _CSVHelper(location, analysis_name)
+            self.helper = CSVHelper(location, analysis_name)
         else:
             raise ValueError("Either 'helper' or 'location' must be provided.")
 
@@ -217,7 +215,7 @@ class CSVTimeSeriesWriter(TSDataWriter):
                 f"CSV time-series writer connected to: {self.helper.analysis_path}"
             )
             return True
-        except (OSError, IOError) as e:
+        except OSError as e:
             logger.error(f"Failed to create directories for CSV writer: {e}")
             return False
 
@@ -230,7 +228,7 @@ class CSVTimeSeriesWriter(TSDataWriter):
         self._is_connected = False
         logger.debug("CSV time-series writer disconnected")
 
-    def write_records(self, records: List[TSRecord]) -> bool:
+    def write_records(self, records: list[TSRecord]) -> bool:
         """Write TSRecord objects to CSV files.
 
         Args:
@@ -247,7 +245,7 @@ class CSVTimeSeriesWriter(TSDataWriter):
         if not records:
             return True
         try:
-            grouped_records: Dict[tuple[str, str], List[TSRecord]] = {}
+            grouped_records: dict[tuple[str, str], list[TSRecord]] = {}
             for record in records:
                 validate_name(record.federate, context="federate")
                 key = (record.federate, record.data_type)
@@ -280,7 +278,7 @@ class CSVTimeSeriesWriter(TSDataWriter):
         except ValidationError as e:
             logger.error(f"Validation error writing CSV records: {e}")
             return False
-        except (OSError, IOError) as e:
+        except OSError as e:
             logger.error(f"File I/O error writing CSV records: {e}")
             return False
         except Exception as e:
@@ -294,9 +292,9 @@ class CSVTimeSeriesReader(TSDataReader):
     def __init__(
         self,
         *,
-        location: Optional[str] = None,
+        location: str | None = None,
         analysis_name: str = "default",
-        helper: Optional[_CSVHelper] = None,
+        helper: CSVHelper | None = None,
     ):
         """
         Initialize the CSV reader.
@@ -304,15 +302,15 @@ class CSVTimeSeriesReader(TSDataReader):
         For standalone use:
             reader = CSVTimeSeriesReader(location="/path/to/data", analysis_name="my_analysis")
         For managed use (by CSVTimeSeriesManager):
-            helper = _CSVHelper(...)
+            helper = CSVHelper(...)
             reader = CSVTimeSeriesReader(helper=helper)
         """
         super().__init__()
-        self.helper: _CSVHelper
+        self.helper: CSVHelper
         if helper:
             self.helper = helper
         elif location:
-            self.helper = _CSVHelper(location, analysis_name)
+            self.helper = CSVHelper(location, analysis_name)
         else:
             raise ValueError("Either 'helper' or 'location' must be provided.")
 
@@ -340,12 +338,12 @@ class CSVTimeSeriesReader(TSDataReader):
 
     def read_data(
         self,
-        start_time: Optional[float] = None,
-        duration: Optional[float] = None,
-        scenario_name: Optional[str | list] = None,
-        federate_name: Optional[str | list] = None,
-        data_name: Optional[str | list] = None,
-        data_type: Optional[str | list] = None,
+        start_time: float | None = None,
+        duration: float | None = None,
+        scenario_name: str | list | None = None,
+        federate_name: str | list | None = None,
+        data_name: str | list | None = None,
+        data_type: str | list | None = None,
     ) -> pd.DataFrame:
         """Read time-series data from CSV files.
 
@@ -370,18 +368,22 @@ class CSVTimeSeriesReader(TSDataReader):
             logger.error("CSV reader not connected. Call connect() first.")
             return pd.DataFrame()
 
-        scenario_names = scenario_name
-        federate_names = federate_name
-        data_names = data_name
-        data_types = data_type
         if isinstance(scenario_name, str):
             scenario_names = [scenario_name]
+        else:
+            scenario_names = scenario_name
         if isinstance(federate_name, str):
             federate_names = [federate_name]
+        else:
+            federate_names = federate_name
         if isinstance(data_name, str):
             data_names = [data_name]
+        else:
+            data_names = data_name
         if isinstance(data_type, str):
             data_types = [data_type]
+        else:
+            data_types = data_type
 
         if not self.helper.analysis_path.exists():
             return pd.DataFrame()
@@ -411,9 +413,7 @@ class CSVTimeSeriesReader(TSDataReader):
                     df = pd.read_csv(csv_file)
                     current_data_type = csv_file.stem
                     df["data_value"] = df["data_value"].apply(
-                        lambda x: self.helper.parse_value_from_csv(
-                            str(x), current_data_type
-                        )
+                        lambda v: self.helper.parse_value_from_csv(str(v), current_data_type)
                     )
                     df["real_time"] = pd.to_datetime(df["real_time"])
                     all_dataframes.append(df)
@@ -452,7 +452,7 @@ class CSVTimeSeriesReader(TSDataReader):
         )
         return filtered_df.sort_values("sim_time").reset_index(drop=True)
 
-    def list_federates(self) -> List[str]:
+    def list_federates(self) -> list[str]:
         """Provides a list of federates with data in the data backend
 
         Returns:
@@ -464,7 +464,7 @@ class CSVTimeSeriesReader(TSDataReader):
             [p.name for p in self.helper.analysis_path.iterdir() if p.is_dir()]
         )
 
-    def list_data_types(self, federate_names: Optional[list[str]] = None) -> List[str]:
+    def list_data_types(self, federate_names: list[str] | None = None) -> list[str]:
         """Provides a list of data types in data backend for a given federate
 
         Args:
@@ -486,7 +486,7 @@ class CSVTimeSeriesReader(TSDataReader):
             data_types.extend(sorted([f.stem for f in federate_path.glob("*.csv")]))
         return sorted(data_types)
 
-    def list_scenarios(self) -> List[str]:
+    def list_scenarios(self) -> list[str]:
         """Get list of unique scenarios in the data.
 
         Returns:
@@ -505,9 +505,9 @@ class CSVTimeSeriesReader(TSDataReader):
                         scenarios.update(df["scenario"].unique())
                     except (KeyError, ValueError):
                         continue
-        return sorted(list(scenarios))
+        return sorted(scenarios)
 
-    def get_time_range(self, **kwargs) -> Dict[str, float]:
+    def get_time_range(self, **kwargs) -> dict[str, float]:
         """Get the time range (min and max simulation times) for the data.
 
         Args:
@@ -542,7 +542,7 @@ class CSVTimeSeriesManager(TSDataManager):
         """Initialize CSV time-series manager."""
         super().__init__(**kwargs)
         # The manager creates ONE helper and shares it.
-        self.helper: _CSVHelper = _CSVHelper(location, analysis_name)
+        self.helper: CSVHelper = CSVHelper(location, analysis_name)
         self.writer: CSVTimeSeriesWriter = CSVTimeSeriesWriter(helper=self.helper)
         self.reader: CSVTimeSeriesReader = CSVTimeSeriesReader(helper=self.helper)
 
@@ -568,7 +568,7 @@ class CSVTimeSeriesManager(TSDataManager):
         self.reader.disconnect()
         self._is_connected = False
 
-    def list_federates(self) -> List[str]:
+    def list_federates(self) -> list[str]:
         """Lists federates with data in data backend
 
         Returns:
@@ -576,7 +576,7 @@ class CSVTimeSeriesManager(TSDataManager):
         """
         return self.reader.list_federates()
 
-    def list_data_types(self, federate_names: Optional[list[str]] = None) -> List[str]:
+    def list_data_types(self, federate_names: list[str] | None = None) -> list[str]:
         """Lists data types for a given federate in the data backend
 
         Args:
@@ -587,7 +587,7 @@ class CSVTimeSeriesManager(TSDataManager):
         """
         return self.reader.list_data_types(federate_names)
 
-    def list_scenarios(self) -> List[str]:
+    def list_scenarios(self) -> list[str]:
         """List of scenarios in the data backend
 
         Returns:
@@ -595,7 +595,7 @@ class CSVTimeSeriesManager(TSDataManager):
         """
         return self.reader.list_scenarios()
 
-    def get_time_range(self, **kwargs) -> Dict[str, float]:
+    def get_time_range(self, **kwargs) -> dict[str, float]:
         """Get time range of data in data backend
 
         Args:

@@ -1,5 +1,5 @@
-import os
 import logging
+import os
 import subprocess
 
 import cosim_toolbox as env
@@ -14,7 +14,7 @@ class DockerRunner:
     """
 
     @staticmethod
-    def _service(name: str, image: str, params: list, cnt: int, depends: str = None) -> str:
+    def _service(name: str, image: str, params: list, cnt: int, depends: str | None = None) -> str:
         """Builds the "service" part of the docker-compose.yaml
 
         Args:
@@ -101,21 +101,19 @@ class DockerRunner:
             cnt += 1
             image = fed_def[name]["image"]
             commandline = f"{fed_def[name]['command']}"
-            if "prefix" in fed_def[name]:
-                if fed_def[name]["prefix"] != "":
-                    commandline = f"{fed_def[name]['prefix']} && " + commandline
+            if "prefix" in fed_def[name] and fed_def[name]["prefix"] != "":
+                commandline = f"{fed_def[name]['prefix']} && " + commandline
             params = [cosim_env, commandline]
             yaml += DockerRunner._service(name, image, params, cnt, depends=None)
-            if "logger" in fed_def[name]:
-                if fed_def[name]["logger"]:
-                    add_logger = True
+            if "logger" in fed_def[name] and fed_def[name]["logger"]:
+                add_logger = True
 
         # Add data logger federate
         if add_logger:
             cnt += 1
             params = [cosim_env,
-                   f"python3 -c \"import cosim_toolbox.federateLogger as datalog; "
-                   f"datalog.main('FederateLogger', '{analysis_name}', '{scenario_name}', '{use_meta_db}', '{use_data_db}')\""
+                      (f"python3 -c \"import cosim_toolbox.federateLogger as datalog; "
+                       f"datalog.main('FederateLogger', '{analysis_name}', '{scenario_name}', '{use_meta_db}', '{use_data_db}')\"")
             ]
             yaml += DockerRunner._service("cst_logger", "cosim-cst:latest", params, cnt, depends=None)
 
@@ -193,13 +191,11 @@ class DockerRunner:
         for name in fed_def:
             cnt += 1
             commandline = f"(exec {fed_def[name]['command']} &> {name}.log &)\n"
-            if "prefix" in fed_def[name]:
-                if fed_def[name]["prefix"] != "":
-                    commandline = f"{fed_def[name]['prefix']} && " + commandline
+            if "prefix" in fed_def[name] and fed_def[name]["prefix"] != "":
+                commandline = f"{fed_def[name]['prefix']} && " + commandline
             shell += commandline
-            if "logger" in fed_def[name]:
-                if fed_def[name]["logger"]:
-                    add_logger = True
+            if "logger" in fed_def[name] and fed_def[name]["logger"]:
+                add_logger = True
 
         # Add data logger federate
         if add_logger:
@@ -213,4 +209,4 @@ class DockerRunner:
 
         with open(f"{scenario_name}.sh", "w") as op:
             op.write(shell)
-        subprocess.run(["chmod", "+x", f"{scenario_name}.sh"])
+        subprocess.run(["chmod", "+x", f"{scenario_name}.sh"], check=False)

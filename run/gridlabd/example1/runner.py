@@ -1,9 +1,9 @@
 """
 
 """
-from cosim_toolbox.sims import DockerRunner
-from cosim_toolbox.sims import DBConfigs
 from configurator import Configurator
+
+from cosim_toolbox.sims import DBConfigs, DockerRunner
 
 if __name__ == "__main__":
     remote = False

@@ -3,22 +3,20 @@ Comprehensive test suite for CoSim Toolbox data management system.
 Tests all components: TSRecord, JSON, MongoDB, factory, and base functionality.
 """
 
-import unittest
-import tempfile
-import shutil
 import json
-from pathlib import Path
-from datetime import datetime
-from unittest.mock import patch, MagicMock
+import shutil
 import sys
+import tempfile
+import unittest
+from datetime import datetime, timezone
+from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 # Add source path
 sys.path.insert(0, "src/cosim_toolbox")
 
 # Import our modules
-from cosim_toolbox.dbms import TSRecord
-from cosim_toolbox.dbms import JSONMetadataManager
-from cosim_toolbox.dbms import create_metadata_manager
+from cosim_toolbox.dbms import JSONMetadataManager, TSRecord, create_metadata_manager
 
 # Try to import MongoDB components
 try:
@@ -34,7 +32,7 @@ class TestTSRecord(unittest.TestCase):
 
     def test_tsrecord_creation(self):
         """Test basic TSRecord creation."""
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         record = TSRecord(
             real_time=now,
             sim_time=120.5,
@@ -53,7 +51,7 @@ class TestTSRecord(unittest.TestCase):
 
     def test_tsrecord_different_types(self):
         """Test TSRecord with different data value types."""
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         test_cases = [
             ("double", 123.45),
             ("integer", 42),
@@ -305,7 +303,7 @@ class TestMongoMetadataManager(unittest.TestCase):
     @patch("cosim_toolbox.dbms.mongo_metadata.MongoClient")
     def test_connection_management(self, mock_mongo_client):
         """Test MongoDB connection management."""
-        mock_client, mock_db, mock_collection = self._setup_mock_client()
+        mock_client, _mock_db, _mock_collection = self._setup_mock_client()
         mock_mongo_client.return_value = mock_client
 
         manager = MongoMetadataManager(location="localhost", database="test_db")
@@ -330,7 +328,7 @@ class TestMongoMetadataManager(unittest.TestCase):
     @patch("cosim_toolbox.dbms.mongo_metadata.MongoClient")
     def test_federation_operations(self, mock_mongo_client):
         """Test MongoDB federation operations."""
-        mock_client, mock_db, mock_collection = self._setup_mock_client()
+        mock_client, _mock_db, mock_collection = self._setup_mock_client()
         mock_mongo_client.return_value = mock_client
 
         # Mock successful operations - no existing document first
@@ -354,7 +352,7 @@ class TestMongoMetadataManager(unittest.TestCase):
     @patch("cosim_toolbox.dbms.mongo_metadata.MongoClient")
     def test_overwrite_protection(self, mock_mongo_client):
         """Test MongoDB overwrite protection."""
-        mock_client, mock_db, mock_collection = self._setup_mock_client()
+        mock_client, _mock_db, mock_collection = self._setup_mock_client()
         mock_mongo_client.return_value = mock_client
 
         manager = MongoMetadataManager(location="localhost", database="test_db")
@@ -390,7 +388,7 @@ class TestMongoMetadataManager(unittest.TestCase):
     @patch("cosim_toolbox.dbms.mongo_metadata.MongoClient")
     def test_read_operations(self, mock_mongo_client):
         """Test MongoDB read operations."""
-        mock_client, mock_db, mock_collection = self._setup_mock_client()
+        mock_client, _mock_db, mock_collection = self._setup_mock_client()
         mock_mongo_client.return_value = mock_client
         mock_collection.find_one.return_value = self.sample_federation
 

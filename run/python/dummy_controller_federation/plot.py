@@ -8,15 +8,15 @@ Python-based logger federate in CoSimulation Toolbox.
 modified by: Shat Pratoomratana
 """
 
-from os import environ
 import matplotlib.pyplot as plt
 import psycopg2
 
 import cosim_toolbox as env
 
+
 def open_logger():
     try:
-        return psycopg2.connect(**env.cst_data_db)
+        return psycopg2.connect(**env.pg_data_db)
     except:
         return
 

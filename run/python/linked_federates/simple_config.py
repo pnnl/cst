@@ -5,11 +5,13 @@ Created on 7/7/2023
 mitch.pelton@pnnl.gov
 """
 
-from cosim_toolbox.sims import Collect
-from cosim_toolbox.sims import HelicsPubGroup
-from cosim_toolbox.sims import HelicsSubGroup
-from cosim_toolbox.sims import HelicsEndPtGroup
-from cosim_toolbox.sims import FederateConfig
+from cosim_toolbox.sims import (
+    Collect,
+    FederateConfig,
+    HelicsEndPtGroup,
+    HelicsPubGroup,
+    HelicsSubGroup,
+)
 
 
 class MyFederate(FederateConfig):

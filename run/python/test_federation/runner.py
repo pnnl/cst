@@ -7,10 +7,14 @@ Copper.
 @author: Mitch Pelton
 mitch.pelton@pnnl.gov
 """
-from cosim_toolbox.sims import DockerRunner
-from cosim_toolbox.sims import HelicsMsg, Collect
 from cosim_toolbox.dbms import create_metadata_manager
+from cosim_toolbox.sims import Collect, DockerRunner, HelicsMsg
 
+#meta_backend = "json"
+meta_backend = "mongo"
+#data_backend = "csv"
+#data_backend = "parquet"
+data_backend = "postgres"
 
 class Runner:
 
@@ -97,7 +101,7 @@ class Runner:
             "docker": self.docker
         }
 
-        with create_metadata_manager(backend="mongo") as mgr:
+        with create_metadata_manager(backend=meta_backend) as mgr:
             print(f"Writing configuration files to '{mgr.location}'...")
             mgr.write_federation(self.federation_name, diction, overwrite=True)
             mgr.write_scenario(self.scenario_name, scenario, overwrite=True)
@@ -116,7 +120,7 @@ def main():
         else:
             DockerRunner.run_yaml(r.scenario_name)
     else:
-        DockerRunner.define_sh(r.scenario_name, use_meta_db="mongo", use_data_db="postgres")
+        DockerRunner.define_sh(r.scenario_name, use_meta_db=meta_backend, use_data_db=data_backend)
 
 if __name__ == "__main__":
     main()

@@ -9,8 +9,9 @@ HELICS federation configuration JSON.
 mitch.pelton@pnnl.gov
 """
 
-from enum import Enum
 import json
+from enum import Enum
+from typing import ClassVar
 
 
 class Group(Enum):
@@ -46,9 +47,8 @@ class HelicsFormatter:
             global_fed = ""
             if self.group == Group.SUB:
                 global_fed = self.fed + self.seperator
-            if "global" in self.diction:
-                if self.diction["global"]:
-                    global_fed = self.fed + self.seperator
+            if self.diction.get("global"):
+                global_fed = self.fed + self.seperator
             # Multiples
             if "@@" in self.keys[0] and "##" in self.keys[0]:
                 for k in self.indices:
@@ -138,15 +138,10 @@ class HelicsEndpointFormatter:
     def format_endpoints(self):
         variables = []
         global_fed = ""
-        if "global" in self.diction:
-            if self.diction["global"]:
-                global_fed = self.fed + self.seperator
+        if self.diction.get("global"):
+            global_fed = self.fed + self.seperator
         # Multiples
-        if "@@" in self.keys[0] and "##" in self.keys[0]:
-            pass
-        elif "@@" in self.keys[0]:
-            pass
-        elif "##" in self.keys[0]:
+        if ("@@" in self.keys[0] and "##" in self.keys[0]) or "@@" in self.keys[0] or "##" in self.keys[0]:
             pass
         else:
         # Single
@@ -178,7 +173,7 @@ class HelicsPubGroup(HelicsFormatter):
         self.format_variables()
 
 class HelicsSubGroup(HelicsFormatter):
-    def __init__(self, name: str, data_type: str, key_format: dict=None, **kwargs):
+    def __init__(self, name: str, data_type: str, key_format: dict | None = None, **kwargs):
         super().__init__(name, key_format, Group.SUB)
         self.diction = {"type": data_type}
         self.diction.update(kwargs)
@@ -204,7 +199,7 @@ class HelicsMsg:
     Provides a data structure for building up the HELICS configuration
     definitions for publications and subscriptions.
     """
-    _config_var = {
+    _config_var: ClassVar[dict] = {
         # General
         "name": "",
         "core_type": "zmq",
@@ -285,7 +280,7 @@ class HelicsMsg:
         "endpoints": [],
         "filters": [],
         "translators": []}
-    _var_attr = {
+    _var_attr: ClassVar[dict] = {
         "key": "",
         "type": "",
         "unit": "",
@@ -303,13 +298,13 @@ class HelicsMsg:
         "only_update_on_change": False,
         "only_transmit_on_change": False,
         "info": {}}
-    _pub_var = dict(_var_attr)
+    _pub_var: ClassVar[dict] = dict(_var_attr)
     _pub_var.update({
         "global": False,
         "tags": {}})
-    _sub_var = dict(_var_attr)
+    _sub_var: ClassVar[dict] = dict(_var_attr)
     _sub_var.update({})
-    _inp_var = dict(_var_attr)
+    _inp_var: ClassVar[dict] = dict(_var_attr)
     _inp_var.update({
         "global": False,
         "connections": 1,
@@ -319,7 +314,7 @@ class HelicsMsg:
         "single_connection_only": False,
         "multiple_connections_allowed": True,
         "multi_input_handling_method": "none"})
-    _end_pts = {
+    _end_pts: ClassVar[dict] = {
         "name": "",
         "type": "",
         # endpoint destination "federate/name"
@@ -333,7 +328,7 @@ class HelicsMsg:
         "info": {},
         "tags": {}
     }
-    _filters = {
+    _filters_var: ClassVar[dict] = {
         "name": "",
         # use singular for *_targets, use multiples for *Targets
         "source_targets": "",
@@ -346,7 +341,7 @@ class HelicsMsg:
             "name": "delay",
             "value": 600}
     }
-    _translators = {
+    _translators_var: ClassVar[dict] = {
         "name": "",
         "type": "",
         # use singular for *_targets, use multiples for *Targets
@@ -357,6 +352,7 @@ class HelicsMsg:
         "info": {}}
 
     def __init__(self, name: str, **kwargs):
+
         self.name = name
 
         # Helics attributes for json
@@ -367,14 +363,14 @@ class HelicsMsg:
 
         self._cnfg.update(kwargs)
         for attr_name, attr in self._cnfg.items():
-            HelicsMsg.verify(HelicsMsg._config_var, attr_name, attr)
+            HelicsMsg.verify(self._config_var, attr_name, attr)
 
         self._pubs = []
         self._subs = []
         self._inputs = []
         self._endpoints = []
-        self._filters = []
-        self._translators = []
+        self._filters = {}
+        self._translators = {}
 
     def write_json(self) -> dict:
         """
@@ -400,13 +396,13 @@ class HelicsMsg:
         Args:
             _fn (str): File name (including path) to which configuration will be written.
         """
-        op = open(_fn, 'w', encoding='utf-8')
-        json.dump(self.write_json(), op, ensure_ascii=False, indent=2)
-        op.close()
+        with open(_fn, 'w', encoding='utf-8') as op:
+            json.dump(self.write_json(), op, ensure_ascii=False, indent=2)
+            op.close()
 
     @staticmethod
     def verify(diction: dict, name: str, value: any):
-        if name in diction.keys():
+        if name in diction:
             if type(diction[name]) == type(value):
                 if diction[name] != value:
                     return True
@@ -445,13 +441,13 @@ class HelicsMsg:
     def get_pubs(self):
         return self._pubs
 
-    def publication(self, diction: dict, _c: Collect = None) -> None:
+    def publication(self, diction: dict, _c: Collect | None = None) -> None:
         if type(_c) is Collect: diction["tags"] = {"logger": _c.value}
-        for name in diction.keys():
-            HelicsMsg.verify(self._pub_var, name, diction[name])
+        for name, value in diction.items():
+            HelicsMsg.verify(self._pub_var, name, value)
         self._pubs.append(diction)
 
-    def pubs(self, _k: str, _t: str, _o: str, _p: str, _g: bool = True, _c: Collect = None) -> None:
+    def pubs(self, _k: str, _t: str, _o: str, _p: str, _g: bool = True, _c: Collect | None = None) -> None:
         """
         Defines a HELICS publication definition and adds it to the
         "_pubs" attribute of this object. This API supports the
@@ -473,7 +469,7 @@ class HelicsMsg:
         diction = {"global": _g, "key": _k, "type": _t, "info": {"object": _o, "property": _p}}
         self.publication(diction, _c)
 
-    def pubs_n(self, _k: str, _t: str, _g: bool = True, _c: Collect = None) -> None:
+    def pubs_n(self, _k: str, _t: str, _g: bool = True, _c: Collect | None = None) -> None:
         """
         Defines a HELICS publication definition and adds it to the
         "_pubs" attribute of this object. Does not include support for the
@@ -493,7 +489,7 @@ class HelicsMsg:
             diction["tags"] = {"logger": _c.value}
         self._pubs.append(diction)
 
-    def pubs_e(self, _k: str, _t: str, _u: str, _g: bool = None, _c: Collect = None) -> None:
+    def pubs_e(self, _k: str, _t: str, _u: str, _g: bool | None = None, _c: Collect | None = None) -> None:
         """
         Defines a HELICS publication definition and adds it to the
         "_pubs" attribute of this object. Includes support for the
@@ -518,8 +514,8 @@ class HelicsMsg:
         return self._subs
 
     def subscription(self, diction: dict) -> None:
-        for name in diction.keys():
-            HelicsMsg.verify(self._sub_var, name, diction[name])
+        for name, value in diction.items():
+            HelicsMsg.verify(self._sub_var, name, value)
         self._subs.append(diction)
 
     def subs(self, _k: str, _t: str, _o: str, _p: str) -> None:
@@ -552,7 +548,7 @@ class HelicsMsg:
         """
         self._subs.append({"key": _k, "type": _t})
 
-    def subs_e(self, _k: str, _t: str, _u: str, _r: bool = None) -> None:
+    def subs_e(self, _k: str, _t: str, _u: str, _r: bool | None = None) -> None:
         """
         Defines a HELICS subscription definition and adds it to the
         "_subs" attribute of this object. This API supports the
@@ -574,18 +570,18 @@ class HelicsMsg:
             diction["connection_required"] = _r
         self.subscription(diction)
 
-    def end_point(self, diction: dict, _c: Collect = None) -> None:
+    def end_point(self, diction: dict, _c: Collect | None = None) -> None:
         if type(_c) is Collect:
             diction["tags"] = {"logger": _c.value}
         # rename 'key' to 'name'
         if "key" in diction:
             diction["name"] = diction["key"]
             diction.pop("key")
-        for name in diction.keys():
-            HelicsMsg.verify(self._end_pts, name, diction[name])
+        for name, value in diction.items():
+            HelicsMsg.verify(self._end_pts, name, value)
         self._endpoints.append(diction)
 
-    def endpt(self, _k: str, _d: list | str, _g: bool = None, _c: Collect = None) -> None:
+    def endpt(self, _k: str, _d: list | str, _g: bool | None = None, _c: Collect | None = None) -> None:
         diction = {"name": _k, "destination": _d}
         if type(_g) is bool:
             diction["global"] = _g

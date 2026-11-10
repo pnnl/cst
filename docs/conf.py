@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 #
 # Co-simulation Toolbox documentation build configuration file
 #
@@ -17,8 +16,8 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os
-import sys
 import subprocess
+import sys
 
 sys.path.insert(0, os.path.abspath('../src'))
 
@@ -28,7 +27,6 @@ subprocess.Popen(cmd, shell=True).wait()
 # -- General configuration ------------------------------------------------
 
 # Add support for markdown
-from recommonmark.parser import CommonMarkParser
 
 # If your documentation needs a minimal Sphinx version, state it here.
 #
@@ -147,7 +145,7 @@ latex_elements = {
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title,
-#  author, documentclass [howto, manual, or own class]).
+#  author, document class [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'CST.tex', 'CST Documentation',
      'Pacific Northwest National Laboratory', 'manual'),

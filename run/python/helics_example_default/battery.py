@@ -1,8 +1,9 @@
-import sys
-from cosim_toolbox.sims import Federate
-import numpy as np
-import logging
 import json
+import logging
+
+import numpy as np
+
+from cosim_toolbox.sims import Federate
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler())

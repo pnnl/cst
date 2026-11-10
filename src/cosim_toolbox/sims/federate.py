@@ -11,12 +11,17 @@ trevor.hardy@pnnl.gov
 import datetime
 import json
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 import helics as h
 
-from cosim_toolbox.dbms import MetadataManager, TimeSeriesManager, TSRecord
-from cosim_toolbox.dbms import create_metadata_manager, create_timeseries_manager
+from cosim_toolbox.dbms import (
+    MetadataManager,
+    TimeSeriesManager,
+    TSRecord,
+    create_metadata_manager,
+    create_timeseries_manager,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -81,24 +86,24 @@ class Federate:
             debug (bool, optional): A flag for enabling debug behaviors. Defaults to True.
         """
         # HELICS and Manager Objects
-        self.hfed: Optional[h.HelicsFederate] = None
-        self.metadata_manager: Optional[MetadataManager] = None
-        self.timeseries_manager: Optional[TimeSeriesManager] = None
+        self.hfed: h.HelicsFederate | None = None
+        self.metadata_manager: MetadataManager | None = None
+        self.timeseries_manager: TimeSeriesManager | None = None
 
         # Configuration Attributes (initialized later)
-        self.config: Optional[Dict[str, Any]] = None
-        self.scenario: Optional[Dict[str, Any]] = None
-        self.scenario_name: Optional[str] = None
-        self.federation: Optional[Dict[str, Any]] = None
-        self.federation_name: Optional[str] = None
-        self.federate: Optional[Dict[str, Any]] = None
-        self.federate_type: Optional[str] = None
-        self.federate_name: Optional[str] = fed_name
-        self.analysis_name: Optional[str] = None
+        self.config: dict[str, Any] | None = None
+        self.scenario: dict[str, Any] | None = None
+        self.scenario_name: str = None
+        self.federation: dict[str, Any] | None = None
+        self.federation_name: str = None
+        self.federate: dict[str, Any] | None = None
+        self.federate_type: str = None
+        self.federate_name: str = fed_name
+        self.analysis_name: str = None
 
         # Time and Control Attributes
-        self.start: Optional[str] = None
-        self.stop: Optional[str] = None
+        self.start: str | None = None
+        self.stop: str | None = None
         self.no_t_start = None
         self.period = -1.0
         self.stop_time = -1.0
@@ -108,18 +113,18 @@ class Federate:
 
         # Internal State Attributes
         self._use_timescale: bool = False
-        self._s: Optional[datetime.datetime] = None
-        self._ep: Optional[datetime.datetime] = None
+        self._s: datetime.datetime | None = None
+        self._ep: datetime.datetime | None = None
         self._count = 0
         self.interval = 1000
 
         # Data Interface Dictionaries
         self.fed_collect = "maybe"
-        self.pubs: Dict[str, Any] = {}
-        self.inputs: Dict[str, Any] = {}
-        self.endpoints: Dict[str, Any] = {}
-        self.data_from_federation: Dict[str, Dict] = {"inputs": {}, "endpoints": {}}
-        self.data_to_federation: Dict[str, Dict] = {"publications": {}, "endpoints": {}}
+        self.pubs: dict[str, Any] = {}
+        self.inputs: dict[str, Any] = {}
+        self.endpoints: dict[str, Any] = {}
+        self.data_from_federation: dict[str, dict] = {"inputs": {}, "endpoints": {}}
+        self.data_to_federation: dict[str, dict] = {"publications": {}, "endpoints": {}}
 
     @property
     def use_timescale(self) -> bool:
@@ -159,15 +164,15 @@ class Federate:
         self.start = self.scenario["start_time"]
         self.stop = self.scenario["stop_time"]
         # setting max in seconds
-        ep = datetime.datetime(1970, 1, 1)
+        ep = datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc)
         # %:z in version  python 3.12, for now, no time offsets (zones)
-        s = datetime.datetime.strptime(self.start, "%Y-%m-%dT%H:%M:%S")
-        e = datetime.datetime.strptime(self.stop, "%Y-%m-%dT%H:%M:%S")
+        s = datetime.datetime.strptime(self.start, "%Y-%m-%dT%H:%M:%S").astimezone()
+        e = datetime.datetime.strptime(self.stop, "%Y-%m-%dT%H:%M:%S").astimezone()
         s_idx = (s - ep).total_seconds()
         e_idx = (e - ep).total_seconds()
-        self.stop_time = int((e_idx - s_idx))
+        self.stop_time = int(e_idx - s_idx)
         self.no_t_start = self.start.replace('T', ' ')
-        self._s = datetime.datetime.strptime(self.start, "%Y-%m-%dT%H:%M:%S")
+        self._s = datetime.datetime.strptime(self.start, "%Y-%m-%dT%H:%M:%S").astimezone()
 
     def get_helics_config(self) -> None:
         """Sets instance attributes to enable HELICS config query of dbConfigs
@@ -234,21 +239,21 @@ class Federate:
         self.get_helics_config()
 
         # Provide internal copies of the HELICS interfaces for convenience during debugging.
-        if "publications" in self.config.keys():
+        if "publications" in self.config:
             for pub in self.config["publications"]:
                 name = pub.get("name", pub.get("key"))
                 self.pubs[name] = pub
                 self.data_to_federation["publications"][name] = None
-        if "subscriptions" in self.config.keys():
+        if "subscriptions" in self.config:
             for sub in self.config["subscriptions"]:
                 target = sub.get("target", sub.get("key"))
                 self.inputs[target] = sub
                 self.data_from_federation["inputs"][target] = None
-        if "inputs" in self.config.keys():
+        if "inputs" in self.config:
             for put in self.config["inputs"]:
                 self.inputs[put["name"]] = put
                 self.data_from_federation["inputs"][put["key"]] = None
-        if "endpoints" in self.config.keys():
+        if "endpoints" in self.config:
             for ep in self.config["endpoints"]:
                 self.endpoints[ep["name"]] = ep
                 self.data_to_federation["endpoints"][ep["name"]] = None
@@ -297,7 +302,6 @@ class Federate:
         Returns:
             None
         """
-        pass
 
     def on_enter_initialization_mode(self) -> None:
         """Functionality executed after entering initialization
@@ -307,7 +311,6 @@ class Federate:
         Returns:
             None
         """
-        pass
 
     def on_enter_executing_mode(self) -> None:
         """Functionality executed after entering executing mode
@@ -317,7 +320,6 @@ class Federate:
         Returns:
             None
         """
-        pass
 
     def run_cosim_loop(self) -> None:
         """Runs the generic HELICS co-sim loop
@@ -440,10 +442,10 @@ class Federate:
             None
         """
 
-        for key in self.data_to_federation["publications"].keys():
+        for key in self.data_to_federation["publications"]:
             self.data_to_federation["publications"][key] = None
 
-        for key in self.data_to_federation["endpoints"].keys():
+        for key in self.data_to_federation["endpoints"]:
             self.data_to_federation["endpoints"][key] = None
 
     def get_data_from_federation(self) -> None:
@@ -464,7 +466,7 @@ class Federate:
         for key in self.data_from_federation["inputs"]:
             self.data_from_federation["inputs"][key] = []
 
-        for idx in range(0, self.hfed.n_inputs):
+        for idx in range(self.hfed.n_inputs):
             put = self.hfed.get_subscription_by_index(idx)
             if put.name[0:7] == "_input_":
                 key = put.target
@@ -497,9 +499,9 @@ class Federate:
         for name in self.data_from_federation["endpoints"]:
             self.data_from_federation["endpoints"][name] = []
 
-        for idx in range(0, self.hfed.n_endpoints):
+        for idx in range(self.hfed.n_endpoints):
             ep = self.hfed.get_endpoint_by_index(idx)
-            for message in range(0, ep.n_pending_messages):
+            for message in range(ep.n_pending_messages):
                 data = ep.get_message()
                 if ep.default_destination in self.data_from_federation["endpoints"]:
                     self.data_from_federation["endpoints"][ep.default_destination].append(data)
@@ -526,7 +528,7 @@ class Federate:
         # Doing something silly for testing purposes
         # Get a value from an arbitrary input; I hope it is a number
         if len(self.data_from_federation["inputs"].keys()) >= 1:
-            key = list(self.data_from_federation["inputs"].keys())[0]
+            key = next(iter(self.data_from_federation["inputs"].keys()))
             dummy_value = self.data_from_federation["inputs"][key]
         else:
             dummy_value = 0
@@ -627,10 +629,10 @@ class Federate:
     def write_to_logger(self, name: str, 
                         key: str, 
                         value: Any, 
-                        table: str = None, 
-                        message_time: float = None, 
-                        receiving_federate: str = None, 
-                        receiving_endpoint: str = None):
+                        table: str | None = None,
+                        message_time: float | None = None,
+                        receiving_federate: str | None = None,
+                        receiving_endpoint: str | None = None):
         """Populates a TSRecord object with the output of a publication or 
         endpoint and adds it to the timeseries data manager queue of data to
         write.

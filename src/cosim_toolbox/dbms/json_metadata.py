@@ -9,10 +9,10 @@ import json
 import logging
 import shutil
 from pathlib import Path
-from typing import Any, Dict, Optional, Union, List, cast
+from typing import Any, cast
 
-from .abstractions import MDDataWriter, MDDataReader, MDDataManager
-from .validation import validate_name, ValidationError, safe_name_log
+from .abstractions import MDDataManager, MDDataReader, MDDataWriter
+from .validation import ValidationError, safe_name_log, validate_name
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 class _JSONPathHelper:
     """Manages file path logic for JSON metadata storage."""
 
-    def __init__(self, location: Union[str, Path]):
+    def __init__(self, location: str | Path):
         self.location = Path(location)
         self.federations_path = self.location / "federations"
         self.scenarios_path = self.location / "scenarios"
@@ -57,14 +57,14 @@ class JSONMetadataWriter(MDDataWriter):
     def __init__(
         self,
         *,
-        location: Optional[Union[str, Path]] = None,
-        helper: Optional[_JSONPathHelper] = None,
+        location: str | Path | None = None,
+        helper: _JSONPathHelper | None = None,
     ):
         """ Initialize the JSON writer. """
         super().__init__()
         if not (location or helper):
             raise ValueError("Either 'location' or 'helper' must be provided.")
-        location = cast(Union[str, Path], location)
+        location = cast(str | Path, location)
         self.helper: _JSONPathHelper
         self.helper = helper or _JSONPathHelper(location)
 
@@ -95,12 +95,12 @@ class JSONMetadataWriter(MDDataWriter):
         logger.debug("JSON metadata writer disconnected")
 
     def write_federation(
-        self, name: str, federation_data: Dict[str, Any], overwrite: bool = False
+        self, name: str, federation_data: dict[str, Any], overwrite: bool = False
     ) -> bool:
         return self.write("federations", name, federation_data, overwrite)
 
     def write_scenario(
-        self, name: str, scenario_data: Dict[str, Any], overwrite: bool = False
+        self, name: str, scenario_data: dict[str, Any], overwrite: bool = False
     ) -> bool:
         return self.write("scenarios", name, scenario_data, overwrite)
 
@@ -108,7 +108,7 @@ class JSONMetadataWriter(MDDataWriter):
         self,
         collection_type: str,
         name: str,
-        data: Dict[str, Any],
+        data: dict[str, Any],
         overwrite: bool = False,
     ) -> bool:
         """_summary_
@@ -154,7 +154,7 @@ class JSONMetadataWriter(MDDataWriter):
                 f"Validation error for {collection_type} '{safe_name_log(name)}': {e}"
             )
             return False
-        except (OSError, IOError) as e:
+        except OSError as e:
             logger.error(
                 f"File I/O error writing {collection_type} '{safe_name_log(name)}': {e}"
             )
@@ -184,14 +184,14 @@ class JSONMetadataReader(MDDataReader):
     def __init__(
         self,
         *,
-        location: Optional[Union[str, Path]] = None,
-        helper: Optional[_JSONPathHelper] = None,
+        location: str | Path | None = None,
+        helper: _JSONPathHelper | None = None,
     ):
         """ Initialize the JSON reader. """
         super().__init__()
         if not (location or helper):
             raise ValueError("Either 'location' or 'helper' must be provided.")
-        location = cast(Union[str, Path], location)
+        location = cast(str | Path, location)
         self.helper: _JSONPathHelper
         if helper is None:
             helper = _JSONPathHelper(location)
@@ -222,7 +222,7 @@ class JSONMetadataReader(MDDataReader):
         self._is_connected = False
         logger.debug("JSON metadata reader disconnected")
 
-    def read_federation(self, name: str) -> Optional[Dict[str, Any]]:
+    def read_federation(self, name: str) -> dict[str, Any] | None:
         """Reads federation configuration data
 
         Args:
@@ -233,7 +233,7 @@ class JSONMetadataReader(MDDataReader):
         """
         return self.read("federations", name)
 
-    def read_scenario(self, name: str) -> Optional[Dict[str, Any]]:
+    def read_scenario(self, name: str) -> dict[str, Any] | None:
         """Reads scenario metadata
 
         Args:
@@ -244,7 +244,7 @@ class JSONMetadataReader(MDDataReader):
         """
         return self.read("scenarios", name)
 
-    def read(self, collection_type: str, name: str) -> Optional[Dict[str, Any]]:
+    def read(self, collection_type: str, name: str) -> dict[str, Any] | None:
         """Reads data from metadata store, generally data in custom 
         collections.
 
@@ -280,7 +280,7 @@ class JSONMetadataReader(MDDataReader):
                 f"Validation error for {collection_type} '{safe_name_log(name)}': {e}"
             )
             return None
-        except (OSError, IOError) as e:
+        except OSError as e:
             logger.error(
                 f"File I/O error reading {collection_type} '{safe_name_log(name)}': {e}"
             )
@@ -296,7 +296,7 @@ class JSONMetadataReader(MDDataReader):
             )
             return None
 
-    def list_federations(self) -> List[str]:
+    def list_federations(self) -> list[str]:
         """Produces a list of federations stored in the metadata store
 
         Returns:
@@ -304,7 +304,7 @@ class JSONMetadataReader(MDDataReader):
         """
         return self.list_items("federations")
 
-    def list_scenarios(self) -> List[str]:
+    def list_scenarios(self) -> list[str]:
         """Produces a list of scenarios stored in the metadata store
 
         Returns:
@@ -312,7 +312,7 @@ class JSONMetadataReader(MDDataReader):
         """
         return self.list_items("scenarios")
 
-    def list_items(self, collection_type: str) -> List[str]:
+    def list_items(self, collection_type: str) -> list[str]:
         """Produces a list of the named data in the collection in the metadata
         store.
 
@@ -363,7 +363,7 @@ class JSONMetadataReader(MDDataReader):
             logger.warning(f"Skipping invalid file name: {file_path.name}")
             return False
 
-    def list_custom_collections(self) -> List[str]:
+    def list_custom_collections(self) -> list[str]:
         """Lists custom collection names in metadata store
 
         Returns:
@@ -512,7 +512,7 @@ class JSONMetadataManager(MDDataManager):
                 f"Validation error for {collection_type} '{safe_name_log(name)}': {e}"
             )
             return False
-        except (OSError, IOError) as e:
+        except OSError as e:
             logger.error(
                 f"File I/O error deleting {collection_type} '{safe_name_log(name)}': {e}"
             )

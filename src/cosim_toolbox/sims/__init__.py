@@ -4,14 +4,11 @@ CoSim Toolbox Simulations Package
 This module provides a unified API for reading and writing co-simulation federates
 """
 
-# Core data structures and class for HELICS
-from .helicsConfig import (
-    HelicsPubGroup,
-    HelicsSubGroup,
-    HelicsEndPtGroup,
-    HelicsMsg,
-    Collect,
-)
+
+# Concrete Manager implementations
+from .docker_runner import DockerRunner
+from .federate import Federate
+from .federate_logger import FederateLogger
 
 # Factory functions for easy instantiation
 from .federation import (
@@ -19,20 +16,25 @@ from .federation import (
     FederationConfig,
 )
 
-# Concrete Manager implementations
-from .federate import Federate
-from .dockerRunner import DockerRunner
-from .federateLogger import FederateLogger
+# Core data structures and class for HELICS
+from .helics_config import (
+    Collect,
+    HelicsEndPtGroup,
+    HelicsMsg,
+    HelicsPubGroup,
+    HelicsSubGroup,
+)
 
 # Public API definition
 __all__ = [
     "Collect",
+    "DockerRunner",
+    "Federate",
+    "FederateConfig",
+    "FederateLogger",
+    "FederationConfig",
+    "HelicsEndPtGroup",
+    "HelicsMsg",
     "HelicsPubGroup",
     "HelicsSubGroup",
-    "HelicsMsg",
-    "FederateConfig",
-    "FederationConfig",
-    "Federate",
-    "DockerRunner",
-    "FederateLogger",
 ]

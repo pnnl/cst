@@ -39,14 +39,6 @@ cst_federations: str = "federations"
 cst_scenarios: str = "scenarios"
 
 # Database connection strings for metadata
-cst_meta_db = {
-    "host": cst_mg_host,
-    "port": cst_mg_port,
-    "dbname": cst_db,
-    "user": cst_user,
-    "password": cst_password
-}
-
 mongo_meta_db = {
     "location": cst_mg_host,
     "port": cst_mg_port,
@@ -60,20 +52,16 @@ json_meta_db = {
 }
 
 # Database connection strings for data
-cst_data_db = {
-    "host": cst_pg_host,
-    "port": cst_pg_port,
-    "dbname": cst_db,
-    "user": cst_user,
-    "password": cst_password
-}
-
 pg_data_db = {
     "location": cst_pg_host,
     "port": cst_pg_port,
     "database": cst_db,
     "user": cst_user,
     "password": cst_password
+}
+
+pq_data_db = {
+    "location": "./data_store",
 }
 
 csv_data_db = {

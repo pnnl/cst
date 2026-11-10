@@ -9,7 +9,7 @@ Though the backends use identical APIs, the nature of the data storage as implem
 
 After specifying which backend and data store to use, data can be automatically collected from federates by two separate means. For federates based on CST's Federate class, the data collection happens automatically, behind the scenes. For federates developed otherwise, a separate logger federate can be included in the federation to do the data collection. In either case, the data that is collected is all of that which is transmitted to the federation via HELICS (configuration is possible to limit the collected data to a subset of this). 
 
-After the data has been collected and is needed for post-processing, the CST APIs take care of extracting the data from the data store and presenting it as a Pandas DataFrame, one of the most common data formats use in the Python community.
+After the data has been collected and is needed for post-processing, the CST APIs take care of extracting the data from the data store and presenting it as a Pandas DataFrame, one of the most common data formats used.
 
 This approach to data collection provides several benefits:
 - Data collection is easily configured simply by creating a new HELICS output
@@ -120,7 +120,7 @@ If you want to manually look through the data without using the CST APIs for acc
 The preservation of the hierarchy and the structure of these files is necessary for the CST's CSV backend to continue to operate correctly. Modification and/or relocation of these files in any way puts the operation of the backend at jeopardy so tread carefully.
 :::
 
-### Postgres Backed (database)
+### Postgres Backend (database)
 The "postgres" backend for CST writes the time-series data to a Postgres database. Included in the persistent services, alongside the database itself, is a service that provides a web interface to inspect the database: "pgadmin". Configuring this service takes a little bit of work.
 
 First, get the IP address of the pgadmin server by looking for the value of the environment variable "POSTGRES_HOST"; this is set when setting up the environment by running the `source cosim.env` in the root directory.

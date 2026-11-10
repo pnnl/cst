@@ -10,15 +10,15 @@ trevor.hardy@pnnl.gov
 """
 
 # Install gitlab: pip install --upgrade python-gitlab
-import gitlab
+import argparse
+import datetime as dt
 import json
 import logging
-import datetime as dt
-import argparse
-import sys
 import os
 import pathlib
+import sys
 
+import gitlab
 
 logger = logging.getLogger(__name__)
 
@@ -38,8 +38,8 @@ def _open_file(file_path: str, type='r'):
     """
     try:
         fh = open(file_path, type)
-    except IOError:
-        logger.error('Unable to open {}'.format(file_path))
+    except OSError:
+        logger.error(f'Unable to open {file_path}')
     else:
         return fh
 

@@ -31,10 +31,10 @@ def read(fn, basedir=None, buf=None):
         line = fh.readline()
         line = remove_comment_inline(line)  # remove comments (anything after //...)
         while line != '':  # Skip Blank lines
-            while re.match('\s*//', line) or re.match('\s+$', line): # Skip comments and whitespace-only lines
+            while re.match(r'\s*//', line) or re.match(r'\s+$', line): # Skip comments and whitespace-only lines
                 line = fh.readline()
             line = remove_comment_inline(line)  # remove comments (anything after //...)
-            m = re.search('#\s?include\s+[\'"]?([^\.]+\.glm)', line)
+            m = re.search('#\\s?include\\s+[\'"]?([^\\.]+\\.glm)', line)
             if m:
                 # Found dependency
                 dep_fn = Path(m.group(1))
@@ -51,15 +51,13 @@ def write(ofn, model, clock, directives, modules, classes, schedules):
     # Open the output file
     with open(ofn, 'w') as outf:
         # Write the '#' directives
-        for directive in directives:
-            outf.write(directive+'\n')
+        outf.writelines(directive+'\n' for directive in directives)
         outf.write('\n')
 
         # Write the clock, if found
         if len(clock) > 0:
             outf.write('clock {\n')
-            for param in clock:
-                outf.write('\t' + param + ' ' + clock[param] + ';\n')
+            outf.writelines('\t' + param + ' ' + clock[param] + ';\n' for param in clock)
             outf.write('}\n')
         outf.write('\n')
 
@@ -70,8 +68,7 @@ def write(ofn, model, clock, directives, modules, classes, schedules):
                 outf.write(';\n')
             else:
                 outf.write(' {\n')
-                for param in modules[module]:
-                    outf.write('\t' + param + ' ' + modules[module][param] + ';\n')
+                outf.writelines('\t' + param + ' ' + modules[module][param] + ';\n' for param in modules[module])
                 outf.write('};\n')
             outf.write('\n')
 
@@ -82,15 +79,13 @@ def write(ofn, model, clock, directives, modules, classes, schedules):
                 outf.write(';\n')
             else:
                 outf.write(' {\n')
-                for param in classes[c]:
-                    outf.write('\t' + param + ' ' + classes[c][param] + ';\n')
+                outf.writelines('\t' + param + ' ' + classes[c][param] + ';\n' for param in classes[c])
                 outf.write('};\n')
             outf.write('\n')
 
         # Write the schedules
         for s in schedules:
-            for sline in schedules[s]:
-                outf.write(sline)
+            outf.writelines(schedules[s])
             outf.write('\n')
 
         # Write the objects
@@ -123,11 +118,11 @@ def obj(parent, model, line, itr, oidh, octr):
     """
     octr += 1
     # Identify the object type
-    m = re.search('object ([^:{\s]+)[:{\s]', line, re.IGNORECASE)
+    m = re.search(r'object ([^:{\s]+)[:{\s]', line, re.IGNORECASE)
 
     _type = m.group(1)
     # If the object has an id number, store it
-    n = re.search('object ([^:]+:[^{\s]+)', line, re.IGNORECASE)
+    n = re.search(r'object ([^:]+:[^{\s]+)', line, re.IGNORECASE)
     if n:
         oid = n.group(1)
     line = next(itr)
@@ -139,11 +134,11 @@ def obj(parent, model, line, itr, oidh, octr):
         params['parent'] = parent
     # print('nested '+type)
     while not oend:
-        m = re.match('\s*(\S+)\s+([^;{]+)[;{]', line)
+        m = re.match(r'\s*(\S+)\s+([^;{]+)[;{]', line)
         if m:
-            if re.search('\$', line):  # check if value is a defined variable
+            if re.search(r'\$', line):  # check if value is a defined variable
                 # redo match but don't exclude { in the match and don't use it to end the match
-                m = re.search('\s*(\S+)\s+([^;]+)[;]', line)
+                m = re.search(r'\s*(\S+)\s+([^;]+)[;]', line)
             # found a parameter
             param = m.group(1)
             # check for quotations in the value
@@ -170,7 +165,7 @@ def obj(parent, model, line, itr, oidh, octr):
                 params[param] = 'OBJECT_'+str(octr)
             else:
                 params[param] = val
-        if re.search('}', line) and not re.search('\$', line):
+        if re.search('}', line) and not re.search(r'\$', line):
             if intobj:
                 intobj -= 1
                 line = next(itr)
@@ -216,7 +211,7 @@ def parse(lines):
         if re.search('object', line):
             line, octr = obj(None, model, line, itr, h, octr)
         # Look for # directives
-        if re.match('#\s?\w', line):
+        if re.match(r'#\s?\w', line):
             if re.match('#/s?if', line, re.IGNORECASE):
                 print('WARNING: #if directive is not supported by glm')
             elif re.match('#/s?endif', line, re.IGNORECASE):
@@ -224,7 +219,7 @@ def parse(lines):
             else:
                 directives.append(line)
         # Look for the clock
-        m_clock = re.match('clock\s*([;{])', line, re.IGNORECASE)
+        m_clock = re.match(r'clock\s*([;{])', line, re.IGNORECASE)
         if m_clock:
             # Clock found: look for parameters
             if m_clock.group(1) == '{':
@@ -232,7 +227,7 @@ def parse(lines):
                 oend = 0
                 while not oend:
                     line = next(itr)
-                    m_param = re.search('(\w+)\s+([^;\n]+)', line)
+                    m_param = re.search('(\\w+)\\s+([^;\n]+)', line)
                     if m_param:
                         # Parameter found
                         clock[m_param.group(1)]=m_param.group(2)
@@ -240,7 +235,7 @@ def parse(lines):
                         # End of the clock definition
                         oend = 1
         # Look for module defintions
-        m_mtype = re.search('module\s+(\w+)\s*([;{])', line, re.IGNORECASE)
+        m_mtype = re.search(r'module\s+(\w+)\s*([;{])', line, re.IGNORECASE)
         if m_mtype:
             # Module found: look for parameters
             modules[m_mtype.group(1)] = {}
@@ -249,7 +244,7 @@ def parse(lines):
                 oend = 0
                 while not oend:
                     line = next(itr)
-                    m_param = re.search('(\w+)\s+([^;\n]+)', line)
+                    m_param = re.search('(\\w+)\\s+([^;\n]+)', line)
                     if m_param:
                         # Parameter found
                         modules[m_mtype.group(1)][m_param.group(1)] = \
@@ -258,7 +253,7 @@ def parse(lines):
                         # End of the module
                         oend = 1
         # Look for class definitions
-        m_ctype = re.search('class\W+(\w+)\s*([;{])', line, re.IGNORECASE)
+        m_ctype = re.search(r'class\W+(\w+)\s*([;{])', line, re.IGNORECASE)
         if m_ctype:
             # Class found: look for parameters
             classes[m_ctype.group(1)] = {}
@@ -267,7 +262,7 @@ def parse(lines):
                 oend = 0
                 while not oend:
                     line = next(itr)
-                    m_param = re.search('(\w+)\s+([^;\n]+)', line)
+                    m_param = re.search('(\\w+)\\s+([^;\n]+)', line)
                     if m_param:
                         # Parameter found
                         classes[m_ctype.group(1)][m_param.group(1)] = \
@@ -276,7 +271,7 @@ def parse(lines):
                         # End of the class
                         oend = 1
         # Look for schedule definitions
-        m_sched = re.search('schedule\W+(\w+)\s*([;{])', line, re.IGNORECASE)
+        m_sched = re.search(r'schedule\W+(\w+)\s*([;{])', line, re.IGNORECASE)
         if m_sched:
             # schedule found
             schedules[m_sched.group(1)] = []

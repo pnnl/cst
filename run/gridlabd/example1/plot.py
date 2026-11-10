@@ -1,7 +1,7 @@
-import plotly.express as px
 import numpy as np
-from cosim_toolbox.dbms import create_timeseries_manager
+import plotly.express as px
 
+from cosim_toolbox.dbms import create_timeseries_manager
 
 # --- Configuration Section ---
 # This makes it easy to switch between different data sources.

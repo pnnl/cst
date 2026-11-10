@@ -5,8 +5,8 @@ Factory functions for creating data managers.
 """
 
 # Use relative imports within the module
-from .. import csv_data_db, pg_data_db, json_meta_db, mongo_meta_db
-from .abstractions import TimeSeriesManager, MetadataManager
+from .. import csv_data_db, json_meta_db, mongo_meta_db, pg_data_db, pq_data_db
+from .abstractions import MetadataManager, TimeSeriesManager
 
 
 def create_timeseries_manager(
@@ -39,6 +39,14 @@ def create_timeseries_manager(
             if key in pg_data_db:
                 pg_data_db[key] = value
         return PostgreSQLTimeSeriesManager(analysis_name=analysis_name, **pg_data_db)
+    elif backend == "parquet":
+            from . import ParquetTimeSeriesManager
+
+            # assign kwargs to backend option
+            for key, value in kwargs.items():
+                if key in pq_data_db:
+                    pq_data_db[key] = value
+            return ParquetTimeSeriesManager(analysis_name=analysis_name, **pq_data_db)
     else:
         raise ValueError(
             f"Unknown time-series backend: {backend}. Supported: csv, postgres"

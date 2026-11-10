@@ -2,11 +2,15 @@
 Tests for metadata factory functions.
 """
 
-import pytest
 from pathlib import Path
-from cosim_toolbox.dbms import create_metadata_manager
-from cosim_toolbox.dbms import JSONMetadataManager
-from cosim_toolbox.dbms import MongoMetadataManager
+
+import pytest
+
+from cosim_toolbox.dbms import (
+    JSONMetadataManager,
+    MongoMetadataManager,
+    create_metadata_manager,
+)
 
 
 class TestMetadataFactory:
