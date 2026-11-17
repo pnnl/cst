@@ -16,7 +16,12 @@ from typing import Any
 
 import pandas as pd
 
-from .abstractions import TSDataManager, TSDataReader, TSDataWriter, TSRecord
+from .abstractions import (
+    TimeSeriesManager,
+    TimeSeriesReader,
+    TimeSeriesWriter,
+    TSRecord,
+)
 from .validation import ValidationError, safe_name_log, validate_name
 
 logger = logging.getLogger(__name__)
@@ -155,7 +160,7 @@ class CSVHelper:
             return value_str
 
 
-class CSVTimeSeriesWriter(TSDataWriter):
+class CSVTimeSeriesWriter(TimeSeriesWriter):
     """CSV file-based time-series data writer."""
 
     def __init__(
@@ -232,12 +237,10 @@ class CSVTimeSeriesWriter(TSDataWriter):
         """Write TSRecord objects to CSV files.
 
         Args:
-            records (List[TSRecord]): Records (data) to be written to the data
-                backend
+            records (list[TSRecord]): Records (data) to be written to the data backend
 
         Returns:
-            bool: flag indicating whether the data was written to the data
-                backend
+            bool: flag indicating whether the data was written to the data backend
         """
         if not self.is_connected:
             logger.error("CSV writer not connected. Call connect() first.")
@@ -286,7 +289,7 @@ class CSVTimeSeriesWriter(TSDataWriter):
             return False
 
 
-class CSVTimeSeriesReader(TSDataReader):
+class CSVTimeSeriesReader(TimeSeriesReader):
     """CSV file-based time-series data reader."""
 
     def __init__(
@@ -456,7 +459,7 @@ class CSVTimeSeriesReader(TSDataReader):
         """Provides a list of federates with data in the data backend
 
         Returns:
-            List[str]: list of federates with data in the data backend
+            list[str]: list of federates with data in the data backend
         """
         if not self.is_connected or not self.helper.analysis_path.exists():
             return []
@@ -472,7 +475,7 @@ class CSVTimeSeriesReader(TSDataReader):
                 data types are being determined
 
         Returns:
-            List[str]: list of data types in data backend
+            list[str]: list of data types in data backend
         """
         data_types = []
         if not self.is_connected:
@@ -490,7 +493,7 @@ class CSVTimeSeriesReader(TSDataReader):
         """Get list of unique scenarios in the data.
 
         Returns:
-            List[str]: list of unique scenarios in the data
+            list[str]: list of unique scenarios in the data
         """
         if not self._is_connected or not self.helper.analysis_path.exists():
             return []
@@ -532,7 +535,7 @@ class CSVTimeSeriesReader(TSDataReader):
         }
 
 
-class CSVTimeSeriesManager(TSDataManager):
+class CSVTimeSeriesManager(TimeSeriesManager):
     """
     Joint CSV time-series manager using composition.
     Manages a shared Helper for a single reader and writer instance.
@@ -572,7 +575,7 @@ class CSVTimeSeriesManager(TSDataManager):
         """Lists federates with data in data backend
 
         Returns:
-            List[str]: list of federates with data in data backend
+            list[str]: list of federates with data in data backend
         """
         return self.reader.list_federates()
 
@@ -583,7 +586,7 @@ class CSVTimeSeriesManager(TSDataManager):
             federate_names (str): Name of federate being queried
 
         Returns:
-            List[str]: list of data types in data backend
+            list[str]: list of data types in data backend
         """
         return self.reader.list_data_types(federate_names)
 
@@ -591,7 +594,7 @@ class CSVTimeSeriesManager(TSDataManager):
         """List of scenarios in the data backend
 
         Returns:
-            List[str]: list of scenarios in the data backend
+            list[str]: list of scenarios in the data backend
         """
         return self.reader.list_scenarios()
 

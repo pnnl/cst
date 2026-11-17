@@ -17,7 +17,12 @@ import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-from .abstractions import TSDataManager, TSDataReader, TSDataWriter, TSRecord
+from .abstractions import (
+    TimeSeriesManager,
+    TimeSeriesReader,
+    TimeSeriesWriter,
+    TSRecord,
+)
 from .validation import ValidationError, safe_name_log, validate_name
 
 logger = logging.getLogger(__name__)
@@ -176,7 +181,7 @@ class ParquetHelper:
             return value_str
 
 
-class ParquetTimeSeriesWriter(TSDataWriter):
+class ParquetTimeSeriesWriter(TimeSeriesWriter):
     """Parquet file-based time-series data writer."""
 
     def __init__(
@@ -251,7 +256,7 @@ class ParquetTimeSeriesWriter(TSDataWriter):
         """Write TSRecord objects to Parquet files.
 
         Args:
-            records (List[TSRecord]): Records (data) to be written to the data
+            records (list[TSRecord]): Records (data) to be written to the data
                 backend
 
         Returns:
@@ -315,7 +320,7 @@ class ParquetTimeSeriesWriter(TSDataWriter):
             return False
 
 
-class ParquetTimeSeriesReader(TSDataReader):
+class ParquetTimeSeriesReader(TimeSeriesReader):
     """Parquet file-based time-series data reader."""
 
     def __init__(
@@ -482,7 +487,7 @@ class ParquetTimeSeriesReader(TSDataReader):
         """Provides a list of federates with data in the data backend
 
         Returns:
-            List[str]: list of federates with data in the data backend
+            list[str]: list of federates with data in the data backend
         """
         if not self.is_connected or not self.helper.analysis_path.exists():
             return []
@@ -498,7 +503,7 @@ class ParquetTimeSeriesReader(TSDataReader):
                 data types are being determined
 
         Returns:
-            List[str]: list of data types in data backend
+            list[str]: list of data types in data backend
         """
         data_types = []
         if not self.is_connected:
@@ -516,7 +521,7 @@ class ParquetTimeSeriesReader(TSDataReader):
         """Get list of unique scenarios in the data.
 
         Returns:
-            List[str]: list of unique scenarios in the data
+            list[str]: list of unique scenarios in the data
         """
         if not self._is_connected or not self.helper.analysis_path.exists():
             return []
@@ -559,7 +564,7 @@ class ParquetTimeSeriesReader(TSDataReader):
         }
 
 
-class ParquetTimeSeriesManager(TSDataManager):
+class ParquetTimeSeriesManager(TimeSeriesManager):
     """
     Joint Parquet time-series manager using composition.
     Manages a shared Helper for a single reader and writer instance.
@@ -599,7 +604,7 @@ class ParquetTimeSeriesManager(TSDataManager):
         """Lists federates with data in data backend
 
         Returns:
-            List[str]: list of federates with data in data backend
+            list[str]: list of federates with data in data backend
         """
         return self.reader.list_federates()
 
@@ -610,7 +615,7 @@ class ParquetTimeSeriesManager(TSDataManager):
             federate_names (str): Name of federate being queried
 
         Returns:
-            List[str]: list of data types in data backend
+            list[str]: list of data types in data backend
         """
         return self.reader.list_data_types(federate_names)
 
@@ -618,7 +623,7 @@ class ParquetTimeSeriesManager(TSDataManager):
         """List of scenarios in the data backend
 
         Returns:
-            List[str]: list of scenarios in the data backend
+            list[str]: list of scenarios in the data backend
         """
         return self.reader.list_scenarios()
 

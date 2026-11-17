@@ -29,12 +29,10 @@ subprocess.Popen(cmd, shell=True).wait()
 # Add support for markdown
 
 # If your documentation needs a minimal Sphinx version, state it here.
-#
-needs_sphinx = '8.2.3'
+needs_sphinx = '9.0.0'
 
 # Add any Sphinx extension module names here, as strings. They can be
-# extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
-# ones.
+# extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 
 numfig = True
 suppress_warnings = ["myst.xref_missing"]

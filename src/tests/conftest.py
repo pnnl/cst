@@ -4,7 +4,7 @@ Pytest configuration and shared fixtures.
 
 import shutil
 import tempfile
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import pytest
@@ -113,35 +113,14 @@ def temp_directory():
 @pytest.fixture
 def sample_ts_records():
     """Sample time-series records for testing."""
-    from cosim_toolbox.dbms import TSRecord
+    from cosim_toolbox.dbms.time_series_record import TSRecord
     
-    base_time = datetime(2023, 12, 7, 15, 31, 27, tzinfo=timezone.utc)
+    base_time = datetime(2023, 12, 7, 15, 31, 27, tzinfo=UTC)
     
     return [
-        TSRecord(
-            real_time=base_time,
-            sim_time=0.0,
-            scenario="TestScenario",
-            federate="Battery",
-            data_name="Battery/current",
-            data_value=10.5
-        ),
-        TSRecord(
-            real_time=base_time,
-            sim_time=60.0,
-            scenario="TestScenario", 
-            federate="Battery",
-            data_name="Battery/current",
-            data_value=12.3
-        ),
-        TSRecord(
-            real_time=base_time,
-            sim_time=0.0,
-            scenario="TestScenario",
-            federate="EVehicle",
-            data_name="EVehicle/voltage", 
-            data_value=120.0
-        )
+        TSRecord(base_time, 0.0, "TestScenario", "Battery", "Battery/current", 10.5),
+        TSRecord(base_time, 60.0, "TestScenario",  "Battery", "Battery/current", 12.3),
+        TSRecord(base_time, 0.0, "TestScenario", "EVehicle", "EVehicle/voltage", 120.0)
     ]
 
 # Skip MongoDB tests if pymongo is not available

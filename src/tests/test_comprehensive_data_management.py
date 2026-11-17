@@ -8,7 +8,7 @@ import shutil
 import sys
 import tempfile
 import unittest
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -16,7 +16,8 @@ from unittest.mock import MagicMock, patch
 sys.path.insert(0, "src/cosim_toolbox")
 
 # Import our modules
-from cosim_toolbox.dbms import JSONMetadataManager, TSRecord, create_metadata_manager
+from cosim_toolbox.dbms import JSONMetadataManager, create_metadata_manager
+from cosim_toolbox.dbms.time_series_record import TSRecord
 
 # Try to import MongoDB components
 try:
@@ -32,15 +33,8 @@ class TestTSRecord(unittest.TestCase):
 
     def test_tsrecord_creation(self):
         """Test basic TSRecord creation."""
-        now = datetime.now(timezone.utc)
-        record = TSRecord(
-            real_time=now,
-            sim_time=120.5,
-            scenario="TestScenario",
-            federate="TestFederate",
-            data_name="test/voltage",
-            data_value=240.5,
-        )
+        now = datetime.now(UTC)
+        record = TSRecord(now, 120.5, "TestScenario", "TestFederate", "test/voltage", 240.5)
 
         self.assertEqual(record.real_time, now)
         self.assertEqual(record.sim_time, 120.5)
@@ -51,7 +45,7 @@ class TestTSRecord(unittest.TestCase):
 
     def test_tsrecord_different_types(self):
         """Test TSRecord with different data value types."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         test_cases = [
             ("double", 123.45),
             ("integer", 42),

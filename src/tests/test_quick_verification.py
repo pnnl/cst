@@ -6,11 +6,12 @@ Use this for rapid testing during development.
 import shutil
 import sys
 import tempfile
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 sys.path.insert(0, "src/cosim_toolbox")
 
-from cosim_toolbox.dbms import TSRecord, create_metadata_manager
+from cosim_toolbox.dbms import create_metadata_manager
+from cosim_toolbox.dbms.time_series_record import TSRecord
 
 
 def test_basic_functionality():
@@ -21,14 +22,7 @@ def test_basic_functionality():
 
     # Test TSRecord
     print("\n1. Testing TSRecord...")
-    record = TSRecord(
-        real_time=datetime.now(timezone.utc),
-        sim_time=60.0,
-        scenario="QuickTest",
-        federate="TestFed",
-        data_name="test/voltage",
-        data_value=120.5,
-    )
+    record = TSRecord(datetime.now(UTC), 60.0, "QuickTest", "TestFed", "test/voltage", 120.5)
     print(f"   ✅ TSRecord created: {record.data_name} = {record.data_value}")
 
     # Test JSON Manager

@@ -2,35 +2,28 @@
 Tests for CSV time-series data management with composition-based approach.
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
 from pandas import read_csv
 
-from cosim_toolbox.dbms import TSRecord
 from cosim_toolbox.dbms.csv_timeseries import (
     CSVHelper,
     CSVTimeSeriesManager,
     CSVTimeSeriesReader,
     CSVTimeSeriesWriter,
+    TSRecord,
 )
 
 
 @pytest.fixture
 def sample_ts_records():
     """Sample time-series records for testing."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     return [
         TSRecord(now, 0.0, "TestScenario", "Battery", "Battery/voltage", 120.5),
-        TSRecord(
-            now + timedelta(seconds=60),
-            60.0,
-            "TestScenario",
-            "Battery",
-            "Battery/voltage",
-            119.8,
-        ),
+        TSRecord(now + timedelta(seconds=60), 60.0, "TestScenario", "Battery", "Battery/voltage", 119.8),
         TSRecord(now, 0.0, "TestScenario", "EVehicle", "EVehicle/voltage", 120.0),
     ]
 
@@ -89,8 +82,8 @@ class TestCSVTimeSeriesWriter:
             location=temp_directory, analysis_name="TestAnalysis"
         )
         with writer:
-            writer.add_record(TSRecord(datetime.now(timezone.utc), 0.0, "Test", "Fed", "v", 1.0))
-            writer.add_record(TSRecord(datetime.now(timezone.utc), 1.0, "Test", "Fed", "v", 2.0))
+            writer.add_record(TSRecord(datetime.now(UTC), 0.0, "Test", "Fed", "v", 1.0))
+            writer.add_record(TSRecord(datetime.now(UTC), 1.0, "Test", "Fed", "v", 2.0))
             assert writer.buffer_size == 2
             assert writer.flush()
             assert writer.buffer_size == 0
@@ -104,7 +97,7 @@ class TestCSVTimeSeriesWriter:
         writer = CSVTimeSeriesWriter(
             location=temp_directory, analysis_name="TestAnalysis"
         )
-        invalid_record = TSRecord(datetime.now(timezone.utc), 0.0, "Test", "invalid\name", "v", 1.0)
+        invalid_record = TSRecord(datetime.now(UTC), 0.0, "Test", "invalid\name", "v", 1.0)
         with writer:
             assert not writer.write_records([invalid_record])
 

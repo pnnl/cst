@@ -6,7 +6,6 @@ import helics as h
 
 collections.Callable = collections.abc.Callable
 
-from cosim_toolbox.dbms import create_metadata_manager
 from cosim_toolbox.sims import DBConfigs, Federate
 
 # create a db for a simple federation

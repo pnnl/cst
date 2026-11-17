@@ -9,6 +9,7 @@ all: venv
 $(VENV)/bin/activate:
 	@echo "Creating Python virtual environment at ./venv/..."
 	@python3.12 -m venv $(VENV)
+	@./$(PYTHON) -m pip install --upgrade pip
 	@echo "Installing requirements..."
 	@./$(PIP) install -r requirements.txt
 	@./$(PIP) install src/.
@@ -21,9 +22,9 @@ run: venv
 
 clean:
 	@echo "Deleting venv, *.pyc, and test coverage data..."
-	@rm -rf $(VENV)
+#	@rm -rf $(VENV)
 	@rm -rf .coverage coverage.xml results.xml .pytest_cache htmlcov
-	@rm -rf  docs/_build src/build src/cosim_toolbox.egg-info
+	@rm -rf docs/_build src/build src/cosim_toolbox.egg-info
 	@find . -type f -name '*.pyc' -delete
 
 docs:
@@ -41,4 +42,4 @@ integration_tests:
 		--cov=cosim_toolbox --cov-fail-under=2 --junitxml results.xml -v \
 		src/integration_tests/test_simple_federation.py
 
-.PHONY: all venv run clean docs tests coverage integration_tests
+.PHONY: all venv run clean docs tests integration_tests

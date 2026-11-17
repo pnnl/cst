@@ -1,92 +1,19 @@
 from datetime import datetime
 
-from cosim_toolbox.dbms import TSRecord, create_timeseries_manager
+from cosim_toolbox.dbms import create_timeseries_manager
+from cosim_toolbox.dbms.time_series_record import TSRecord
 
 records = [
-    TSRecord(
-        real_time=datetime.now(),
-        sim_time=0,
-        scenario="test_scenario",
-        federate="test_fed",
-        data_name="value",
-        data_value=1,
-    ),
-    TSRecord(
-        real_time=datetime.now(),
-        sim_time=0,
-        scenario="test_scenario",
-        federate="test_fed",
-        data_name="value",
-        data_value=2.0,
-    ),
-    TSRecord(
-        real_time=datetime.now(),
-        sim_time=0,
-        scenario="test_scenario",
-        federate="test_fed",
-        data_name="value",
-        data_value=True,
-    ),
-    TSRecord(
-        real_time=datetime.now(),
-        sim_time=0,
-        scenario="test_scenario",
-        federate="test_fed",
-        data_name="value",
-        data_value="hello world",
-    ),
-    TSRecord(
-        real_time=datetime.now(),
-        sim_time=1,
-        scenario="test_scenario",
-        federate="test_fed",
-        data_name="value",
-        data_value="hello world",
-    ),
-    TSRecord(
-        real_time=datetime.now(),
-        sim_time=0,
-        scenario="test_scenario",
-        federate="test_fed",
-        data_name="value",
-        data_value="hello world",
-        receiving_endpoint="receiver_endpoint",
-        receiving_federate="receiver",
-    ),
-    TSRecord(
-        real_time=datetime.now(),
-        sim_time=0,
-        scenario="test_scenario",
-        federate="test_fed2",
-        data_name="value",
-        data_value="hello world",
-    ),
-    TSRecord(
-        real_time=datetime.now(),
-        sim_time=0,
-        scenario="test_scenario",
-        federate="test_fed2",
-        data_name="value",
-        data_value="hello world",
-        receiving_endpoint="receiver_endpoint",
-        receiving_federate="receiver",
-    ),
-    TSRecord(
-        real_time=datetime.now(),
-        sim_time=0,
-        scenario="test_scenario",
-        federate="test_fed3",
-        data_name="value",
-        data_value=1,
-    ),
-    TSRecord(
-        real_time=datetime.now(),
-        sim_time=0,
-        scenario="test_scenario",
-        federate="test_fed3",
-        data_name="value",
-        data_value=2.0,
-    ),
+    TSRecord(datetime.now(), 0, "test_scenario", "test_fed", "value", 1),
+    TSRecord(datetime.now(), 0, "test_scenario", "test_fed", "value", 2.0),
+    TSRecord(datetime.now(), 0, "test_scenario", "test_fed", "value", True),
+    TSRecord(datetime.now(), 0, "test_scenario", "test_fed", "value", "hello world"),
+    TSRecord(datetime.now(), 1, "test_scenario", "test_fed", "value", "hello world"),
+    TSRecord(datetime.now(), 0, "test_scenario", "test_fed", "value", "hello world", "receiver_endpoint", "receiver"),
+    TSRecord(datetime.now(), 0, "test_scenario", "test_fed2", "value", "hello world"),
+    TSRecord(datetime.now(), 0, "test_scenario", "test_fed2", "value", "hello world", "receiver_endpoint", "receiver"),
+    TSRecord(datetime.now(), 0, "test_scenario", "test_fed3", "value", 1),
+    TSRecord(datetime.now(), 0, "test_scenario", "test_fed3", "value", 2.0),
 ]
 
 with create_timeseries_manager(backend="postgres", analysis_name="example_data") as mgr:

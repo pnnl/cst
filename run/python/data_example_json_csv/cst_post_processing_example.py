@@ -7,12 +7,12 @@ import pandas as pd
 from prettytable import PrettyTable
 
 from cosim_toolbox.dbms import (
-    TSRecord,
     create_metadata_manager,
     create_timeseries_manager,
 )
 from cosim_toolbox.dbms.csv_timeseries import (
     CSVTimeSeriesManager,
+    TSRecord,
 )
 
 

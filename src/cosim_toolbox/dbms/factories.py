@@ -15,7 +15,7 @@ def create_timeseries_manager(
     """
     Factory function to create appropriate time-series data manager.
     Args:
-        backend (str): Backend type ("csv", "postgres").
+        backend (str): Backend type ("csv", "postgres", "parquet").
         analysis_name (str): Analysis name.
         **kwargs: Backend-specific options.
 
@@ -40,17 +40,15 @@ def create_timeseries_manager(
                 pg_data_db[key] = value
         return PostgreSQLTimeSeriesManager(analysis_name=analysis_name, **pg_data_db)
     elif backend == "parquet":
-            from . import ParquetTimeSeriesManager
+        from . import ParquetTimeSeriesManager
 
-            # assign kwargs to backend option
-            for key, value in kwargs.items():
-                if key in pq_data_db:
-                    pq_data_db[key] = value
-            return ParquetTimeSeriesManager(analysis_name=analysis_name, **pq_data_db)
+        # assign kwargs to backend option
+        for key, value in kwargs.items():
+            if key in pq_data_db:
+                pq_data_db[key] = value
+        return ParquetTimeSeriesManager(analysis_name=analysis_name, **pq_data_db)
     else:
-        raise ValueError(
-            f"Unknown time-series backend: {backend}. Supported: csv, postgres"
-        )
+        raise ValueError(f"Unknown time-series backend: {backend}. Supported: csv, postgres")
 
 
 def create_metadata_manager(backend: str = "mongo", **kwargs) -> MetadataManager:

@@ -22,7 +22,7 @@ try:
 except ImportError:
     PYMONGO_AVAILABLE = False
 
-from .abstractions import MDDataManager, MDDataReader, MDDataWriter
+from .abstractions import MetadataManager, MetadataReader, MetadataWriter
 from .validation import ValidationError, safe_name_log, validate_name
 
 logger = logging.getLogger(__name__)
@@ -149,7 +149,7 @@ class _MongoConnectionHelper:
             return self.db[collection_type]
 
 
-class MongoMetadataWriter(MDDataWriter):
+class MongoMetadataWriter(MetadataWriter):
     """MongoDB-based metadata writer."""
 
     def __init__(
@@ -309,7 +309,7 @@ class MongoMetadataWriter(MDDataWriter):
             return False
 
 
-class MongoMetadataReader(MDDataReader):
+class MongoMetadataReader(MetadataReader):
     """MongoDB-based metadata reader."""
 
     def __init__(
@@ -429,7 +429,7 @@ class MongoMetadataReader(MDDataReader):
         """Produces a list of federations stored in the metadata store
 
         Returns:
-            List[str]: list of federations
+            list[str]: list of federations
         """
         return self.list_items("federations")
 
@@ -437,7 +437,7 @@ class MongoMetadataReader(MDDataReader):
         """Produces a list of scenarios stored in the metadata store
 
         Returns:
-            List[str]: list of scenarios
+            list[str]: list of scenarios
         """
         return self.list_items("scenarios")
 
@@ -449,7 +449,7 @@ class MongoMetadataReader(MDDataReader):
             collection_type (str): Collection whose contents are being listed
 
         Returns:
-            List[str]: List of the named data in the specified collection
+            list[str]: List of the named data in the specified collection
         """
         if not self.is_connected:
             logger.error("MongoDB reader not connected.")
@@ -475,7 +475,7 @@ class MongoMetadataReader(MDDataReader):
         """Lists custom collection names in metadata store
 
         Returns:
-            List[str]: List of collection names in metadata store
+            list[str]: List of collection names in metadata store
         """
         if not self.is_connected or not self.helper.db:
             logger.error("MongoDB reader not connected.")
@@ -497,7 +497,7 @@ class MongoMetadataReader(MDDataReader):
             return []
 
 
-class MongoMetadataManager(MDDataManager):
+class MongoMetadataManager(MetadataManager):
     """Joint MongoDB metadata manager using composition."""
 
     def __init__(

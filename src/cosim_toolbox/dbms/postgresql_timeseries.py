@@ -22,9 +22,9 @@ except ImportError:
     PSYCOPG2_AVAILABLE = False
 
 from .abstractions import (
-    TSDataManager,
-    TSDataReader,
-    TSDataWriter,
+    TimeSeriesManager,
+    TimeSeriesReader,
+    TimeSeriesWriter,
     TSRecord,
 )
 from .validation import ValidationError, validate_database_identifier
@@ -215,14 +215,14 @@ class PostgresConnectionHelper:
         """
         if value is None:
             return None
-        if table_suffix == "hdt_complex":
-            return complex(value)
+#        if table_suffix == "hdt_complex":
+#            return complex(value)
         if table_suffix in ("hdt_vector", "hdt_complex_vector"):
             return json.loads(value)
         return value
 
 
-class PostgreSQLTimeSeriesWriter(TSDataWriter):
+class PostgreSQLTimeSeriesWriter(TimeSeriesWriter):
     """PostgreSQL-based time-series data writer."""
 
     def __init__(
@@ -381,7 +381,7 @@ class PostgreSQLTimeSeriesWriter(TSDataWriter):
         """Writes records (rows) to PostgreSQL database
 
         Args:
-            records (List[TSRecord]): data to be written to database
+            records (list[TSRecord]): data to be written to database
 
         Returns:
             bool: Flag indicating data was successfully written to
@@ -455,7 +455,7 @@ class PostgreSQLTimeSeriesWriter(TSDataWriter):
             self.helper.connection.rollback()
             return False
 
-    # def write_endpoint_records(self, records: List[TSEndpointRecord]) -> bool:
+    # def write_endpoint_records(self, records: list[TSEndpointRecord]) -> bool:
     #     """Write endpoint records to PostgreSQL."""
     #     if not self._is_connected or not records:
     #         return True
@@ -495,7 +495,7 @@ class PostgreSQLTimeSeriesWriter(TSDataWriter):
     #         return False
 
 
-class PostgreSQLTimeSeriesReader(TSDataReader):
+class PostgreSQLTimeSeriesReader(TimeSeriesReader):
     """PostgreSQL-based time-series data reader."""
 
     def __init__(
@@ -562,9 +562,9 @@ class PostgreSQLTimeSeriesReader(TSDataReader):
         """Gets list of tables in the PostgreSQL database
 
         Args:
-            data_types (Optional[List[str]]): CST data types to be read
+            data_types (Optional[list[str]]): CST data types to be read
         Returns:
-            List[str]: tables in PostgreSQL DB
+            list[str]: tables in PostgreSQL DB
         """
         assert self.helper.connection is not None, "Database not connected"
         with self.helper.connection.cursor() as cursor:
@@ -703,7 +703,7 @@ class PostgreSQLTimeSeriesReader(TSDataReader):
             column_name (str): _description_
 
         Returns:
-            List[str]: _description_
+            list[str]: _description_
         """
         if not self._is_connected:
             return []
@@ -725,7 +725,7 @@ class PostgreSQLTimeSeriesReader(TSDataReader):
         """Produces a list of scenarios stored in the metadata store
 
         Returns:
-            List[str]: list of scenarios
+            list[str]: list of scenarios
         """
         return self._query_distinct_column("scenario")
 
@@ -733,7 +733,7 @@ class PostgreSQLTimeSeriesReader(TSDataReader):
         """Produces a list of federations stored in the metadata store
 
         Returns:
-            List[str]: list of federations
+            list[str]: list of federations
         """
         return self._query_distinct_column("federate")
 
@@ -741,14 +741,14 @@ class PostgreSQLTimeSeriesReader(TSDataReader):
         """Produces the list of data types in PostgreSQL database
 
         Returns:
-            List[str]: Data types in database
+            list[str]: Data types in database
         """
         if not self._is_connected:
             return []
         return self._get_tables_to_query(None)
 
 
-class PostgreSQLTimeSeriesManager(TSDataManager):
+class PostgreSQLTimeSeriesManager(TimeSeriesManager):
     """Joint PostgreSQL time-series manager using composition."""
 
     def __init__(
@@ -803,7 +803,7 @@ class PostgreSQLTimeSeriesManager(TSDataManager):
         """Produces a list of scenarios stored in the metadata store
 
         Returns:
-            List[str]: list of scenarios
+            list[str]: list of scenarios
         """
         return self.reader.list_scenarios()
 
@@ -811,7 +811,7 @@ class PostgreSQLTimeSeriesManager(TSDataManager):
         """Produces a list of federations stored in the metadata store
 
         Returns:
-            List[str]: list of federations
+            list[str]: list of federations
         """
         return self.reader.list_federates()
 
@@ -819,7 +819,7 @@ class PostgreSQLTimeSeriesManager(TSDataManager):
         """Produces a list of data types in the PostgreSQL database
 
         Returns:
-            List[str]: ist of data types in the PostgreSQL database
+            list[str]: ist of data types in the PostgreSQL database
         """
         return self.reader.list_data_types()
 

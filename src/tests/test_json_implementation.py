@@ -11,7 +11,10 @@ from pathlib import Path
 
 sys.path.insert(0, 'src/cosim_toolbox')
 
-from cosim_toolbox.dbms import JSONMetadataManager, TSRecord
+from datetime import UTC
+
+from cosim_toolbox.dbms import JSONMetadataManager
+from cosim_toolbox.dbms.time_series_record import TSRecord
 
 
 def test_basic_functionality():
@@ -332,18 +335,10 @@ def test_tsrecord():
     
     print("\n=== Testing TSRecord ===")
     
-    from datetime import datetime, timezone
+    from datetime import datetime
     
     # Create a sample record
-    record = TSRecord(
-        real_time=datetime.now(timezone.utc),
-        sim_time=120.5,
-        scenario="MyScenario",
-        federate="Battery",
-        data_name="Battery/EV1_current",
-        data_value=15.7
-    )
-    
+    record = TSRecord(datetime.now(UTC),120.5,"MyScenario","Battery","Battery/EV1_current",15.7)
     print(f"Created TSRecord: {record}")
     print(f"Real time: {record.real_time}")
     print(f"Sim time: {record.sim_time}")
@@ -354,12 +349,12 @@ def test_tsrecord():
     
     # Test with different data types
     records = [
-        TSRecord(datetime.now(timezone.utc), 0.0, "test", "fed1", "voltage", 120.5),  # float
-        TSRecord(datetime.now(timezone.utc), 1.0, "test", "fed1", "count", 42),      # int
-        TSRecord(datetime.now(timezone.utc), 2.0, "test", "fed1", "status", "active"), # string
-        TSRecord(datetime.now(timezone.utc), 3.0, "test", "fed1", "flag", True),     # bool
-        TSRecord(datetime.now(timezone.utc), 4.0, "test", "fed1", "complex", 3+4j),  # complex
-        TSRecord(datetime.now(timezone.utc), 5.0, "test", "fed1", "vector", [1,2,3]), # list
+        TSRecord(datetime.now(UTC), 0.0, "test", "fed1", "voltage", 120.5),  # float
+        TSRecord(datetime.now(UTC), 1.0, "test", "fed1", "count", 42),      # int
+        TSRecord(datetime.now(UTC), 2.0, "test", "fed1", "status", "active"), # string
+        TSRecord(datetime.now(UTC), 3.0, "test", "fed1", "flag", True),     # bool
+        TSRecord(datetime.now(UTC), 4.0, "test", "fed1", "complex", 3+4j),  # complex
+        TSRecord(datetime.now(UTC), 5.0, "test", "fed1", "vector", [1,2,3]), # list
     ]
     
     print(f"\nTested {len(records)} records with different data types:")

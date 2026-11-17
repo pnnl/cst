@@ -16,33 +16,31 @@ Example Usage::
         ts_manager.add_record(record)
 """
 
-# Core data structures and abstract classes
+# Core abstract classes
 from .abstractions import (
-    TSRecord,
-    TimeSeriesManager,
     MetadataManager,
+    TimeSeriesManager
 )
 
 # Factory functions for easy instantiation
 from .factories import (
-    create_timeseries_manager,
     create_metadata_manager,
+    create_timeseries_manager
 )
 
-# Concrete Manager implementations
+# Concrete metadata manager implementations
 from .json_metadata import JSONMetadataManager
 from .mongo_metadata import MongoMetadataManager
+
+# Concrete time series manager implementations
 from .csv_timeseries import CSVTimeSeriesManager
 from .parquet_timeseries import ParquetTimeSeriesManager
 from .postgresql_timeseries import PostgreSQLTimeSeriesManager
 
 # Public API definition
 __all__ = [
-    "TSRecord",
-    "TimeSeriesManager",
-    "MetadataManager",
-    "create_timeseries_manager",
     "create_metadata_manager",
+    "create_timeseries_manager",
     "CSVTimeSeriesManager",
     "ParquetTimeSeriesManager",
     "PostgreSQLTimeSeriesManager",

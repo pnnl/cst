@@ -18,10 +18,10 @@ import helics as h
 from cosim_toolbox.dbms import (
     MetadataManager,
     TimeSeriesManager,
-    TSRecord,
     create_metadata_manager,
     create_timeseries_manager,
 )
+from cosim_toolbox.dbms.time_series_record import TSRecord
 
 logger = logging.getLogger(__name__)
 
@@ -164,7 +164,7 @@ class Federate:
         self.start = self.scenario["start_time"]
         self.stop = self.scenario["stop_time"]
         # setting max in seconds
-        ep = datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc)
+        ep = datetime.datetime(1970, 1, 1, tzinfo=datetime.UTC)
         # %:z in version  python 3.12, for now, no time offsets (zones)
         s = datetime.datetime.strptime(self.start, "%Y-%m-%dT%H:%M:%S").astimezone()
         e = datetime.datetime.strptime(self.stop, "%Y-%m-%dT%H:%M:%S").astimezone()

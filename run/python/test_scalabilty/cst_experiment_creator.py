@@ -256,5 +256,5 @@ def create_tests(scalability_name: str):
 
 
 if __name__ == "__main__":
-    test_name="cst_scale1"
+    test_name="mycst_scale1"
     create_tests(test_name)

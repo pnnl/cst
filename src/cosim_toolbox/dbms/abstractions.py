@@ -1,81 +1,19 @@
 """
 Core data management abstractions for CoSim Toolbox.
-Provides TSRecord dataclass and abstract base classes for data I/O.
+Provides abstract base classes for data I/O.
 
 @author Nathan Gray
 """
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
-from datetime import datetime
 from typing import Any
 
 import pandas as pd
 
-
-@dataclass
-class TSRecord:
-    real_time: datetime
-    sim_time: float
-    scenario: str
-    federate: str
-    data_name: str
-    data_value: Any
-    receiving_federate: str | None = None
-    receiving_endpoint: str | None = None
-    data_type: str | None = None  # "hdt_string", "hdt_endpoint", "hdt_double", etc.
-
-    def __post_init__(self) -> None:
-        # Auto-detect type if not provided
-        if self.data_type is None:
-            self.data_type = self._auto_detect_type()
-
-    def _auto_detect_type(self) -> str:
-        """Auto-detect data type from value"""
-
-        if self.receiving_endpoint is not None:
-            return "hdt_endpoint"
-        if self.receiving_federate is not None:
-            return "hdt_endpoint"
-        if isinstance(self.data_value, bool):
-            return "hdt_boolean"
-        if isinstance(self.data_value, int):
-            return "hdt_integer"
-        if isinstance(self.data_value, float):
-            return "hdt_double"
-        if isinstance(self.data_value, complex):
-            return "hdt_complex"
-        if isinstance(self.data_value, str):
-            return "hdt_string"
-        if isinstance(self.data_value, (list, tuple)):
-            return "hdt_vector"  # Could be enhanced for complex vectors
-        return "hdt_string"  # Default fallback
-
-    def json(self, func):
-        if self.data_type == "hdt_endpoint":
-            params = {
-                'real_time': self.real_time,
-                'sim_time': self.sim_time,
-                'scenario': self.scenario,
-                'federate': self.federate,
-                'data_name': self.data_name,
-                'receiving_federate': self.receiving_federate,
-                'receiving_endpoint': self.receiving_endpoint,
-                'data_value': func(self.data_value),
-            }
-        else:
-            params = {
-                'real_time': self.real_time,
-                'sim_time': self.sim_time,
-                'scenario': self.scenario,
-                'federate': self.federate,
-                'data_name': self.data_name,
-                'data_value': func(self.data_value),
-            }
-        return params
+from .time_series_record import TSRecord
 
 
-class TSDataWriter(ABC):
+class TimeSeriesWriter(ABC):
     """
     Abstract base class for time-series data writers.
     All time-series data writers must implement these methods to provide
@@ -181,7 +119,7 @@ class TSDataWriter(ABC):
         self.disconnect()
 
 
-class TSDataReader(ABC):
+class TimeSeriesReader(ABC):
     """
     Abstract base class for time-series data readers.
     All time-series data readers must implement these methods to provide
@@ -201,7 +139,7 @@ class TSDataReader(ABC):
             bool: flag indicated if the connection to the data store exists
         """
         raise NotImplementedError(
-            "TSDataReader.connect() is an abstract class and must be "
+            "TimeSeriesReader.connect() is an abstract class and must be "
             "subclassed and implemented."
         )
 
@@ -213,7 +151,7 @@ class TSDataReader(ABC):
             bool: flag indicated if the connection to the data store exists
         """
         raise NotImplementedError(
-            "TSDataReader.disconnect() is an abstract class and must be"
+            "TimeSeriesReader.disconnect() is an abstract class and must be"
             "subclassed and implemented."
         )
 
@@ -264,7 +202,7 @@ class TSDataReader(ABC):
         self.disconnect()
 
 
-class MDDataWriter(ABC):
+class MetadataWriter(ABC):
     """
     Abstract base class for metadata writers.
     All metadata writers must implement these methods to provide
@@ -374,7 +312,7 @@ class MDDataWriter(ABC):
         self.disconnect()
 
 
-class MDDataReader(ABC):
+class MetadataReader(ABC):
     """
     Abstract base class for metadata readers.
     All metadata readers must implement these methods to provide
@@ -398,7 +336,7 @@ class MDDataReader(ABC):
             bool: flag indicated if the connection to the data store exists
         """
         raise NotImplementedError(
-            "MDDataReader.connect() is an abstract class and must be"
+            "MetadataReader.connect() is an abstract class and must be"
             "subclassed and implemented."
         )
 
@@ -410,7 +348,7 @@ class MDDataReader(ABC):
             bool: flag indicated if the connection to the data store exists
         """
         raise NotImplementedError(
-            "MDDataReader.disconnect() is an abstract class and must be"
+            "MetadataReader.disconnect() is an abstract class and must be"
             "subclassed and implemented."
         )
 
@@ -512,14 +450,14 @@ class MDDataReader(ABC):
 
 
 # Joint Manager Classes (composition-based)
-class TSDataManager(ABC):
+class TimeSeriesManager(ABC):
     """Abstract base class for combined time-series data management."""
 
     def __init__(self, **kwargs) -> None:
         self._is_connected = False
         self.helper: object
-        self.writer: TSDataWriter
-        self.reader: TSDataReader
+        self.writer: TimeSeriesWriter
+        self.reader: TimeSeriesReader
 
     @abstractmethod
     def connect(self) -> bool:
@@ -602,7 +540,7 @@ class TSDataManager(ABC):
         return self._is_connected
 
 
-class MDDataManager(ABC):
+class MetadataManager(ABC):
     """
     Abstract base class for combined metadata management.
     """
@@ -610,8 +548,8 @@ class MDDataManager(ABC):
     def __init__(self, **kwargs) -> None:
         self._is_connected = False
         self.helper: object
-        self.writer: MDDataWriter
-        self.reader: MDDataReader
+        self.writer: MetadataWriter
+        self.reader: MetadataReader
 
     @abstractmethod
     def connect(self) -> bool:
@@ -778,7 +716,3 @@ class MDDataManager(ABC):
             bool: True if writer is connected to data store
         """
         return self._is_connected
-
-
-MetadataManager = MDDataManager
-TimeSeriesManager = TSDataManager

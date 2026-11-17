@@ -5,7 +5,7 @@ import json
 import subprocess
 from multiprocessing import Process
 
-import cosim_toolbox.sims.federateLogger as datalog
+import cosim_toolbox.sims.federate_logger as FederateLogger
 import helics as h
 from battery import Battery
 from charger import Charger
@@ -26,7 +26,7 @@ def run(scenario_name):
     charg = Charger(fed_name="Charger")
     p_batt = Process(target=batt.run, args=(_scenario_name,))
     p_charg = Process(target=charg.run, args=(_scenario_name,))
-    p_log = Process(target=datalog.main, args=('FederateLogger', _analysis_name, _scenario_name))
+    p_log = Process(target=FederateLogger.main, args=('FederateLogger', _analysis_name, _scenario_name))
     print("Starting Processes...")
     # p_broker = Process(target=h.helicsCreateBroker, args=("zmq", "", f"--federates=3"))
     # p_broker.start()
