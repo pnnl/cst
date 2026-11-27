@@ -5,7 +5,14 @@ Factory functions for creating data managers.
 """
 
 # Use relative imports within the module
-from .. import csv_data_db, json_meta_db, mongo_meta_db, pg_data_db, pq_data_db
+from .. import (
+    csv_data_db,
+    h5_data_db,
+    json_meta_db,
+    mongo_meta_db,
+    pg_data_db,
+    pq_data_db,
+)
 from .abstractions import MetadataManager, TimeSeriesManager
 
 
@@ -15,7 +22,7 @@ def create_timeseries_manager(
     """
     Factory function to create appropriate time-series data manager.
     Args:
-        backend (str): Backend type ("csv", "postgres", "parquet").
+        backend (str): Backend type ("csv", "postgres", "parquet", "hdf5").
         analysis_name (str): Analysis name.
         **kwargs: Backend-specific options.
 
@@ -47,8 +54,15 @@ def create_timeseries_manager(
             if key in pq_data_db:
                 pq_data_db[key] = value
         return ParquetTimeSeriesManager(analysis_name=analysis_name, **pq_data_db)
+    elif backend == "hdf5":
+        from . import HDF5TimeSeriesManager
+
+        # apply kwargs to a copy so they do not change the defaults for later managers
+        options = dict(h5_data_db)
+        options.update({key: value for key, value in kwargs.items() if key in options})
+        return HDF5TimeSeriesManager(analysis_name=analysis_name, **options)
     else:
-        raise ValueError(f"Unknown time-series backend: {backend}. Supported: csv, postgres")
+        raise ValueError(f"Unknown time-series backend: {backend}. Supported: csv, postgres, parquet, hdf5")
 
 
 def create_metadata_manager(backend: str = "mongo", **kwargs) -> MetadataManager:

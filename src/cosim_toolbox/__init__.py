@@ -67,3 +67,13 @@ pq_data_db = {
 csv_data_db = {
     "location": "./data_store",
 }
+
+h5_data_db = {
+    "location": "./data_store",
+    "compression": "gzip",
+    "compression_opts": 4,
+    "chunk_rows": 16384,
+    "max_segments": 32,
+    "lock_timeout": 60.0,
+    "durable": True,
+}
