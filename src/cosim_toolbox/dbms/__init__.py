@@ -34,6 +34,7 @@ from .mongo_metadata import MongoMetadataManager
 
 # Concrete time series manager implementations
 from .csv_timeseries import CSVTimeSeriesManager
+from .hdf5_timeseries import HDF5TimeSeriesManager
 from .parquet_timeseries import ParquetTimeSeriesManager
 from .postgresql_timeseries import PostgreSQLTimeSeriesManager
 
@@ -42,6 +43,7 @@ __all__ = [
     "create_metadata_manager",
     "create_timeseries_manager",
     "CSVTimeSeriesManager",
+    "HDF5TimeSeriesManager",
     "ParquetTimeSeriesManager",
     "PostgreSQLTimeSeriesManager",
     "JSONMetadataManager",
